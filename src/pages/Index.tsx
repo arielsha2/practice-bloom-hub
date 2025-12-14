@@ -1,13 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { Header } from '@/components/landing/Header';
+import { Hero } from '@/components/landing/Hero';
+import { Benefits } from '@/components/landing/Benefits';
+import { Bots } from '@/components/landing/Bots';
+import { SignupForm } from '@/components/landing/SignupForm';
+import { Footer } from '@/components/landing/Footer';
+
+function LandingContent() {
+  const { isRTL } = useLanguage();
+
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen">
+      <Header />
+      <main>
+        <Hero />
+        <Benefits />
+        <Bots />
+        <SignupForm />
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <LanguageProvider>
+      <LandingContent />
+    </LanguageProvider>
   );
 };
 
