@@ -2,116 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Design System for Therapist Marketing Landing Page
-   Warm, safe, inspiring - terracotta/cream palette */
+   Professional, calm, trustworthy - dark teal/white palette */
 
 @layer base {
   :root {
-    /* Warm cream background */
-    --background: 40 33% 98%;
-    --foreground: 25 30% 15%;
+    /* Clean white background */
+    --background: 0 0% 100%;
+    --foreground: 210 25% 15%;
 
     /* Card surfaces */
-    --card: 40 40% 99%;
-    --card-foreground: 25 30% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 25% 15%;
 
-    --popover: 40 40% 99%;
-    --popover-foreground: 25 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 25% 15%;
 
-    /* Primary: Warm Terracotta */
-    --primary: 20 70% 55%;
-    --primary-foreground: 40 40% 99%;
+    /* Primary: Dark Teal */
+    --primary: 195 45% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Soft Cream */
-    --secondary: 35 40% 94%;
-    --secondary-foreground: 25 30% 20%;
+    /* Secondary: Light Gray */
+    --secondary: 210 20% 97%;
+    --secondary-foreground: 210 25% 20%;
 
     /* Muted tones */
-    --muted: 35 25% 92%;
-    --muted-foreground: 25 15% 45%;
+    --muted: 210 15% 94%;
+    --muted-foreground: 210 10% 45%;
 
-    /* Accent: Golden warmth */
-    --accent: 35 85% 60%;
-    --accent-foreground: 25 30% 15%;
+    /* Accent: Gold/Amber - used sparingly for CTAs */
+    --accent: 38 80% 50%;
+    --accent-foreground: 210 25% 12%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 40 40% 99%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 20 70% 55%;
+    --border: 210 15% 90%;
+    --input: 210 15% 90%;
+    --ring: 195 45% 25%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Custom tokens */
-    --terracotta: 20 70% 55%;
-    --terracotta-light: 20 60% 70%;
-    --terracotta-dark: 20 75% 40%;
-    --cream: 40 33% 96%;
-    --cream-dark: 35 25% 90%;
-    --gold: 38 85% 55%;
-    --charcoal: 25 30% 18%;
+    --teal: 195 45% 25%;
+    --teal-light: 195 35% 40%;
+    --gold: 38 80% 50%;
+    --gold-dark: 38 85% 42%;
+    --charcoal: 210 25% 15%;
 
-    /* Gradients */
-    --gradient-warm: linear-gradient(135deg, hsl(20, 70%, 55%) 0%, hsl(35, 85%, 60%) 100%);
-    --gradient-soft: linear-gradient(180deg, hsl(40, 33%, 98%) 0%, hsl(35, 40%, 94%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(20, 70%, 55%) 0%, hsl(25, 65%, 50%) 50%, hsl(35, 80%, 55%) 100%);
-
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(20 70% 55% / 0.15);
-    --shadow-card: 0 8px 30px -8px hsl(25 30% 20% / 0.1);
-    --shadow-elevated: 0 20px 50px -15px hsl(25 30% 20% / 0.15);
+    /* Shadows - subtle and professional */
+    --shadow-soft: 0 2px 8px -2px hsl(210 25% 15% / 0.08);
+    --shadow-card: 0 4px 16px -4px hsl(210 25% 15% / 0.1);
+    --shadow-elevated: 0 8px 30px -8px hsl(210 25% 15% / 0.12);
 
     /* Sidebar */
-    --sidebar-background: 40 33% 98%;
-    --sidebar-foreground: 25 30% 25%;
-    --sidebar-primary: 20 70% 55%;
-    --sidebar-primary-foreground: 40 40% 99%;
-    --sidebar-accent: 35 40% 94%;
-    --sidebar-accent-foreground: 25 30% 20%;
-    --sidebar-border: 30 20% 88%;
-    --sidebar-ring: 20 70% 55%;
+    --sidebar-background: 195 45% 25%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 38 80% 50%;
+    --sidebar-primary-foreground: 210 25% 12%;
+    --sidebar-accent: 195 35% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 195 40% 20%;
+    --sidebar-ring: 38 80% 50%;
   }
 
   .dark {
-    --background: 25 30% 8%;
-    --foreground: 40 33% 96%;
+    --background: 210 25% 8%;
+    --foreground: 210 15% 95%;
 
-    --card: 25 28% 12%;
-    --card-foreground: 40 33% 96%;
+    --card: 210 22% 12%;
+    --card-foreground: 210 15% 95%;
 
-    --popover: 25 28% 12%;
-    --popover-foreground: 40 33% 96%;
+    --popover: 210 22% 12%;
+    --popover-foreground: 210 15% 95%;
 
-    --primary: 20 65% 58%;
-    --primary-foreground: 25 30% 8%;
+    --primary: 195 40% 45%;
+    --primary-foreground: 210 25% 8%;
 
-    --secondary: 25 25% 18%;
-    --secondary-foreground: 40 33% 96%;
+    --secondary: 210 20% 18%;
+    --secondary-foreground: 210 15% 95%;
 
-    --muted: 25 25% 18%;
-    --muted-foreground: 30 15% 60%;
+    --muted: 210 20% 18%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 35 80% 55%;
-    --accent-foreground: 25 30% 8%;
+    --accent: 38 75% 55%;
+    --accent-foreground: 210 25% 8%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 40 33% 96%;
+    --destructive-foreground: 210 15% 95%;
 
-    --border: 25 25% 20%;
-    --input: 25 25% 20%;
-    --ring: 20 65% 58%;
+    --border: 210 20% 22%;
+    --input: 210 20% 22%;
+    --ring: 195 40% 45%;
 
-    --sidebar-background: 25 30% 10%;
-    --sidebar-foreground: 40 33% 96%;
-    --sidebar-primary: 20 65% 58%;
-    --sidebar-primary-foreground: 25 30% 8%;
-    --sidebar-accent: 25 25% 18%;
-    --sidebar-accent-foreground: 40 33% 96%;
-    --sidebar-border: 25 25% 20%;
-    --sidebar-ring: 20 65% 58%;
+    --sidebar-background: 210 25% 10%;
+    --sidebar-foreground: 210 15% 95%;
+    --sidebar-primary: 38 75% 55%;
+    --sidebar-primary-foreground: 210 25% 8%;
+    --sidebar-accent: 210 20% 18%;
+    --sidebar-accent-foreground: 210 15% 95%;
+    --sidebar-border: 210 20% 22%;
+    --sidebar-ring: 195 40% 45%;
   }
 }
 
@@ -126,32 +119,19 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
   }
 
   .font-body {
     font-family: 'Inter', sans-serif;
-  }
-
-  .text-gradient {
-    background: var(--gradient-warm);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .bg-gradient-warm {
-    background: var(--gradient-warm);
-  }
-
-  .bg-gradient-hero {
-    background: var(--gradient-hero);
   }
 
   .shadow-soft {
