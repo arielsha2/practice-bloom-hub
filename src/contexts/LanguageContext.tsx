@@ -16,6 +16,9 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.about": "About",
     "nav.bots": "AI Assistants",
     "nav.contact": "Contact",
+    "nav.contents": "Contents",
+    "nav.login": "Login",
+    "nav.logout": "Logout",
 
     // Hero
     "hero.title": "Market Your Practice with Authenticity",
@@ -57,6 +60,46 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     "footer.tagline": "Empowering therapists to grow with authenticity",
     "footer.rights": "All rights reserved",
+
+    // Contents
+    "contents.title": "Resources & Articles",
+    "contents.subtitle": "Insights and tools to help you grow your practice",
+    "contents.empty": "No content available yet",
+    "contents.readMore": "Read More",
+    "contents.back": "Back to Contents",
+    "contents.admin.add": "Add Content",
+    "contents.admin.edit": "Edit",
+    "contents.admin.delete": "Delete",
+    "contents.admin.cancel": "Cancel",
+    "contents.admin.save": "Save",
+    "contents.admin.saving": "Saving...",
+    "contents.admin.saveSuccess": "Content saved successfully",
+    "contents.admin.saveError": "Error saving content",
+    "contents.admin.deleteConfirm": "Delete Content?",
+    "contents.admin.deleteWarning": "This action cannot be undone.",
+    "contents.admin.deleteSuccess": "Content deleted successfully",
+    "contents.admin.deleteError": "Error deleting content",
+    "contents.form.title": "Title",
+    "contents.form.titlePlaceholder": "Enter title...",
+    "contents.form.content": "Content",
+    "contents.form.contentPlaceholder": "Enter content...",
+    "contents.form.language": "Language",
+
+    // Auth
+    "auth.loginTitle": "Welcome Back",
+    "auth.loginSubtitle": "Sign in to your account",
+    "auth.signupTitle": "Create Account",
+    "auth.signupSubtitle": "Join our community of therapists",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.loginButton": "Sign In",
+    "auth.signupButton": "Create Account",
+    "auth.loading": "Loading...",
+    "auth.noAccount": "Don't have an account? Sign up",
+    "auth.hasAccount": "Already have an account? Sign in",
+    "auth.loginSuccess": "Welcome back!",
+    "auth.signupSuccess": "Account created! Check your email to confirm.",
+    "auth.alreadyRegistered": "This email is already registered",
   },
   he: {
     // Header
@@ -64,6 +107,9 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.about": "אודות",
     "nav.bots": "עוזרי AI",
     "nav.contact": "צור קשר",
+    "nav.contents": "תכנים",
+    "nav.login": "התחברות",
+    "nav.logout": "התנתקות",
 
     // Hero
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
@@ -103,6 +149,46 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     "footer.tagline": "מעצימים מטפלים לצמוח באותנטיות",
     "footer.rights": "כל הזכויות שמורות",
+
+    // Contents
+    "contents.title": "משאבים ומאמרים",
+    "contents.subtitle": "תובנות וכלים שיעזרו לכם לצמוח בפרקטיקה",
+    "contents.empty": "אין תכנים זמינים עדיין",
+    "contents.readMore": "קראו עוד",
+    "contents.back": "חזרה לתכנים",
+    "contents.admin.add": "הוסף תוכן",
+    "contents.admin.edit": "ערוך",
+    "contents.admin.delete": "מחק",
+    "contents.admin.cancel": "ביטול",
+    "contents.admin.save": "שמור",
+    "contents.admin.saving": "שומר...",
+    "contents.admin.saveSuccess": "התוכן נשמר בהצלחה",
+    "contents.admin.saveError": "שגיאה בשמירת התוכן",
+    "contents.admin.deleteConfirm": "למחוק את התוכן?",
+    "contents.admin.deleteWarning": "לא ניתן לבטל פעולה זו.",
+    "contents.admin.deleteSuccess": "התוכן נמחק בהצלחה",
+    "contents.admin.deleteError": "שגיאה במחיקת התוכן",
+    "contents.form.title": "כותרת",
+    "contents.form.titlePlaceholder": "הזינו כותרת...",
+    "contents.form.content": "תוכן",
+    "contents.form.contentPlaceholder": "הזינו תוכן...",
+    "contents.form.language": "שפה",
+
+    // Auth
+    "auth.loginTitle": "ברוכים השבים",
+    "auth.loginSubtitle": "התחברו לחשבון שלכם",
+    "auth.signupTitle": "יצירת חשבון",
+    "auth.signupSubtitle": "הצטרפו לקהילת המטפלים שלנו",
+    "auth.email": "אימייל",
+    "auth.password": "סיסמה",
+    "auth.loginButton": "התחברות",
+    "auth.signupButton": "יצירת חשבון",
+    "auth.loading": "טוען...",
+    "auth.noAccount": "אין לכם חשבון? הירשמו",
+    "auth.hasAccount": "כבר יש לכם חשבון? התחברו",
+    "auth.loginSuccess": "ברוכים השבים!",
+    "auth.signupSuccess": "החשבון נוצר! בדקו את האימייל לאישור.",
+    "auth.alreadyRegistered": "האימייל הזה כבר רשום",
   },
 };
 
