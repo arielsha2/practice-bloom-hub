@@ -40,6 +40,9 @@ export function Header() {
           <Link to="/contents" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.contents')}
           </Link>
+          <Link to="/portal" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+            {t('nav.portal')}
+          </Link>
           <a href="/#signup" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.contact')}
           </a>
@@ -129,6 +132,13 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.contents')}
+            </Link>
+            <Link 
+              to="/portal" 
+              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('nav.portal')}
             </Link>
             <a 
               href="/#signup" 

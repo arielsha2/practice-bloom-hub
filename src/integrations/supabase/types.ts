@@ -44,6 +44,106 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_resources: {
+        Row: {
+          created_at: string | null
+          file_path: string
+          id: string
+          lesson_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_path: string
+          id?: string
+          lesson_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          file_path?: string
+          id?: string
+          lesson_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      qa_threads: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          created_at: string | null
+          id: string
+          is_public: boolean | null
+          lesson_id: string | null
+          question: string
+          user_id: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          lesson_id?: string | null
+          question: string
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          lesson_id?: string | null
+          question?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_threads_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -74,6 +174,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_course_member: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "course_member"
