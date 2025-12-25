@@ -1,39 +1,51 @@
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogIn, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-primary shadow-card">
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-bold text-primary-foreground tracking-tight">
             TherapyGrowth
           </span>
-        </div>
+        </Link>
 
         {/* Desktop Navigation */}
         <div className={`hidden md:flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <a href="#home" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+          <Link to="/" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.home')}
-          </a>
-          <a href="#benefits" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+          </Link>
+          <a href="/#benefits" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.about')}
           </a>
-          <a href="#bots" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+          <a href="/#bots" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.bots')}
           </a>
-          <a href="#signup" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+          <Link to="/contents" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+            {t('nav.contents')}
+          </Link>
+          <a href="/#signup" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.contact')}
           </a>
         </div>
 
-        {/* Language Toggles */}
+        {/* Language Toggles & Auth */}
         <div className="flex items-center gap-2">
           <Button
             variant={language === 'he' ? 'header-active' : 'header-ghost'}
@@ -52,6 +64,28 @@ export function Header() {
             English
           </Button>
 
+          {/* Auth Button */}
+          <div className="hidden md:block">
+            {user ? (
+              <Button
+                variant="header-ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="font-medium"
+              >
+                <LogOut className="w-4 h-4 me-1" />
+                {t('nav.logout')}
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button variant="header-ghost" size="sm" className="font-medium">
+                  <LogIn className="w-4 h-4 me-1" />
+                  {t('nav.login')}
+                </Button>
+              </Link>
+            )}
+          </div>
+
           {/* Mobile Menu Button */}
           <Button
             variant="header-ghost"
@@ -68,34 +102,64 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-primary border-t border-primary-foreground/10 animate-fade-in">
           <div className={`container mx-auto px-4 py-4 flex flex-col gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <a 
-              href="#home" 
+            <Link 
+              to="/" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.home')}
-            </a>
+            </Link>
             <a 
-              href="#benefits" 
+              href="/#benefits" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.about')}
             </a>
             <a 
-              href="#bots" 
+              href="/#bots" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.bots')}
             </a>
+            <Link 
+              to="/contents" 
+              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('nav.contents')}
+            </Link>
             <a 
-              href="#signup" 
+              href="/#signup" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.contact')}
             </a>
+            
+            {/* Mobile Auth */}
+            {user ? (
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10 text-start flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                {t('nav.logout')}
+              </button>
+            ) : (
+              <Link 
+                to="/auth"
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10 flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <LogIn className="w-4 h-4" />
+                {t('nav.login')}
+              </Link>
+            )}
           </div>
         </div>
       )}
