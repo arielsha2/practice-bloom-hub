@@ -1,45 +1,94 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Video, FileText, Presentation, Download, Play } from 'lucide-react';
+import { Video, FileText, Presentation, Download, Play, Youtube, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import type { VideoSource } from '@/lib/videoUtils';
 
 interface ResourceItemProps {
   id: string;
   title: string;
   type: 'video' | 'pdf' | 'ppt';
-  filePath: string;
-  onPlay?: (url: string) => void;
+  filePath: string | null;
+  url?: string | null;
+  source?: VideoSource;
+  onPlay?: (url: string, source: VideoSource) => void;
 }
 
-export function ResourceItem({ id, title, type, filePath, onPlay }: ResourceItemProps) {
+export function ResourceItem({ 
+  id, 
+  title, 
+  type, 
+  filePath, 
+  url, 
+  source = 'file', 
+  onPlay 
+}: ResourceItemProps) {
   const { t, isRTL } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const getIcon = () => {
+    if (type === 'video') {
+      switch (source) {
+        case 'youtube':
+          return <Youtube className="w-5 h-5" />;
+        case 'vimeo':
+          return <Video className="w-5 h-5" />;
+        case 'zoom':
+          return <ExternalLink className="w-5 h-5" />;
+        default:
+          return <Video className="w-5 h-5" />;
+      }
+    }
     switch (type) {
-      case 'video':
-        return <Video className="w-5 h-5" />;
       case 'pdf':
         return <FileText className="w-5 h-5" />;
       case 'ppt':
         return <Presentation className="w-5 h-5" />;
+      default:
+        return <Video className="w-5 h-5" />;
     }
   };
 
   const getTypeLabel = () => {
+    if (type === 'video') {
+      switch (source) {
+        case 'youtube':
+          return 'YouTube';
+        case 'vimeo':
+          return 'Vimeo';
+        case 'zoom':
+          return t('portal.zoomRecording');
+        default:
+          return t('portal.video');
+      }
+    }
     switch (type) {
-      case 'video':
-        return t('portal.video');
       case 'pdf':
         return t('portal.exercise');
       case 'ppt':
         return t('portal.presentation');
+      default:
+        return type;
     }
   };
 
   const handleAction = async () => {
+    // For external video sources (YouTube, Vimeo, Zoom)
+    if (type === 'video' && source !== 'file' && url) {
+      if (onPlay) {
+        onPlay(url, source);
+      }
+      return;
+    }
+
+    // For file-based resources
+    if (!filePath) {
+      toast.error(t('portal.downloadError'));
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.storage
@@ -49,7 +98,7 @@ export function ResourceItem({ id, title, type, filePath, onPlay }: ResourceItem
       if (error) throw error;
 
       if (type === 'video' && onPlay) {
-        onPlay(data.signedUrl);
+        onPlay(data.signedUrl, 'file');
       } else {
         window.open(data.signedUrl, '_blank');
       }

@@ -47,27 +47,33 @@ export type Database = {
       lesson_resources: {
         Row: {
           created_at: string | null
-          file_path: string
+          file_path: string | null
           id: string
           lesson_id: string
+          source: string | null
           title: string
           type: string
+          url: string | null
         }
         Insert: {
           created_at?: string | null
-          file_path: string
+          file_path?: string | null
           id?: string
           lesson_id: string
+          source?: string | null
           title: string
           type: string
+          url?: string | null
         }
         Update: {
           created_at?: string | null
-          file_path?: string
+          file_path?: string | null
           id?: string
           lesson_id?: string
+          source?: string | null
           title?: string
           type?: string
+          url?: string | null
         }
         Relationships: [
           {

@@ -8,11 +8,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { GripVertical, ChevronDown, ChevronUp, Trash2, Video, Presentation, FileText } from 'lucide-react';
 import { LessonResourceManager } from './LessonResourceManager';
 
+import type { VideoSource } from '@/lib/videoUtils';
+
 interface Resource {
   id: string;
   title: string;
   type: string;
-  file_path: string;
+  file_path: string | null;
+  url: string | null;
+  source: VideoSource;
 }
 
 interface SortableLessonCardProps {

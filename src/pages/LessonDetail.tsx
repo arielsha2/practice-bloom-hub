@@ -10,9 +10,9 @@ import { ResourceItem } from '@/components/portal/ResourceItem';
 import { VideoPlayer } from '@/components/portal/VideoPlayer';
 import { QASection } from '@/components/portal/QASection';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowRight, ArrowLeft, Video, FileText, MessageCircle } from 'lucide-react';
+import type { VideoSource } from '@/lib/videoUtils';
 
 interface Lesson {
   id: string;
@@ -24,7 +24,9 @@ interface Resource {
   id: string;
   title: string;
   type: 'video' | 'pdf' | 'ppt';
-  file_path: string;
+  file_path: string | null;
+  url: string | null;
+  source: VideoSource;
 }
 
 export default function LessonDetail() {
@@ -35,7 +37,7 @@ export default function LessonDetail() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoPlayer, setVideoPlayer] = useState<{ url: string; source: VideoSource } | null>(null);
 
   useEffect(() => {
     if (hasAccess && id) {
@@ -65,13 +67,18 @@ export default function LessonDetail() {
       if (resourcesError) throw resourcesError;
       setResources((resourcesData || []).map(r => ({
         ...r,
-        type: r.type as 'video' | 'pdf' | 'ppt'
+        type: r.type as 'video' | 'pdf' | 'ppt',
+        source: (r.source as VideoSource) || 'file',
       })));
     } catch (error) {
       console.error('Error fetching lesson:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePlayVideo = (url: string, source: VideoSource) => {
+    setVideoPlayer({ url, source });
   };
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
@@ -99,7 +106,13 @@ export default function LessonDetail() {
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
-      {videoUrl && <VideoPlayer url={videoUrl} onClose={() => setVideoUrl(null)} />}
+      {videoPlayer && (
+        <VideoPlayer 
+          url={videoPlayer.url} 
+          source={videoPlayer.source} 
+          onClose={() => setVideoPlayer(null)} 
+        />
+      )}
       
       <main className="container mx-auto px-4 pt-24 pb-12">
         <Link to="/portal">
@@ -156,7 +169,9 @@ export default function LessonDetail() {
                         title={resource.title}
                         type={resource.type}
                         filePath={resource.file_path}
-                        onPlay={setVideoUrl}
+                        url={resource.url}
+                        source={resource.source}
+                        onPlay={handlePlayVideo}
                       />
                     ))}
                   </div>
@@ -177,6 +192,8 @@ export default function LessonDetail() {
                         title={resource.title}
                         type={resource.type}
                         filePath={resource.file_path}
+                        url={resource.url}
+                        source={resource.source}
                       />
                     ))}
                   </div>
