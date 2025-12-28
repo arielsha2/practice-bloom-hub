@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Video, Presentation, FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
+import { Video, Presentation, FileText, Plus, Trash2, Download, Eye, Youtube, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { ResourceUploadDialog } from './ResourceUploadDialog';
+import type { VideoSource } from '@/lib/videoUtils';
 
 interface Resource {
   id: string;
   title: string;
   type: string;
-  file_path: string;
+  file_path: string | null;
+  url: string | null;
+  source: VideoSource;
 }
 
 interface LessonResourceManagerProps {
@@ -39,13 +42,15 @@ export function LessonResourceManager({
 
     setDeletingId(resource.id);
     try {
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('course-materials')
-        .remove([resource.file_path]);
+      // Delete from storage only if it's a file-based resource
+      if (resource.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from('course-materials')
+          .remove([resource.file_path]);
 
-      if (storageError) {
-        console.error('Storage delete error:', storageError);
+        if (storageError) {
+          console.error('Storage delete error:', storageError);
+        }
       }
 
       // Delete from database
@@ -67,6 +72,18 @@ export function LessonResourceManager({
   };
 
   const handleView = async (resource: Resource) => {
+    // For external video sources, open URL directly
+    if (resource.url && resource.source !== 'file') {
+      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // For file-based resources, get signed URL
+    if (!resource.file_path) {
+      toast.error(t('portal.downloadError'));
+      return;
+    }
+
     try {
       const { data, error } = await supabase.storage
         .from('course-materials')
@@ -77,6 +94,32 @@ export function LessonResourceManager({
     } catch (error) {
       console.error('Error getting signed URL:', error);
       toast.error(t('portal.downloadError'));
+    }
+  };
+
+  const getVideoSourceIcon = (source: VideoSource) => {
+    switch (source) {
+      case 'youtube':
+        return <Youtube className="w-3 h-3" />;
+      case 'zoom':
+        return <ExternalLink className="w-3 h-3" />;
+      case 'vimeo':
+        return <Video className="w-3 h-3" />;
+      default:
+        return null;
+    }
+  };
+
+  const getVideoSourceLabel = (source: VideoSource) => {
+    switch (source) {
+      case 'youtube':
+        return 'YouTube';
+      case 'vimeo':
+        return 'Vimeo';
+      case 'zoom':
+        return 'Zoom';
+      default:
+        return '';
     }
   };
 
@@ -119,6 +162,12 @@ export function LessonResourceManager({
               key={resource.id}
               className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm"
             >
+              {type === 'video' && resource.source !== 'file' && (
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  {getVideoSourceIcon(resource.source)}
+                  <span className="text-xs">{getVideoSourceLabel(resource.source)}</span>
+                </span>
+              )}
               <span className="truncate max-w-[150px]">{resource.title}</span>
               <div className="flex items-center gap-1">
                 <Button

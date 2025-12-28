@@ -38,7 +38,9 @@ interface Resource {
   id: string;
   title: string;
   type: string;
-  file_path: string;
+  file_path: string | null;
+  url: string | null;
+  source: 'file' | 'youtube' | 'vimeo' | 'zoom';
   lesson_id: string;
 }
 
@@ -79,7 +81,12 @@ export default function PortalAdmin() {
       if (resourcesRes.error) throw resourcesRes.error;
 
       setLessons(lessonsRes.data || []);
-      setResources(resourcesRes.data || []);
+      setResources((resourcesRes.data || []).map(r => ({
+        ...r,
+        source: ((r as any).source as Resource['source']) || 'file',
+        url: (r as any).url || null,
+        file_path: r.file_path || null,
+      })));
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
