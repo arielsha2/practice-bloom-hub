@@ -1,4 +1,4 @@
-import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ const botData = [
   { key: 'content', icon: PenTool },
 ];
 
-function AIAssistantsContent() {
+const AIAssistants = () => {
   const { t, isRTL } = useLanguage();
 
   return (
@@ -72,14 +72,6 @@ function AIAssistantsContent() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-const AIAssistants = () => {
-  return (
-    <LanguageProvider>
-      <AIAssistantsContent />
-    </LanguageProvider>
   );
 };
 
