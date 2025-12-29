@@ -1,4 +1,4 @@
-import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Hero } from '@/components/landing/Hero';
 import { Benefits } from '@/components/landing/Benefits';
@@ -6,7 +6,7 @@ import { BotsTeaser } from '@/components/landing/BotsTeaser';
 import { CTABanner } from '@/components/landing/CTABanner';
 import { Footer } from '@/components/landing/Footer';
 
-function LandingContent() {
+const Index = () => {
   const { isRTL } = useLanguage();
 
   return (
@@ -20,14 +20,6 @@ function LandingContent() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-const Index = () => {
-  return (
-    <LanguageProvider>
-      <LandingContent />
-    </LanguageProvider>
   );
 };
 
