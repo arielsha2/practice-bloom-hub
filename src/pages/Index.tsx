@@ -2,8 +2,8 @@ import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Hero } from '@/components/landing/Hero';
 import { Benefits } from '@/components/landing/Benefits';
-import { Bots } from '@/components/landing/Bots';
-import { SignupForm } from '@/components/landing/SignupForm';
+import { BotsTeaser } from '@/components/landing/BotsTeaser';
+import { CTABanner } from '@/components/landing/CTABanner';
 import { Footer } from '@/components/landing/Footer';
 
 function LandingContent() {
@@ -15,8 +15,8 @@ function LandingContent() {
       <main>
         <Hero />
         <Benefits />
-        <Bots />
-        <SignupForm />
+        <BotsTeaser />
+        <CTABanner />
       </main>
       <Footer />
     </div>
