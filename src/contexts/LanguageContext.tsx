@@ -48,6 +48,12 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.content.title": "Content Creator Bot",
     "bots.content.desc": "Generate authentic content ideas that showcase your expertise and attract clients",
     "bots.cta": "Try Now",
+    "bots.teaser": "Want to discover our digital assistants?",
+    "bots.teaserLink": "Learn more",
+
+    // CTA
+    "cta.title": "Ready to grow your practice authentically?",
+    "cta.button": "Discover if it's right for me",
 
     // Form
     "form.title": "Get Free Marketing Resources",
@@ -215,6 +221,12 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.content.title": "בוט יצירת תוכן",
     "bots.content.desc": "הפיקו רעיונות תוכן אותנטיים שמציגים את המומחיות שלכם ומושכים לקוחות",
     "bots.cta": "נסו עכשיו",
+    "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
+    "bots.teaserLink": "למידע נוסף",
+
+    // CTA
+    "cta.title": "מוכנים לצמוח בפרקטיקה באופן אותנטי?",
+    "cta.button": "לגלות אם זה מתאים לי",
 
     // Form
     "form.title": "קבלו חומרי שיווק בחינם",

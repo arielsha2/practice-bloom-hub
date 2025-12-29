@@ -13,40 +13,23 @@ export function Benefits() {
   ];
 
   return (
-    <section id="benefits" className="py-24 bg-background">
+    <section id="benefits" className="py-16 bg-background">
       <div className="container mx-auto px-4">
-        {/* Section header */}
-        <div className={`text-center max-w-3xl mx-auto mb-16 ${isRTL ? 'text-right md:text-center' : ''}`}>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">
-            {t('benefits.title')}
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            {t('benefits.subtitle')}
-          </p>
-        </div>
-
-        {/* Benefits grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className={`flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
               <div
                 key={benefit.key}
-                className={`group bg-card rounded-xl p-8 border border-border transition-all duration-200 hover:shadow-card animate-fade-in ${isRTL ? 'text-right' : ''}`}
+                className={`flex items-center gap-3 animate-fade-in ${isRTL ? 'flex-row-reverse' : ''}`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-6">
-                  <Icon className="w-6 h-6 text-primary-foreground" />
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
-
-                {/* Content */}
-                <h3 className="text-xl font-semibold text-foreground mb-3">
+                <span className="text-foreground font-medium">
                   {t(`benefits.${benefit.key}.title`)}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {t(`benefits.${benefit.key}.desc`)}
-                </p>
+                </span>
               </div>
             );
           })}

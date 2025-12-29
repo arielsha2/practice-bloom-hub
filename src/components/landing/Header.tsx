@@ -26,26 +26,20 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation - Simplified to 4 links */}
         <div className={`hidden md:flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Link to="/" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.home')}
           </Link>
-          <a href="/#benefits" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
-            {t('nav.about')}
-          </a>
-          <a href="/#bots" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
+          <Link to="/ai-assistants" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.bots')}
-          </a>
+          </Link>
           <Link to="/contents" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.contents')}
           </Link>
           <Link to="/portal" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.portal')}
           </Link>
-          <a href="/#signup" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
-            {t('nav.contact')}
-          </a>
         </div>
 
         {/* Language Toggles & Auth */}
@@ -101,7 +95,7 @@ export function Header() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Simplified */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-primary border-t border-primary-foreground/10 animate-fade-in">
           <div className={`container mx-auto px-4 py-4 flex flex-col gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -112,20 +106,13 @@ export function Header() {
             >
               {t('nav.home')}
             </Link>
-            <a 
-              href="/#benefits" 
-              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {t('nav.about')}
-            </a>
-            <a 
-              href="/#bots" 
+            <Link 
+              to="/ai-assistants" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.bots')}
-            </a>
+            </Link>
             <Link 
               to="/contents" 
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
@@ -140,13 +127,6 @@ export function Header() {
             >
               {t('nav.portal')}
             </Link>
-            <a 
-              href="/#signup" 
-              className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {t('nav.contact')}
-            </a>
             
             {/* Mobile Auth */}
             {user ? (

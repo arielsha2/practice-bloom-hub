@@ -11,7 +11,7 @@ export function Hero() {
       id="home" 
       className="min-h-screen flex items-center justify-center pt-16 bg-secondary"
     >
-      <div className={`container mx-auto px-4 py-20 ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className={`container mx-auto px-4 py-32 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div className="max-w-3xl mx-auto text-center">
           {/* Badge */}
           <div 

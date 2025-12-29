@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import StudentPortal from "./pages/StudentPortal";
 import LessonDetail from "./pages/LessonDetail";
 import PortalAdmin from "./pages/PortalAdmin";
+import AIAssistants from "./pages/AIAssistants";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/contents" element={<Contents />} />
               <Route path="/contents/:id" element={<ContentDetail />} />
               <Route path="/auth" element={<Auth />} />
