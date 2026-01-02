@@ -10,7 +10,7 @@ export function CTABanner() {
     <section className="py-20 bg-primary/5">
       <div className="container mx-auto px-4">
         <div className={`text-center max-w-2xl mx-auto ${isRTL ? 'text-right md:text-center' : ''}`}>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
+          <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground mb-6 tracking-wide">
             {t('cta.title')}
           </h2>
           <Button 

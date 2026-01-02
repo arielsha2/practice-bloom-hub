@@ -24,16 +24,16 @@
     --primary: 195 45% 25%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Light Gray */
-    --secondary: 210 20% 97%;
+    /* Secondary: Warm off-white */
+    --secondary: 40 20% 97%;
     --secondary-foreground: 210 25% 20%;
 
     /* Muted tones */
     --muted: 210 15% 94%;
     --muted-foreground: 210 10% 45%;
 
-    /* Accent: Gold/Amber - used sparingly for CTAs */
-    --accent: 38 80% 50%;
+    /* Accent: Soft warm amber - calmer CTAs */
+    --accent: 38 55% 52%;
     --accent-foreground: 210 25% 12%;
 
     --destructive: 0 84% 60%;
@@ -48,14 +48,14 @@
     /* Custom tokens */
     --teal: 195 45% 25%;
     --teal-light: 195 35% 40%;
-    --gold: 38 80% 50%;
-    --gold-dark: 38 85% 42%;
+    --gold: 38 55% 52%;
+    --gold-dark: 38 60% 45%;
     --charcoal: 210 25% 15%;
 
-    /* Shadows - subtle and professional */
-    --shadow-soft: 0 2px 8px -2px hsl(210 25% 15% / 0.08);
-    --shadow-card: 0 4px 16px -4px hsl(210 25% 15% / 0.1);
-    --shadow-elevated: 0 8px 30px -8px hsl(210 25% 15% / 0.12);
+    /* Shadows - very soft and calming */
+    --shadow-soft: 0 2px 8px -2px hsl(210 25% 15% / 0.05);
+    --shadow-card: 0 4px 16px -4px hsl(210 25% 15% / 0.07);
+    --shadow-elevated: 0 8px 30px -8px hsl(210 25% 15% / 0.09);
 
     /* Sidebar */
     --sidebar-background: 195 45% 25%;
@@ -119,8 +119,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
 }
 

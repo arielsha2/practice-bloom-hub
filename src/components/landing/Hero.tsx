@@ -25,7 +25,7 @@ export function Hero() {
 
           {/* Main heading */}
           <h1 
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-fade-in tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-serif font-medium text-foreground mb-6 leading-tight animate-fade-in tracking-wide"
             style={{ animationDelay: '0.2s' }}
           >
             {t('hero.title')}
