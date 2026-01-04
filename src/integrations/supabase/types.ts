@@ -263,7 +263,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      qa_threads_safe: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          created_at: string | null
+          id: string | null
+          is_my_question: boolean | null
+          is_public: boolean | null
+          lesson_id: string | null
+          question: string | null
+          user_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_my_question?: never
+          is_public?: boolean | null
+          lesson_id?: string | null
+          question?: string | null
+          user_id?: never
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_my_question?: never
+          is_public?: boolean | null
+          lesson_id?: string | null
+          question?: string | null
+          user_id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_threads_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
