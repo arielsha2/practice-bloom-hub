@@ -243,6 +243,54 @@ export type Database = {
           },
         ]
       }
+      user_lesson_progress: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_position_seconds: number | null
+          last_watched_at: string | null
+          lesson_id: string
+          user_id: string
+          video_id: string | null
+          watched: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_position_seconds?: number | null
+          last_watched_at?: string | null
+          lesson_id: string
+          user_id: string
+          video_id?: string | null
+          watched?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_position_seconds?: number | null
+          last_watched_at?: string | null
+          lesson_id?: string
+          user_id?: string
+          video_id?: string | null
+          watched?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_lesson_progress_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "media_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string

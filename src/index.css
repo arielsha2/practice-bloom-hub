@@ -9,8 +9,8 @@
 
 @layer base {
   :root {
-    /* Clean white background */
-    --background: 0 0% 100%;
+    /* Clean warm white background */
+    --background: 40 30% 99%;
     --foreground: 210 25% 15%;
 
     /* Card surfaces */
