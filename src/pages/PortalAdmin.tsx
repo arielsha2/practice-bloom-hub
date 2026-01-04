@@ -24,7 +24,7 @@ import { AdminQAList } from '@/components/portal/admin/AdminQAList';
 import { SortableLessonCard } from '@/components/portal/admin/SortableLessonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, ArrowLeft, MessageCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, MessageCircle, FolderOpen } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -34,14 +34,19 @@ interface Lesson {
   order_index: number;
 }
 
-interface Resource {
+interface MediaLink {
   id: string;
-  title: string;
-  type: string;
-  file_path: string | null;
-  url: string | null;
-  source: 'file' | 'youtube' | 'vimeo' | 'zoom';
+  media_id: string;
   lesson_id: string;
+  display_order: number;
+  media: {
+    id: string;
+    title: string;
+    media_kind: string;
+    file_path: string | null;
+    url: string | null;
+    source: string;
+  };
 }
 
 export default function PortalAdmin() {
@@ -49,7 +54,7 @@ export default function PortalAdmin() {
   const { loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [mediaLinks, setMediaLinks] = useState<MediaLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const sensors = useSensors(
@@ -67,26 +72,28 @@ export default function PortalAdmin() {
 
   const fetchData = async () => {
     try {
-      const [lessonsRes, resourcesRes] = await Promise.all([
+      const [lessonsRes, mediaLinksRes] = await Promise.all([
         supabase
           .from('lessons')
           .select('id, title, order_index')
           .order('order_index', { ascending: true }),
         supabase
-          .from('lesson_resources')
-          .select('id, title, type, file_path, lesson_id'),
+          .from('lesson_media_links')
+          .select(`
+            id,
+            media_id,
+            lesson_id,
+            display_order,
+            media:media_library(id, title, media_kind, file_path, url, source)
+          `)
+          .order('display_order', { ascending: true }),
       ]);
 
       if (lessonsRes.error) throw lessonsRes.error;
-      if (resourcesRes.error) throw resourcesRes.error;
+      if (mediaLinksRes.error) throw mediaLinksRes.error;
 
       setLessons(lessonsRes.data || []);
-      setResources((resourcesRes.data || []).map(r => ({
-        ...r,
-        source: ((r as any).source as Resource['source']) || 'file',
-        url: (r as any).url || null,
-        file_path: r.file_path || null,
-      })));
+      setMediaLinks((mediaLinksRes.data || []) as unknown as MediaLink[]);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -135,16 +142,33 @@ export default function PortalAdmin() {
     if (!confirm(t('contents.admin.deleteWarning'))) return;
 
     try {
-      // Get resources for this lesson to delete from storage
-      const lessonResources = resources.filter((r) => r.lesson_id === lessonId);
+      // Get media links for this lesson to find files to delete from storage
+      const lessonMediaLinks = mediaLinks.filter((ml) => ml.lesson_id === lessonId);
+      
+      // Get unique file paths that need to be deleted
+      // Note: We only delete files that are not used by other lessons
+      const mediaIdsInLesson = new Set(lessonMediaLinks.map((ml) => ml.media_id));
+      const mediaIdsInOtherLessons = new Set(
+        mediaLinks
+          .filter((ml) => ml.lesson_id !== lessonId)
+          .map((ml) => ml.media_id)
+      );
+      
+      const mediaOnlyInThisLesson = lessonMediaLinks.filter(
+        (ml) => !mediaIdsInOtherLessons.has(ml.media_id) && ml.media?.file_path
+      );
 
-      // Delete files from storage
-      if (lessonResources.length > 0) {
-        const filePaths = lessonResources.map((r) => r.file_path);
-        await supabase.storage.from('course-materials').remove(filePaths);
+      // Delete files from storage (only if not used elsewhere)
+      if (mediaOnlyInThisLesson.length > 0) {
+        const filePaths = mediaOnlyInThisLesson
+          .map((ml) => ml.media?.file_path)
+          .filter(Boolean) as string[];
+        if (filePaths.length > 0) {
+          await supabase.storage.from('course-materials').remove(filePaths);
+        }
       }
 
-      // Delete lesson (cascade will delete resources)
+      // Delete lesson (cascade will delete links, but not the media itself)
       const { error } = await supabase
         .from('lessons')
         .delete()
@@ -160,7 +184,18 @@ export default function PortalAdmin() {
   };
 
   const getResourcesForLesson = (lessonId: string) => {
-    return resources.filter((r) => r.lesson_id === lessonId);
+    return mediaLinks
+      .filter((ml) => ml.lesson_id === lessonId)
+      .map((ml) => ({
+        id: ml.id,
+        media_id: ml.media_id,
+        title: ml.media?.title || '',
+        type: ml.media?.media_kind || '',
+        file_path: ml.media?.file_path || null,
+        url: ml.media?.url || null,
+        source: (ml.media?.source || 'file') as 'file' | 'youtube' | 'vimeo' | 'zoom',
+        display_order: ml.display_order,
+      }));
   };
 
   // Count unanswered questions
@@ -203,12 +238,20 @@ export default function PortalAdmin() {
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <Link to="/portal">
-          <Button variant="ghost" className="mb-4">
-            <BackIcon className="w-4 h-4 me-1" />
-            {t('portal.back')}
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/portal">
+            <Button variant="ghost">
+              <BackIcon className="w-4 h-4 me-1" />
+              {t('portal.back')}
+            </Button>
+          </Link>
+          <Link to="/media-library">
+            <Button variant="outline">
+              <FolderOpen className="w-4 h-4 me-2" />
+              {t('media.title')}
+            </Button>
+          </Link>
+        </div>
 
         <h1 className="text-3xl font-bold mb-8">{t('portal.admin.title')}</h1>
 

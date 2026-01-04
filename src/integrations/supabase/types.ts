@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_media_links: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          lesson_id: string
+          media_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          lesson_id: string
+          media_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          lesson_id?: string
+          media_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_media_links_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_media_links_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_resources: {
         Row: {
           created_at: string | null
@@ -106,6 +145,60 @@ export type Database = {
           id?: string
           order_index?: number | null
           title?: string
+        }
+        Relationships: []
+      }
+      media_library: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          external_id: string | null
+          file_format: string | null
+          file_path: string | null
+          id: string
+          intended_use: Database["public"]["Enums"]["intended_use"] | null
+          media_kind: Database["public"]["Enums"]["media_kind"]
+          source: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
+          file_format?: string | null
+          file_path?: string | null
+          id?: string
+          intended_use?: Database["public"]["Enums"]["intended_use"] | null
+          media_kind: Database["public"]["Enums"]["media_kind"]
+          source?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
+          file_format?: string | null
+          file_path?: string | null
+          id?: string
+          intended_use?: Database["public"]["Enums"]["intended_use"] | null
+          media_kind?: Database["public"]["Enums"]["media_kind"]
+          source?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string | null
         }
         Relationships: []
       }
@@ -184,6 +277,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "course_member"
+      intended_use: "intro" | "practice" | "deepening" | "reference" | "bonus"
+      media_kind: "video" | "document" | "presentation" | "audio" | "link"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -312,6 +407,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "course_member"],
+      intended_use: ["intro", "practice", "deepening", "reference", "bonus"],
+      media_kind: ["video", "document", "presentation", "audio", "link"],
     },
   },
 } as const

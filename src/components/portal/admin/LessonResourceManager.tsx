@@ -2,18 +2,37 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Video, Presentation, FileText, Plus, Trash2, Download, Eye, Youtube, ExternalLink } from 'lucide-react';
+import { Video, Presentation, FileText, Plus, X, Eye, Download, Youtube, ExternalLink, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
-import { ResourceUploadDialog } from './ResourceUploadDialog';
+import { MediaPickerDialog } from './MediaPickerDialog';
 import type { VideoSource } from '@/lib/videoUtils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Resource {
-  id: string;
+  id: string; // This is the link id
+  media_id: string;
   title: string;
-  type: string;
+  type: string; // media_kind
   file_path: string | null;
   url: string | null;
   source: VideoSource;
+  display_order: number;
 }
 
 interface LessonResourceManagerProps {
@@ -22,7 +41,107 @@ interface LessonResourceManagerProps {
   onResourceChange: () => void;
 }
 
-type ResourceType = 'video' | 'ppt' | 'pdf';
+type MediaKindFilter = 'video' | 'document' | 'presentation';
+
+function SortableResourceItem({
+  resource,
+  onRemove,
+  onView,
+  isRemoving,
+}: {
+  resource: Resource;
+  onRemove: () => void;
+  onView: () => void;
+  isRemoving: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: resource.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const getSourceIcon = (source: VideoSource) => {
+    switch (source) {
+      case 'youtube':
+        return <Youtube className="w-3 h-3" />;
+      case 'zoom':
+        return <ExternalLink className="w-3 h-3" />;
+      case 'vimeo':
+        return <Video className="w-3 h-3" />;
+      default:
+        return null;
+    }
+  };
+
+  const getSourceLabel = (source: VideoSource) => {
+    switch (source) {
+      case 'youtube':
+        return 'YouTube';
+      case 'vimeo':
+        return 'Vimeo';
+      case 'zoom':
+        return 'Zoom';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm ${
+        isDragging ? 'ring-2 ring-primary' : ''
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none p-0.5 hover:bg-muted rounded"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </button>
+
+      {resource.type === 'video' && resource.source !== 'file' && (
+        <span className="flex items-center gap-1 text-muted-foreground">
+          {getSourceIcon(resource.source)}
+          <span className="text-xs">{getSourceLabel(resource.source)}</span>
+        </span>
+      )}
+      
+      <span className="truncate max-w-[150px] flex-1">{resource.title}</span>
+      
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onView}
+        >
+          {resource.type === 'video' ? (
+            <Eye className="w-3 h-3" />
+          ) : (
+            <Download className="w-3 h-3" />
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-destructive hover:text-destructive"
+          onClick={onRemove}
+          disabled={isRemoving}
+        >
+          <X className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function LessonResourceManager({
   lessonId,
@@ -30,44 +149,38 @@ export function LessonResourceManager({
   onResourceChange,
 }: LessonResourceManagerProps) {
   const { t, isRTL } = useLanguage();
-  const [uploadType, setUploadType] = useState<ResourceType | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pickerFilter, setPickerFilter] = useState<MediaKindFilter | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const videoResources = resources.filter((r) => r.type === 'video');
-  const pptResources = resources.filter((r) => r.type === 'ppt');
-  const pdfResources = resources.filter((r) => r.type === 'pdf');
+  const presentationResources = resources.filter((r) => r.type === 'presentation');
+  const documentResources = resources.filter((r) => r.type === 'document');
 
-  const handleDelete = async (resource: Resource) => {
-    if (!confirm(t('contents.admin.deleteWarning'))) return;
-
-    setDeletingId(resource.id);
+  const handleRemoveFromLesson = async (resource: Resource) => {
+    setRemovingId(resource.id);
     try {
-      // Delete from storage only if it's a file-based resource
-      if (resource.file_path) {
-        const { error: storageError } = await supabase.storage
-          .from('course-materials')
-          .remove([resource.file_path]);
-
-        if (storageError) {
-          console.error('Storage delete error:', storageError);
-        }
-      }
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('lesson_resources')
+      // Remove the link, not the media itself
+      const { error } = await supabase
+        .from('lesson_media_links')
         .delete()
         .eq('id', resource.id);
 
-      if (dbError) throw dbError;
+      if (error) throw error;
 
-      toast.success(t('portal.admin.resourceDeleted'));
+      toast.success(t('media.removedFromLesson'));
       onResourceChange();
     } catch (error) {
-      console.error('Error deleting resource:', error);
+      console.error('Error removing resource from lesson:', error);
       toast.error(t('portal.admin.deleteError'));
     } finally {
-      setDeletingId(null);
+      setRemovingId(null);
     }
   };
 
@@ -97,29 +210,35 @@ export function LessonResourceManager({
     }
   };
 
-  const getVideoSourceIcon = (source: VideoSource) => {
-    switch (source) {
-      case 'youtube':
-        return <Youtube className="w-3 h-3" />;
-      case 'zoom':
-        return <ExternalLink className="w-3 h-3" />;
-      case 'vimeo':
-        return <Video className="w-3 h-3" />;
-      default:
-        return null;
-    }
-  };
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const getVideoSourceLabel = (source: VideoSource) => {
-    switch (source) {
-      case 'youtube':
-        return 'YouTube';
-      case 'vimeo':
-        return 'Vimeo';
-      case 'zoom':
-        return 'Zoom';
-      default:
-        return '';
+    if (over && active.id !== over.id) {
+      const allSorted = [...resources].sort((a, b) => a.display_order - b.display_order);
+      const oldIndex = allSorted.findIndex((r) => r.id === active.id);
+      const newIndex = allSorted.findIndex((r) => r.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(allSorted, oldIndex, newIndex);
+
+      // Update display_order in database
+      try {
+        for (let i = 0; i < reordered.length; i++) {
+          const { error } = await supabase
+            .from('lesson_media_links')
+            .update({ display_order: i })
+            .eq('id', reordered[i].id);
+
+          if (error) throw error;
+        }
+
+        toast.success(t('portal.admin.orderUpdated'));
+        onResourceChange();
+      } catch (error) {
+        console.error('Error updating order:', error);
+        toast.error(t('portal.admin.deleteError'));
+      }
     }
   };
 
@@ -129,7 +248,7 @@ export function LessonResourceManager({
     label,
     items,
   }: {
-    type: ResourceType;
+    type: MediaKindFilter;
     icon: typeof Video;
     label: string;
     items: Resource[];
@@ -143,7 +262,7 @@ export function LessonResourceManager({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setUploadType(type)}
+          onClick={() => setPickerFilter(type)}
           className="h-7 text-xs"
         >
           <Plus className="w-3 h-3 me-1" />
@@ -156,48 +275,33 @@ export function LessonResourceManager({
           {t('portal.admin.noResources')}
         </p>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {items.map((resource) => (
-            <div
-              key={resource.id}
-              className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm"
-            >
-              {type === 'video' && resource.source !== 'file' && (
-                <span className="flex items-center gap-1 text-muted-foreground">
-                  {getVideoSourceIcon(resource.source)}
-                  <span className="text-xs">{getVideoSourceLabel(resource.source)}</span>
-                </span>
-              )}
-              <span className="truncate max-w-[150px]">{resource.title}</span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleView(resource)}
-                >
-                  {type === 'video' ? (
-                    <Eye className="w-3 h-3" />
-                  ) : (
-                    <Download className="w-3 h-3" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
-                  onClick={() => handleDelete(resource)}
-                  disabled={deletingId === resource.id}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={items.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-2">
+              {items.map((resource) => (
+                <SortableResourceItem
+                  key={resource.id}
+                  resource={resource}
+                  onRemove={() => handleRemoveFromLesson(resource)}
+                  onView={() => handleView(resource)}
+                  isRemoving={removingId === resource.id}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
+
+  const existingMediaIds = resources.map((r) => r.media_id);
 
   return (
     <div className="space-y-4 border-t pt-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -208,25 +312,25 @@ export function LessonResourceManager({
         items={videoResources}
       />
       <ResourceSection
-        type="ppt"
+        type="presentation"
         icon={Presentation}
         label={t('portal.admin.presentations')}
-        items={pptResources}
+        items={presentationResources}
       />
       <ResourceSection
-        type="pdf"
+        type="document"
         icon={FileText}
         label={t('portal.admin.worksheets')}
-        items={pdfResources}
+        items={documentResources}
       />
 
-      <ResourceUploadDialog
-        open={uploadType !== null}
-        onOpenChange={(open) => !open && setUploadType(null)}
+      <MediaPickerDialog
+        open={pickerFilter !== null}
+        onOpenChange={(open) => !open && setPickerFilter(null)}
         lessonId={lessonId}
-        type={uploadType || 'video'}
-        onUploaded={() => {
-          setUploadType(null);
+        existingMediaIds={existingMediaIds}
+        onMediaAdded={() => {
+          setPickerFilter(null);
           onResourceChange();
         }}
       />
