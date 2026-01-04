@@ -17,7 +17,8 @@ interface QAThread {
   is_public: boolean;
   created_at: string;
   answered_at: string | null;
-  user_id: string;
+  user_id: string | null;
+  is_my_question: boolean;
 }
 
 interface QASectionProps {
@@ -39,8 +40,9 @@ export function QASection({ lessonId }: QASectionProps) {
 
   const fetchQuestions = async () => {
     try {
+      // Use the secure view that hides user_id from other students
       let query = supabase
-        .from('qa_threads')
+        .from('qa_threads_safe')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -51,7 +53,7 @@ export function QASection({ lessonId }: QASectionProps) {
       const { data, error } = await query;
 
       if (error) throw error;
-      setQuestions(data || []);
+      setQuestions((data || []) as QAThread[]);
     } catch (error) {
       console.error('Error fetching questions:', error);
     } finally {
@@ -136,7 +138,7 @@ export function QASection({ lessonId }: QASectionProps) {
           </div>
         ) : (
           questions.map((q) => (
-            <Card key={q.id} className={q.user_id === user?.id ? 'border-primary/30' : ''}>
+            <Card key={q.id} className={q.is_my_question ? 'border-primary/30' : ''}>
               <CardContent className="pt-4">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
