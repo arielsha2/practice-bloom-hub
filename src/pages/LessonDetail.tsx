@@ -23,10 +23,11 @@ interface Lesson {
 interface Resource {
   id: string;
   title: string;
-  type: 'video' | 'pdf' | 'ppt';
+  type: 'video' | 'document' | 'presentation' | 'audio' | 'link';
   file_path: string | null;
   url: string | null;
   source: VideoSource;
+  display_order: number;
 }
 
 export default function LessonDetail() {
@@ -57,19 +58,33 @@ export default function LessonDetail() {
       if (lessonError) throw lessonError;
       setLesson(lessonData);
 
-      // Fetch resources
-      const { data: resourcesData, error: resourcesError } = await supabase
-        .from('lesson_resources')
-        .select('*')
+      // Fetch resources via lesson_media_links with media_library join
+      const { data: linksData, error: linksError } = await supabase
+        .from('lesson_media_links')
+        .select(`
+          id,
+          display_order,
+          media:media_library(id, title, media_kind, file_path, url, source)
+        `)
         .eq('lesson_id', id)
-        .order('created_at', { ascending: true });
+        .order('display_order', { ascending: true });
 
-      if (resourcesError) throw resourcesError;
-      setResources((resourcesData || []).map(r => ({
-        ...r,
-        type: r.type as 'video' | 'pdf' | 'ppt',
-        source: (r.source as VideoSource) || 'file',
-      })));
+      if (linksError) throw linksError;
+
+      // Transform to Resource format
+      const transformedResources: Resource[] = (linksData || [])
+        .filter((link: any) => link.media)
+        .map((link: any) => ({
+          id: link.id,
+          title: link.media.title,
+          type: link.media.media_kind as Resource['type'],
+          file_path: link.media.file_path,
+          url: link.media.url,
+          source: (link.media.source as VideoSource) || 'file',
+          display_order: link.display_order,
+        }));
+
+      setResources(transformedResources);
     } catch (error) {
       console.error('Error fetching lesson:', error);
     } finally {
@@ -167,7 +182,7 @@ export default function LessonDetail() {
                         key={resource.id}
                         id={resource.id}
                         title={resource.title}
-                        type={resource.type}
+                        type="video"
                         filePath={resource.file_path}
                         url={resource.url}
                         source={resource.source}
@@ -190,7 +205,7 @@ export default function LessonDetail() {
                         key={resource.id}
                         id={resource.id}
                         title={resource.title}
-                        type={resource.type}
+                        type={resource.type === 'document' ? 'pdf' : resource.type === 'presentation' ? 'ppt' : 'pdf'}
                         filePath={resource.file_path}
                         url={resource.url}
                         source={resource.source}

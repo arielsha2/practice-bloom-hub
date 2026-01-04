@@ -12,11 +12,13 @@ import type { VideoSource } from '@/lib/videoUtils';
 
 interface Resource {
   id: string;
+  media_id: string;
   title: string;
   type: string;
   file_path: string | null;
   url: string | null;
   source: VideoSource;
+  display_order: number;
 }
 
 interface SortableLessonCardProps {
@@ -56,10 +58,10 @@ export function SortableLessonCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Count resources by type
+  // Count resources by type (media_kind)
   const videoCount = resources.filter((r) => r.type === 'video').length;
-  const pptCount = resources.filter((r) => r.type === 'ppt').length;
-  const pdfCount = resources.filter((r) => r.type === 'pdf').length;
+  const presentationCount = resources.filter((r) => r.type === 'presentation').length;
+  const documentCount = resources.filter((r) => r.type === 'document').length;
 
   return (
     <Card
@@ -97,16 +99,16 @@ export function SortableLessonCard({
                   {videoCount}
                 </span>
               )}
-              {pptCount > 0 && (
+              {presentationCount > 0 && (
                 <span className="flex items-center gap-1">
                   <Presentation className="w-4 h-4" />
-                  {pptCount}
+                  {presentationCount}
                 </span>
               )}
-              {pdfCount > 0 && (
+              {documentCount > 0 && (
                 <span className="flex items-center gap-1">
                   <FileText className="w-4 h-4" />
-                  {pdfCount}
+                  {documentCount}
                 </span>
               )}
             </div>
