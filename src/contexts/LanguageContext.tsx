@@ -151,7 +151,9 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.backToLogin": "Back to login",
     "auth.preparingReset": "Preparing password reset...",
     "auth.sessionError": "Error setting up session. Please try the reset link again.",
-
+    "auth.resetLinkInvalidTitle": "Link Invalid or Expired",
+    "auth.resetLinkInvalidBody": "This reset link is no longer valid. It may have expired or already been used.",
+    "auth.requestNewResetLink": "Request New Link",
     // Portal
     "portal.title": "Student Portal",
     "portal.noAccess": "Access Denied",
@@ -403,6 +405,9 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.backToLogin": "חזרה להתחברות",
     "auth.preparingReset": "מכינים את האפשרות לאיפוס סיסמה...",
     "auth.sessionError": "שגיאה בהגדרת הסשן. נסו את הקישור שוב.",
+    "auth.resetLinkInvalidTitle": "הקישור לא תקין או פג תוקף",
+    "auth.resetLinkInvalidBody": "קישור האיפוס כבר לא בתוקף. ייתכן שפג תוקפו או שכבר נוצל.",
+    "auth.requestNewResetLink": "בקש קישור חדש",
 
     // Portal
     "portal.title": "אזור התלמידים",
