@@ -1,7 +1,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -26,7 +26,7 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop Navigation - Simplified to 4 links */}
+        {/* Desktop Navigation */}
         <div className={`hidden md:flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Link to="/" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.home')}
@@ -40,6 +40,12 @@ export function Header() {
           <Link to="/portal" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10">
             {t('nav.portal')}
           </Link>
+          {user && (
+            <Link to="/dashboard" className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10 flex items-center gap-1">
+              <LayoutDashboard className="w-4 h-4" />
+              {t('nav.dashboard')}
+            </Link>
+          )}
         </div>
 
         {/* Language Toggles & Auth */}
@@ -127,6 +133,16 @@ export function Header() {
             >
               {t('nav.portal')}
             </Link>
+            {user && (
+              <Link 
+                to="/dashboard" 
+                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10 flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                {t('nav.dashboard')}
+              </Link>
+            )}
             
             {/* Mobile Auth */}
             {user ? (

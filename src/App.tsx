@@ -15,6 +15,7 @@ import LessonDetail from "./pages/LessonDetail";
 import PortalAdmin from "./pages/PortalAdmin";
 import MediaLibrary from "./pages/MediaLibrary";
 import AIAssistants from "./pages/AIAssistants";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/portal/lesson/:id" element={<LessonDetail />} />
               <Route path="/portal/admin" element={<PortalAdmin />} />
               <Route path="/media-library" element={<MediaLibrary />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
