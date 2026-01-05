@@ -1,5 +1,5 @@
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Heart } from 'lucide-react';
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Heart } from "lucide-react";
 
 export function Footer() {
   const { t, isRTL } = useLanguage();
@@ -8,25 +8,25 @@ export function Footer() {
   return (
     <footer className="py-10 bg-primary text-primary-foreground">
       <div className="container mx-auto px-4">
-        <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+        <div
+          className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? "md:flex-row-reverse" : ""}`}
+        >
           {/* Logo & tagline */}
-          <div className={`text-center ${isRTL ? 'md:text-right' : 'md:text-left'}`}>
+          <div className={`text-center ${isRTL ? "md:text-right" : "md:text-left"}`}>
             <span className="text-xl font-bold">TherapyGrowth</span>
-            <p className="text-primary-foreground/70 mt-1 text-sm">
-              {t('footer.tagline')}
-            </p>
+            <p className="text-primary-foreground/70 mt-1 text-sm">{t("footer.tagline")}</p>
           </div>
 
           {/* Made with love */}
           <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
-            <span>{isRTL ? 'נבנה עם' : 'Made with'}</span>
+            <span>{isRTL ? "נבנה עם" : "Made with"}</span>
             <Heart className="w-4 h-4 text-accent fill-accent" />
-            <span>{isRTL ? 'למטפלים' : 'for therapists'}</span>
+            <span>{isRTL ? "למטפלים" : "for therapists"}</span>
           </div>
 
           {/* Copyright */}
           <p className="text-primary-foreground/60 text-sm">
-            © {currentYear} TherapyGrowth. {t('footer.rights')}.
+            © {currentYear} Turning Point. {t("footer.rights")}.
           </p>
         </div>
       </div>
