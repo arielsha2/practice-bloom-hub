@@ -149,6 +149,8 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.passwordUpdated": "Password updated successfully!",
     "auth.passwordMismatch": "Passwords don't match",
     "auth.backToLogin": "Back to login",
+    "auth.preparingReset": "Preparing password reset...",
+    "auth.sessionError": "Error setting up session. Please try the reset link again.",
 
     // Portal
     "portal.title": "Student Portal",
@@ -399,6 +401,8 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.passwordUpdated": "הסיסמה עודכנה בהצלחה!",
     "auth.passwordMismatch": "הסיסמאות לא תואמות",
     "auth.backToLogin": "חזרה להתחברות",
+    "auth.preparingReset": "מכינים את האפשרות לאיפוס סיסמה...",
+    "auth.sessionError": "שגיאה בהגדרת הסשן. נסו את הקישור שוב.",
 
     // Portal
     "portal.title": "אזור התלמידים",
