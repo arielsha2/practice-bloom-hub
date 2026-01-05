@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -9,29 +9,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
+import { CheckCircle } from 'lucide-react';
+
+type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
 
 export default function Auth() {
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signIn, signUp, loading, resetPasswordForEmail, updatePassword } = useAuth();
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  // Check for reset mode from URL
+  useEffect(() => {
+    if (searchParams.get('mode') === 'reset') {
+      setMode('reset');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
-    if (user && !loading) {
+    // Don't redirect if in reset mode (user needs to set new password)
+    if (user && !loading && mode !== 'reset') {
       navigate('/');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      if (isLogin) {
+      if (mode === 'login') {
         const { error } = await signIn(email, password);
         if (error) {
           toast.error(error.message);
@@ -39,7 +53,7 @@ export default function Auth() {
           toast.success(t('auth.loginSuccess'));
           navigate('/');
         }
-      } else {
+      } else if (mode === 'signup') {
         const { error } = await signUp(email, password);
         if (error) {
           if (error.message.includes('already registered')) {
@@ -50,9 +64,56 @@ export default function Auth() {
         } else {
           toast.success(t('auth.signupSuccess'));
         }
+      } else if (mode === 'forgot') {
+        const { error } = await resetPasswordForEmail(email);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          setResetSent(true);
+        }
+      } else if (mode === 'reset') {
+        if (password !== confirmPassword) {
+          toast.error(t('auth.passwordMismatch'));
+          return;
+        }
+        const { error } = await updatePassword(password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success(t('auth.passwordUpdated'));
+          navigate('/');
+        }
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'login': return t('auth.loginTitle');
+      case 'signup': return t('auth.signupTitle');
+      case 'forgot': return t('auth.forgotTitle');
+      case 'reset': return t('auth.resetTitle');
+    }
+  };
+
+  const getSubtitle = () => {
+    switch (mode) {
+      case 'login': return t('auth.loginSubtitle');
+      case 'signup': return t('auth.signupSubtitle');
+      case 'forgot': return t('auth.forgotSubtitle');
+      case 'reset': return t('auth.resetSubtitle');
+    }
+  };
+
+  const getButtonText = () => {
+    if (isSubmitting) return t('auth.loading');
+    switch (mode) {
+      case 'login': return t('auth.loginButton');
+      case 'signup': return t('auth.signupButton');
+      case 'forgot': return t('auth.sendResetLink');
+      case 'reset': return t('auth.updatePassword');
     }
   };
 
@@ -72,62 +133,129 @@ export default function Auth() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-foreground">
-              {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
+              {getTitle()}
             </CardTitle>
             <CardDescription>
-              {isLogin ? t('auth.loginSubtitle') : t('auth.signupSubtitle')}
+              {getSubtitle()}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('auth.email')}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  required
-                />
+            {mode === 'forgot' && resetSent ? (
+              <div className="text-center space-y-4">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+                <p className="text-muted-foreground">{t('auth.resetSent')}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setResetSent(false);
+                  }}
+                  className="text-sm text-primary hover:underline transition-colors"
+                >
+                  {t('auth.backToLogin')}
+                </button>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('auth.password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
-              </div>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Email field - shown for login, signup, forgot */}
+                  {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t('auth.email')}</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="email@example.com"
+                        required
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Password field - shown for login, signup, reset */}
+                  {(mode === 'login' || mode === 'signup' || mode === 'reset') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="password">
+                        {mode === 'reset' ? t('auth.newPassword') : t('auth.password')}
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  )}
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting 
-                  ? t('auth.loading') 
-                  : isLogin 
-                    ? t('auth.loginButton') 
-                    : t('auth.signupButton')
-                }
-              </Button>
-            </form>
+                  {/* Confirm password - only for reset mode */}
+                  {mode === 'reset' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  )}
 
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
-              </button>
-            </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {getButtonText()}
+                  </Button>
+                </form>
+
+                {/* Forgot password link - only on login */}
+                {mode === 'login' && (
+                  <div className="mt-4 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setMode('forgot')}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {t('auth.forgotPassword')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Toggle between login/signup */}
+                {(mode === 'login' || mode === 'signup') && (
+                  <div className="mt-6 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Back to login - for forgot and reset modes */}
+                {(mode === 'forgot' || mode === 'reset') && (
+                  <div className="mt-6 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setMode('login')}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {t('auth.backToLogin')}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       </main>
