@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
 
@@ -25,13 +26,41 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
-  // Check for reset mode from URL
+  // Handle password reset tokens from URL hash
   useEffect(() => {
-    if (searchParams.get('mode') === 'reset') {
-      setMode('reset');
-    }
-  }, [searchParams]);
+    const handleRecoveryToken = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+        
+        if (accessToken && refreshToken && type === 'recovery') {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (!error) {
+            setMode('reset');
+            setSessionReady(true);
+            window.history.replaceState({}, '', '/auth?mode=reset');
+          } else {
+            toast.error(t('auth.sessionError') || 'Session error');
+          }
+        }
+      } else if (searchParams.get('mode') === 'reset') {
+        // If already in reset mode without hash, session should already exist
+        setMode('reset');
+        setSessionReady(true);
+      }
+    };
+    
+    handleRecoveryToken();
+  }, [searchParams, t]);
 
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
@@ -173,12 +202,10 @@ export default function Auth() {
                     </div>
                   )}
                   
-                  {/* Password field - shown for login, signup, reset */}
-                  {(mode === 'login' || mode === 'signup' || mode === 'reset') && (
+                  {/* Password field - shown for login, signup */}
+                  {(mode === 'login' || mode === 'signup') && (
                     <div className="space-y-2">
-                      <Label htmlFor="password">
-                        {mode === 'reset' ? t('auth.newPassword') : t('auth.password')}
-                      </Label>
+                      <Label htmlFor="password">{t('auth.password')}</Label>
                       <Input
                         id="password"
                         type="password"
@@ -191,29 +218,54 @@ export default function Auth() {
                     </div>
                   )}
 
-                  {/* Confirm password - only for reset mode */}
-                  {mode === 'reset' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        minLength={6}
-                      />
+                  {/* Reset mode - wait for session */}
+                  {mode === 'reset' && !sessionReady && (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                      <p className="mt-2 text-muted-foreground">{t('auth.preparingReset')}</p>
                     </div>
                   )}
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
-                  >
-                    {getButtonText()}
-                  </Button>
+                  {/* Password fields for reset - only when session is ready */}
+                  {mode === 'reset' && sessionReady && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">{t('auth.newPassword')}</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Submit button - hide for reset if session not ready */}
+                  {(mode !== 'reset' || sessionReady) && (
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isSubmitting}
+                    >
+                      {getButtonText()}
+                    </Button>
+                  )}
                 </form>
 
                 {/* Forgot password link - only on login */}
