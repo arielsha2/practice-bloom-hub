@@ -13,6 +13,7 @@ import { CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
+type ResetStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export default function Auth() {
   const { user, signIn, signUp, loading, resetPasswordForEmail, updatePassword } = useAuth();
@@ -26,41 +27,94 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
+  const [resetStatus, setResetStatus] = useState<ResetStatus>('idle');
 
-  // Handle password reset tokens from URL hash
+  // Handle password reset tokens from URL (both hash and query params)
   useEffect(() => {
     const handleRecoveryToken = async () => {
       const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
+      const hashParams = hash ? new URLSearchParams(hash.substring(1)) : null;
+      
+      // Check for error in URL (invalid/expired link)
+      const errorParam = hashParams?.get('error') || searchParams.get('error');
+      const errorDesc = hashParams?.get('error_description') || searchParams.get('error_description');
+      
+      if (errorParam) {
+        console.log('Reset error from URL:', errorParam, errorDesc);
+        setMode('reset');
+        setResetStatus('error');
+        return;
+      }
+
+      // Check for access_token in hash (implicit flow)
+      const accessToken = hashParams?.get('access_token');
+      const refreshToken = hashParams?.get('refresh_token');
+      const type = hashParams?.get('type');
+      
+      if (accessToken && refreshToken && type === 'recovery') {
+        setMode('reset');
+        setResetStatus('loading');
         
-        if (accessToken && refreshToken && type === 'recovery') {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          if (!error) {
-            setMode('reset');
-            setSessionReady(true);
-            window.history.replaceState({}, '', '/auth?mode=reset');
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+        
+        if (error) {
+          console.error('Error setting session:', error);
+          setResetStatus('error');
+        } else {
+          // Verify session was set
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            setResetStatus('ready');
+            navigate('/auth?mode=reset', { replace: true });
           } else {
-            toast.error(t('auth.sessionError') || 'Session error');
+            setResetStatus('error');
           }
         }
-      } else if (searchParams.get('mode') === 'reset') {
-        // If already in reset mode without hash, session should already exist
+        return;
+      }
+
+      // Check for code in query params (PKCE flow)
+      const code = searchParams.get('code');
+      if (code) {
         setMode('reset');
-        setSessionReady(true);
+        setResetStatus('loading');
+        
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          console.error('Error exchanging code:', error);
+          setResetStatus('error');
+        } else {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            setResetStatus('ready');
+            navigate('/auth?mode=reset', { replace: true });
+          } else {
+            setResetStatus('error');
+          }
+        }
+        return;
+      }
+
+      // If mode=reset but no tokens, check if session already exists
+      if (searchParams.get('mode') === 'reset') {
+        setMode('reset');
+        setResetStatus('loading');
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setResetStatus('ready');
+        } else {
+          setResetStatus('error');
+        }
       }
     };
     
     handleRecoveryToken();
-  }, [searchParams, t]);
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
@@ -103,6 +157,13 @@ export default function Auth() {
       } else if (mode === 'reset') {
         if (password !== confirmPassword) {
           toast.error(t('auth.passwordMismatch'));
+          return;
+        }
+        // Verify session exists before attempting password update
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error(t('auth.resetLinkInvalidBody'));
+          setResetStatus('error');
           return;
         }
         const { error } = await updatePassword(password);
@@ -218,16 +279,38 @@ export default function Auth() {
                     </div>
                   )}
 
-                  {/* Reset mode - wait for session */}
-                  {mode === 'reset' && !sessionReady && (
+                  {/* Reset mode - loading state */}
+                  {mode === 'reset' && resetStatus === 'loading' && (
                     <div className="text-center py-4">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
                       <p className="mt-2 text-muted-foreground">{t('auth.preparingReset')}</p>
                     </div>
                   )}
 
+                  {/* Reset mode - error state (invalid/expired link) */}
+                  {mode === 'reset' && resetStatus === 'error' && (
+                    <div className="text-center py-4 space-y-4">
+                      <div className="text-destructive text-4xl">⚠️</div>
+                      <h3 className="font-semibold text-foreground">{t('auth.resetLinkInvalidTitle')}</h3>
+                      <p className="text-muted-foreground text-sm">{t('auth.resetLinkInvalidBody')}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setMode('forgot');
+                          setResetStatus('idle');
+                          setPassword('');
+                          setConfirmPassword('');
+                          navigate('/auth', { replace: true });
+                        }}
+                      >
+                        {t('auth.requestNewResetLink')}
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Password fields for reset - only when session is ready */}
-                  {mode === 'reset' && sessionReady && (
+                  {mode === 'reset' && resetStatus === 'ready' && (
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="password">{t('auth.newPassword')}</Label>
@@ -257,7 +340,7 @@ export default function Auth() {
                   )}
 
                   {/* Submit button - hide for reset if session not ready */}
-                  {(mode !== 'reset' || sessionReady) && (
+                  {(mode !== 'reset' || resetStatus === 'ready') && (
                     <Button 
                       type="submit" 
                       className="w-full" 
