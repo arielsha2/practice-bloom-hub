@@ -33,7 +33,7 @@ export default function Dashboard() {
   const isLoading = authLoading || userStats.isLoading || (isAdmin && adminStats.isLoading);
 
   return (
-    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
