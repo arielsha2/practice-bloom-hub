@@ -45,7 +45,7 @@ export function Header() {
             {t("nav.contents")}
           </Link>
           <Link
-            to="/portal"
+            to={user ? "/dashboard" : "/auth"}
             className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10"
           >
             {t("nav.portal")}
@@ -135,7 +135,7 @@ export function Header() {
               {t("nav.contents")}
             </Link>
             <Link
-              to="/portal"
+              to={user ? "/dashboard" : "/auth"}
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >

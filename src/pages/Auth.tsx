@@ -119,7 +119,7 @@ export default function Auth() {
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
     if (user && !loading && mode !== 'reset') {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [user, loading, navigate, mode]);
 
@@ -134,7 +134,7 @@ export default function Auth() {
           toast.error(error.message);
         } else {
           toast.success(t('auth.loginSuccess'));
-          navigate('/');
+          navigate('/dashboard');
         }
       } else if (mode === 'signup') {
         const { error } = await signUp(email, password);
@@ -171,7 +171,7 @@ export default function Auth() {
           toast.error(error.message);
         } else {
           toast.success(t('auth.passwordUpdated'));
-          navigate('/');
+          navigate('/dashboard');
         }
       }
     } finally {
