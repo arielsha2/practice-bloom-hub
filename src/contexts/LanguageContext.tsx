@@ -377,7 +377,7 @@ const translations: Record<Language, Record<string, string>> = {
     "contents.form.language": "שפה",
 
     // Auth
-    "auth.loginTitle": "ברוכים השבים",
+    "auth.loginTitle": "נקודת המפנה",
     "auth.loginSubtitle": "התחברו לחשבון שלכם",
     "auth.signupTitle": "יצירת חשבון",
     "auth.signupSubtitle": "הצטרפו לקהילת המטפלים שלנו",
