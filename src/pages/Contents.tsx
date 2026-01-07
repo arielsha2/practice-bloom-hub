@@ -64,11 +64,11 @@ export default function Contents() {
     <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      <main className="flex-1 pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
+      <main className="flex-1 pt-16">
+        {/* Hero Header */}
+        <div className="bg-secondary py-16 mb-12">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-serif font-medium text-foreground mb-4">
               {t('contents.title')}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -78,13 +78,17 @@ export default function Contents() {
             {isAdmin && (
               <Button 
                 onClick={() => setShowForm(true)}
-                className="mt-6"
+                variant="cta"
+                className="mt-8"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 {t('contents.admin.add')}
               </Button>
             )}
           </div>
+        </div>
+
+        <div className="container mx-auto px-4 pb-12">
 
           {/* Content Grid */}
           {loading ? (
@@ -98,7 +102,7 @@ export default function Contents() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {contents.map((content) => (
                 <ContentCard key={content.id} content={content} />
               ))}

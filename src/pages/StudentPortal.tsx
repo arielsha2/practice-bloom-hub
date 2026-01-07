@@ -141,18 +141,32 @@ export default function StudentPortal() {
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">{t('portal.title')}</h1>
-          {isAdmin && (
-            <Link to="/portal/admin">
-              <Button variant="outline">
-                <Settings className="w-4 h-4 me-1" />
-                {t('portal.admin.title')}
-              </Button>
-            </Link>
-          )}
+      
+      {/* Hero Header */}
+      <div className="bg-secondary pt-24 pb-12">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-2">
+                {t('portal.title')}
+              </h1>
+              <p className="text-muted-foreground">
+                {isRTL ? 'המשך מהמקום שהפסקת' : 'Continue where you left off'}
+              </p>
+            </div>
+            {isAdmin && (
+              <Link to="/portal/admin">
+                <Button variant="outline" className="shadow-soft">
+                  <Settings className="w-4 h-4 me-2" />
+                  {t('portal.admin.title')}
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
+      </div>
+      
+      <main className="container mx-auto px-4 py-12">
 
         <Tabs defaultValue="lessons" className="space-y-6">
           <TabsList>

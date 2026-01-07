@@ -52,10 +52,10 @@
     --gold-dark: 38 60% 45%;
     --charcoal: 210 25% 15%;
 
-    /* Shadows - very soft and calming */
-    --shadow-soft: 0 2px 8px -2px hsl(210 25% 15% / 0.05);
-    --shadow-card: 0 4px 16px -4px hsl(210 25% 15% / 0.07);
-    --shadow-elevated: 0 8px 30px -8px hsl(210 25% 15% / 0.09);
+    /* Shadows - refined and visible */
+    --shadow-soft: 0 2px 12px -2px hsl(210 25% 15% / 0.1);
+    --shadow-card: 0 4px 24px -4px hsl(210 25% 15% / 0.15);
+    --shadow-elevated: 0 12px 40px -8px hsl(210 25% 15% / 0.18);
 
     /* Sidebar */
     --sidebar-background: 195 45% 25%;

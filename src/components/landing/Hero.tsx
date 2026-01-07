@@ -9,9 +9,16 @@ export function Hero() {
   return (
     <section 
       id="home" 
-      className="min-h-screen flex items-center justify-center pt-16 bg-secondary"
+      className="min-h-screen flex items-center justify-center pt-16 bg-secondary relative overflow-hidden"
     >
-      <div className={`container mx-auto px-4 py-32 ${isRTL ? 'text-right' : 'text-left'}`}>
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full" />
+      </div>
+      
+      <div className={`container mx-auto px-4 py-32 relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div className="max-w-3xl mx-auto text-center">
           {/* Badge */}
           <div 
