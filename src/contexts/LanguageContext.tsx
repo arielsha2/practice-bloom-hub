@@ -273,7 +273,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.about": "אודות",
     "nav.bots": "עוזרי AI",
     "nav.contact": "צור קשר",
-    "nav.contents": "תכנים",
+    "nav.contents": "על שפת הקליניקה",
     "nav.portal": "נקודת המפנה",
     "nav.login": "התחברות",
     "nav.logout": "התנתקות",
