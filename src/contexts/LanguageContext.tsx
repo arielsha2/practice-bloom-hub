@@ -54,6 +54,7 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "Market Your Practice with Authenticity",
     "hero.subtitle": "Build a thriving private practice without anxiety or compromising who you are",
     "hero.cta": "Get Free Resources",
+    "hero.secondary_cta": "See How It Works",
 
     // Benefits
     "benefits.title": "Grow Your Practice, Stay True to Yourself",
@@ -310,6 +311,7 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
     "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
     "hero.cta": "קבלו חומרים בחינם",
+    "hero.secondary_cta": "לראות איך זה עובד",
 
     // Benefits
     "benefits.title": "צמחו בפרקטיקה, הישארו נאמנים לעצמכם",
