@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, User, UserPlus, Mail, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
@@ -215,14 +215,28 @@ export default function Auth() {
     );
   }
 
+  const getModeIcon = () => {
+    switch (mode) {
+      case 'login': return User;
+      case 'signup': return UserPlus;
+      case 'forgot': return Mail;
+      case 'reset': return KeyRound;
+    }
+  };
+
+  const ModeIcon = getModeIcon();
+
   return (
-    <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen flex flex-col bg-secondary ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       <main className="flex-1 flex items-center justify-center pt-24 pb-12 px-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md shadow-card border border-border/50 bg-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-foreground">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <ModeIcon className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl md:text-3xl font-serif font-medium text-foreground">
               {getTitle()}
             </CardTitle>
             <CardDescription>
@@ -343,6 +357,7 @@ export default function Auth() {
                   {(mode !== 'reset' || resetStatus === 'ready') && (
                     <Button 
                       type="submit" 
+                      variant="cta"
                       className="w-full" 
                       disabled={isSubmitting}
                     >

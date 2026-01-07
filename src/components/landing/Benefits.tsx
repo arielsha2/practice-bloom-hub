@@ -13,23 +13,30 @@ export function Benefits() {
   ];
 
   return (
-    <section id="benefits" className="py-16 bg-background">
+    <section id="benefits" className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <div className={`flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+        <div className={`grid md:grid-cols-3 gap-6 max-w-5xl mx-auto ${isRTL ? 'text-right' : ''}`}>
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
               <div
                 key={benefit.key}
-                className={`flex items-center gap-3 animate-fade-in ${isRTL ? 'flex-row-reverse' : ''}`}
+                className={`group bg-card rounded-xl p-6 border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in ${isRTL ? 'text-right' : ''}`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-primary" />
+                <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
+                    <Icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {t(`benefits.${benefit.key}.title`)}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {t(`benefits.${benefit.key}.desc`)}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-foreground font-medium tracking-wide">
-                  {t(`benefits.${benefit.key}.title`)}
-                </span>
               </div>
             );
           })}
