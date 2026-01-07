@@ -56,17 +56,60 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.cta": "Get Free Resources",
     "hero.secondary_cta": "See How It Works",
 
+    // How It Works
+    "howItWorks.label": "The Process",
+    "howItWorks.title": "Your Path to a Thriving Practice",
+    "howItWorks.subtitle": "Four simple steps to transform your clinical practice",
+    "howItWorks.step1.title": "Sign Up",
+    "howItWorks.step1.desc": "Create your account and get instant access to all learning materials",
+    "howItWorks.step2.title": "Learn",
+    "howItWorks.step2.desc": "Watch video lessons and complete practical exercises at your own pace",
+    "howItWorks.step3.title": "Get Support",
+    "howItWorks.step3.desc": "Ask questions and receive personalized guidance from our experts",
+    "howItWorks.step4.title": "Grow",
+    "howItWorks.step4.desc": "Apply what you've learned and watch your practice flourish",
+
     // Benefits
+    "benefits.label": "Why Choose Us",
     "benefits.title": "Grow Your Practice, Stay True to Yourself",
-    "benefits.subtitle":
-      "Our approach helps psychotherapists attract ideal clients while honoring their therapeutic values",
+    "benefits.subtitle": "Our approach helps psychotherapists attract ideal clients while honoring their therapeutic values",
     "benefits.item1.title": "Find Your Niche",
-    "benefits.item1.desc":
-      "Discover what makes your practice unique and attracts clients who truly resonate with your approach",
+    "benefits.item1.desc": "Discover what makes your practice unique and attracts clients who truly resonate with your approach",
     "benefits.item2.title": "Authentic Marketing",
     "benefits.item2.desc": "Learn marketing strategies that feel natural and align with your professional ethics",
     "benefits.item3.title": "Sustainable Growth",
     "benefits.item3.desc": "Build a stable practice with consistent client flow without burnout or overwhelm",
+
+    // Testimonials
+    "testimonials.label": "Success Stories",
+    "testimonials.title": "What Therapists Are Saying",
+    "testimonials.subtitle": "Join hundreds of therapists who transformed their practice",
+    "testimonials.testimonial1.quote": "This course completely changed how I think about marketing my practice. I finally feel confident putting myself out there.",
+    "testimonials.testimonial1.name": "Rachel K.",
+    "testimonials.testimonial1.role": "Clinical Psychologist",
+    "testimonials.testimonial2.quote": "The AI assistants are incredible. They helped me find my niche in just one session.",
+    "testimonials.testimonial2.name": "Michael S.",
+    "testimonials.testimonial2.role": "Marriage & Family Therapist",
+    "testimonials.testimonial3.quote": "I went from 3 clients a week to a full caseload in just 2 months. Highly recommended!",
+    "testimonials.testimonial3.name": "Aliza L.",
+    "testimonials.testimonial3.role": "Art Therapist",
+
+    // Features
+    "features.label": "What's Included",
+    "features.title": "Everything You Need to Succeed",
+    "features.subtitle": "Comprehensive tools and resources designed for busy therapists",
+    "features.videos.title": "Video Lessons",
+    "features.videos.desc": "20+ hours of content",
+    "features.exercises.title": "Practical Exercises",
+    "features.exercises.desc": "Hands-on worksheets",
+    "features.community.title": "Community Access",
+    "features.community.desc": "Connect with peers",
+    "features.ai.title": "AI Assistants",
+    "features.ai.desc": "24/7 guidance",
+    "features.support.title": "Personal Support",
+    "features.support.desc": "Expert Q&A",
+    "features.mobile.title": "Mobile Access",
+    "features.mobile.desc": "Learn anywhere",
 
     // Bots
     "bots.title": "AI Assistants for Therapists",
@@ -83,7 +126,9 @@ const translations: Record<Language, Record<string, string>> = {
 
     // CTA
     "cta.title": "Ready to grow your practice authentically?",
-    "cta.button": "Discover if it's right for me",
+    "cta.subtitle": "Join hundreds of therapists who have transformed their practice with our proven method",
+    "cta.button": "Start Your Journey",
+    "cta.secondaryButton": "Learn More",
 
     // Form
     "form.title": "Get Free Marketing Resources",
@@ -309,11 +354,25 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Hero
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
-    "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
+    "hero.subtitle": "איך ליצור קליניקה שמתאימה לך",
     "hero.cta": "קבלו חומרים בחינם",
     "hero.secondary_cta": "לראות איך זה עובד",
 
+    // How It Works
+    "howItWorks.label": "התהליך",
+    "howItWorks.title": "הדרך שלך לקליניקה משגשגת",
+    "howItWorks.subtitle": "ארבעה צעדים פשוטים לשינוי הקליניקה שלך",
+    "howItWorks.step1.title": "הרשמה",
+    "howItWorks.step1.desc": "צרו חשבון וקבלו גישה מיידית לכל חומרי הלמידה",
+    "howItWorks.step2.title": "למידה",
+    "howItWorks.step2.desc": "צפו בשיעורי וידאו והשלימו תרגילים מעשיים בקצב שלכם",
+    "howItWorks.step3.title": "תמיכה",
+    "howItWorks.step3.desc": "שאלו שאלות וקבלו הדרכה אישית מהמומחים שלנו",
+    "howItWorks.step4.title": "צמיחה",
+    "howItWorks.step4.desc": "יישמו את מה שלמדתם וראו את הקליניקה משגשגת",
+
     // Benefits
+    "benefits.label": "למה לבחור בנו",
     "benefits.title": "צמחו בפרקטיקה, הישארו נאמנים לעצמכם",
     "benefits.subtitle": "הגישה שלנו עוזרת לפסיכותרפיסטים למשוך לקוחות אידיאליים תוך כיבוד הערכים הטיפוליים שלהם",
     "benefits.item1.title": "מצאו את הנישה שלכם",
@@ -322,6 +381,37 @@ const translations: Record<Language, Record<string, string>> = {
     "benefits.item2.desc": "למדו אסטרטגיות שיווק שמרגישות טבעיות ומתאימות לאתיקה המקצועית שלכם",
     "benefits.item3.title": "צמיחה בת-קיימא",
     "benefits.item3.desc": "בנו פרקטיקה יציבה עם זרימת לקוחות עקבית ללא שחיקה או עומס",
+
+    // Testimonials
+    "testimonials.label": "סיפורי הצלחה",
+    "testimonials.title": "מה מטפלים אומרים",
+    "testimonials.subtitle": "הצטרפו למאות מטפלים ששינו את הקליניקה שלהם",
+    "testimonials.testimonial1.quote": "הקורס הזה שינה לחלוטין את הדרך שבה אני חושבת על שיווק הקליניקה שלי. סוף סוף אני מרגישה בטוחה לחשוף את עצמי.",
+    "testimonials.testimonial1.name": "רחל כ.",
+    "testimonials.testimonial1.role": "פסיכולוגית קלינית",
+    "testimonials.testimonial2.quote": "העוזרים הדיגיטליים מדהימים. הם עזרו לי למצוא את הנישה שלי בשיחה אחת.",
+    "testimonials.testimonial2.name": "מיכאל ש.",
+    "testimonials.testimonial2.role": "מטפל זוגי ומשפחתי",
+    "testimonials.testimonial3.quote": "עברתי מ-3 מטופלים בשבוע לקליניקה מלאה תוך חודשיים. ממליצה בחום!",
+    "testimonials.testimonial3.name": "אליזה ל.",
+    "testimonials.testimonial3.role": "מטפלת באמנות",
+
+    // Features
+    "features.label": "מה כלול",
+    "features.title": "כל מה שצריך להצלחה",
+    "features.subtitle": "כלים ומשאבים מקיפים שתוכננו למטפלים עסוקים",
+    "features.videos.title": "שיעורי וידאו",
+    "features.videos.desc": "20+ שעות תוכן",
+    "features.exercises.title": "תרגילים מעשיים",
+    "features.exercises.desc": "דפי עבודה מעשיים",
+    "features.community.title": "גישה לקהילה",
+    "features.community.desc": "התחברו עם עמיתים",
+    "features.ai.title": "עוזרי AI",
+    "features.ai.desc": "הדרכה 24/7",
+    "features.support.title": "תמיכה אישית",
+    "features.support.desc": "שאלות ותשובות מומחים",
+    "features.mobile.title": "גישה לנייד",
+    "features.mobile.desc": "למדו בכל מקום",
 
     // Bots
     "bots.title": "עוזרי AI למטפלים",
@@ -338,7 +428,9 @@ const translations: Record<Language, Record<string, string>> = {
 
     // CTA
     "cta.title": "מוכנים לצמוח בפרקטיקה באופן אותנטי?",
-    "cta.button": "לגלות אם זה מתאים לי",
+    "cta.subtitle": "הצטרפו למאות מטפלים ששינו את הקליניקה שלהם עם השיטה המוכחת שלנו",
+    "cta.button": "התחילו את המסע",
+    "cta.secondaryButton": "למידע נוסף",
 
     // Form
     "form.title": "קבלו חומרי שיווק בחינם",
