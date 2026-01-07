@@ -11,11 +11,24 @@ export function Hero() {
       id="home" 
       className="min-h-screen flex items-center justify-center pt-16 bg-secondary relative overflow-hidden"
     >
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      {/* Animated floating decorative elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Large blurred circles */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float-slower" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full" />
+        
+        {/* Small floating dots */}
+        <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-primary/20 rounded-full animate-float-dot" />
+        <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-accent/30 rounded-full animate-float-dot-reverse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/3 left-1/3 w-4 h-4 bg-primary/15 rounded-full animate-float-dot" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-2/3 right-1/3 w-2 h-2 bg-accent/25 rounded-full animate-float-dot-reverse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute bottom-1/4 right-1/5 w-3 h-3 bg-primary/20 rounded-full animate-float-dot" style={{ animationDelay: '1.5s' }} />
+        
+        {/* Subtle geometric shapes */}
+        <div className="absolute top-[15%] right-[20%] w-16 h-16 border border-primary/10 rounded-lg rotate-12 animate-spin-very-slow" />
+        <div className="absolute bottom-[20%] left-[15%] w-12 h-12 border border-accent/15 rounded-full animate-pulse-slow" />
+        <div className="absolute top-[60%] right-[10%] w-8 h-8 border border-primary/10 rotate-45 animate-float-dot" style={{ animationDelay: '3s' }} />
       </div>
       
       <div className={`container mx-auto px-4 py-32 relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
