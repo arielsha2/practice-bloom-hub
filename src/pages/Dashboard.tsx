@@ -9,6 +9,8 @@ import { ProgressOverview } from '@/components/dashboard/ProgressOverview';
 import { NextStepCard } from '@/components/dashboard/NextStepCard';
 import { LessonsGrid } from '@/components/dashboard/LessonsGrid';
 import { AdminStats } from '@/components/dashboard/AdminStats';
+import { AdminQuickActions } from '@/components/dashboard/AdminQuickActions';
+import { UnansweredQuestions } from '@/components/dashboard/UnansweredQuestions';
 import { LessonProgressChart } from '@/components/dashboard/LessonProgressChart';
 import { RecentUsersTable } from '@/components/dashboard/RecentUsersTable';
 import { Separator } from '@/components/ui/separator';
@@ -90,6 +92,10 @@ export default function Dashboard() {
                       activeUsers={adminStats.activeUsers}
                       completionPercent={adminStats.overallCompletionPercent}
                     />
+
+                    <AdminQuickActions />
+
+                    <UnansweredQuestions />
 
                     <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
                       <LessonProgressChart lessonStats={adminStats.lessonStats} />

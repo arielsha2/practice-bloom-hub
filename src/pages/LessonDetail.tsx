@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsCourseMember } from '@/hooks/useIsCourseMember';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { PortalAccessDenied } from '@/components/portal/PortalAccessDenied';
 import { LessonSidebar } from '@/components/portal/LessonSidebar';
+import { LessonAdminControls } from '@/components/portal/admin/LessonAdminControls';
 import { VideoPlayerInline } from '@/components/portal/VideoPlayerInline';
 import { ExpandableDescription } from '@/components/portal/ExpandableDescription';
 import { ResourceItem } from '@/components/portal/ResourceItem';
@@ -39,6 +41,7 @@ export default function LessonDetail() {
   const { t, isRTL } = useLanguage();
   const { loading: authLoading } = useAuth();
   const { hasAccess, isLoading: accessLoading } = useIsCourseMember();
+  const { isAdmin } = useIsAdmin();
   const { isLessonWatched, markAsWatched, updatePosition, isLoading: progressLoading } = useUserProgress();
   
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
@@ -199,6 +202,14 @@ export default function LessonDetail() {
             </div>
           ) : (
             <div className="max-w-4xl mx-auto space-y-6">
+              {/* Admin Controls */}
+              {isAdmin && currentLesson && (
+                <LessonAdminControls
+                  lesson={currentLesson}
+                  onUpdate={() => fetchLessonData(currentLesson.id)}
+                />
+              )}
+
               {/* Video Player */}
               {videoUrl ? (
                 <VideoPlayerInline
