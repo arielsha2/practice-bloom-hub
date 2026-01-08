@@ -45,7 +45,7 @@ export function Header() {
             {t("nav.contents")}
           </Link>
           <Link
-            to={user ? "/dashboard" : "/auth"}
+            to="/portal"
             className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10"
           >
             {t("nav.portal")}
@@ -69,7 +69,7 @@ export function Header() {
             onClick={() => setLanguage("he")}
             className="font-medium"
           >
-            עברית
+            ע
           </Button>
           <Button
             variant={language === "en" ? "header-active" : "header-ghost"}
@@ -135,7 +135,7 @@ export function Header() {
               {t("nav.contents")}
             </Link>
             <Link
-              to={user ? "/dashboard" : "/auth"}
+              to="/portal"
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
               onClick={() => setMobileMenuOpen(false)}
             >
