@@ -231,6 +231,11 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.zoomRecording": "Zoom Recording",
     "portal.zoomRecordingMessage": "Zoom recordings open in a new window",
     "portal.invalidVideoUrl": "Invalid video URL",
+    "portal.video.zoomTitle": "Video Recording",
+    "portal.video.zoomDescription": "This recording opens in a separate window for optimal viewing",
+    "portal.video.watchButton": "Watch Recording",
+    "portal.admin.zoomWarning": "Zoom links open outside the system. For embedded playback, upload an MP4 file or use YouTube/Vimeo.",
+    "portal.admin.recommended": "Recommended",
 
     // Media Library
     "media.title": "Media Library",
@@ -486,6 +491,11 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.zoomRecording": "הקלטת Zoom",
     "portal.zoomRecordingMessage": "הקלטות Zoom נפתחות בחלון חדש",
     "portal.invalidVideoUrl": "קישור וידאו לא תקין",
+    "portal.video.zoomTitle": "הקלטת הרצאה",
+    "portal.video.zoomDescription": "הקלטה זו נפתחת בחלון נפרד לחוויית צפייה מיטבית",
+    "portal.video.watchButton": "צפייה בהקלטה",
+    "portal.admin.zoomWarning": "קישורי Zoom נפתחים מחוץ למערכת. להטמעה מלאה, העלי קובץ וידאו או השתמשי ב-YouTube/Vimeo.",
+    "portal.admin.recommended": "מומלץ",
 
     // Media Library
     "media.title": "ספריית מדיה",
