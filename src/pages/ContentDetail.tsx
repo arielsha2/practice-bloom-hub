@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { ContentForm } from '@/components/contents/ContentForm';
+import { CategoryBadge } from '@/components/contents/CategoryBadge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Edit, Trash2 } from 'lucide-react';
 import {
@@ -26,13 +27,23 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
+interface Category {
+  id: string;
+  name_he: string;
+  name_en: string;
+  slug: string;
+}
+
 interface Content {
   id: string;
   title: string;
   content: string;
   language: string;
   published_at: string;
-  is_published: boolean;
+  status: string;
+  category_id: string | null;
+  excerpt: string | null;
+  featured_image_url: string | null;
 }
 
 export default function ContentDetail() {
@@ -42,6 +53,7 @@ export default function ContentDetail() {
   const { isAdmin } = useIsAdmin();
   
   const [content, setContent] = useState<Content | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -61,6 +73,19 @@ export default function ContentDetail() {
         navigate('/contents');
       } else {
         setContent(data);
+        
+        // Fetch category if exists
+        if (data.category_id) {
+          const { data: catData } = await supabase
+            .from('content_categories')
+            .select('*')
+            .eq('id', data.category_id)
+            .single();
+          
+          if (catData) {
+            setCategory(catData);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -97,6 +122,7 @@ export default function ContentDetail() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString(isRTL ? 'he-IL' : 'en-US', {
       year: 'numeric',
       month: 'long',
@@ -133,15 +159,30 @@ export default function ContentDetail() {
             {t('contents.back')}
           </Link>
 
+          {/* Featured Image */}
+          {content.featured_image_url && (
+            <div className="aspect-video overflow-hidden rounded-lg mb-8">
+              <img 
+                src={content.featured_image_url} 
+                alt={content.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           {/* Content */}
           <article>
             <header className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                {category && <CategoryBadge category={category} />}
+                <time className="text-muted-foreground">
+                  {formatDate(content.published_at)}
+                </time>
+              </div>
+              
               <h1 className="text-4xl font-bold text-foreground mb-4">
                 {content.title}
               </h1>
-              <time className="text-muted-foreground">
-                {formatDate(content.published_at)}
-              </time>
 
               {/* Admin Actions */}
               {isAdmin && (
@@ -151,7 +192,7 @@ export default function ContentDetail() {
                     size="sm"
                     onClick={() => setShowEditForm(true)}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="w-4 h-4 me-2" />
                     {t('contents.admin.edit')}
                   </Button>
                   <Button
@@ -159,27 +200,25 @@ export default function ContentDetail() {
                     size="sm"
                     onClick={() => setShowDeleteDialog(true)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 me-2" />
                     {t('contents.admin.delete')}
                   </Button>
                 </div>
               )}
             </header>
 
-            <div className="prose prose-lg max-w-none text-foreground">
-              {content.content.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-4">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            {/* Rich text content - rendered as HTML */}
+            <div 
+              className="prose prose-lg max-w-none text-foreground"
+              dangerouslySetInnerHTML={{ __html: content.content }}
+            />
           </article>
         </div>
       </main>
 
       {/* Edit Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('contents.admin.edit')}</DialogTitle>
           </DialogHeader>
