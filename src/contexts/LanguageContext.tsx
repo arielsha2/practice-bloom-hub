@@ -234,7 +234,8 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.video.zoomTitle": "Video Recording",
     "portal.video.zoomDescription": "This recording opens in a separate window for optimal viewing",
     "portal.video.watchButton": "Watch Recording",
-    "portal.admin.zoomWarning": "Zoom links open outside the system. For embedded playback, upload an MP4 file or use YouTube/Vimeo.",
+    "portal.admin.zoomWarning":
+      "Zoom links open outside the system. For embedded playback, upload an MP4 file or use YouTube/Vimeo.",
     "portal.admin.recommended": "Recommended",
 
     // Media Library
@@ -315,7 +316,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
     "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
-    "hero.cta": "קבלו חומרים בחינם",
+    "hero.cta": "הצטרפו לקהילת על שפת הקליניקה",
 
     // Benefits
     "benefits.title": "צמחו בפרקטיקה, הישארו נאמנים לעצמכם",
@@ -345,12 +346,12 @@ const translations: Record<Language, Record<string, string>> = {
     "cta.button": "לגלות אם זה מתאים לי",
 
     // Form
-    "form.title": "קבלו חומרי שיווק בחינם",
-    "form.subtitle": "הצטרפו לקהילה שלנו וקבלו כלים מעשיים לצמיחה אותנטית בפרקטיקה",
+    "form.title": "איך מבססים קליניקה מצליחה",
+    "form.subtitle": "הצטרפו לקהילה שלנו וקבלו כלים עיוניים, מעשיים,ורגשיים להצמיח את הקליניקה שלכם",
     "form.name": "שם מלא",
     "form.email": "כתובת אימייל",
     "form.phone": "מספר נייד",
-    "form.submit": "קבלו חומרים בחינם",
+    "form.submit": "אני רוצה להצטרף",
     "form.privacy": "אנחנו מכבדים את הפרטיות שלכם. ניתן לבטל בכל עת.",
 
     // Footer
@@ -494,7 +495,8 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.video.zoomTitle": "הקלטת הרצאה",
     "portal.video.zoomDescription": "הקלטה זו נפתחת בחלון נפרד לחוויית צפייה מיטבית",
     "portal.video.watchButton": "צפייה בהקלטה",
-    "portal.admin.zoomWarning": "קישורי Zoom נפתחים מחוץ למערכת. להטמעה מלאה, העלי קובץ וידאו או השתמשי ב-YouTube/Vimeo.",
+    "portal.admin.zoomWarning":
+      "קישורי Zoom נפתחים מחוץ למערכת. להטמעה מלאה, העלי קובץ וידאו או השתמשי ב-YouTube/Vimeo.",
     "portal.admin.recommended": "מומלץ",
 
     // Media Library
