@@ -69,7 +69,7 @@ export function Header() {
             onClick={() => setLanguage("he")}
             className="font-medium"
           >
-            ע
+            עב
           </Button>
           <Button
             variant={language === "en" ? "header-active" : "header-ghost"}
