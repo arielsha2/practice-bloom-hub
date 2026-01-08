@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -29,6 +31,7 @@ import {
   Youtube,
   CheckCircle2,
   XCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateVideoUrl, type VideoSource } from '@/lib/videoUtils';
@@ -305,6 +308,9 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                   <Label htmlFor="mode-file" className="flex items-center gap-1 cursor-pointer">
                     <Upload className="w-4 h-4" />
                     {t('portal.admin.uploadFile')}
+                    <Badge variant="secondary" className="text-xs">
+                      {t('portal.admin.recommended')}
+                    </Badge>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -329,6 +335,16 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                   </Label>
                 </div>
               </RadioGroup>
+
+              {/* Zoom warning */}
+              {videoMode === 'zoom' && (
+                <Alert variant="default" className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
+                    {t('portal.admin.zoomWarning')}
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           )}
 
