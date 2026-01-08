@@ -105,14 +105,6 @@ export function Hero() {
                   className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                 />
               </Button>
-              <Button
-                variant="outline"
-                size="xl"
-                className="group border-2"
-                onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                {t("hero.secondary_cta")}
-              </Button>
             </motion.div>
           </div>
 
