@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+לקהילת המטפלים import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type Language = "en" | "he";
 
@@ -342,7 +342,7 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.teaserLink": "למידע נוסף",
 
     // CTA
-    "cta.title": "מוכנים לצמוח בפרקטיקה באופן אותנטי?",
+    "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
     "cta.button": "לגלות אם זה מתאים לי",
 
     // Form
