@@ -158,7 +158,7 @@ export function Hero() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {isRTL ? "קהילה תומכת" : "Supportive Community"}
+                      {isRTL ? "לטפל במטופלים, בשעות ומחיר שמתאים לך" : "Supportive Community"}
                     </p>
                     <p className="text-xs text-muted-foreground">{isRTL ? "מטפלים כמוך" : "Therapists like you"}</p>
                   </div>
@@ -182,7 +182,9 @@ export function Hero() {
                     <Award className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{isRTL ? "תעודת סיום" : "Certificate"}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {isRTL ? "להרגיש נוח וראוי בכיסא המטפל" : "Certificate"}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {isRTL ? "הכרה מקצועית" : "Professional recognition"}
                     </p>
