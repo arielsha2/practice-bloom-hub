@@ -14,35 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_categories: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          name_en: string
+          name_he: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          name_en: string
+          name_he: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          name_en?: string
+          name_he?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       contents: {
         Row: {
+          category_id: string | null
           content: string
           created_at: string | null
+          excerpt: string | null
+          featured_image_url: string | null
           id: string
           is_published: boolean | null
           language: string
+          metadata: Json | null
+          original_id: string | null
           published_at: string | null
+          source: string | null
+          status: string | null
           title: string
         }
         Insert: {
+          category_id?: string | null
           content: string
           created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
           id?: string
           is_published?: boolean | null
           language?: string
+          metadata?: Json | null
+          original_id?: string | null
           published_at?: string | null
+          source?: string | null
+          status?: string | null
           title: string
         }
         Update: {
+          category_id?: string | null
           content?: string
           created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
           id?: string
           is_published?: boolean | null
           language?: string
+          metadata?: Json | null
+          original_id?: string | null
           published_at?: string | null
+          source?: string | null
+          status?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_media_links: {
         Row: {
