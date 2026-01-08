@@ -77,7 +77,7 @@ export function Header() {
             onClick={() => setLanguage("en")}
             className="font-medium"
           >
-            English
+            En
           </Button>
 
           {/* Auth Button */}

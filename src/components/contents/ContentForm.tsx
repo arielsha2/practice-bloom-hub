@@ -93,7 +93,7 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="he">ע</SelectItem>
-            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="en">En</SelectItem>
           </SelectContent>
         </Select>
       </div>
