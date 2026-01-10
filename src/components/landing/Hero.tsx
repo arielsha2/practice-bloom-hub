@@ -134,8 +134,12 @@ export function Hero() {
                     <BookOpen className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{isRTL ? "שיעורי וידאו" : "Video Lessons"}</p>
-                    <p className="text-xs text-muted-foreground">{isRTL ? "20+ שעות תוכן" : "20+ hours of content"}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {isRTL ? "לייצר יציבות בקליניקה" : "Sense of stability"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? "לדעת מהיכן יגיע המטופל הבא" : "To know where the next client would come from"}
+                    </p>
                   </div>
                 </div>
               </motion.div>
