@@ -5,6 +5,11 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Mail, User, Phone, Gift } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+const emailSchema = z.string().email();
+const phoneSchema = z.string().regex(/^[0-9+\-\s()]+$/, 'מספר טלפון לא תקין');
 
 export function SignupForm() {
   const { t, isRTL } = useLanguage();
@@ -17,13 +22,38 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email
+    if (!emailSchema.safeParse(formData.email).success) {
+      toast.error(isRTL ? 'כתובת אימייל לא תקינה' : 'Invalid email address');
+      return;
+    }
+    
+    // Validate phone
+    if (!phoneSchema.safeParse(formData.phone).success) {
+      toast.error(isRTL ? 'מספר טלפון לא תקין - יש להזין מספרים בלבד' : 'Invalid phone number - digits only');
+      return;
+    }
+    
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await supabase
+      .from('leads')
+      .insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        source: 'landing_page'
+      });
+
+    if (error) {
+      console.error('Error saving lead:', error);
+      toast.error(isRTL ? 'אירעה שגיאה. נסו שוב מאוחר יותר.' : 'An error occurred. Please try again later.');
+    } else {
+      toast.success(isRTL ? 'תודה! הפרטים התקבלו בהצלחה.' : 'Thank you! Your details have been received.');
+      setFormData({ name: '', email: '', phone: '' });
+    }
     
-    toast.success(isRTL ? 'תודה! החומרים יישלחו אליך בקרוב' : 'Thank you! Your materials will be sent shortly');
-    setFormData({ name: '', email: '', phone: '' });
     setIsSubmitting(false);
   };
 
@@ -50,7 +80,7 @@ export function SignupForm() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name field */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground font-medium flex items-center gap-2">
+                <Label htmlFor="name" className={`text-foreground font-medium flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <User className="w-4 h-4 text-muted-foreground" />
                   {t('form.name')}
                 </Label>
@@ -67,7 +97,7 @@ export function SignupForm() {
 
               {/* Email field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium flex items-center gap-2">
+                <Label htmlFor="email" className={`text-foreground font-medium flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   {t('form.email')}
                 </Label>
@@ -84,7 +114,7 @@ export function SignupForm() {
 
               {/* Phone field */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-foreground font-medium flex items-center gap-2">
+                <Label htmlFor="phone" className={`text-foreground font-medium flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   {t('form.phone')}
                 </Label>
