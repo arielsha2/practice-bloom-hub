@@ -6,6 +6,7 @@ import { Benefits } from '@/components/landing/Benefits';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { Features } from '@/components/landing/Features';
 import { CTABanner } from '@/components/landing/CTABanner';
+import { SignupForm } from '@/components/landing/SignupForm';
 import { Footer } from '@/components/landing/Footer';
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
         <Testimonials />
         <Features />
         <CTABanner />
+        <SignupForm />
       </main>
       <Footer />
     </div>
