@@ -80,6 +80,19 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
 
+    // How It Works
+    "howItWorks.label": "The Process",
+    "howItWorks.title": "How Does It Work?",
+    "howItWorks.subtitle": "4 steps to building a stable and sought-after practice",
+    "howItWorks.step1.title": "Professional Identity",
+    "howItWorks.step1.desc": "Define your ideal client, sharpen your unique expertise, and learn to present yourself in an engaging way connected to your values.",
+    "howItWorks.step2.title": "Referral System",
+    "howItWorks.step2.desc": "Create quality connections with colleagues, overcome imposter syndrome, and build a systematic method for bringing in clients.",
+    "howItWorks.step3.title": "The Matching Call",
+    "howItWorks.step3.desc": "Learn to conduct a first conversation from a professional place, lead the client to a decision, and address their concerns.",
+    "howItWorks.step4.title": "Financial Stability",
+    "howItWorks.step4.desc": "Overcome emotional blocks around money, learn profitable and value-based pricing, and set clear boundaries.",
+
     // CTA
     "cta.title": "Ready to grow your practice authentically?",
     "cta.button": "Discover if it's right for me",
@@ -359,6 +372,19 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.cta": "נסו עכשיו",
     "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
     "bots.teaserLink": "למידע נוסף",
+
+    // How It Works
+    "howItWorks.label": "תהליך העבודה",
+    "howItWorks.title": "איך זה עובד?",
+    "howItWorks.subtitle": "4 שלבים לבניית קליניקה יציבה ומבוקשת",
+    "howItWorks.step1.title": "דיוק הזהות המקצועית",
+    "howItWorks.step1.desc": "מגדירים את המטופל האידיאלי, מחדדים את המומחיות הייחודית, ולומדים להציג את עצמנו בצורה מעוררת עניין ומחוברת לערכים שלנו.",
+    "howItWorks.step2.title": "בניית מנגנון הפניות",
+    "howItWorks.step2.desc": "יוצרים קשרים איכותיים עם קולגות, מתמודדים עם תסמונת המתחזה, ובונים שיטה להבאת מטופלים באופן שיטתי.",
+    "howItWorks.step3.title": "ניהול שיחת ההתאמה",
+    "howItWorks.step3.desc": "לומדים לנהל שיחה ראשונה ממקום מקצועי, להוביל את המטופל להחלטה, ולהתייחס לחששות של המתעניין.",
+    "howItWorks.step4.title": "יציבות כלכלית",
+    "howItWorks.step4.desc": "מתגברים על מחסומים רגשיים סביב כסף, לומדים לתמחר באופן רווחי וערכי, ומציבים גבולות ברורים.",
 
     // CTA
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
