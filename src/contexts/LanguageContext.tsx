@@ -378,8 +378,8 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.teaserLink": "למידע נוסף",
 
     // How It Works
-    "howItWorks.title": "איך זה עובד?",
-    "howItWorks.subtitle": "4 שלבים לבניית קליניקה יציבה ומבוקשת",
+    "howItWorks.title": "4 שלבים",
+    "howItWorks.subtitle": "לבניית קליניקה יציבה ומבוקשת",
     "howItWorks.step1.title": "דיוק הזהות המקצועית",
     "howItWorks.step1.desc":
       "מגדירים את המטופל האידיאלי, מחדדים את המומחיות הייחודית, ולומדים להציג את עצמנו בצורה מעוררת עניין ומחוברת לערכים שלנו.",
