@@ -58,15 +58,19 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Founders
     "founders.title": "Who We Are? Ariel & Eliana",
-    "founders.textPart1": "We are partners in life and in creation, and we both come from the world of psychotherapy. Our journey began when we realized that even the best therapists we met were missing a 'bridge' – the way to connect the deep work in the room with the reality of managing a clinic in the real world.",
+    "founders.textPart1":
+      "We are partners in life and in creation, and we both come from the world of psychotherapy. Our journey began when we realized that even the best therapists we met were missing a 'bridge' – the way to connect the deep work in the room with the reality of managing a clinic in the real world.",
     "founders.textPart2Prefix": "We joined forces to give you a ",
     "founders.textPart2Bold": "both/and",
-    "founders.textPart2Suffix": " solution: on one hand, emotional processing of the difficulties and doubts that prevent us from daring to be seen, and on the other – a marketing and practical toolbox tailored exactly to the therapeutic language. We are here to give you the professional confidence and practical knowledge that will allow you to simply sit in your chair and treat in peace.",
+    "founders.textPart2Suffix":
+      " solution: on one hand, emotional processing of the difficulties and doubts that prevent us from daring to be seen, and on the other – a marketing and practical toolbox tailored exactly to the therapeutic language. We are here to give you the professional confidence and practical knowledge that will allow you to simply sit in your chair and treat in peace.",
     "founders.imageAlt": "Ariel and Eliana - Program Founders",
     "founders.ariel.name": "Dr. Ariel Shapira",
-    "founders.ariel.bio": "Expert clinical psychologist and supervisor. After 12 years of experience in the public system and private practice, I developed a model that helps therapists connect to their value and feel greater professional self-confidence. I'm here to accompany you in building a stable business strategy, step by step, from deep clinical understanding.",
+    "founders.ariel.bio":
+      "Expert clinical psychologist and supervisor. After 12 years of experience in the public system and private practice, I developed a model that helps therapists connect to their value and feel greater professional self-confidence. I'm here to accompany you in building a stable business strategy, step by step, from deep clinical understanding.",
     "founders.eliana.name": "Eliana Shapira",
-    "founders.eliana.bio": "Psychotherapist, content and AI expert. I bring the practical 'how'. I teach you to use the most advanced therapeutic, marketing, and coaching tools to tell your story simply, so that marketing becomes an integral part of your therapeutic work.",
+    "founders.eliana.bio":
+      "Psychotherapist, content and AI expert. I bring the practical 'how'. I teach you to use the most advanced therapeutic, marketing, and coaching tools to tell your story simply, so that marketing becomes an integral part of your therapeutic work.",
 
     // Benefits / Transformation
     "benefits.label": "The Transformation",
@@ -382,15 +386,19 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Founders
     "founders.title": "מי אנחנו? אריאל ואליענה",
-    "founders.textPart1": "אנחנו זוג בחיים ושותפים ליצירה, ושנינו באנו מעולמות הפסיכותרפיה. המסע שלנו התחיל מהרגע שבו הבנו שגם למטפלים הכי טובים שפגשנו, חסר 'גשר' – הדרך לחבר בין העבודה העמוקה בחדר לבין המציאות של ניהול קליניקה בעולם האמיתי.",
+    "founders.textPart1":
+      "אנחנו זוג בחיים ושותפים ליצירה, ושנינו באנו מעולמות הפסיכותרפיה. המסע שלנו התחיל מהרגע שבו הבנו שגם למטפלים הכי טובים שפגשנו, חסר 'גשר' – הדרך לחבר בין העבודה העמוקה בחדר לבין המציאות של ניהול קליניקה בעולם האמיתי.",
     "founders.textPart2Prefix": "איחדנו כוחות כדי לתת לכם מענה של ",
     "founders.textPart2Bold": "גם וגם",
-    "founders.textPart2Suffix": ": מצד אחד, עיבוד רגשי של הקשיים והספקות שמונעים מאיתנו להעז ולהיראות, ומצד שני – ארגז כלים שיווקי ומעשי שמותאם בדיוק לשפה הטיפולית. אנחנו כאן כדי להעניק לכם את הביטחון המקצועי ואת הידע הפרקטי שיאפשרו לכם פשוט לשבת בכיסא ולטפל בשקט.",
+    "founders.textPart2Suffix":
+      ": מצד אחד, עיבוד רגשי של הקשיים והספקות שמונעים מאיתנו להעז ולהיראות, ומצד שני – ארגז כלים שיווקי ומעשי שמותאם בדיוק לשפה הטיפולית. אנחנו כאן כדי להעניק לכם את הביטחון המקצועי ואת הידע הפרקטי שיאפשרו לכם פשוט לשבת בכיסא ולטפל בשקט.",
     "founders.imageAlt": "אריאל ואליענה - מייסדי התוכנית",
-    "founders.ariel.name": "ד\"ר אריאל שפירא",
-    "founders.ariel.bio": "פסיכולוג קליני מומחה ומדריך. אחרי 12 שנות ניסיון במערכת הציבורית ובקליניקה הפרטית, פיתחתי מודל שעוזר למטפלים להתחבר לערך שלהם ולהרגיש ביטחון עצמי מקצועי רב יותר. אני כאן כדי ללוות אתכם בבניית אסטרטגיה עסקית יציבה, צעד אחר צעד, מתוך הבנה קלינית עמוקה.",
+    "founders.ariel.name": 'ד"ר אריאל שפירא',
+    "founders.ariel.bio":
+      "פסיכולוג קליני מומחה ומדריך. אחרי 12 שנות ניסיון במערכת הציבורית ובקליניקה הפרטית, פיתחתי מודל שעוזר למטפלים להתחבר לערך שלהם ולהרגיש ביטחון עצמי מקצועי רב יותר. אני כאן כדי ללוות אתכם בבניית אסטרטגיה עסקית יציבה, צעד אחר צעד, מתוך הבנה קלינית עמוקה.",
     "founders.eliana.name": "אליענה שפירא",
-    "founders.eliana.bio": "פסיכותרפיסטית, מומחית לתוכן ובינה מלאכותית. אני מביאה את ה'איך' המעשי. אני מלמדת אתכם להשתמש בכלים הכי מתקדמים, טיפוליים, שיווקים ואימוניים, כדי לספר על עצמכם בפשטות, כך שהשיווק יהפוך לחלק בלתי נפרד מהעבודה הטיפולית שלכם.",
+    "founders.eliana.bio":
+      "פסיכותרפיסטית, מומחית לתוכן ובינה מלאכותית. אני מביאה את ה'איך' המעשי. אני מלמדת אתכם להשתמש בכלים הכי מתקדמים, טיפוליים, שיווקים ואימוניים, כדי לספר על עצמכם בפשטות, כך שהשיווק יהפוך לחלק בלתי נפרד מהעבודה הטיפולית שלכם.",
 
     // Benefits / Transformation
     "benefits.label": "הטרנספורמציה",
@@ -408,7 +416,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Bots
     "bots.title": "עוזרי AI למטפלים",
-    "bots.subtitle": "כלים חכמים שתוכננו במיוחד לעזור לכם לצמוח בפרקטיקה",
+    "bots.subtitle": "כלים חכמים שתוכננו במיוחד לעזור לכם לבנות את הקליניקה ",
     "bots.niche.title": "בוט מציאת נישה",
     "bots.niche.desc": "גלו את הנישה הטיפולית הייחודית שלכם ואת פרופיל הלקוח האידיאלי באמצעות חקירה מודרכת",
     "bots.strategy.title": "בוט תכנון אסטרטגיה",
