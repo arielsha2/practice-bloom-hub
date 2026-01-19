@@ -63,9 +63,11 @@ const translations: Record<Language, Record<string, string>> = {
     "benefits.item1.desc":
       "Feel the true value of your work and project it naturally in marketing and therapy sessions. No more second-guessing your worth.",
     "benefits.item2.title": "Consistent Flow of Ideal Patients",
-    "benefits.item2.desc": "No more relying on luck. A predictable system that fills your clinic with patients you love to treat.",
+    "benefits.item2.desc":
+      "No more relying on luck. A predictable system that fills your clinic with patients you love to treat.",
     "benefits.item3.title": "Financial Freedom & Zero Burnout",
-    "benefits.item3.desc": "Earn what you deserve while maintaining professional boundaries and personal well-being. Work less, earn more, live better.",
+    "benefits.item3.desc":
+      "Earn what you deserve while maintaining professional boundaries and personal well-being. Work less, earn more, live better.",
 
     // Bots
     "bots.title": "AI Assistants for Therapists",
@@ -357,13 +359,15 @@ const translations: Record<Language, Record<string, string>> = {
     // Benefits / Transformation
     "benefits.label": "הטרנספורמציה",
     "benefits.title": "התוצאות שלכם",
-    "benefits.subtitle": "תוצאות רגשיות ומעשיות שמשנות את הפרקטיקה ואת החיים שלכם",
+    "benefits.subtitle": "תוצאות רגשיות ומעשיות שמשנות את הקליניקה ואת הביטחון המקצועי שלכם",
     "benefits.item1.title": "ביטחון מקצועי בלתי מעורער",
-    "benefits.item1.desc": "להרגיש את הערך האמיתי של העבודה שלכם ולהקרין אותו באופן טבעי בשיווק ובפגישות. בלי יותר ספקות לגבי השווי שלכם.",
+    "benefits.item1.desc":
+      "להרגיש את הערך האמיתי של העבודה שלכם ולהקרין אותו באופן טבעי בשיווק ובפגישות. בלי יותר ספקות לגבי השווי שלכם.",
     "benefits.item2.title": "זרם עקבי של מטופלים אידיאליים",
     "benefits.item2.desc": "בלי יותר להסתמך על המזל. מערכת צפויה שממלאה את הקליניקה במטופלים שאתם אוהבים לטפל בהם.",
     "benefits.item3.title": "חופש כלכלי ואפס שחיקה",
-    "benefits.item3.desc": "להרוויח את מה שמגיע לכם תוך שמירה על גבולות מקצועיים ורווחה אישית. לעבוד פחות, להרוויח יותר, לחיות טוב יותר.",
+    "benefits.item3.desc":
+      "להרוויח את מה שמגיע לכם תוך שמירה על גבולות מקצועיים ורווחה אישית. לעבוד פחות, להרוויח יותר, לחיות טוב יותר.",
 
     // Bots
     "bots.title": "עוזרי AI למטפלים",
@@ -392,8 +396,7 @@ const translations: Record<Language, Record<string, string>> = {
     "howItWorks.step3.desc":
       "שליטה ב'שיחת ההתאמה' מתוך ביטחון. ללמוד להוביל מטופלים פוטנציאליים לתהליך טיפולי מחויב בצורה מקצועית.",
     "howItWorks.step4.title": "יציבות כלכלית וגבולות",
-    "howItWorks.step4.desc":
-      "תמחור רווחי, התגברות על חסמים סביב כסף, והצבת גבולות ברורים סביב ביטולים ותשלומים.",
+    "howItWorks.step4.desc": "תמחור רווחי, התגברות על חסמים סביב כסף, והצבת גבולות ברורים סביב ביטולים ותשלומים.",
 
     // CTA
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
