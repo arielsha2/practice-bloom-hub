@@ -8,14 +8,15 @@ import { useUserProgress } from '@/hooks/useUserProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { PortalAccessDenied } from '@/components/portal/PortalAccessDenied';
-import { ContinueLearningSection } from '@/components/portal/ContinueLearningSection';
-import { LessonThumbnailCard } from '@/components/portal/LessonThumbnailCard';
+import { CourseProgressHeader } from '@/components/portal/CourseProgressHeader';
+import { LessonListItem } from '@/components/portal/LessonListItem';
 import { QASection } from '@/components/portal/QASection';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { BookOpen, MessageCircle, Settings } from 'lucide-react';
+import { BookOpen, MessageCircle, Settings, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface Lesson {
   id: string;
@@ -28,6 +29,7 @@ interface MediaItem {
   id: string;
   thumbnail_url: string | null;
   url: string | null;
+  duration_seconds: number | null;
 }
 
 interface LessonWithMedia extends Lesson {
@@ -52,7 +54,6 @@ export default function StudentPortal() {
 
   const fetchLessons = async () => {
     try {
-      // Fetch lessons
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
@@ -60,13 +61,12 @@ export default function StudentPortal() {
 
       if (lessonsError) throw lessonsError;
 
-      // Fetch first video media for each lesson (for thumbnails)
       const lessonsWithMedia: LessonWithMedia[] = await Promise.all(
         (lessonsData || []).map(async (lesson) => {
           const { data: linkData } = await supabase
             .from('lesson_media_links')
             .select(`
-              media:media_library(id, thumbnail_url, url)
+              media:media_library(id, thumbnail_url, url, duration_seconds)
             `)
             .eq('lesson_id', lesson.id)
             .order('display_order', { ascending: true })
@@ -89,36 +89,46 @@ export default function StudentPortal() {
   };
 
   // Determine the next lesson to show
-  const { nextLesson, isInProgress } = useMemo(() => {
-    if (lessons.length === 0) return { nextLesson: null, isInProgress: false };
+  const { nextLesson, isInProgress, nextLessonIndex } = useMemo(() => {
+    if (lessons.length === 0) return { nextLesson: null, isInProgress: false, nextLessonIndex: -1 };
 
-    // First check for lessons in progress (started but not finished)
-    for (const lesson of lessons) {
+    // First check for lessons in progress
+    for (let i = 0; i < lessons.length; i++) {
+      const lesson = lessons[i];
       const progress = getLessonProgress(lesson.id);
       if (progress && !progress.watched && progress.last_position_seconds > 0) {
-        return { nextLesson: lesson, isInProgress: true };
+        return { nextLesson: lesson, isInProgress: true, nextLessonIndex: i };
       }
     }
 
     // Find first unwatched lesson
-    for (const lesson of lessons) {
+    for (let i = 0; i < lessons.length; i++) {
+      const lesson = lessons[i];
       if (!isLessonWatched(lesson.id)) {
-        return { nextLesson: lesson, isInProgress: false };
+        return { nextLesson: lesson, isInProgress: false, nextLessonIndex: i };
       }
     }
 
     // All lessons watched - show first lesson
-    return { nextLesson: lessons[0] || null, isInProgress: false };
+    return { nextLesson: lessons[0] || null, isInProgress: false, nextLessonIndex: 0 };
   }, [lessons, getLessonProgress, isLessonWatched]);
 
-  // Other lessons (excluding the featured one)
-  const otherLessons = useMemo(() => {
-    if (!nextLesson) return lessons;
-    return lessons.filter(l => l.id !== nextLesson.id);
-  }, [lessons, nextLesson]);
+  // Calculate progress stats
+  const { completedCount, totalCount } = useMemo(() => {
+    const completed = lessons.filter(l => isLessonWatched(l.id)).length;
+    return { completedCount: completed, totalCount: lessons.length };
+  }, [lessons, isLessonWatched]);
 
   const handlePlayLesson = (lessonId: string) => {
     navigate(`/portal/lesson/${lessonId}`);
+  };
+
+  // Format duration helper
+  const formatDuration = (seconds: number | null | undefined) => {
+    if (!seconds) return undefined;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (authLoading || accessLoading || progressLoading) {
@@ -142,32 +152,27 @@ export default function StudentPortal() {
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      {/* Hero Header */}
-      <div className="bg-secondary pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-2">
-                {t('portal.title')}
-              </h1>
-              <p className="text-muted-foreground">
-                {isRTL ? 'המשך מהמקום שהפסקת' : 'Continue where you left off'}
-              </p>
-            </div>
-            {isAdmin && (
-              <Link to="/portal/admin">
-                <Button variant="outline" className="shadow-soft">
-                  <Settings className="w-4 h-4 me-2" />
-                  {t('portal.admin.title')}
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
+      {/* Progress Header - Udemy style dark header */}
+      <div className="pt-16">
+        <CourseProgressHeader 
+          totalLessons={totalCount}
+          completedLessons={completedCount}
+        />
       </div>
-      
-      <main className="container mx-auto px-4 py-12">
 
+      {/* Admin Link */}
+      {isAdmin && (
+        <div className="container mx-auto px-4 py-3 border-b">
+          <Link to="/portal/admin">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Settings className="w-4 h-4" />
+              {t('portal.admin.title')}
+            </Button>
+          </Link>
+        </div>
+      )}
+      
+      <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="lessons" className="space-y-6">
           <TabsList>
             <TabsTrigger value="lessons" className="flex items-center gap-2">
@@ -180,7 +185,7 @@ export default function StudentPortal() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="lessons" className="space-y-8">
+          <TabsContent value="lessons" className="space-y-6">
             {isLoading ? (
               <div className="text-center py-12 text-muted-foreground">
                 {t('auth.loading')}
@@ -190,40 +195,121 @@ export default function StudentPortal() {
                 {t('portal.noLessons')}
               </div>
             ) : (
-              <>
-                {/* Featured/Next Lesson Section */}
-                <ContinueLearningSection
-                  lesson={nextLesson}
-                  media={nextLesson?.media || null}
-                  isInProgress={isInProgress}
-                  onPlay={() => nextLesson && handlePlayLesson(nextLesson.id)}
-                />
-
-                {/* Other Lessons */}
-                {otherLessons.length > 0 && (
-                  <div className="space-y-4">
-                    <h2 className="text-lg font-medium text-muted-foreground">
-                      {isRTL ? 'השיעורים שלך' : 'Your lessons'}
-                    </h2>
-                    <ScrollArea className="w-full">
-                      <div className="flex gap-4 pb-4">
-                        {otherLessons.map((lesson) => (
-                          <div key={lesson.id} className="w-48 shrink-0">
-                            <LessonThumbnailCard
-                              id={lesson.id}
-                              title={lesson.title}
-                              thumbnailUrl={lesson.media?.thumbnail_url}
-                              isWatched={isLessonWatched(lesson.id)}
-                              onClick={() => handlePlayLesson(lesson.id)}
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* Continue Learning Card - Left side on desktop */}
+                <Card className="lg:col-span-1 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-medium text-muted-foreground">
+                      {isInProgress 
+                        ? (isRTL ? 'המשיכי מאיפה שעצרת' : 'Continue where you left off')
+                        : (isRTL ? 'הצעד הבא שלך' : 'Your next step')
+                      }
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {nextLesson ? (
+                      <>
+                        {/* Thumbnail */}
+                        <div 
+                          onClick={() => handlePlayLesson(nextLesson.id)}
+                          className="group relative aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer"
+                        >
+                          {nextLesson.media?.thumbnail_url ? (
+                            <img
+                              src={nextLesson.media.thumbnail_url}
+                              alt={nextLesson.title}
+                              className="w-full h-full object-cover"
                             />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                          )}
+                          
+                          {/* Play overlay */}
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                              <Play className="w-6 h-6 text-primary-foreground fill-current ms-0.5" />
+                            </div>
                           </div>
-                        ))}
+
+                          {/* Duration badge */}
+                          {nextLesson.media?.duration_seconds && (
+                            <div className="absolute bottom-2 end-2 px-2 py-0.5 bg-black/70 text-white text-xs rounded">
+                              {formatDuration(nextLesson.media.duration_seconds)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Lesson info */}
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {isRTL ? `שיעור ${nextLessonIndex + 1}` : `Lesson ${nextLessonIndex + 1}`}
+                          </p>
+                          <h3 className="font-semibold line-clamp-2">{nextLesson.title}</h3>
+                          {nextLesson.description && (
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {nextLesson.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Play button */}
+                        <Button 
+                          onClick={() => handlePlayLesson(nextLesson.id)}
+                          className="w-full gap-2"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                          {isInProgress 
+                            ? (isRTL ? 'המשך צפייה' : 'Continue watching')
+                            : (isRTL ? 'התחל שיעור' : 'Start lesson')
+                          }
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {isRTL ? 'סיימת את כל השיעורים! 🎉' : 'You completed all lessons! 🎉'}
                       </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                  </div>
-                )}
-              </>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Course Content - Right side on desktop */}
+                <Card className="lg:col-span-2">
+                  <CardHeader className="pb-3 border-b">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-medium">
+                        {isRTL ? 'תוכן הקורס' : 'Course Content'}
+                      </CardTitle>
+                      <span className="text-sm text-muted-foreground">
+                        {isRTL 
+                          ? `${totalCount} שיעורים`
+                          : `${totalCount} lessons`
+                        }
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-2">
+                    <div className="divide-y">
+                      {lessons.map((lesson, index) => {
+                        const progress = getLessonProgress(lesson.id);
+                        const isLessonInProgress = progress && !progress.watched && progress.last_position_seconds > 0;
+                        
+                        return (
+                          <LessonListItem
+                            key={lesson.id}
+                            index={index + 1}
+                            title={lesson.title}
+                            duration={formatDuration(lesson.media?.duration_seconds)}
+                            isWatched={isLessonWatched(lesson.id)}
+                            isActive={nextLesson?.id === lesson.id}
+                            isInProgress={isLessonInProgress || false}
+                            onClick={() => handlePlayLesson(lesson.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </TabsContent>
 
