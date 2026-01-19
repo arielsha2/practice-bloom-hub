@@ -1,38 +1,138 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock } from 'lucide-react';
+import { Header } from '@/components/landing/Header';
+import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Video, FileText, Users, Bot, Headphones, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
+
+const features = [
+  { key: 'videos', icon: Video },
+  { key: 'exercises', icon: FileText },
+  { key: 'community', icon: Users },
+  { key: 'ai', icon: Bot },
+  { key: 'support', icon: Headphones },
+  { key: 'mobile', icon: Smartphone },
+];
 
 export function PortalAccessDenied() {
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
 
+  const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <Card className="max-w-md w-full text-center">
-        <CardHeader>
-          <div className="mx-auto mb-4 w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-            <Lock className="w-8 h-8 text-muted-foreground" />
+    <div className="min-h-screen bg-background flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="bg-secondary pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="inline-block text-primary font-medium text-sm mb-4 tracking-wider uppercase">
+              {t('howItWorks.label')}
+            </span>
+            <h1 className="text-4xl md:text-5xl font-serif font-medium text-foreground mb-6 tracking-wide">
+              {t('portal.course.title')}
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              {t('portal.course.subtitle')}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-20 flex-grow">
+        <div className="container mx-auto px-4">
+          <motion.h2 
+            className={`text-2xl md:text-3xl font-serif font-medium text-foreground mb-12 text-center ${isRTL ? 'text-right md:text-center' : ''}`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            {t('portal.course.includes')}
+          </motion.h2>
+
+          <div className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto ${isRTL ? 'text-right' : ''}`}>
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.key}
+                  className="group"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                >
+                  <div className={`flex items-center gap-4 p-5 rounded-xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-card transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-0.5">
+                        {t(`features.${feature.key}.title`)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t(`features.${feature.key}.desc`)}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          <CardTitle>{t('portal.noAccess')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            {t('portal.accessDescription')}
-          </p>
-          {!user ? (
-            <Link to="/auth">
-              <Button className="w-full">{t('nav.login')}</Button>
-            </Link>
-          ) : (
-            <Link to="/">
-              <Button variant="outline" className="w-full">{t('nav.home')}</Button>
-            </Link>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-secondary">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center max-w-xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            {!user ? (
+              <div className="space-y-4">
+                <Link to="/auth">
+                  <Button size="lg" className="text-lg px-8 py-6">
+                    {t('portal.course.signup')}
+                    <ArrowIcon className="w-5 h-5 ms-2" />
+                  </Button>
+                </Link>
+                <p className="text-muted-foreground text-sm">
+                  {t('portal.course.alreadyMember')}{' '}
+                  <Link to="/auth" className="text-primary hover:underline">
+                    {t('nav.login')}
+                  </Link>
+                </p>
+              </div>
+            ) : (
+              <div className="bg-card rounded-2xl p-8 border border-border/50">
+                <p className="text-muted-foreground mb-4">
+                  {t('portal.accessDescription')}
+                </p>
+                <Link to="/">
+                  <Button variant="outline">{t('nav.home')}</Button>
+                </Link>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }
