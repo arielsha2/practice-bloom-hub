@@ -102,7 +102,9 @@ const translations: Record<Language, Record<string, string>> = {
 
     // CTA
     "cta.title": "Ready to grow your practice authentically?",
+    "cta.subtitle": "Get updates, tools, and insights directly to your inbox",
     "cta.button": "Discover if it's right for me",
+    "cta.secondaryButton": "Join Newsletter",
 
     // Form
     "form.title": "Get Free Marketing Resources",
@@ -403,11 +405,13 @@ const translations: Record<Language, Record<string, string>> = {
     "howItWorks.step3.desc":
       "שליטה ב'שיחת ההתאמה' מתוך ביטחון. ללמוד להוביל מטופלים פוטנציאליים לתהליך טיפולי מחויב בצורה מקצועית.",
     "howItWorks.step4.title": "יציבות כלכלית וגבולות",
-    "howItWorks.step4.desc": "תמחור רווחי, התגברות על חסמים סביב כסף, והצבת גבולות ברורים סביב ביטולים ותשלומים.",
+    "howItWorks.step4.desc": "תמחור רווחי, פיצוח חסמים רגשיים סביב כסף, והצבת גבולות ברורים סביב ביטולים ותשלומים.",
 
     // CTA
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
+    "cta.subtitle": "קבלו עדכונים, כלים ותובנות ישירות לתיבת המייל שלכם",
     "cta.button": "לגלות אם זה מתאים לי",
+    "cta.secondaryButton": "הצטרפות לניוזלטר",
 
     // Form
     "form.title": "איך מבססים קליניקה מצליחה",
