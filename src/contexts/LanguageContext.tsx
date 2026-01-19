@@ -413,8 +413,8 @@ const translations: Record<Language, Record<string, string>> = {
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
     "cta.subtitle": "קבלו עדכונים, כלים ותובנות ישירות לתיבת המייל ולנייד שלכם",
     "cta.button": "לגלות אם זה מתאים לי",
-    "cta.secondaryButton": "הצטרפות לניוזלטר",
-    "cta.newsletter": "הצטרפות לניוזלטר",
+    "cta.secondaryButton": "הצטרפות לרשימת התפוצה",
+    "cta.newsletter": "הצטרפות לרשימת התפוצה",
     "cta.whatsapp": "הצטרפות לקהילה",
 
     // Form
