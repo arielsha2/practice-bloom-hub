@@ -58,26 +58,16 @@ export function CTABanner() {
             {t('cta.subtitle')}
           </p>
 
-          {/* Buttons */}
-          <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-            <Button 
-              variant="secondary" 
-              size="xl" 
-              className="group shadow-elevated hover:shadow-card bg-white text-primary hover:bg-white/90"
-              onClick={() => window.location.href = '/auth'}
-            >
-              {t('cta.button')}
-              <Arrow className={`w-5 h-5 transition-transform ${isRTL ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="xl" 
-              className="text-primary-foreground border-2 border-white/30 hover:bg-white/10 hover:text-primary-foreground"
-              onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
-            >
-              {t('cta.secondaryButton')}
-            </Button>
-          </div>
+          {/* Button */}
+          <Button 
+            variant="secondary" 
+            size="xl" 
+            className="group shadow-elevated hover:shadow-card bg-white text-primary hover:bg-white/90"
+            onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
+          >
+            {t('cta.secondaryButton')}
+            <Arrow className={`w-5 h-5 transition-transform ${isRTL ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
+          </Button>
         </motion.div>
       </div>
     </section>
