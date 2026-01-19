@@ -19,6 +19,9 @@ export default {
         display: ['Cormorant Garamond', 'Georgia', 'serif'],
         body: ['Inter', 'sans-serif'],
       },
+      lineHeight: {
+        'relaxed': '1.6',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,6 +56,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Organic palette
+        sand: "hsl(var(--sand))",
+        forest: "hsl(var(--forest))",
+        sage: "hsl(var(--sage))",
+        terracotta: "hsl(var(--terracotta))",
+        // Legacy compatibility
         teal: {
           DEFAULT: "hsl(var(--teal))",
           light: "hsl(var(--teal-light))",

@@ -9,6 +9,8 @@ import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryFilter } from '@/components/contents/CategoryFilter';
 import { ContentSearch } from '@/components/contents/ContentSearch';
 import { Button } from '@/components/ui/button';
+import { Plus, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import {
   Dialog,
@@ -149,14 +151,21 @@ export default function Contents() {
             />
             
             {isAdmin && (
-              <Button 
-                onClick={() => setShowForm(true)}
-                variant="cta"
-                className="mt-8"
-              >
-                <Plus className="w-4 h-4 me-2" />
-                {t('contents.admin.add')}
-              </Button>
+              <div className="flex gap-2 mt-8">
+                <Button 
+                  onClick={() => setShowForm(true)}
+                  variant="cta"
+                >
+                  <Plus className="w-4 h-4 me-2" />
+                  {t('contents.admin.add')}
+                </Button>
+                <Link to="/contents/admin">
+                  <Button variant="outline">
+                    <Settings className="w-4 h-4 me-2" />
+                    {isRTL ? 'ניהול מאמרים' : 'Manage Articles'}
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
