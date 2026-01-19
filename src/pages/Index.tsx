@@ -2,6 +2,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Hero } from '@/components/landing/Hero';
 import { HowItWorks } from '@/components/landing/HowItWorks';
+import { AboutFounders } from '@/components/landing/AboutFounders';
 import { Benefits } from '@/components/landing/Benefits';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { CTABanner } from '@/components/landing/CTABanner';
@@ -16,6 +17,7 @@ const Index = () => {
       <main>
         <Hero />
         <HowItWorks />
+        <AboutFounders />
         <Benefits />
         <Testimonials />
         <CTABanner />
