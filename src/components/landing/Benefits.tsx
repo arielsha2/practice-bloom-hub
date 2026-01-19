@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Target, Heart, TrendingUp } from 'lucide-react';
+import { Sparkles, HeartHandshake, Sunrise } from 'lucide-react';
 
-const icons = [Target, Heart, TrendingUp];
+const icons = [Sparkles, HeartHandshake, Sunrise];
 
 export function Benefits() {
   const { t, isRTL } = useLanguage();
