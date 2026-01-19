@@ -55,17 +55,17 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.subtitle": "Build a thriving private practice without anxiety or compromising who you are",
     "hero.cta": "Get Free Resources",
 
-    // Benefits
-    "benefits.title": "Grow Your Practice, Stay True to Yourself",
-    "benefits.subtitle":
-      "Our approach helps psychotherapists attract ideal clients while honoring their therapeutic values",
-    "benefits.item1.title": "Find Your Niche",
+    // Benefits / Transformation
+    "benefits.label": "The Transformation",
+    "benefits.title": "Your Results",
+    "benefits.subtitle": "Mental and practical outcomes that transform your practice and life",
+    "benefits.item1.title": "Unshakable Professional Confidence",
     "benefits.item1.desc":
-      "Discover what makes your practice unique and attracts clients who truly resonate with your approach",
-    "benefits.item2.title": "Authentic Marketing",
-    "benefits.item2.desc": "Learn marketing strategies that feel natural and align with your professional ethics",
-    "benefits.item3.title": "Sustainable Growth",
-    "benefits.item3.desc": "Build a stable practice with consistent client flow without burnout or overwhelm",
+      "Feel the true value of your work and project it naturally in marketing and therapy sessions. No more second-guessing your worth.",
+    "benefits.item2.title": "Consistent Flow of Ideal Patients",
+    "benefits.item2.desc": "No more relying on luck. A predictable system that fills your clinic with patients you love to treat.",
+    "benefits.item3.title": "Financial Freedom & Zero Burnout",
+    "benefits.item3.desc": "Earn what you deserve while maintaining professional boundaries and personal well-being. Work less, earn more, live better.",
 
     // Bots
     "bots.title": "AI Assistants for Therapists",
@@ -81,21 +81,21 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.teaserLink": "Learn more",
 
     // How It Works
-    "howItWorks.label": "The Process",
-    "howItWorks.title": "How Does It Work?",
-    "howItWorks.subtitle": "4 steps to building a stable and sought-after practice",
-    "howItWorks.step1.title": "Professional Identity",
+    "howItWorks.label": "The Turning Point Program",
+    "howItWorks.title": "4 Steps to a Thriving Practice",
+    "howItWorks.subtitle": "A structured journey from uncertainty to professional confidence",
+    "howItWorks.step1.title": "Precise Professional Identity",
     "howItWorks.step1.desc":
-      "Define your ideal client, sharpen your unique expertise, and learn to present yourself in an engaging way connected to your values.",
-    "howItWorks.step2.title": "Referral System",
+      "Transition from 'amateur' to 'pro' by defining your ideal patient and unique expertise. Learn to present yourself in a way that attracts the right clients.",
+    "howItWorks.step2.title": "Referral & Lead Mechanism",
     "howItWorks.step2.desc":
-      "Create quality connections with colleagues, overcome imposter syndrome, and build a systematic method for bringing in clients.",
-    "howItWorks.step3.title": "The Matching Call",
+      "Build a systematic flow of inquiries through professional networking. Overcome 'imposter syndrome' and create consistent referral relationships.",
+    "howItWorks.step3.title": "From Inquiry to Patient",
     "howItWorks.step3.desc":
-      "Learn to conduct a first conversation from a professional place, lead the client to a decision, and address their concerns.",
-    "howItWorks.step4.title": "Financial Stability",
+      "Master the 'matching call' with confidence. Learn to lead potential patients to a committed therapeutic process professionally.",
+    "howItWorks.step4.title": "Financial Stability & Boundaries",
     "howItWorks.step4.desc":
-      "Overcome emotional blocks around money, learn profitable and value-based pricing, and set clear boundaries.",
+      "Profitable pricing, overcoming money blocks, and setting clear boundaries around cancellations and payments.",
 
     // CTA
     "cta.title": "Ready to grow your practice authentically?",
@@ -354,15 +354,16 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
     "hero.cta": "הצטרפו לקהילת על שפת הקליניקה",
 
-    // Benefits
-    "benefits.title": "צמחו בפרקטיקה, הישארו נאמנים לעצמכם",
-    "benefits.subtitle": "הגישה שלנו עוזרת לפסיכותרפיסטים למשוך לקוחות אידיאליים תוך כיבוד הערכים הטיפוליים שלהם",
-    "benefits.item1.title": "מצאו את הנישה שלכם",
-    "benefits.item1.desc": "גלו מה מייחד את הפרקטיקה שלכם ומושך לקוחות שמתחברים באמת לגישה שלכם",
-    "benefits.item2.title": "שיווק אותנטי",
-    "benefits.item2.desc": "למדו אסטרטגיות שיווק שמרגישות טבעיות ומתאימות לאתיקה המקצועית שלכם",
-    "benefits.item3.title": "צמיחה בת-קיימא",
-    "benefits.item3.desc": "בנו פרקטיקה יציבה עם זרימת לקוחות עקבית ללא שחיקה או עומס",
+    // Benefits / Transformation
+    "benefits.label": "הטרנספורמציה",
+    "benefits.title": "התוצאות שלכם",
+    "benefits.subtitle": "תוצאות רגשיות ומעשיות שמשנות את הפרקטיקה ואת החיים שלכם",
+    "benefits.item1.title": "ביטחון מקצועי בלתי מעורער",
+    "benefits.item1.desc": "להרגיש את הערך האמיתי של העבודה שלכם ולהקרין אותו באופן טבעי בשיווק ובפגישות. בלי יותר ספקות לגבי השווי שלכם.",
+    "benefits.item2.title": "זרם עקבי של מטופלים אידיאליים",
+    "benefits.item2.desc": "בלי יותר להסתמך על המזל. מערכת צפויה שממלאה את הקליניקה במטופלים שאתם אוהבים לטפל בהם.",
+    "benefits.item3.title": "חופש כלכלי ואפס שחיקה",
+    "benefits.item3.desc": "להרוויח את מה שמגיע לכם תוך שמירה על גבולות מקצועיים ורווחה אישית. לעבוד פחות, להרוויח יותר, לחיות טוב יותר.",
 
     // Bots
     "bots.title": "עוזרי AI למטפלים",
@@ -378,21 +379,21 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.teaserLink": "למידע נוסף",
 
     // How It Works
-    "howItWorks.label": "תהליך העבודה",
-    "howItWorks.title": "4 שלבים",
-    "howItWorks.subtitle": "לבניית קליניקה יציבה ומבוקשת",
+    "howItWorks.label": "תוכנית נקודת המפנה",
+    "howItWorks.title": "4 שלבים לקליניקה משגשגת",
+    "howItWorks.subtitle": "מסע מובנה מחוסר ודאות לביטחון מקצועי",
     "howItWorks.step1.title": "דיוק הזהות המקצועית",
     "howItWorks.step1.desc":
-      "מגדירים את המטופל האידיאלי, מחדדים את המומחיות הייחודית, ולומדים להציג את עצמנו בצורה מעוררת עניין ומחוברת לערכים שלנו.",
-    "howItWorks.step2.title": "בניית מנגנון הפניות",
+      "מעבר מ'חובבן' ל'מקצוען' דרך הגדרת המטופל האידיאלי והמומחיות הייחודית. ללמוד להציג את עצמנו בצורה שמושכת את הלקוחות הנכונים.",
+    "howItWorks.step2.title": "מנגנון הפניות ולידים",
     "howItWorks.step2.desc":
-      "יוצרים קשרים איכותיים עם קולגות, מתמודדים עם תסמונת המתחזה, ובונים שיטה להבאת מטופלים באופן שיטתי.",
-    "howItWorks.step3.title": "ניהול שיחת ההתאמה",
+      "בניית זרם פניות שיטתי דרך קשרים מקצועיים. התמודדות עם 'תסמונת המתחזה' ויצירת קשרי הפניות עקביים.",
+    "howItWorks.step3.title": "ממתעניין למטופל",
     "howItWorks.step3.desc":
-      "לומדים לנהל שיחה ראשונה ממקום מקצועי, להוביל את המטופל להחלטה, ולהתייחס לחששות של המתעניין.",
-    "howItWorks.step4.title": "יציבות כלכלית",
+      "שליטה ב'שיחת ההתאמה' מתוך ביטחון. ללמוד להוביל מטופלים פוטנציאליים לתהליך טיפולי מחויב בצורה מקצועית.",
+    "howItWorks.step4.title": "יציבות כלכלית וגבולות",
     "howItWorks.step4.desc":
-      "מתגברים על מחסומים רגשיים סביב כסף, לומדים לתמחר באופן רווחי וערכי, ומציבים גבולות ברורים.",
+      "תמחור רווחי, התגברות על חסמים סביב כסף, והצבת גבולות ברורים סביב ביטולים ותשלומים.",
 
     // CTA
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
