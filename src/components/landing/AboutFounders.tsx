@@ -12,7 +12,7 @@ export function AboutFounders() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section className="py-20 md:py-28 bg-background relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-[#FDFBF7] relative overflow-hidden">
       {/* Subtle background decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 -left-20 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
@@ -20,7 +20,8 @@ export function AboutFounders() {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${isRTL ? "" : ""}`}>
+        {/* Top Part: Image + Main Text */}
+        <div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center`}>
           {/* Image */}
           <motion.div
             className={`${isRTL ? "lg:order-2" : "lg:order-1"}`}
@@ -31,7 +32,7 @@ export function AboutFounders() {
               <img
                 src={foundersImage}
                 alt={t("founders.imageAlt")}
-                className="w-full h-auto rounded-2xl shadow-card object-cover"
+                className="w-full h-auto rounded-3xl shadow-card object-cover"
               />
               {/* Decorative accent */}
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-accent/10 rounded-2xl -z-10" />
@@ -48,8 +49,44 @@ export function AboutFounders() {
             <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-6">
               {t("founders.title")}
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {t("founders.text")}
+            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
+              <p>{t("founders.textPart1")}</p>
+              <p>
+                {t("founders.textPart2Prefix")}
+                <span className="font-bold text-foreground">{t("founders.textPart2Bold")}</span>
+                {t("founders.textPart2Suffix")}
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Bottom Part: Individual Bios */}
+        <div className={`grid md:grid-cols-2 gap-8 mt-16`}>
+          {/* Ariel Bio */}
+          <motion.div
+            className={`bg-white/60 rounded-2xl p-6 md:p-8 shadow-sm ${isRTL ? "text-right" : ""}`}
+            {...fadeUp}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
+          >
+            <h3 className="text-xl font-semibold text-foreground mb-3">
+              {t("founders.ariel.name")}
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              {t("founders.ariel.bio")}
+            </p>
+          </motion.div>
+
+          {/* Eliana Bio */}
+          <motion.div
+            className={`bg-white/60 rounded-2xl p-6 md:p-8 shadow-sm ${isRTL ? "text-right" : ""}`}
+            {...fadeUp}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.5 }}
+          >
+            <h3 className="text-xl font-semibold text-foreground mb-3">
+              {t("founders.eliana.name")}
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              {t("founders.eliana.bio")}
             </p>
           </motion.div>
         </div>
