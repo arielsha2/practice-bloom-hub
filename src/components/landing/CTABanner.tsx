@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Sparkles, Star } from 'lucide-react';
+import { Mail, MessageCircle, Star } from 'lucide-react';
 
 export function CTABanner() {
   const { t, isRTL } = useLanguage();
-  const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   return (
     <section className="py-24 bg-primary relative overflow-hidden">
@@ -40,14 +39,6 @@ export function CTABanner() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5 mb-8">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span className="text-primary-foreground/90 text-sm font-medium">
-              {isRTL ? 'הצטרפו עכשיו' : 'Join Now'}
-            </span>
-          </div>
-
           {/* Main heading */}
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-medium text-primary-foreground mb-6 tracking-wide leading-tight">
             {t('cta.title')}
@@ -58,16 +49,28 @@ export function CTABanner() {
             {t('cta.subtitle')}
           </p>
 
-          {/* Button */}
-          <Button 
-            variant="secondary" 
-            size="xl" 
-            className="group shadow-elevated hover:shadow-card bg-white text-primary hover:bg-white/90"
-            onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
-          >
-            {t('cta.secondaryButton')}
-            <Arrow className={`w-5 h-5 transition-transform ${isRTL ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} />
-          </Button>
+          {/* Buttons */}
+          <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+            <Button 
+              variant="secondary" 
+              size="xl" 
+              className="group shadow-elevated hover:shadow-card bg-white text-primary hover:bg-white/90"
+              onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
+            >
+              <Mail className="w-5 h-5" />
+              {t('cta.newsletter')}
+            </Button>
+            
+            <Button 
+              variant="secondary" 
+              size="xl" 
+              className="group shadow-elevated hover:shadow-card bg-[#25D366] text-white hover:bg-[#20BD5A]"
+              onClick={() => window.open('https://chat.whatsapp.com/LBKVYVc4aoaGnsBVqFNJEb', '_blank')}
+            >
+              <MessageCircle className="w-5 h-5" />
+              {t('cta.whatsapp')}
+            </Button>
+          </div>
         </motion.div>
       </div>
     </section>

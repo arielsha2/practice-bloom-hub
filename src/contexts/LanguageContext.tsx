@@ -102,9 +102,11 @@ const translations: Record<Language, Record<string, string>> = {
 
     // CTA
     "cta.title": "Ready to grow your practice authentically?",
-    "cta.subtitle": "Get updates, tools, and insights directly to your inbox",
+    "cta.subtitle": "Get updates, tools, and insights directly to your inbox and mobile",
     "cta.button": "Discover if it's right for me",
     "cta.secondaryButton": "Join Newsletter",
+    "cta.newsletter": "Join Newsletter",
+    "cta.whatsapp": "Join Community",
 
     // Form
     "form.title": "Get Free Marketing Resources",
@@ -409,9 +411,11 @@ const translations: Record<Language, Record<string, string>> = {
 
     // CTA
     "cta.title": "הצטרפו לקהילת על שפת הקליניקה",
-    "cta.subtitle": "קבלו עדכונים, כלים ותובנות ישירות לתיבת המייל שלכם",
+    "cta.subtitle": "קבלו עדכונים, כלים ותובנות ישירות לתיבת המייל ולנייד שלכם",
     "cta.button": "לגלות אם זה מתאים לי",
     "cta.secondaryButton": "הצטרפות לניוזלטר",
+    "cta.newsletter": "הצטרפות לניוזלטר",
+    "cta.whatsapp": "הצטרפות לקהילה",
 
     // Form
     "form.title": "איך מבססים קליניקה מצליחה",
