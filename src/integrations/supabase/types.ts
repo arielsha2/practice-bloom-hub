@@ -41,6 +41,63 @@ export type Database = {
         }
         Relationships: []
       }
+      content_tag_links: {
+        Row: {
+          content_id: string
+          created_at: string | null
+          tag_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string | null
+          tag_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string | null
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_tag_links_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_tag_links_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "content_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name_en: string
+          name_he: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name_en: string
+          name_he: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name_en?: string
+          name_he?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       contents: {
         Row: {
           category_id: string | null
@@ -54,6 +111,7 @@ export type Database = {
           metadata: Json | null
           original_id: string | null
           published_at: string | null
+          scheduled_publish_at: string | null
           source: string | null
           status: string | null
           title: string
@@ -70,6 +128,7 @@ export type Database = {
           metadata?: Json | null
           original_id?: string | null
           published_at?: string | null
+          scheduled_publish_at?: string | null
           source?: string | null
           status?: string | null
           title: string
@@ -86,6 +145,7 @@ export type Database = {
           metadata?: Json | null
           original_id?: string | null
           published_at?: string | null
+          scheduled_publish_at?: string | null
           source?: string | null
           status?: string | null
           title?: string

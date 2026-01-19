@@ -16,6 +16,7 @@ import PortalAdmin from "./pages/PortalAdmin";
 import MediaLibrary from "./pages/MediaLibrary";
 import AIAssistants from "./pages/AIAssistants";
 import Dashboard from "./pages/Dashboard";
+import ContentsAdmin from "./pages/ContentsAdmin";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/contents" element={<Contents />} />
+              <Route path="/contents/admin" element={<ContentsAdmin />} />
               <Route path="/contents/:id" element={<ContentDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/portal" element={<StudentPortal />} />

@@ -2,109 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
 
 /* Design System for Therapist Marketing Landing Page
-   Professional, calm, trustworthy - dark teal/white palette */
+   Organic/Professional palette - warm, authoritative, calming */
 
 @layer base {
   :root {
-    /* Clean warm white background */
-    --background: 40 30% 99%;
-    --foreground: 210 25% 15%;
+    /* Organic sand background */
+    --background: 40 33% 97%;
+    --foreground: 145 20% 18%;
 
-    /* Card surfaces */
+    /* Card surfaces - clean white */
     --card: 0 0% 100%;
-    --card-foreground: 210 25% 15%;
+    --card-foreground: 145 20% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 25% 15%;
+    --popover-foreground: 145 20% 18%;
 
-    /* Primary: Dark Teal */
-    --primary: 195 45% 25%;
+    /* Primary: Sage green (מרווה) */
+    --primary: 115 10% 51%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Warm off-white */
-    --secondary: 40 20% 97%;
-    --secondary-foreground: 210 25% 20%;
+    /* Secondary: Light sand */
+    --secondary: 40 30% 95%;
+    --secondary-foreground: 145 20% 18%;
 
     /* Muted tones */
-    --muted: 210 15% 94%;
-    --muted-foreground: 210 10% 45%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 145 10% 45%;
 
-    /* Accent: Soft warm amber - calmer CTAs */
-    --accent: 38 55% 52%;
-    --accent-foreground: 210 25% 12%;
+    /* Accent: Muted terracotta */
+    --accent: 15 45% 52%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 90%;
-    --ring: 195 45% 25%;
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 115 10% 51%;
 
     --radius: 0.5rem;
 
-    /* Custom tokens */
-    --teal: 195 45% 25%;
-    --teal-light: 195 35% 40%;
-    --gold: 38 55% 52%;
-    --gold-dark: 38 60% 45%;
-    --charcoal: 210 25% 15%;
+    /* Custom organic tokens */
+    --sand: 40 33% 97%;
+    --forest: 145 20% 18%;
+    --sage: 115 10% 51%;
+    --terracotta: 15 45% 52%;
+    
+    /* Legacy tokens for compatibility */
+    --teal: 115 10% 51%;
+    --teal-light: 115 15% 60%;
+    --gold: 15 45% 52%;
+    --gold-dark: 15 50% 45%;
+    --charcoal: 145 20% 18%;
 
-    /* Shadows - refined and visible */
-    --shadow-soft: 0 2px 12px -2px hsl(210 25% 15% / 0.1);
-    --shadow-card: 0 4px 24px -4px hsl(210 25% 15% / 0.15);
-    --shadow-elevated: 0 12px 40px -8px hsl(210 25% 15% / 0.18);
+    /* Shadows - soft and refined */
+    --shadow-soft: 0 2px 12px -2px hsl(145 20% 18% / 0.08);
+    --shadow-card: 0 4px 24px -4px hsl(145 20% 18% / 0.12);
+    --shadow-elevated: 0 12px 40px -8px hsl(145 20% 18% / 0.15);
 
     /* Sidebar */
-    --sidebar-background: 195 45% 25%;
+    --sidebar-background: 145 20% 18%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 38 80% 50%;
-    --sidebar-primary-foreground: 210 25% 12%;
-    --sidebar-accent: 195 35% 35%;
+    --sidebar-primary: 15 45% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 145 15% 28%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 195 40% 20%;
-    --sidebar-ring: 38 80% 50%;
+    --sidebar-border: 145 20% 25%;
+    --sidebar-ring: 15 45% 52%;
   }
 
   .dark {
-    --background: 210 25% 8%;
-    --foreground: 210 15% 95%;
+    --background: 145 20% 8%;
+    --foreground: 40 20% 95%;
 
-    --card: 210 22% 12%;
-    --card-foreground: 210 15% 95%;
+    --card: 145 18% 12%;
+    --card-foreground: 40 20% 95%;
 
-    --popover: 210 22% 12%;
-    --popover-foreground: 210 15% 95%;
+    --popover: 145 18% 12%;
+    --popover-foreground: 40 20% 95%;
 
-    --primary: 195 40% 45%;
-    --primary-foreground: 210 25% 8%;
+    --primary: 115 15% 55%;
+    --primary-foreground: 145 20% 8%;
 
-    --secondary: 210 20% 18%;
-    --secondary-foreground: 210 15% 95%;
+    --secondary: 145 15% 18%;
+    --secondary-foreground: 40 20% 95%;
 
-    --muted: 210 20% 18%;
-    --muted-foreground: 210 10% 60%;
+    --muted: 145 15% 18%;
+    --muted-foreground: 40 10% 60%;
 
-    --accent: 38 75% 55%;
-    --accent-foreground: 210 25% 8%;
+    --accent: 15 50% 58%;
+    --accent-foreground: 145 20% 8%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 210 15% 95%;
+    --destructive-foreground: 40 20% 95%;
 
-    --border: 210 20% 22%;
-    --input: 210 20% 22%;
-    --ring: 195 40% 45%;
+    --border: 145 15% 22%;
+    --input: 145 15% 22%;
+    --ring: 115 15% 55%;
 
-    --sidebar-background: 210 25% 10%;
-    --sidebar-foreground: 210 15% 95%;
-    --sidebar-primary: 38 75% 55%;
-    --sidebar-primary-foreground: 210 25% 8%;
-    --sidebar-accent: 210 20% 18%;
-    --sidebar-accent-foreground: 210 15% 95%;
-    --sidebar-border: 210 20% 22%;
-    --sidebar-ring: 195 40% 45%;
+    --sidebar-background: 145 20% 10%;
+    --sidebar-foreground: 40 20% 95%;
+    --sidebar-primary: 15 50% 58%;
+    --sidebar-primary-foreground: 145 20% 8%;
+    --sidebar-accent: 145 15% 18%;
+    --sidebar-accent-foreground: 40 20% 95%;
+    --sidebar-border: 145 15% 22%;
+    --sidebar-ring: 115 15% 55%;
   }
 }
 
@@ -123,12 +129,17 @@
     font-weight: 500;
     letter-spacing: 0.01em;
   }
+
+  /* Reading-friendly line height for body text */
+  p, li, article {
+    line-height: 1.6;
+  }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
   }
 
   .font-body {
@@ -145,5 +156,47 @@
 
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
+  }
+
+  /* Article prose styling */
+  .prose-article {
+    @apply leading-relaxed;
+  }
+  
+  .prose-article h1 {
+    @apply text-4xl md:text-5xl font-serif font-medium mb-6;
+  }
+  
+  .prose-article h2 {
+    @apply text-2xl md:text-3xl font-serif font-medium mt-8 mb-4;
+  }
+  
+  .prose-article h3 {
+    @apply text-xl md:text-2xl font-serif font-medium mt-6 mb-3;
+  }
+  
+  .prose-article p {
+    @apply mb-4 text-foreground/90;
+  }
+  
+  .prose-article a {
+    @apply text-primary underline hover:text-primary/80 transition-colors;
+  }
+  
+  .prose-article blockquote {
+    @apply border-s-4 border-primary/30 ps-4 italic my-6 text-muted-foreground;
+  }
+  
+  .prose-article ul, .prose-article ol {
+    @apply my-4 ps-6;
+  }
+  
+  .prose-article li {
+    @apply mb-2;
+  }
+
+  /* CTA button style for rich text editor */
+  .prose-article .cta-button {
+    @apply inline-block px-6 py-3 bg-accent text-accent-foreground rounded-lg font-medium no-underline hover:opacity-90 transition-opacity;
   }
 }

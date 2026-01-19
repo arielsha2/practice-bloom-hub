@@ -7,8 +7,9 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryBadge } from '@/components/contents/CategoryBadge';
+import { AuthorFooter } from '@/components/contents/AuthorFooter';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Edit, Trash2, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -74,7 +75,6 @@ export default function ContentDetail() {
       } else {
         setContent(data);
         
-        // Fetch category if exists
         if (data.category_id) {
           const { data: catData } = await supabase
             .from('content_categories')
@@ -130,11 +130,19 @@ export default function ContentDetail() {
     });
   };
 
+  // Estimate reading time (words per minute)
+  const getReadingTime = (text: string) => {
+    const plainText = text.replace(/<[^>]*>/g, '');
+    const wordCount = plainText.split(/\s+/).length;
+    const minutes = Math.ceil(wordCount / 200);
+    return isRTL ? `${minutes} דקות קריאה` : `${minutes} min read`;
+  };
+
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -145,73 +153,82 @@ export default function ContentDetail() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      <main className="flex-1 pt-24 pb-12">
-        <div className="container mx-auto px-4 max-w-3xl">
+      <main className="flex-1 pt-24 pb-16">
+        <div className="container mx-auto px-4">
           {/* Back Button */}
-          <Link 
-            to="/contents"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-          >
-            <BackIcon className="w-4 h-4" />
-            {t('contents.back')}
-          </Link>
+          <div className="max-w-2xl mx-auto mb-8">
+            <Link 
+              to="/contents"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <BackIcon className="w-4 h-4" />
+              {t('contents.back')}
+            </Link>
+          </div>
 
-          {/* Featured Image */}
-          {content.featured_image_url && (
-            <div className="aspect-video overflow-hidden rounded-lg mb-8">
-              <img 
-                src={content.featured_image_url} 
-                alt={content.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          {/* Content */}
-          <article>
-            <header className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                {category && <CategoryBadge category={category} />}
-                <time className="text-muted-foreground">
-                  {formatDate(content.published_at)}
-                </time>
+          {/* Article Container - WriteToDone style */}
+          <article className="max-w-2xl mx-auto">
+            {/* Featured Image - Full width, large */}
+            {content.featured_image_url && (
+              <div className="aspect-video overflow-hidden rounded-xl mb-8 shadow-card">
+                <img 
+                  src={content.featured_image_url} 
+                  alt={content.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              
-              <h1 className="text-4xl font-bold text-foreground mb-4">
-                {content.title}
-              </h1>
+            )}
 
-              {/* Admin Actions */}
-              {isAdmin && (
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEditForm(true)}
-                  >
-                    <Edit className="w-4 h-4 me-2" />
-                    {t('contents.admin.edit')}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="w-4 h-4 me-2" />
-                    {t('contents.admin.delete')}
-                  </Button>
-                </div>
-              )}
-            </header>
+            {/* Meta info bar */}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+              {category && <CategoryBadge category={category} />}
+              <span className="text-muted-foreground/50">|</span>
+              <time>{formatDate(content.published_at)}</time>
+              <span className="text-muted-foreground/50">|</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {getReadingTime(content.content)}
+              </span>
+            </div>
+            
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-medium text-foreground mb-8 leading-tight">
+              {content.title}
+            </h1>
 
-            {/* Rich text content - rendered as HTML */}
+            {/* Admin Actions */}
+            {isAdmin && (
+              <div className="flex gap-2 mb-8 pb-8 border-b">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditForm(true)}
+                >
+                  <Edit className="w-4 h-4 me-2" />
+                  {t('contents.admin.edit')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="w-4 h-4 me-2" />
+                  {t('contents.admin.delete')}
+                </Button>
+              </div>
+            )}
+
+            {/* Rich text content */}
             <div 
-              className="prose prose-lg max-w-none text-foreground"
+              className="prose-article"
               dangerouslySetInnerHTML={{ __html: content.content }}
             />
+
+            {/* Author Footer */}
+            <AuthorFooter />
           </article>
         </div>
       </main>
