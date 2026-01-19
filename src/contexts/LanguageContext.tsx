@@ -68,6 +68,7 @@ const translations: Record<Language, Record<string, string>> = {
     "benefits.item3.title": "Financial Freedom & Zero Burnout",
     "benefits.item3.desc":
       "Earn what you deserve while maintaining professional boundaries and personal well-being. Work less, earn more, live better.",
+    "benefits.cta": "Discover the Turning Point Program",
 
     // Bots
     "bots.title": "AI Assistants for Therapists",
@@ -197,6 +198,11 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.noAccess": "Access Denied",
     "portal.accessDescription":
       "You don't have access to this area. Please contact the administrator if you believe this is an error.",
+    "portal.course.title": "The Turning Point Program",
+    "portal.course.subtitle": "Everything you need to build a thriving therapy practice",
+    "portal.course.includes": "What's Included",
+    "portal.course.signup": "Join the Program",
+    "portal.course.alreadyMember": "Already a member?",
     "portal.lessons": "Lessons",
     "portal.noLessons": "No lessons available yet",
     "portal.video": "Video",
@@ -368,6 +374,7 @@ const translations: Record<Language, Record<string, string>> = {
     "benefits.item3.title": "חופש לטפל בלי המתח הכלכלי",
     "benefits.item3.desc":
       "להרוויח את מה שמגיע לכם תוך שמירה על גבולות מקצועיים ורווחה אישית. לעבוד פחות, להרוויח יותר, לחיות טוב יותר.",
+    "benefits.cta": "גלו את תוכנית נקודת המפנה",
 
     // Bots
     "bots.title": "עוזרי AI למטפלים",
@@ -496,6 +503,11 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.title": "אזור התלמידים",
     "portal.noAccess": "אין גישה",
     "portal.accessDescription": "אין לך גישה לאזור זה. אנא פנה למנהל אם אתה מאמין שזו שגיאה.",
+    "portal.course.title": "תוכנית נקודת המפנה",
+    "portal.course.subtitle": "כל מה שצריך כדי לבנות קליניקה טיפולית משגשגת",
+    "portal.course.includes": "מה כולל הקורס",
+    "portal.course.signup": "הצטרפו לתוכנית",
+    "portal.course.alreadyMember": "כבר חברים?",
     "portal.lessons": "שיעורים",
     "portal.noLessons": "אין שיעורים עדיין",
     "portal.video": "וידאו",

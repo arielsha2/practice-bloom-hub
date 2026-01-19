@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sparkles, HeartHandshake, Sunrise } from 'lucide-react';
+import { Sparkles, HeartHandshake, Sunrise, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const icons = [Sparkles, HeartHandshake, Sunrise];
 
@@ -12,6 +14,8 @@ export function Benefits() {
     { key: 'item2', icon: icons[1] },
     { key: 'item3', icon: icons[2] },
   ];
+
+  const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
     <section id="benefits" className="py-24 bg-secondary relative overflow-hidden">
@@ -76,6 +80,22 @@ export function Benefits() {
             );
           })}
         </div>
+
+        {/* CTA Button */}
+        <motion.div 
+          className="text-center mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Link to="/portal">
+            <Button size="lg" className="text-lg px-8 py-6">
+              {t('benefits.cta')}
+              <ArrowIcon className="w-5 h-5 ms-2" />
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
