@@ -54,6 +54,12 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "Market Your Practice with Authenticity",
     "hero.subtitle": "Build a thriving private practice without anxiety or compromising who you are",
     "hero.cta": "Get Free Resources",
+    "hero.videoPlaceholder": "Watch Introduction Video",
+
+    // Founders
+    "founders.title": "Who We Are",
+    "founders.text": "Ariel and Eliana - guiding therapists in building stable and thriving practices through the 'On the Edge of the Clinic' approach. We believe that combining precise professional identity with ethical business tools is the key to your growth.",
+    "founders.imageAlt": "Ariel and Eliana - Program Founders",
 
     // Benefits / Transformation
     "benefits.label": "The Transformation",
@@ -365,6 +371,12 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
     "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
     "hero.cta": "הצטרפו לקהילת על שפת הקליניקה",
+    "hero.videoPlaceholder": "צפו בסרטון ההכרות",
+
+    // Founders
+    "founders.title": "מי אנחנו?",
+    "founders.text": "אריאל ואליענה - מלווים מטפלים בבניית קליניקות יציבות ומשגשגות דרך גישת 'על שפת הקליניקה'. אנחנו מאמינים ששילוב בין זהות מקצועית מדויקת לבין כלים עסקיים אתיים הוא המפתח לצמיחה שלכם.",
+    "founders.imageAlt": "אריאל ואליענה - מייסדי התוכנית",
 
     // Benefits / Transformation
     "benefits.label": "הטרנספורמציה",

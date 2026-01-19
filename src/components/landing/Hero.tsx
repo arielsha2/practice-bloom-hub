@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award, Play } from "lucide-react";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -81,12 +81,38 @@ export function Hero() {
 
             {/* Subheading */}
             <motion.p
-              className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed"
+              className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
             >
               {t("hero.subtitle")}
             </motion.p>
+
+            {/* Video Placeholder */}
+            <motion.div
+              className="mb-8 w-full max-w-xl"
+              {...fadeUp}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 }}
+            >
+              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-card bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 cursor-pointer group hover:shadow-elevated transition-all duration-300">
+                {/* Placeholder background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+                
+                {/* Play button overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-elevated group-hover:scale-110 group-hover:bg-primary transition-all duration-300">
+                    <Play className="w-7 h-7 md:w-8 md:h-8 text-primary-foreground fill-current ml-1" />
+                  </div>
+                </div>
+                
+                {/* Video placeholder text */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <p className={`text-sm text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-2 rounded-lg inline-block ${isRTL ? "text-right" : ""}`}>
+                    {t("hero.videoPlaceholder")}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
 
             {/* CTA Buttons */}
             <motion.div
