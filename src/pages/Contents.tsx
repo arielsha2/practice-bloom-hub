@@ -11,7 +11,6 @@ import { ContentSearch } from '@/components/contents/ContentSearch';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
