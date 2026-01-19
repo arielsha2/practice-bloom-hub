@@ -73,7 +73,7 @@ export function CTABanner() {
               variant="ghost" 
               size="xl" 
               className="text-primary-foreground border-2 border-white/30 hover:bg-white/10 hover:text-primary-foreground"
-              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
             >
               {t('cta.secondaryButton')}
             </Button>
