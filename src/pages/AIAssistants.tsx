@@ -3,12 +3,19 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Compass, Map, PenTool, Bot } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const botData = [
   { key: 'niche', icon: Compass },
   { key: 'strategy', icon: Map },
   { key: 'content', icon: PenTool },
 ];
+
+const botKeyMapping: Record<string, string> = {
+  'niche': 'niche-finder',
+  'strategy': 'strategy-planner',
+  'content': 'content-creator',
+};
 
 const AIAssistants = () => {
   const { t, isRTL } = useLanguage();
@@ -65,9 +72,11 @@ const AIAssistants = () => {
                       <p className="text-muted-foreground leading-relaxed mb-8">
                         {t(`bots.${bot.key}.desc`)}
                       </p>
-                      <Button variant="cta" className="w-full">
-                        {t('bots.cta')}
-                      </Button>
+                      <Link to={`/ai-assistants/${botKeyMapping[bot.key]}`}>
+                        <Button variant="cta" className="w-full">
+                          {t('bots.cta')}
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 );
