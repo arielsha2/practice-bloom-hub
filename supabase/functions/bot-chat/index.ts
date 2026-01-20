@@ -103,7 +103,7 @@ serve(async (req) => {
     // 3. Load user memory (personal insights)
     const { data: userMemories } = await supabase
       .from("bot_user_memory")
-      .select("memory_content, memory_type")
+      .select("key, value")
       .eq("user_id", user.id)
       .eq("bot_key", botKey)
       .order("created_at", { ascending: false });
@@ -121,7 +121,7 @@ serve(async (req) => {
 
     if (userMemories && userMemories.length > 0) {
       const memorySection = userMemories
-        .map((m) => `- ${m.memory_content}`)
+        .map((m) => `- ${m.value}`)
         .join("\n");
       
       systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;

@@ -91,9 +91,16 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
         // Process line by line
         let newlineIndex: number;
         while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.slice(0, newlineIndex);
+          let line = buffer.slice(0, newlineIndex);
           buffer = buffer.slice(newlineIndex + 1);
 
+          // Handle CRLF
+          if (line.endsWith('\r')) {
+            line = line.slice(0, -1);
+          }
+
+          // Skip empty lines and SSE comments
+          if (line.trim() === '' || line.startsWith(':')) continue;
           if (!line.startsWith('data: ')) continue;
 
           const jsonStr = line.slice(6).trim();
@@ -113,7 +120,9 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
               );
             }
           } catch {
-            // Ignore parse errors from incomplete JSON
+            // Incomplete JSON, put line back and wait for more data
+            buffer = line + '\n' + buffer;
+            break;
           }
         }
       }
