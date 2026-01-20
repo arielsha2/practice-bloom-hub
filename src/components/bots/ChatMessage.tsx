@@ -12,8 +12,8 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
   const isUser = role === 'user';
   const [displayedContent, setDisplayedContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const contentRef = useRef(content);
-  const hasAnimatedRef = useRef(false);
+  const hasCompletedRef = useRef(false);
+  const wasStreamingRef = useRef(false);
 
   useEffect(() => {
     // User messages - show immediately
@@ -25,23 +25,29 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
     // During streaming - show content as it arrives
     if (isStreaming) {
       setDisplayedContent(content);
-      contentRef.current = content;
-      hasAnimatedRef.current = true;
+      wasStreamingRef.current = true;
       return;
     }
 
-    // If content changed and we've already animated, just update
-    if (hasAnimatedRef.current && content === contentRef.current) {
+    // Just finished streaming - keep the content, don't re-animate
+    if (wasStreamingRef.current) {
+      setDisplayedContent(content);
+      hasCompletedRef.current = true;
+      return;
+    }
+
+    // Already completed (e.g., re-render) - show immediately
+    if (hasCompletedRef.current) {
       setDisplayedContent(content);
       return;
     }
 
     // New message from history - animate typing
-    if (content && !hasAnimatedRef.current) {
+    if (content && !hasCompletedRef.current) {
       setIsTyping(true);
       setDisplayedContent('');
       let index = 0;
-      const typingSpeed = 12; // ms per character
+      const typingSpeed = 12;
 
       const typeNextChar = () => {
         if (index < content.length) {
@@ -50,8 +56,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
           setTimeout(typeNextChar, typingSpeed);
         } else {
           setIsTyping(false);
-          hasAnimatedRef.current = true;
-          contentRef.current = content;
+          hasCompletedRef.current = true;
         }
       };
 
@@ -88,7 +93,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right" dir="rtl">
           {displayedContent}
           {showCursor && (
             <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
