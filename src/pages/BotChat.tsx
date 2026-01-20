@@ -36,6 +36,7 @@ const BotChat = () => {
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isStreamingRef = useRef(false);
 
   // Data fetching
   const { data: botConfig, isLoading: botLoading } = useBotConfiguration(botKey || '');
@@ -60,25 +61,36 @@ const BotChat = () => {
     },
   });
 
+  // Track streaming state in ref
+  useEffect(() => {
+    isStreamingRef.current = chatLoading || messages.some(m => m.isStreaming);
+  }, [chatLoading, messages]);
+
   // Load saved messages when conversation changes
   // Don't sync during streaming to prevent overwriting local streaming state
   useEffect(() => {
-    const hasStreamingMessages = messages.some(m => m.isStreaming);
-    if (chatLoading || hasStreamingMessages) {
+    if (isStreamingRef.current) {
       return;
     }
 
-    if (savedMessages.length > 0) {
-      const formattedMessages: ChatMessageType[] = savedMessages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-      }));
-      loadMessages(formattedMessages);
-    } else if (!activeConversationId) {
-      clearMessages();
-    }
-  }, [savedMessages, activeConversationId, loadMessages, clearMessages, chatLoading, messages]);
+    // Small delay to ensure DB has updated after streaming ends
+    const timeoutId = setTimeout(() => {
+      if (isStreamingRef.current) return;
+      
+      if (savedMessages.length > 0) {
+        const formattedMessages: ChatMessageType[] = savedMessages.map((msg) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+        }));
+        loadMessages(formattedMessages);
+      } else if (!activeConversationId) {
+        clearMessages();
+      }
+    }, 150);
+
+    return () => clearTimeout(timeoutId);
+  }, [savedMessages, activeConversationId, loadMessages, clearMessages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
