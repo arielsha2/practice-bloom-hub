@@ -18,6 +18,7 @@ import AIAssistants from "./pages/AIAssistants";
 import Dashboard from "./pages/Dashboard";
 import ContentsAdmin from "./pages/ContentsAdmin";
 import BotAdmin from "./pages/BotAdmin";
+import BotChat from "./pages/BotChat";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
+              <Route path="/ai-assistants/:botKey" element={<BotChat />} />
               <Route path="/contents" element={<Contents />} />
               <Route path="/contents/admin" element={<ContentsAdmin />} />
               <Route path="/contents/:id" element={<ContentDetail />} />
