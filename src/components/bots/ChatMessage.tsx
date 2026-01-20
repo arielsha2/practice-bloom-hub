@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 
@@ -9,6 +10,58 @@ interface ChatMessageProps {
 
 export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
   const isUser = role === 'user';
+  const [displayedContent, setDisplayedContent] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const contentRef = useRef(content);
+  const hasAnimatedRef = useRef(false);
+
+  useEffect(() => {
+    // User messages - show immediately
+    if (isUser) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    // During streaming - show content as it arrives
+    if (isStreaming) {
+      setDisplayedContent(content);
+      contentRef.current = content;
+      hasAnimatedRef.current = true;
+      return;
+    }
+
+    // If content changed and we've already animated, just update
+    if (hasAnimatedRef.current && content === contentRef.current) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    // New message from history - animate typing
+    if (content && !hasAnimatedRef.current) {
+      setIsTyping(true);
+      setDisplayedContent('');
+      let index = 0;
+      const typingSpeed = 12; // ms per character
+
+      const typeNextChar = () => {
+        if (index < content.length) {
+          setDisplayedContent(content.slice(0, index + 1));
+          index++;
+          setTimeout(typeNextChar, typingSpeed);
+        } else {
+          setIsTyping(false);
+          hasAnimatedRef.current = true;
+          contentRef.current = content;
+        }
+      };
+
+      typeNextChar();
+    } else {
+      setDisplayedContent(content);
+    }
+  }, [content, isStreaming, isUser]);
+
+  const showCursor = isStreaming || isTyping;
 
   return (
     <div
@@ -36,9 +89,9 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">
-          {content}
-          {isStreaming && (
-            <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse mr-1" />
+          {displayedContent}
+          {showCursor && (
+            <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
           )}
         </p>
       </div>
