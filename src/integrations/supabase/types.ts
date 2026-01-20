@@ -14,6 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_configurations: {
+        Row: {
+          bot_key: string
+          color: string | null
+          created_at: string | null
+          description_en: string | null
+          description_he: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          max_tokens: number | null
+          model: string | null
+          name_en: string
+          name_he: string
+          system_prompt: string
+          temperature: number | null
+          updated_at: string | null
+          welcome_message_en: string | null
+          welcome_message_he: string | null
+        }
+        Insert: {
+          bot_key: string
+          color?: string | null
+          created_at?: string | null
+          description_en?: string | null
+          description_he?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_tokens?: number | null
+          model?: string | null
+          name_en: string
+          name_he: string
+          system_prompt: string
+          temperature?: number | null
+          updated_at?: string | null
+          welcome_message_en?: string | null
+          welcome_message_he?: string | null
+        }
+        Update: {
+          bot_key?: string
+          color?: string | null
+          created_at?: string | null
+          description_en?: string | null
+          description_he?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_tokens?: number | null
+          model?: string | null
+          name_en?: string
+          name_he?: string
+          system_prompt?: string
+          temperature?: number | null
+          updated_at?: string | null
+          welcome_message_en?: string | null
+          welcome_message_he?: string | null
+        }
+        Relationships: []
+      }
+      bot_conversations: {
+        Row: {
+          bot_key: string
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          bot_key: string
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          bot_key?: string
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_conversations_bot_key_fkey"
+            columns: ["bot_key"]
+            isOneToOne: false
+            referencedRelation: "bot_configurations"
+            referencedColumns: ["bot_key"]
+          },
+        ]
+      }
+      bot_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "bot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_user_memory: {
+        Row: {
+          bot_key: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          bot_key: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          bot_key?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_user_memory_bot_key_fkey"
+            columns: ["bot_key"]
+            isOneToOne: false
+            referencedRelation: "bot_configurations"
+            referencedColumns: ["bot_key"]
+          },
+        ]
+      }
       content_categories: {
         Row: {
           created_at: string | null

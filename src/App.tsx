@@ -17,6 +17,7 @@ import MediaLibrary from "./pages/MediaLibrary";
 import AIAssistants from "./pages/AIAssistants";
 import Dashboard from "./pages/Dashboard";
 import ContentsAdmin from "./pages/ContentsAdmin";
+import BotAdmin from "./pages/BotAdmin";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/portal/admin" element={<PortalAdmin />} />
               <Route path="/media-library" element={<MediaLibrary />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin/bots" element={<BotAdmin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
