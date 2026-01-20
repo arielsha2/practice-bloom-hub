@@ -29,6 +29,9 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
     setError(null);
     setIsLoading(true);
 
+    // Track new conversation ID for proper invalidation
+    let effectiveConversationId: string | null = conversationId;
+
     // Add user message immediately
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -62,9 +65,10 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
       );
 
       // Check for new conversation ID in header
-      const newConversationId = response.headers.get('X-Conversation-Id');
-      if (newConversationId && newConversationId !== conversationId) {
-        onConversationCreated?.(newConversationId);
+      const headerConversationId = response.headers.get('X-Conversation-Id');
+      if (headerConversationId && headerConversationId !== conversationId) {
+        effectiveConversationId = headerConversationId;
+        onConversationCreated?.(headerConversationId);
       }
 
       if (!response.ok) {
@@ -136,10 +140,10 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
         )
       );
 
-      // Invalidate queries to refresh conversation list
+      // Invalidate queries to refresh conversation list and messages
       queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
-      if (conversationId) {
-        queryClient.invalidateQueries({ queryKey: ['bot-messages', conversationId] });
+      if (effectiveConversationId) {
+        queryClient.invalidateQueries({ queryKey: ['bot-messages', effectiveConversationId] });
       }
     } catch (err) {
       console.error('Chat error:', err);

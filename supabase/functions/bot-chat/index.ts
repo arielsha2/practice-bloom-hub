@@ -281,6 +281,8 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
         "X-Conversation-Id": currentConversationId!,
       },
     });

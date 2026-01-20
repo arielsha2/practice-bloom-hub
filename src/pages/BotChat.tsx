@@ -61,7 +61,13 @@ const BotChat = () => {
   });
 
   // Load saved messages when conversation changes
+  // Don't sync during streaming to prevent overwriting local streaming state
   useEffect(() => {
+    const hasStreamingMessages = messages.some(m => m.isStreaming);
+    if (chatLoading || hasStreamingMessages) {
+      return;
+    }
+
     if (savedMessages.length > 0) {
       const formattedMessages: ChatMessageType[] = savedMessages.map((msg) => ({
         id: msg.id,
@@ -72,7 +78,7 @@ const BotChat = () => {
     } else if (!activeConversationId) {
       clearMessages();
     }
-  }, [savedMessages, activeConversationId, loadMessages, clearMessages]);
+  }, [savedMessages, activeConversationId, loadMessages, clearMessages, chatLoading, messages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
