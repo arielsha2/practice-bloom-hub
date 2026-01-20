@@ -2,6 +2,34 @@ import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 
+// Simple markdown parser for bold and italic text
+function parseMarkdown(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Match bold (**text**)
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    
+    if (boldMatch && boldMatch.index !== undefined) {
+      // Add text before the match
+      if (boldMatch.index > 0) {
+        parts.push(remaining.slice(0, boldMatch.index));
+      }
+      // Add bold text
+      parts.push(<strong key={key++} className="font-semibold">{boldMatch[1]}</strong>);
+      remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
+    } else {
+      // No more matches, add remaining text
+      parts.push(remaining);
+      break;
+    }
+  }
+
+  return parts;
+}
+
 interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
@@ -94,7 +122,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right" dir="rtl">
-          {displayedContent}
+          {parseMarkdown(displayedContent)}
           {showCursor && (
             <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
           )}
