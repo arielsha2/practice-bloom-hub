@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Expose-Headers": "X-Conversation-Id",
 };
 
 interface ChatRequest {
@@ -236,11 +237,11 @@ serve(async (req) => {
                 if (content) {
                   fullAssistantResponse += content;
                 }
-                // Pass through the SSE event
-                await writer.write(encoder.encode(line + "\n"));
+                // Pass through the SSE event with proper SSE format
+                await writer.write(encoder.encode(line + "\n\n"));
               } catch {
                 // Incomplete JSON, pass through anyway
-                await writer.write(encoder.encode(line + "\n"));
+                await writer.write(encoder.encode(line + "\n\n"));
               }
             } else {
               // Pass through non-data lines (comments, empty lines)

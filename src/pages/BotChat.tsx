@@ -84,9 +84,8 @@ const BotChat = () => {
           content: msg.content,
         }));
         loadMessages(formattedMessages);
-      } else if (!activeConversationId) {
-        clearMessages();
       }
+      // Removed auto-clear: clearing is only done via handleNewConversation
     }, 150);
 
     return () => clearTimeout(timeoutId);
