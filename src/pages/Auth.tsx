@@ -246,7 +246,7 @@ export default function Auth() {
           <CardContent>
             {mode === 'forgot' && resetSent ? (
               <div className="text-center space-y-4">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+                <CheckCircle className="w-16 h-16 text-success mx-auto" />
                 <p className="text-muted-foreground">{t('auth.resetSent')}</p>
                 <button
                   type="button"

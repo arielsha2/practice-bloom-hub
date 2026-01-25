@@ -45,7 +45,7 @@ export function LessonListItem({
         className={cn(
           "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold border-2",
           isWatched 
-            ? "bg-emerald-500 border-emerald-500 text-white" 
+            ? "bg-success border-success text-success-foreground"
             : isActive
               ? "border-primary bg-primary text-primary-foreground"
               : "border-muted-foreground/30 text-muted-foreground group-hover:border-muted-foreground/50"

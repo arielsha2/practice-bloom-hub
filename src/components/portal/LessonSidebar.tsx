@@ -46,7 +46,7 @@ export function LessonSidebar({
                 : `${completedCount}/${totalCount} completed`
               }
             </span>
-            <span className="font-medium text-emerald-600">{progressPercentage}%</span>
+            <span className="font-medium text-accent">{progressPercentage}%</span>
           </div>
           <Progress value={progressPercentage} className="h-1.5" />
         </div>
@@ -76,7 +76,7 @@ export function LessonSidebar({
                   isActive 
                     ? "bg-primary-foreground/20 border-primary-foreground/30" 
                     : isWatched 
-                      ? "bg-emerald-500 border-emerald-500 text-white" 
+                      ? "bg-success border-success text-success-foreground"
                       : "border-muted-foreground/30 text-muted-foreground"
                 )}>
                   {isWatched && !isActive ? (

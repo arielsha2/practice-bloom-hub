@@ -12,14 +12,14 @@ interface StatsCardProps {
 
 const variantStyles = {
   default: 'bg-card border-border',
-  success: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
+  success: 'bg-success/10 dark:bg-success/20 border-success/30 dark:border-success/40',
   warning: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
   info: 'bg-primary/5 border-primary/20',
 };
 
 const iconStyles = {
   default: 'text-muted-foreground',
-  success: 'text-emerald-600 dark:text-emerald-400',
+  success: 'text-success dark:text-success',
   warning: 'text-amber-600 dark:text-amber-400',
   info: 'text-primary',
 };
