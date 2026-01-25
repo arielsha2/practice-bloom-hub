@@ -5,15 +5,54 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Video, FileText, Users, Bot, Headphones, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Video, Users, ClipboardCheck, BookOpen, Infinity, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight } from 'lucide-react';
 
-const features = [
-  { key: 'videos', icon: Video },
-  { key: 'exercises', icon: FileText },
-  { key: 'community', icon: Users },
-  { key: 'ai', icon: Bot },
-  { key: 'support', icon: Headphones },
-  { key: 'mobile', icon: Smartphone },
+const programFeatures = [
+  { 
+    icon: Video, 
+    title: '6 שיעורי וידאו מוקלטים', 
+    desc: 'תוכן מקצועי ומעשי שתוכלי לצפות בזמן שנוח לך' 
+  },
+  { 
+    icon: Users, 
+    title: '6 מפגשי לייב בזום', 
+    desc: 'סימולציות ותרגול קבוצתי עם משוב אישי' 
+  },
+  { 
+    icon: ClipboardCheck, 
+    title: 'משימות שבועיות', 
+    desc: 'לתרגול ויישום מעשי של מה שלמדת' 
+  },
+  { 
+    icon: BookOpen, 
+    title: 'מדריך מקצועי מקיף', 
+    desc: 'יעזור לך להתמצא בכל התכנים' 
+  },
+  { 
+    icon: Infinity, 
+    title: 'גישה פתוחה ללא הגבלה', 
+    desc: 'צפי בתכנים מתי שרק תרצי, לתמיד' 
+  },
+  { 
+    icon: FileText, 
+    title: 'חוברות תרגול פרקטיות', 
+    desc: 'לסיכום והטמעה של כל מה שלמדת' 
+  },
+  { 
+    icon: Heart, 
+    title: 'קבוצה קטנה של 4 משתתפים', 
+    desc: 'יחס אישי לתרגול מעמיק והתקדמות מהירה' 
+  },
+  { 
+    icon: MessageCircle, 
+    title: 'קבוצת וואטסאפ ייעודית', 
+    desc: 'תמיכה מתמשכת בין המפגשים' 
+  },
+  { 
+    icon: Gift, 
+    title: 'בונוס: חוברת תסריטים', 
+    desc: 'לניהול שיחות עם מתעניינים וקולגות' 
+  },
 ];
 
 export function PortalAccessDenied() {
@@ -62,11 +101,11 @@ export function PortalAccessDenied() {
           </motion.h2>
 
           <div className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto ${isRTL ? 'text-right' : ''}`}>
-            {features.map((feature, index) => {
+            {programFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <motion.div
-                  key={feature.key}
+                  key={index}
                   className="group"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -79,10 +118,10 @@ export function PortalAccessDenied() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-0.5">
-                        {t(`features.${feature.key}.title`)}
+                        {feature.title}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {t(`features.${feature.key}.desc`)}
+                        {feature.desc}
                       </p>
                     </div>
                   </div>
