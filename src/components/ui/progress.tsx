@@ -17,7 +17,7 @@ const Progress = React.forwardRef<
   >
     {animated ? (
       <motion.div
-        className="h-full bg-primary rounded-full"
+        className="h-full bg-accent rounded-full"
         initial={{ width: 0 }}
         animate={{ width: `${value || 0}%` }}
         transition={{ 

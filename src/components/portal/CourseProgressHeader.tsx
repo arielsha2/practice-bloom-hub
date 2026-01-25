@@ -21,7 +21,7 @@ export function CourseProgressHeader({
 
   return (
     <motion.div 
-      className="bg-slate-900 text-white py-6"
+      className="bg-primary text-primary-foreground py-6"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -46,7 +46,7 @@ export function CourseProgressHeader({
               <h1 className="text-xl md:text-2xl font-medium">
                 {courseTitle || (isRTL ? 'נקודת המפנה' : 'Turning Point')}
               </h1>
-              <p className="text-slate-400 text-sm">
+              <p className="text-primary-foreground/70 text-sm">
                 {isRTL 
                   ? `${completedLessons} מתוך ${totalLessons} שיעורים הושלמו`
                   : `${completedLessons} of ${totalLessons} lessons completed`
@@ -65,7 +65,7 @@ export function CourseProgressHeader({
             <div className="flex-1">
               <Progress 
                 value={progressPercentage} 
-                className="h-2 bg-slate-700"
+                className="h-2 bg-primary-foreground/20"
                 animated={true}
               />
             </div>

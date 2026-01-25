@@ -30,9 +30,9 @@ export function LessonSidebar({
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="w-80 border-e bg-slate-50 dark:bg-slate-900/50 flex flex-col h-[calc(100vh-64px)] sticky top-16">
+    <div className="w-80 border-e border-primary-foreground/10 bg-primary text-primary-foreground flex flex-col h-[calc(100vh-64px)] sticky top-16">
       {/* Header with progress */}
-      <div className="p-4 border-b bg-background">
+      <div className="p-4 border-b border-primary-foreground/10">
         <h2 className="font-semibold text-base mb-3">
           {isRTL ? 'תוכן הקורס' : 'Course content'}
         </h2>
@@ -40,7 +40,7 @@ export function LessonSidebar({
         {/* Progress summary */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
+            <span className="text-primary-foreground/70">
               {isRTL 
                 ? `${completedCount}/${totalCount} שיעורים הושלמו`
                 : `${completedCount}/${totalCount} completed`
@@ -48,7 +48,7 @@ export function LessonSidebar({
             </span>
             <span className="font-medium text-accent">{progressPercentage}%</span>
           </div>
-          <Progress value={progressPercentage} className="h-1.5" />
+          <Progress value={progressPercentage} className="h-1.5 bg-primary-foreground/20" />
         </div>
       </div>
       
@@ -66,18 +66,18 @@ export function LessonSidebar({
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-start transition-all group",
                   isActive 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : "hover:bg-muted"
+                    ? "bg-accent text-accent-foreground shadow-sm" 
+                    : "hover:bg-primary-foreground/10"
                 )}
               >
                 {/* Number/Check indicator */}
                 <div className={cn(
                   "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold border-2 transition-colors",
                   isActive 
-                    ? "bg-primary-foreground/20 border-primary-foreground/30" 
+                    ? "bg-accent-foreground/20 border-accent-foreground/30 text-accent-foreground" 
                     : isWatched 
                       ? "bg-success border-success text-success-foreground"
-                      : "border-muted-foreground/30 text-muted-foreground"
+                      : "border-primary-foreground/30 text-primary-foreground/70"
                 )}>
                   {isWatched && !isActive ? (
                     <Check className="w-4 h-4" />
@@ -90,7 +90,7 @@ export function LessonSidebar({
                 <div className="flex-1 min-w-0">
                   <span className={cn(
                     "text-sm line-clamp-2 block",
-                    isActive ? "font-medium" : isWatched ? "text-muted-foreground" : "font-normal"
+                    isActive ? "font-medium text-accent-foreground" : isWatched ? "text-primary-foreground/60" : "font-normal text-primary-foreground"
                   )}>
                     {lesson.title}
                   </span>
@@ -103,7 +103,7 @@ export function LessonSidebar({
                 
                 {/* Hover play for non-active */}
                 {!isActive && (
-                  <Play className="w-4 h-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                  <Play className="w-4 h-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary-foreground/70" />
                 )}
               </button>
             );
