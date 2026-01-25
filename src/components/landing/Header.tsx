@@ -51,12 +51,11 @@ export function Header() {
             {t("nav.portal")}
           </Link>
           {user && (
-            <Link
-              to="/dashboard"
-              className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10 flex items-center gap-1"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              {t("nav.dashboard")}
+            <Link to="/dashboard">
+              <Button variant="cta" size="sm" className="gap-1.5">
+                <LayoutDashboard className="w-4 h-4" />
+                {t("nav.dashboard")}
+              </Button>
             </Link>
           )}
         </div>
@@ -142,13 +141,11 @@ export function Header() {
               {t("nav.portal")}
             </Link>
             {user && (
-              <Link
-                to="/dashboard"
-                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10 flex items-center gap-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                {t("nav.dashboard")}
+              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="cta" size="sm" className="gap-2 w-full justify-start">
+                  <LayoutDashboard className="w-4 h-4" />
+                  {t("nav.dashboard")}
+                </Button>
               </Link>
             )}
 

@@ -186,7 +186,7 @@ export default function LessonDetail() {
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      <div className="flex pt-16">
+      <div className={cn("flex pt-16", isRTL && "flex-row-reverse")}>
         {/* Sidebar - collapsible */}
         {sidebarOpen && (
           <LessonSidebar
