@@ -17,7 +17,7 @@ export function NextStepCard({ lesson }: NextStepCardProps) {
 
   if (!lesson) {
     return (
-      <Card className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0">
+      <Card className="bg-gradient-to-r from-success to-success/80 text-success-foreground border-0">
         <CardContent className="p-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-white/20 rounded-full">

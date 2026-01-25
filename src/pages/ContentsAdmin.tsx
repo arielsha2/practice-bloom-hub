@@ -223,7 +223,7 @@ export default function ContentsAdmin() {
     }
     switch (status) {
       case 'published':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-success" />;
       case 'draft':
         return <FileText className="w-4 h-4 text-muted-foreground" />;
       case 'archived':

@@ -120,7 +120,7 @@ export function AdminQAList() {
                     </div>
                   </div>
                   {q.answer ? (
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-success shrink-0" />
                   ) : (
                     <Clock className="w-5 h-5 text-destructive shrink-0" />
                   )}

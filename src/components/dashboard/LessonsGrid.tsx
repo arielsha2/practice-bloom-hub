@@ -36,7 +36,7 @@ export function LessonsGrid({ lessons }: LessonsGridProps) {
               className={cn(
                 'transition-all hover:shadow-md cursor-pointer group h-full',
                 lesson.watched 
-                  ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' 
+                  ? 'bg-success/10 dark:bg-success/20 border-success/30 dark:border-success/40' 
                   : 'hover:border-primary/50'
               )}
             >
@@ -45,7 +45,7 @@ export function LessonsGrid({ lessons }: LessonsGridProps) {
                   <div className={cn(
                     'p-2 rounded-full transition-colors',
                     lesson.watched 
-                      ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400' 
+                      ? 'bg-success/20 dark:bg-success/30 text-success' 
                       : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
                   )}>
                     {lesson.watched ? (

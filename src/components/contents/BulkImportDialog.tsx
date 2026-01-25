@@ -387,11 +387,11 @@ export function BulkImportDialog({ open, onOpenChange, onImportComplete }: BulkI
       case 'pending':
         return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
       case 'ready':
-        return <Check className="w-4 h-4 text-green-500" />;
+        return <Check className="w-4 h-4 text-success" />;
       case 'importing':
         return <Loader2 className="w-4 h-4 animate-spin text-primary" />;
       case 'done':
-        return <Check className="w-4 h-4 text-green-500" />;
+        return <Check className="w-4 h-4 text-success" />;
       case 'error':
         return <AlertCircle className="w-4 h-4 text-destructive" />;
     }

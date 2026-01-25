@@ -75,9 +75,9 @@ export function CourseProgressHeader({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6, type: "spring", stiffness: 500 }}
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-accent" />
               <motion.span 
-                className="text-emerald-400"
+                className="text-accent"
                 key={progressPercentage}
                 initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
