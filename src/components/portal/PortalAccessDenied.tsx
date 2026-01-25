@@ -6,8 +6,9 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Video, Users, ClipboardCheck, BookOpen, Infinity, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Sparkles, Star } from 'lucide-react';
 import { PaymentOptionsDialog } from './PaymentOptionsDialog';
+import { PortalTestimonials } from './PortalTestimonials';
 
 const programFeatures = [
   { 
@@ -31,7 +32,7 @@ const programFeatures = [
     desc: 'יעזור לך להתמצא בכל התכנים' 
   },
   { 
-    icon: Infinity, 
+    icon: InfinityIcon, 
     title: 'גישה פתוחה ללא הגבלה', 
     desc: 'צפי בתכנים מתי שרק תרצי, לתמיד' 
   },
@@ -69,8 +70,14 @@ export function PortalAccessDenied() {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-secondary pt-24 pb-16">
-        <div className="container mx-auto px-4">
+      <section className="bg-secondary pt-24 pb-16 relative overflow-hidden">
+        {/* Decorative blur circles */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
+          <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-accent/15 rounded-full blur-[80px]" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
@@ -91,8 +98,36 @@ export function PortalAccessDenied() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 flex-grow">
-        <div className="container mx-auto px-4">
+      <section className="py-20 flex-grow relative overflow-hidden">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 via-background to-background pointer-events-none" />
+        
+        {/* Floating decorative icons */}
+        <motion.div
+          className="absolute top-20 right-[10%] w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center hidden md:flex"
+          animate={{ y: [0, -15, 0], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Sparkles className="w-6 h-6 text-accent" />
+        </motion.div>
+        
+        <motion.div
+          className="absolute bottom-32 left-[8%] w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hidden md:flex"
+          animate={{ y: [0, -12, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
+        >
+          <Star className="w-5 h-5 text-primary" />
+        </motion.div>
+
+        <motion.div
+          className="absolute top-1/2 left-[5%] w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center hidden lg:flex"
+          animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 5, repeat: Infinity, delay: 1, ease: "easeInOut" }}
+        >
+          <Star className="w-4 h-4 text-primary/50" />
+        </motion.div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <motion.h2 
             className={`text-2xl md:text-3xl font-serif font-medium text-foreground mb-12 text-center ${isRTL ? 'text-right md:text-center' : ''}`}
             initial={{ opacity: 0, y: 20 }}
@@ -135,9 +170,29 @@ export function PortalAccessDenied() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <PortalTestimonials />
+
       {/* CTA Section */}
-      <section className="py-16 bg-secondary">
-        <div className="container mx-auto px-4">
+      <section className="py-16 bg-gradient-to-br from-secondary via-secondary to-accent/5 relative overflow-hidden">
+        {/* Floating decorative elements */}
+        <motion.div 
+          className="absolute top-8 right-[15%] text-primary/15 hidden md:block"
+          animate={{ rotate: 360, scale: [1, 1.15, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        >
+          <Star className="w-8 h-8 fill-current" />
+        </motion.div>
+        
+        <motion.div 
+          className="absolute bottom-8 left-[10%] text-accent/10 hidden md:block"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+        >
+          <Sparkles className="w-6 h-6" />
+        </motion.div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center max-w-xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
