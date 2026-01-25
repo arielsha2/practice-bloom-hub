@@ -547,7 +547,7 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.accessDescription": "אין לך גישה לאזור זה. אנא פנה למנהל אם אתה מאמין שזו שגיאה.",
     "portal.course.title": "תוכנית נקודת המפנה",
     "portal.course.subtitle": "כל מה שצריך כדי לבנות קליניקה טיפולית משגשגת",
-    "portal.course.includes": "מה כולל הקורס",
+    "portal.course.includes": "מה כוללת התוכנית",
     "portal.course.signup": "הצטרפו לתוכנית",
     "portal.course.alreadyMember": "כבר חברים?",
     "portal.lessons": "שיעורים",
