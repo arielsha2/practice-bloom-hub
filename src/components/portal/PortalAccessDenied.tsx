@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Video, Users, ClipboardCheck, BookOpen, Infinity, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight } from 'lucide-react';
+import { PaymentOptionsDialog } from './PaymentOptionsDialog';
 
 const programFeatures = [
   { 
@@ -58,6 +60,7 @@ const programFeatures = [
 export function PortalAccessDenied() {
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -144,12 +147,14 @@ export function PortalAccessDenied() {
           >
             {!user ? (
               <div className="space-y-4">
-                <Link to="/auth">
-                  <Button size="lg" className="text-lg px-8 py-6">
-                    {t('portal.course.signup')}
-                    <ArrowIcon className="w-5 h-5 ms-2" />
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6"
+                  onClick={() => setShowPaymentDialog(true)}
+                >
+                  {t('portal.course.signup')}
+                  <ArrowIcon className="w-5 h-5 ms-2" />
+                </Button>
                 <p className="text-muted-foreground text-sm">
                   {t('portal.course.alreadyMember')}{' '}
                   <Link to="/auth" className="text-primary hover:underline">
@@ -172,6 +177,11 @@ export function PortalAccessDenied() {
       </section>
 
       <Footer />
+
+      <PaymentOptionsDialog 
+        open={showPaymentDialog} 
+        onOpenChange={setShowPaymentDialog} 
+      />
     </div>
   );
 }
