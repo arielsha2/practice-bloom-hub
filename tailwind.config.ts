@@ -14,10 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        sans: ['Assistant', 'sans-serif'],
+        serif: ['Heebo', 'sans-serif'],
+        display: ['Heebo', 'sans-serif'],
+        body: ['Assistant', 'sans-serif'],
       },
       lineHeight: {
         'relaxed': '1.6',
@@ -65,11 +65,12 @@ export default {
         forest: "hsl(var(--forest))",
         sage: "hsl(var(--sage))",
         terracotta: "hsl(var(--terracotta))",
-        // Legacy compatibility
+        // Teal accent
         teal: {
           DEFAULT: "hsl(var(--teal))",
           light: "hsl(var(--teal-light))",
         },
+        // Legacy compatibility
         gold: {
           DEFAULT: "hsl(var(--gold))",
           dark: "hsl(var(--gold-dark))",

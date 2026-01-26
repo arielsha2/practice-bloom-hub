@@ -6,7 +6,7 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Sparkles, Star } from 'lucide-react';
+import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Play, Target, Mic, MessageSquare } from 'lucide-react';
 import { PaymentOptionsDialog } from './PaymentOptionsDialog';
 import { PortalTestimonials } from './PortalTestimonials';
 
@@ -58,6 +58,27 @@ const programFeatures = [
   },
 ];
 
+const curriculumMeetings = [
+  {
+    num: 1,
+    icon: Target,
+    title: 'מתחברים אל החלומות',
+    desc: 'נגדיר יחד את החזון שלך לקליניקה ונבנה תוכנית פעולה ברורה להגשמתו'
+  },
+  {
+    num: 2,
+    icon: Users,
+    title: 'מטופלים מגיעים אל הקליניקה',
+    desc: 'נלמד איך למשוך את המטופלים הנכונים עבורך בדרכים אותנטיות ויעילות'
+  },
+  {
+    num: 3,
+    icon: Mic,
+    title: 'איך לדבר כך שמתעניינים יקשיבו',
+    desc: 'נתרגל שיחות עם מתעניינים ונלמד להעביר את הערך שלך בביטחון'
+  },
+];
+
 export function PortalAccessDenied() {
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
@@ -69,12 +90,12 @@ export function PortalAccessDenied() {
     <div className="min-h-screen bg-background flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      {/* Hero Section */}
-      <section className="bg-secondary pt-24 pb-16 relative overflow-hidden">
-        {/* Decorative blur circles */}
+      {/* Hero Section - Solid Wine Background */}
+      <section className="bg-primary pt-24 pb-16 relative overflow-hidden">
+        {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
-          <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-accent/15 rounded-full blur-[80px]" />
+          <div className="absolute -top-20 -right-20 w-[400px] h-[400px] bg-primary-foreground/5 rounded-full blur-[100px]" />
+          <div className="absolute -bottom-20 -left-20 w-[350px] h-[350px] bg-accent/10 rounded-full blur-[80px]" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -84,52 +105,128 @@ export function PortalAccessDenied() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block text-primary font-medium text-sm mb-4 tracking-wider uppercase">
+            <span className="inline-block text-accent font-medium text-sm mb-4 tracking-wider uppercase">
               {t('howItWorks.label')}
             </span>
-            <h1 className="text-4xl md:text-5xl font-serif font-medium text-foreground mb-6 tracking-wide">
+            <h1 className="text-4xl md:text-5xl font-display text-primary-foreground mb-6 tracking-wide">
               {t('portal.course.title')}
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-primary-foreground/80">
               {t('portal.course.subtitle')}
             </p>
+            
+            {/* CTA in Hero */}
+            {!user && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="mt-8"
+              >
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6 bg-accent hover:bg-accent/90 text-accent-foreground"
+                  onClick={() => setShowPaymentDialog(true)}
+                >
+                  {t('portal.course.signup')}
+                  <ArrowIcon className="w-5 h-5 ms-2" />
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </section>
 
+      {/* Video Highlight Section - Teal Background */}
+      <section className="py-16 bg-teal relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-teal to-teal-light/80 pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div 
+            className="max-w-3xl mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Video Card */}
+            <div className="bg-card rounded-2xl shadow-elevated p-4 md:p-6">
+              <div className="aspect-video bg-muted rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/40" />
+                <motion.div 
+                  className="w-20 h-20 rounded-full bg-accent flex items-center justify-center shadow-lg z-10"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Play className="w-8 h-8 text-accent-foreground ms-1" fill="currentColor" />
+                </motion.div>
+                <p className="absolute bottom-4 text-primary-foreground/90 text-sm font-medium">
+                  צפי בסרטון ההיכרות
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Curriculum Roadmap - Warm Cream Background */}
+      <section className="py-20 bg-background relative">
+        <div className="container mx-auto px-4">
+          <motion.h2 
+            className="text-3xl md:text-4xl font-display text-foreground mb-12 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            מה נלמד בתוכנית?
+          </motion.h2>
+
+          <div className="max-w-4xl mx-auto space-y-6">
+            {curriculumMeetings.map((meeting, index) => {
+              const Icon = meeting.icon;
+              return (
+                <motion.div
+                  key={meeting.num}
+                  className="group"
+                  initial={{ opacity: 0, x: isRTL ? 30 : -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.15 }}
+                >
+                  <div className={`flex items-start gap-6 p-6 rounded-2xl bg-card border border-border/50 hover:border-teal/30 hover:shadow-card transition-all duration-300 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                    {/* Meeting Number */}
+                    <div className="flex-shrink-0">
+                      <div className="w-14 h-14 rounded-full bg-teal/10 flex items-center justify-center group-hover:bg-teal/20 transition-colors">
+                        <span className="text-2xl font-display text-teal">{meeting.num}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1">
+                      <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Icon className="w-5 h-5 text-teal" />
+                        <h3 className="text-xl font-display text-foreground">
+                          מפגש {meeting.num} - {meeting.title}
+                        </h3>
+                      </div>
+                      <p className="text-muted-foreground font-body">
+                        {meeting.desc}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Features Grid */}
-      <section className="py-20 flex-grow relative overflow-hidden">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 via-background to-background pointer-events-none" />
-        
-        {/* Floating decorative icons */}
-        <motion.div
-          className="absolute top-20 right-[10%] w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center hidden md:flex"
-          animate={{ y: [0, -15, 0], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Sparkles className="w-6 h-6 text-accent" />
-        </motion.div>
-        
-        <motion.div
-          className="absolute bottom-32 left-[8%] w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hidden md:flex"
-          animate={{ y: [0, -12, 0] }}
-          transition={{ duration: 3.5, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
-        >
-          <Star className="w-5 h-5 text-primary" />
-        </motion.div>
-
-        <motion.div
-          className="absolute top-1/2 left-[5%] w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center hidden lg:flex"
-          animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 5, repeat: Infinity, delay: 1, ease: "easeInOut" }}
-        >
-          <Star className="w-4 h-4 text-primary/50" />
-        </motion.div>
-
+      <section className="py-20 flex-grow relative overflow-hidden bg-gradient-to-b from-background via-secondary/30 to-background">
         <div className="container mx-auto px-4 relative z-10">
           <motion.h2 
-            className={`text-2xl md:text-3xl font-serif font-medium text-foreground mb-12 text-center ${isRTL ? 'text-right md:text-center' : ''}`}
+            className={`text-2xl md:text-3xl font-display text-foreground mb-12 text-center ${isRTL ? 'text-right md:text-center' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -150,9 +247,9 @@ export function PortalAccessDenied() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
                 >
-                  <div className={`flex items-center gap-4 p-5 rounded-xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-card transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-6 h-6 text-primary" />
+                  <div className={`flex items-center gap-4 p-5 rounded-xl bg-card border border-border/50 hover:border-teal/20 hover:shadow-card transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal/15 to-teal/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="w-6 h-6 text-teal" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-0.5">
@@ -170,28 +267,11 @@ export function PortalAccessDenied() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Testimonials Section - Wine Background */}
       <PortalTestimonials />
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-secondary via-secondary to-accent/5 relative overflow-hidden">
-        {/* Floating decorative elements */}
-        <motion.div 
-          className="absolute top-8 right-[15%] text-primary/15 hidden md:block"
-          animate={{ rotate: 360, scale: [1, 1.15, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-        >
-          <Star className="w-8 h-8 fill-current" />
-        </motion.div>
-        
-        <motion.div 
-          className="absolute bottom-8 left-[10%] text-accent/10 hidden md:block"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-        >
-          <Sparkles className="w-6 h-6" />
-        </motion.div>
-
+      <section className="py-16 bg-gradient-to-br from-secondary via-background to-accent/5 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center max-w-xl mx-auto"
@@ -204,7 +284,7 @@ export function PortalAccessDenied() {
               <div className="space-y-4">
                 <Button 
                   size="lg" 
-                  className="text-lg px-8 py-6"
+                  className="text-lg px-8 py-6 bg-accent hover:bg-accent/90 text-accent-foreground"
                   onClick={() => setShowPaymentDialog(true)}
                 >
                   {t('portal.course.signup')}
@@ -212,7 +292,7 @@ export function PortalAccessDenied() {
                 </Button>
                 <p className="text-muted-foreground text-sm">
                   {t('portal.course.alreadyMember')}{' '}
-                  <Link to="/auth" className="text-primary hover:underline">
+                  <Link to="/auth" className="text-teal hover:underline">
                     {t('nav.login')}
                   </Link>
                 </p>
