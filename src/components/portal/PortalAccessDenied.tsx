@@ -6,7 +6,7 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Play, Target, Mic, MessageSquare } from 'lucide-react';
+import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Play, FileDown, Phone } from 'lucide-react';
 import { PaymentOptionsDialog } from './PaymentOptionsDialog';
 import { PortalTestimonials } from './PortalTestimonials';
 
@@ -55,27 +55,6 @@ const programFeatures = [
     icon: Gift, 
     title: 'בונוס: חוברת תסריטים', 
     desc: 'לניהול שיחות עם מתעניינים וקולגות' 
-  },
-];
-
-const curriculumMeetings = [
-  {
-    num: 1,
-    icon: Target,
-    title: 'מתחברים אל החלומות',
-    desc: 'נגדיר יחד את החזון שלך לקליניקה ונבנה תוכנית פעולה ברורה להגשמתו'
-  },
-  {
-    num: 2,
-    icon: Users,
-    title: 'מטופלים מגיעים אל הקליניקה',
-    desc: 'נלמד איך למשוך את המטופלים הנכונים עבורך בדרכים אותנטיות ויעילות'
-  },
-  {
-    num: 3,
-    icon: Mic,
-    title: 'איך לדבר כך שמתעניינים יקשיבו',
-    desc: 'נתרגל שיחות עם מתעניינים ונלמד להעביר את הערך שלך בביטחון'
   },
 ];
 
@@ -169,59 +148,6 @@ export function PortalAccessDenied() {
         </div>
       </section>
 
-      {/* Curriculum Roadmap - Warm Cream Background */}
-      <section className="py-20 bg-background relative">
-        <div className="container mx-auto px-4">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-display text-foreground mb-12 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            מה נלמד בתוכנית?
-          </motion.h2>
-
-          <div className="max-w-4xl mx-auto space-y-6">
-            {curriculumMeetings.map((meeting, index) => {
-              const Icon = meeting.icon;
-              return (
-                <motion.div
-                  key={meeting.num}
-                  className="group"
-                  initial={{ opacity: 0, x: isRTL ? 30 : -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.15 }}
-                >
-                  <div className={`flex items-start gap-6 p-6 rounded-2xl bg-card border border-border/50 hover:border-teal/30 hover:shadow-card transition-all duration-300 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                    {/* Meeting Number */}
-                    <div className="flex-shrink-0">
-                      <div className="w-14 h-14 rounded-full bg-teal/10 flex items-center justify-center group-hover:bg-teal/20 transition-colors">
-                        <span className="text-2xl font-display text-teal">{meeting.num}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1">
-                      <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Icon className="w-5 h-5 text-teal" />
-                        <h3 className="text-xl font-display text-foreground">
-                          מפגש {meeting.num} - {meeting.title}
-                        </h3>
-                      </div>
-                      <p className="text-muted-foreground font-body">
-                        {meeting.desc}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* Features Grid */}
       <section className="py-20 flex-grow relative overflow-hidden bg-gradient-to-b from-background via-secondary/30 to-background">
         <div className="container mx-auto px-4 relative z-10">
@@ -264,6 +190,50 @@ export function PortalAccessDenied() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Syllabus Download Section */}
+      <section className="py-16 bg-background relative">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="max-w-2xl mx-auto text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="bg-card rounded-2xl p-8 md:p-12 border border-border/50 shadow-card">
+              <div className="w-16 h-16 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-6">
+                <FileDown className="w-8 h-8 text-teal" />
+              </div>
+              
+              <h2 className="text-2xl md:text-3xl font-display text-foreground mb-4">
+                רוצה לדעת בדיוק מה תלמדי?
+              </h2>
+              
+              <p className="text-muted-foreground font-body mb-8 max-w-md mx-auto">
+                הורידי את הסילבוס המלא של התוכנית וגלי את כל התכנים, המפגשים והבונוסים שמחכים לך
+              </p>
+              
+              <Button 
+                size="lg"
+                className="text-lg px-8 py-6 bg-accent hover:bg-accent/90 text-accent-foreground mb-6"
+                onClick={() => window.open('/syllabus.pdf', '_blank')}
+              >
+                <FileDown className="w-5 h-5 me-2" />
+                הורדת סילבוס התוכנית
+              </Button>
+              
+              <div className={`flex items-center justify-center gap-2 text-muted-foreground text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Phone className="w-4 h-4" />
+                <span>או התקשרי אלינו:</span>
+                <a href="tel:050-0000000" className="text-teal hover:underline font-medium">
+                  050-000-0000
+                </a>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
