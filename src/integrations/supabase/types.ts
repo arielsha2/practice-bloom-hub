@@ -575,6 +575,42 @@ export type Database = {
           },
         ]
       }
+      student_enrollments: {
+        Row: {
+          activated_at: string | null
+          course_key: string
+          created_at: string | null
+          email: string
+          enrolled_at: string | null
+          full_name: string | null
+          id: string
+          notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          course_key?: string
+          created_at?: string | null
+          email: string
+          enrolled_at?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          course_key?: string
+          created_at?: string | null
+          email?: string
+          enrolled_at?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_lesson_progress: {
         Row: {
           created_at: string | null
