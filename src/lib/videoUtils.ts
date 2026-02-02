@@ -1,4 +1,4 @@
-export type VideoSource = 'file' | 'youtube' | 'vimeo' | 'zoom';
+export type VideoSource = 'file' | 'youtube' | 'vimeo' | 'zoom' | 'gdrive';
 
 interface VideoInfo {
   isValid: boolean;
@@ -54,6 +54,28 @@ export function extractVimeoId(url: string): string | null {
 }
 
 /**
+ * Extract Google Drive file ID from various URL formats
+ */
+export function extractGoogleDriveId(url: string): string | null {
+  const patterns = [
+    // drive.google.com/file/d/FILE_ID/...
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+    // drive.google.com/open?id=FILE_ID
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
+    // docs.google.com/file/d/FILE_ID/...
+    /docs\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
+/**
  * Validate and parse a video URL
  */
 export function parseVideoUrl(url: string): VideoInfo {
@@ -78,6 +100,17 @@ export function parseVideoUrl(url: string): VideoInfo {
       source: 'vimeo',
       videoId: vimeoId,
       embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+    };
+  }
+
+  // Check Google Drive
+  const gdriveId = extractGoogleDriveId(trimmedUrl);
+  if (gdriveId) {
+    return {
+      isValid: true,
+      source: 'gdrive',
+      videoId: gdriveId,
+      embedUrl: `https://drive.google.com/file/d/${gdriveId}/preview`,
     };
   }
 
@@ -113,6 +146,11 @@ export function getVideoEmbedUrl(url: string, source: VideoSource): string | nul
     return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
   }
 
+  if (source === 'gdrive') {
+    const videoId = extractGoogleDriveId(url);
+    return videoId ? `https://drive.google.com/file/d/${videoId}/preview` : null;
+  }
+
   return null;
 }
 
@@ -127,6 +165,8 @@ export function validateVideoUrl(url: string, source: VideoSource): boolean {
       return extractYouTubeId(url) !== null;
     case 'vimeo':
       return extractVimeoId(url) !== null;
+    case 'gdrive':
+      return extractGoogleDriveId(url) !== null;
     case 'zoom':
       return url.includes('zoom.us');
     default:

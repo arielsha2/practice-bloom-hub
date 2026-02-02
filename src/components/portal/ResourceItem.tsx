@@ -1,6 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Video, FileText, Presentation, Download, Play, Youtube, ExternalLink } from 'lucide-react';
+import { Video, FileText, Presentation, Download, Play, Youtube, ExternalLink, HardDrive } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -37,6 +37,8 @@ export function ResourceItem({
           return <Video className="w-5 h-5" />;
         case 'zoom':
           return <ExternalLink className="w-5 h-5" />;
+        case 'gdrive':
+          return <HardDrive className="w-5 h-5" />;
         default:
           return <Video className="w-5 h-5" />;
       }
@@ -60,6 +62,8 @@ export function ResourceItem({
           return 'Vimeo';
         case 'zoom':
           return t('portal.zoomRecording');
+        case 'gdrive':
+          return t('portal.googleDrive');
         default:
           return t('portal.video');
       }

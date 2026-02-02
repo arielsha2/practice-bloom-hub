@@ -301,7 +301,10 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.video.watchButton": "Watch Recording",
     "portal.admin.zoomWarning":
       "Zoom links open outside the system. For embedded playback, upload an MP4 file or use YouTube/Vimeo.",
+    "portal.admin.gdriveWarning":
+      "The video must be shared as 'Anyone with the link' in Google Drive for it to play correctly.",
     "portal.admin.recommended": "Recommended",
+    "portal.googleDrive": "Google Drive",
 
     // Media Library
     "media.title": "Media Library",
@@ -627,7 +630,10 @@ const translations: Record<Language, Record<string, string>> = {
     "portal.video.watchButton": "צפייה בהקלטה",
     "portal.admin.zoomWarning":
       "קישורי Zoom נפתחים מחוץ למערכת. להטמעה מלאה, העלי קובץ וידאו או השתמשי ב-YouTube/Vimeo.",
+    "portal.admin.gdriveWarning":
+      "כדי שהוידאו יעבוד, הקובץ חייב להיות משותף ב-Google Drive בהרשאת 'כל מי שיש לו קישור'.",
     "portal.admin.recommended": "מומלץ",
+    "portal.googleDrive": "Google Drive",
 
     // Media Library
     "media.title": "ספריית מדיה",
