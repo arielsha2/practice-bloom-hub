@@ -17,6 +17,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useCourseManagement } from '@/hooks/useCourseManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { AdminLessonForm } from '@/components/portal/admin/AdminLessonForm';
@@ -24,6 +25,13 @@ import { AdminQAList } from '@/components/portal/admin/AdminQAList';
 import { SortableLessonCard } from '@/components/portal/admin/SortableLessonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ArrowRight, ArrowLeft, MessageCircle, FolderOpen } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -32,6 +40,7 @@ interface Lesson {
   id: string;
   title: string;
   order_index: number;
+  course_key: string | null;
 }
 
 interface MediaLink {
@@ -53,9 +62,18 @@ export default function PortalAdmin() {
   const { t, isRTL } = useLanguage();
   const { loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const { courses } = useCourseManagement();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [mediaLinks, setMediaLinks] = useState<MediaLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCourseKey, setSelectedCourseKey] = useState<string>('');
+
+  // Set default course when courses load
+  useEffect(() => {
+    if (courses && courses.length > 0 && !selectedCourseKey) {
+      setSelectedCourseKey(courses[0].course_key);
+    }
+  }, [courses, selectedCourseKey]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -75,7 +93,7 @@ export default function PortalAdmin() {
       const [lessonsRes, mediaLinksRes] = await Promise.all([
         supabase
           .from('lessons')
-          .select('id, title, order_index')
+          .select('id, title, order_index, course_key')
           .order('order_index', { ascending: true }),
         supabase
           .from('lesson_media_links')
@@ -101,19 +119,33 @@ export default function PortalAdmin() {
     }
   };
 
+  // Filter lessons by selected course
+  const filteredLessons = selectedCourseKey
+    ? lessons.filter((l) => l.course_key === selectedCourseKey)
+    : lessons;
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = lessons.findIndex((l) => l.id === active.id);
-      const newIndex = lessons.findIndex((l) => l.id === over.id);
+      const oldIndex = filteredLessons.findIndex((l) => l.id === active.id);
+      const newIndex = filteredLessons.findIndex((l) => l.id === over.id);
 
-      const newLessons = arrayMove(lessons, oldIndex, newIndex);
-      setLessons(newLessons);
+      const newFilteredLessons = arrayMove(filteredLessons, oldIndex, newIndex);
+      
+      // Update the full lessons array with new order
+      const updatedLessons = lessons.map((lesson) => {
+        const newIdx = newFilteredLessons.findIndex((l) => l.id === lesson.id);
+        if (newIdx !== -1) {
+          return { ...lesson, order_index: newIdx };
+        }
+        return lesson;
+      });
+      setLessons(updatedLessons);
 
       // Update order_index in database
       try {
-        const updates = newLessons.map((lesson, index) => ({
+        const updates = newFilteredLessons.map((lesson, index) => ({
           id: lesson.id,
           title: lesson.title,
           order_index: index,
@@ -256,8 +288,33 @@ export default function PortalAdmin() {
         <h1 className="text-3xl font-bold mb-8">{t('portal.admin.title')}</h1>
 
         <div className="space-y-8">
+          {/* Course Filter */}
+          {courses && courses.length > 0 && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium">
+                {isRTL ? 'סנן לפי קורס:' : 'Filter by course:'}
+              </span>
+              <Select value={selectedCourseKey} onValueChange={setSelectedCourseKey}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder={isRTL ? 'בחר קורס' : 'Select course'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((course) => (
+                    <SelectItem key={course.course_key} value={course.course_key}>
+                      {isRTL ? course.name_he : course.name_en} ({course.lesson_count || 0} {isRTL ? 'שיעורים' : 'lessons'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Add Lesson Form */}
-          <AdminLessonForm onLessonAdded={fetchData} />
+          <AdminLessonForm 
+            onLessonAdded={fetchData} 
+            courses={courses || []}
+            selectedCourseKey={selectedCourseKey}
+          />
 
           {/* Lessons List with Drag & Drop */}
           <Card>
@@ -274,7 +331,7 @@ export default function PortalAdmin() {
                 <div className="text-center py-4 text-muted-foreground">
                   {t('auth.loading')}
                 </div>
-              ) : lessons.length === 0 ? (
+              ) : filteredLessons.length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground">
                   {t('portal.noLessons')}
                 </div>
@@ -285,11 +342,11 @@ export default function PortalAdmin() {
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={lessons.map((l) => l.id)}
+                    items={filteredLessons.map((l) => l.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {lessons.map((lesson, index) => (
+                      {filteredLessons.map((lesson, index) => (
                         <SortableLessonCard
                           key={lesson.id}
                           lesson={lesson}

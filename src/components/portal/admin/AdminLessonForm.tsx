@@ -6,29 +6,52 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface AdminLessonFormProps {
-  onLessonAdded: () => void;
+interface Course {
+  id: string;
+  course_key: string;
+  name_he: string;
+  name_en: string;
 }
 
-export function AdminLessonForm({ onLessonAdded }: AdminLessonFormProps) {
+interface AdminLessonFormProps {
+  onLessonAdded: () => void;
+  courses: Course[];
+  selectedCourseKey: string;
+}
+
+export function AdminLessonForm({ onLessonAdded, courses, selectedCourseKey }: AdminLessonFormProps) {
   const { t, isRTL } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [courseKey, setCourseKey] = useState(selectedCourseKey);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update courseKey when selectedCourseKey changes
+  useState(() => {
+    setCourseKey(selectedCourseKey);
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !courseKey) return;
 
     setIsSubmitting(true);
     try {
-      // Get max order_index
+      // Get max order_index for the selected course
       const { data: maxOrder } = await supabase
         .from('lessons')
         .select('order_index')
+        .eq('course_key', courseKey)
         .order('order_index', { ascending: false })
         .limit(1)
         .single();
@@ -39,6 +62,7 @@ export function AdminLessonForm({ onLessonAdded }: AdminLessonFormProps) {
         title: title.trim(),
         description: description.trim() || null,
         order_index: newOrderIndex,
+        course_key: courseKey,
       });
 
       if (error) throw error;
@@ -65,6 +89,23 @@ export function AdminLessonForm({ onLessonAdded }: AdminLessonFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Course Selection */}
+          <div className="space-y-2">
+            <Label>{isRTL ? 'קורס' : 'Course'} *</Label>
+            <Select value={courseKey} onValueChange={setCourseKey}>
+              <SelectTrigger>
+                <SelectValue placeholder={isRTL ? 'בחר קורס' : 'Select course'} />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((course) => (
+                  <SelectItem key={course.course_key} value={course.course_key}>
+                    {isRTL ? course.name_he : course.name_en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="lesson-title">{t('contents.form.title')}</Label>
             <Input
@@ -84,7 +125,7 @@ export function AdminLessonForm({ onLessonAdded }: AdminLessonFormProps) {
               className="min-h-20"
             />
           </div>
-          <Button type="submit" disabled={isSubmitting || !title.trim()}>
+          <Button type="submit" disabled={isSubmitting || !title.trim() || !courseKey}>
             <Save className="w-4 h-4 me-1" />
             {isSubmitting ? t('contents.admin.saving') : t('contents.admin.save')}
           </Button>
