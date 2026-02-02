@@ -19,6 +19,8 @@ interface Enrollment {
   enrolled_at: string | null;
   activated_at: string | null;
   full_name: string | null;
+  pending_role: string | null;
+  notes: string | null;
 }
 
 interface Course {
@@ -240,9 +242,95 @@ export function useUsersManagement() {
     },
   });
 
+  // Add pending user (whitelist)
+  const addPendingUser = useMutation({
+    mutationFn: async ({
+      email,
+      fullName,
+      courseKey,
+      cohortId,
+      pendingRole,
+      notes,
+    }: {
+      email: string;
+      fullName: string | null;
+      courseKey: string;
+      cohortId: string | null;
+      pendingRole: 'admin' | 'course_member';
+      notes: string | null;
+    }) => {
+      // Check for existing enrollment with same email and course
+      const existing = enrollments.find(
+        e => e.email.toLowerCase() === email.toLowerCase() && e.course_key === courseKey
+      );
+      if (existing) {
+        throw new Error(isRTL ? 'משתמש כבר קיים בקורס זה' : 'User already exists in this course');
+      }
+
+      const { error } = await supabase
+        .from('student_enrollments')
+        .insert({
+          email: email.toLowerCase(),
+          full_name: fullName,
+          course_key: courseKey,
+          cohort_id: cohortId,
+          pending_role: pendingRole,
+          notes: notes,
+          // user_id stays null - will be filled when user signs up
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-enrollments'] });
+      toast({
+        title: isRTL ? 'הצלחה' : 'Success',
+        description: isRTL ? 'המשתמש נוסף לרשימת ההמתנה' : 'User added to pending list',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete pending enrollment
+  const deletePendingEnrollment = useMutation({
+    mutationFn: async ({ enrollmentId }: { enrollmentId: string }) => {
+      const { error } = await supabase
+        .from('student_enrollments')
+        .delete()
+        .eq('id', enrollmentId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-enrollments'] });
+      toast({
+        title: isRTL ? 'הצלחה' : 'Success',
+        description: isRTL ? 'הרשומה נמחקה' : 'Entry deleted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Get enrollments for a specific user
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter(e => e.user_id === userId);
+  };
+
+  // Get pending enrollments (user_id is null)
+  const getPendingEnrollments = () => {
+    return enrollments.filter(e => e.user_id === null);
   };
 
   // Check if user is enrolled in specific course
@@ -282,7 +370,10 @@ export function useUsersManagement() {
     assignToCourse,
     removeFromCourse,
     changeRole,
+    addPendingUser,
+    deletePendingEnrollment,
     getUserEnrollments,
+    getPendingEnrollments,
     isEnrolledInCourse,
     getUserRole,
     getUserCohorts,
