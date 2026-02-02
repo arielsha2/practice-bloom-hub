@@ -20,7 +20,7 @@ import ContentsAdmin from "./pages/ContentsAdmin";
 import BotAdmin from "./pages/BotAdmin";
 import BotChat from "./pages/BotChat";
 import UsersAdmin from "./pages/UsersAdmin";
-
+import CoursesAdmin from "./pages/CoursesAdmin";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin/bots" element={<BotAdmin />} />
               <Route path="/admin/users" element={<UsersAdmin />} />
+              <Route path="/admin/courses" element={<CoursesAdmin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
