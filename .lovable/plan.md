@@ -1,48 +1,109 @@
 
-# תיקון שגיאות ניתוב ו-Select
+
+# תיקון שגיאת Invalid Token באימות Admin
+
+## הבעיה
+
+הפונקציה `check-admin` עובדת נכון כשהטוקן תקין, אבל לפעמים נכשלת עם "Auth session missing!" כי:
+1. הדף מתרענן והסשן עדיין לא נטען
+2. הטוקן פג תוקף ולא התרענן
+3. Race condition בין טעינת הסשן לקריאה ל-edge function
+
+## הפתרון
+
+שיפור ה-hook `useIsAdmin` כך שיוודא שהסשן מוכן לגמרי לפני קריאה ל-edge function, ויוסיף retry logic.
 
 ## שינויים נדרשים
 
-### 1. תיקון קובץ _redirects
-
-| קובץ | שינוי |
-|------|-------|
-| `public/_redirects` | הוספת `/` לפני `index.html` |
-
-**תוכן חדש:**
-```text
-/* /index.html 200
-```
-
-### 2. תיקון Select ב-PortalAdmin.tsx
-
-| קובץ | שורות | שינוי |
-|------|-------|-------|
-| `src/pages/PortalAdmin.tsx` | 297-308 | טיפול בערך ריק עם `__none__` |
+### קובץ `src/hooks/useIsAdmin.ts`
 
 **לפני:**
 ```typescript
-<Select value={selectedCourseKey} onValueChange={setSelectedCourseKey}>
+useEffect(() => {
+  async function checkAdminStatus() {
+    if (!user || !session) {
+      setIsAdmin(false);
+      setIsLoading(false);
+      return;
+    }
+    // קורא ל-edge function מיד
+  }
+  checkAdminStatus();
+}, [user, session]);
 ```
 
 **אחרי:**
 ```typescript
-<Select 
-  value={selectedCourseKey || '__none__'} 
-  onValueChange={(value) => setSelectedCourseKey(value === '__none__' ? '' : value)}
->
+import { useAuth } from '@/contexts/AuthContext';
+
+export function useIsAdmin() {
+  const { user, session, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkAdminStatus() {
+      // מחכה שהסשן יסיים להיטען
+      if (authLoading) {
+        return;
+      }
+
+      if (!user || !session) {
+        setIsAdmin(false);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // מרענן את הסשן לפני הקריאה
+        const { data: refreshData, error: refreshError } = 
+          await supabase.auth.refreshSession();
+        
+        const currentToken = refreshData?.session?.access_token 
+          || session.access_token;
+
+        const { data, error } = await supabase.functions.invoke('check-admin', {
+          headers: {
+            Authorization: `Bearer ${currentToken}`
+          }
+        });
+
+        if (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data?.isAdmin === true);
+        }
+      } catch (error) {
+        console.error('Error invoking check-admin:', error);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    checkAdminStatus();
+  }, [user, session, authLoading]);
+
+  return { isAdmin, isLoading };
+}
 ```
 
-ובנוסף הוספת אופציה "כל הקורסים":
-```typescript
-<SelectItem value="__none__">
-  {isRTL ? 'כל הקורסים' : 'All courses'}
-</SelectItem>
-```
+## שינויים עיקריים
+
+| שינוי | תיאור |
+|-------|--------|
+| הוספת `authLoading` | מחכה לסיום טעינת הסשן |
+| רענון סשן | קורא ל-`refreshSession()` לפני בדיקת admin |
+| שימוש בטוקן מעודכן | משתמש בטוקן המרוענן אם קיים |
+
+## קבצים לעדכון
+
+| קובץ | שינוי |
+|------|-------|
+| `src/hooks/useIsAdmin.ts` | הוספת המתנה לסשן ורענון טוקן |
 
 ## סיכום
 
-| קובץ | סוג שינוי |
-|------|----------|
-| `public/_redirects` | עדכון תוכן |
-| `src/pages/PortalAdmin.tsx` | תיקון Select |
+התיקון מבטיח שהסשן נטען לגמרי ומרוענן לפני קריאה ל-edge function, מה שימנע את שגיאות "Auth session missing!".
+
