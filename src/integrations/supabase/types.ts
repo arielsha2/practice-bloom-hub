@@ -668,6 +668,7 @@ export type Database = {
           full_name: string | null
           id: string
           notes: string | null
+          pending_role: string | null
           user_id: string | null
         }
         Insert: {
@@ -680,6 +681,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           notes?: string | null
+          pending_role?: string | null
           user_id?: string | null
         }
         Update: {
@@ -692,6 +694,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           notes?: string | null
+          pending_role?: string | null
           user_id?: string | null
         }
         Relationships: [

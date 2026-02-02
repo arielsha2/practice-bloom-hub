@@ -7,10 +7,12 @@ import { useUsersManagement } from '@/hooks/useUsersManagement';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { UsersTable } from '@/components/admin/UsersTable';
+import { PendingUsersTable } from '@/components/admin/PendingUsersTable';
 import { CourseAssignmentDialog } from '@/components/admin/CourseAssignmentDialog';
 import { RoleChangeDialog } from '@/components/admin/RoleChangeDialog';
+import { AddUserDialog } from '@/components/admin/AddUserDialog';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Users, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Users, Loader2, UserPlus } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -33,7 +35,10 @@ export default function UsersAdmin() {
     assignToCourse,
     removeFromCourse,
     changeRole,
+    addPendingUser,
+    deletePendingEnrollment,
     getUserEnrollments,
+    getPendingEnrollments,
     getUserRole,
     getUserCohorts,
   } = useUsersManagement();
@@ -41,6 +46,7 @@ export default function UsersAdmin() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -107,11 +113,31 @@ export default function UsersAdmin() {
     }
   };
 
+  const handleAddPendingUser = (data: {
+    email: string;
+    fullName: string | null;
+    courseKey: string;
+    cohortId: string | null;
+    pendingRole: 'admin' | 'course_member';
+    notes: string | null;
+  }) => {
+    addPendingUser.mutate(data, {
+      onSuccess: () => {
+        setAddUserDialogOpen(false);
+      },
+    });
+  };
+
+  const handleDeletePendingEnrollment = (enrollmentId: string) => {
+    deletePendingEnrollment.mutate({ enrollmentId });
+  };
+
   const selectedUserEnrollments = selectedUser
     ? getUserEnrollments(selectedUser.id).map(e => ({ course_key: e.course_key, cohort_id: e.cohort_id }))
     : [];
 
   const selectedUserRole = selectedUser ? getUserRole(selectedUser.id) : 'none';
+  const pendingEnrollments = getPendingEnrollments();
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -134,18 +160,24 @@ export default function UsersAdmin() {
           </div>
 
           {/* Title */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <Users className="w-6 h-6 text-primary" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-primary/10">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display text-foreground">
+                  {isRTL ? 'ניהול משתמשים' : 'User Management'}
+                </h1>
+                <p className="text-muted-foreground">
+                  {isRTL ? 'שייך משתמשים לקורסים ונהל הרשאות' : 'Assign users to courses and manage permissions'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-display text-foreground">
-                {isRTL ? 'ניהול משתמשים' : 'User Management'}
-              </h1>
-              <p className="text-muted-foreground">
-                {isRTL ? 'שייך משתמשים לקורסים ונהל הרשאות' : 'Assign users to courses and manage permissions'}
-              </p>
-            </div>
+            <Button onClick={() => setAddUserDialogOpen(true)}>
+              <UserPlus className="w-4 h-4 me-2" />
+              {isRTL ? 'הוסף משתמש' : 'Add User'}
+            </Button>
           </div>
 
           {/* Content */}
@@ -154,17 +186,27 @@ export default function UsersAdmin() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <UsersTable
-              users={users}
-              enrollments={enrollments}
-              courses={courses}
-              cohorts={cohorts}
-              getUserRole={getUserRole}
-              getUserCohorts={getUserCohorts}
-              onAssignCourse={handleAssignCourse}
-              onRemoveFromCourse={handleRemoveFromCourse}
-              onChangeRole={handleChangeRole}
-            />
+            <>
+              <UsersTable
+                users={users}
+                enrollments={enrollments}
+                courses={courses}
+                cohorts={cohorts}
+                getUserRole={getUserRole}
+                getUserCohorts={getUserCohorts}
+                onAssignCourse={handleAssignCourse}
+                onRemoveFromCourse={handleRemoveFromCourse}
+                onChangeRole={handleChangeRole}
+              />
+
+              <PendingUsersTable
+                pendingEnrollments={pendingEnrollments}
+                courses={courses}
+                cohorts={cohorts}
+                onDelete={handleDeletePendingEnrollment}
+                isDeleting={deletePendingEnrollment.isPending}
+              />
+            </>
           )}
         </div>
       </main>
@@ -189,6 +231,15 @@ export default function UsersAdmin() {
         currentRole={selectedUserRole}
         onChangeRole={handleRoleChange}
         isChanging={changeRole.isPending}
+      />
+
+      <AddUserDialog
+        open={addUserDialogOpen}
+        onOpenChange={setAddUserDialogOpen}
+        courses={courses}
+        cohorts={cohorts}
+        onAddUser={handleAddPendingUser}
+        isAdding={addPendingUser.isPending}
       />
     </div>
   );
