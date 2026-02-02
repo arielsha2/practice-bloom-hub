@@ -15,24 +15,33 @@ export function useUserEnrolledCourses() {
   const { user } = useAuth();
 
   const { data: enrolledCourses, isLoading } = useQuery({
-    queryKey: ['user-enrolled-courses', user?.id],
+    queryKey: ['user-enrolled-courses', user?.id, user?.email],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user?.email) {
+        console.log('[useUserEnrolledCourses] No user or email');
+        return [];
+      }
 
-      // Get enrollments for user
+      console.log('[useUserEnrolledCourses] Fetching enrollments for email:', user.email);
+
+      // Get enrollments for user by email (matching RLS policy)
       const { data: enrollments, error: enrollmentError } = await supabase
         .from('student_enrollments')
         .select('course_key')
-        .eq('user_id', user.id);
+        .ilike('email', user.email);
+
+      console.log('[useUserEnrolledCourses] Enrollments result:', { enrollments, error: enrollmentError });
 
       if (enrollmentError) throw enrollmentError;
 
       if (!enrollments || enrollments.length === 0) {
+        console.log('[useUserEnrolledCourses] No enrollments found');
         return [];
       }
 
       // Get unique course keys
       const courseKeys = [...new Set(enrollments.map(e => e.course_key))];
+      console.log('[useUserEnrolledCourses] Course keys:', courseKeys);
 
       // Get course details
       const { data: courses, error: coursesError } = await supabase
@@ -41,11 +50,13 @@ export function useUserEnrolledCourses() {
         .in('course_key', courseKeys)
         .eq('is_active', true);
 
+      console.log('[useUserEnrolledCourses] Courses result:', { courses, error: coursesError });
+
       if (coursesError) throw coursesError;
 
       return (courses || []) as EnrolledCourse[];
     },
-    enabled: !!user,
+    enabled: !!user?.email,
   });
 
   return {
