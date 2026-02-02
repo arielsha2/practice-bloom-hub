@@ -8,6 +8,7 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { UsersTable } from '@/components/admin/UsersTable';
 import { CourseAssignmentDialog } from '@/components/admin/CourseAssignmentDialog';
+import { RoleChangeDialog } from '@/components/admin/RoleChangeDialog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Users, Loader2 } from 'lucide-react';
 
@@ -20,21 +21,26 @@ interface UserProfile {
 
 export default function UsersAdmin() {
   const navigate = useNavigate();
-  const { isRTL, t } = useLanguage();
+  const { isRTL } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const {
     users,
     enrollments,
     courses,
+    cohorts,
     isLoading,
     assignToCourse,
     removeFromCourse,
+    changeRole,
     getUserEnrollments,
+    getUserRole,
+    getUserCohorts,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -63,16 +69,21 @@ export default function UsersAdmin() {
 
   const handleAssignCourse = (user: UserProfile) => {
     setSelectedUser(user);
-    setDialogOpen(true);
+    setAssignDialogOpen(true);
   };
 
-  const handleAssign = (courseKey: string) => {
+  const handleChangeRole = (user: UserProfile) => {
+    setSelectedUser(user);
+    setRoleDialogOpen(true);
+  };
+
+  const handleAssign = (courseKey: string, cohortId: string | null) => {
     if (selectedUser && selectedUser.email) {
       assignToCourse.mutate(
-        { userId: selectedUser.id, email: selectedUser.email, courseKey },
+        { userId: selectedUser.id, email: selectedUser.email, courseKey, cohortId },
         {
           onSuccess: () => {
-            setDialogOpen(false);
+            // Keep dialog open to allow multiple assignments
           },
         }
       );
@@ -83,9 +94,24 @@ export default function UsersAdmin() {
     removeFromCourse.mutate({ enrollmentId });
   };
 
+  const handleRoleChange = (newRole: 'admin' | 'course_member' | null, currentRole: 'admin' | 'course_member' | null) => {
+    if (selectedUser) {
+      changeRole.mutate(
+        { userId: selectedUser.id, newRole, currentRole },
+        {
+          onSuccess: () => {
+            setRoleDialogOpen(false);
+          },
+        }
+      );
+    }
+  };
+
   const selectedUserEnrollments = selectedUser
-    ? getUserEnrollments(selectedUser.id).map(e => e.course_key)
+    ? getUserEnrollments(selectedUser.id).map(e => ({ course_key: e.course_key, cohort_id: e.cohort_id }))
     : [];
+
+  const selectedUserRole = selectedUser ? getUserRole(selectedUser.id) : 'none';
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -132,8 +158,12 @@ export default function UsersAdmin() {
               users={users}
               enrollments={enrollments}
               courses={courses}
+              cohorts={cohorts}
+              getUserRole={getUserRole}
+              getUserCohorts={getUserCohorts}
               onAssignCourse={handleAssignCourse}
               onRemoveFromCourse={handleRemoveFromCourse}
+              onChangeRole={handleChangeRole}
             />
           )}
         </div>
@@ -142,13 +172,23 @@ export default function UsersAdmin() {
       <Footer />
 
       <CourseAssignmentDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
         user={selectedUser}
         courses={courses}
-        enrolledCourseKeys={selectedUserEnrollments}
+        cohorts={cohorts}
+        enrollments={selectedUserEnrollments}
         onAssign={handleAssign}
         isAssigning={assignToCourse.isPending}
+      />
+
+      <RoleChangeDialog
+        open={roleDialogOpen}
+        onOpenChange={setRoleDialogOpen}
+        user={selectedUser}
+        currentRole={selectedUserRole}
+        onChangeRole={handleRoleChange}
+        isChanging={changeRole.isPending}
       />
     </div>
   );

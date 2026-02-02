@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { GraduationCap, FolderOpen, FileText, Users } from 'lucide-react';
+import { GraduationCap, FolderOpen, FileText, Users, Calendar } from 'lucide-react';
 
 export function AdminQuickActions() {
   const navigate = useNavigate();
@@ -14,6 +14,13 @@ export function AdminQuickActions() {
       description: isRTL ? 'שייך משתמשים לקורסים' : 'Assign users to courses',
       icon: Users,
       path: '/admin/users',
+    },
+    {
+      id: 'courses',
+      title: isRTL ? 'קורסים ומחזורים' : 'Courses & Cohorts',
+      description: isRTL ? 'נהל מחזורים וקורסים' : 'Manage cohorts and courses',
+      icon: Calendar,
+      path: '/admin/courses',
     },
     {
       id: 'lessons',

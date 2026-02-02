@@ -182,6 +182,36 @@ export type Database = {
           },
         ]
       }
+      cohorts: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name_en: string
+          name_he: string
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en: string
+          name_he: string
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en?: string
+          name_he?: string
+          start_date?: string | null
+        }
+        Relationships: []
+      }
       content_categories: {
         Row: {
           created_at: string | null
@@ -330,6 +360,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          cohort_id: string | null
           course_key: string
           created_at: string | null
           description: string | null
@@ -339,6 +370,7 @@ export type Database = {
           name_he: string
         }
         Insert: {
+          cohort_id?: string | null
           course_key: string
           created_at?: string | null
           description?: string | null
@@ -348,6 +380,7 @@ export type Database = {
           name_he: string
         }
         Update: {
+          cohort_id?: string | null
           course_key?: string
           created_at?: string | null
           description?: string | null
@@ -356,7 +389,15 @@ export type Database = {
           name_en?: string
           name_he?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -619,6 +660,7 @@ export type Database = {
       student_enrollments: {
         Row: {
           activated_at: string | null
+          cohort_id: string | null
           course_key: string
           created_at: string | null
           email: string
@@ -630,6 +672,7 @@ export type Database = {
         }
         Insert: {
           activated_at?: string | null
+          cohort_id?: string | null
           course_key?: string
           created_at?: string | null
           email: string
@@ -641,6 +684,7 @@ export type Database = {
         }
         Update: {
           activated_at?: string | null
+          cohort_id?: string | null
           course_key?: string
           created_at?: string | null
           email?: string
@@ -650,7 +694,15 @@ export type Database = {
           notes?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_enrollments_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_lesson_progress: {
         Row: {
