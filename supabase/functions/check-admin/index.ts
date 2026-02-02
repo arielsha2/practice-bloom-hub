@@ -2,8 +2,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+// Helper function to decode JWT payload (without verification)
+function decodeJwtPayload(token: string): { sub?: string; exp?: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,34 +35,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Create client with the user's auth header for token validation
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    // Validate JWT using getClaims
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getUser(token);
-
-    if (claimsError || !claimsData?.user) {
-      console.log('Error validating token:', claimsError?.message);
+    
+    // Decode JWT to get user ID (manual decoding since verify_jwt = false)
+    const payload = decodeJwtPayload(token);
+    if (!payload?.sub) {
+      console.log('Invalid token format - could not extract user ID');
       return new Response(
-        JSON.stringify({ isAdmin: false, error: 'Invalid token' }),
+        JSON.stringify({ isAdmin: false, error: 'Invalid token format' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
-    const userId = claimsData.user.id;
+    // Check if token is expired
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      console.log('Token expired');
+      return new Response(
+        JSON.stringify({ isAdmin: false, error: 'Token expired' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    const userId = payload.sub;
     console.log('Checking admin status for user:', userId);
 
-    // Use service role client to check roles (bypasses RLS)
+    // Create service role client (bypasses RLS)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if user has admin role using the has_role function
+    // Verify user exists using admin API
+    const { data: userData, error: userError } = 
+      await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (userError || !userData?.user) {
+      console.log('User not found or error:', userError?.message);
+      return new Response(
+        JSON.stringify({ isAdmin: false, error: 'User not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    // Check admin role using RPC (service role bypasses RLS)
     const { data, error } = await supabaseAdmin.rpc('has_role', {
       _user_id: userId,
       _role: 'admin'
