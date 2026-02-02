@@ -1,266 +1,48 @@
 
-# מערכת ניהול קורסים ושיעורים מתקדמת
+# תיקון שגיאות ניתוב ו-Select
 
-## מצב נוכחי
+## שינויים נדרשים
 
-| רכיב | סטטוס |
+### 1. תיקון קובץ _redirects
+
+| קובץ | שינוי |
 |------|-------|
-| טבלת `lessons` | יש עמודת `course_key` - כל השיעורים משויכים ל-"turning_point" |
-| טבלת `courses` | יש קורס אחד עם `cohort_id` |
-| טבלת `student_enrollments` | יש `course_key` ו-`cohort_id` |
-| פונקציית RLS | `is_enrolled_in_course` מגבילה גישה לפי קורס |
-| ממשק ניהול | **חסר** - אין UI לניהול קורסים ושיוך שיעורים |
+| `public/_redirects` | הוספת `/` לפני `index.html` |
 
-## מה נדרש
+**תוכן חדש:**
+```text
+/* /index.html 200
+```
 
-### 1. ממשק ניהול קורסים (CoursesAdmin)
+### 2. תיקון Select ב-PortalAdmin.tsx
 
-הוספת רשימת קורסים לעמוד ניהול הקורסים והמחזורים:
-- הצגת כל הקורסים
-- יצירת קורס חדש
-- עריכת קורס קיים
-- שיוך קורס למחזור
+| קובץ | שורות | שינוי |
+|------|-------|-------|
+| `src/pages/PortalAdmin.tsx` | 297-308 | טיפול בערך ריק עם `__none__` |
 
-### 2. שיוך שיעורים לקורס (PortalAdmin)
+**לפני:**
+```typescript
+<Select value={selectedCourseKey} onValueChange={setSelectedCourseKey}>
+```
 
-עדכון ממשק ניהול השיעורים:
-- בחירת קורס בעת יצירת שיעור חדש
-- סינון רשימת השיעורים לפי קורס
-- אפשרות לשנות שיוך קורס לשיעור קיים
+**אחרי:**
+```typescript
+<Select 
+  value={selectedCourseKey || '__none__'} 
+  onValueChange={(value) => setSelectedCourseKey(value === '__none__' ? '' : value)}
+>
+```
 
-### 3. פורטל הסטודנט (StudentPortal)
+ובנוסף הוספת אופציה "כל הקורסים":
+```typescript
+<SelectItem value="__none__">
+  {isRTL ? 'כל הקורסים' : 'All courses'}
+</SelectItem>
+```
 
-עדכון תצוגת השיעורים לסטודנט:
-- שליפת הקורסים שהסטודנט רשום אליהם
-- אם יש יותר מקורס אחד - הצגת בורר קורסים
-- סינון השיעורים לפי הקורס הנבחר
+## סיכום
 
-## שינויים טכניים
-
-### קבצים חדשים
-
-| קובץ | תיאור |
-|------|-------|
-| `src/components/admin/CourseManager.tsx` | רכיב ליצירה ועריכת קורסים |
-| `src/hooks/useCourseManagement.ts` | Hook לניהול קורסים |
-| `src/hooks/useUserEnrolledCourses.ts` | Hook לקבלת הקורסים של הסטודנט |
-
-### קבצים לעדכון
-
-| קובץ | שינויים |
+| קובץ | סוג שינוי |
 |------|----------|
-| `src/pages/CoursesAdmin.tsx` | הוספת רשימת הקורסים |
-| `src/components/portal/admin/AdminLessonForm.tsx` | בחירת קורס בעת יצירת שיעור |
-| `src/pages/PortalAdmin.tsx` | סינון לפי קורס |
-| `src/pages/StudentPortal.tsx` | בורר קורסים + סינון שיעורים |
-
-## ממשק ניהול קורסים
-
-### עיצוב רשימת הקורסים
-
-```
-┌─────────────────────────────────────────────────────┐
-│ 📚 ניהול קורסים                     [+ קורס חדש] │
-│─────────────────────────────────────────────────────│
-│                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │ 📕 נקודת מפנה                                   │ │
-│ │    מחזור: נקודת המפנה נוב 25                   │ │
-│ │    5 שיעורים | פעיל ✓                          │ │
-│ │                                    [ערוך] │ │
-│ └─────────────────────────────────────────────────┘ │
-│                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │ 📗 קורס מתקדם                                   │ │
-│ │    מחזור: מחזור ב׳                              │ │
-│ │    0 שיעורים | פעיל ✓                          │ │
-│ │                                    [ערוך] │ │
-│ └─────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────┘
-```
-
-### טופס יצירת/עריכת קורס
-
-```
-┌─────────────────────────────────────────┐
-│  קורס חדש                               │
-│─────────────────────────────────────────│
-│                                         │
-│  🔑 מזהה קורס (course_key) *            │
-│  ┌───────────────────────────────────┐  │
-│  │ advanced_course                   │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  📝 שם בעברית *                         │
-│  ┌───────────────────────────────────┐  │
-│  │ קורס מתקדם                        │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  📝 שם באנגלית *                        │
-│  ┌───────────────────────────────────┐  │
-│  │ Advanced Course                   │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│  📅 שיוך למחזור                         │
-│  ┌───────────────────────────────────┐  │
-│  │ נקודת המפנה נוב 25            ▼  │  │
-│  └───────────────────────────────────┘  │
-│                                         │
-│              [ביטול]  [שמור]            │
-└─────────────────────────────────────────┘
-```
-
-## ממשק ניהול שיעורים (עדכון)
-
-### הוספת בורר קורס
-
-```
-┌─────────────────────────────────────────────────────┐
-│ 🎓 ניהול שיעורים                                    │
-│─────────────────────────────────────────────────────│
-│                                                     │
-│  סנן לפי קורס:                                      │
-│  ┌───────────────────────────────────────────────┐  │
-│  │ נקודת מפנה (5 שיעורים)                    ▼  │  │
-│  └───────────────────────────────────────────────┘  │
-│                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │  + הוסף שיעור חדש                              │ │
-│ │───────────────────────────────────────────────│ │
-│ │  כותרת: [_____________]                        │ │
-│ │  תיאור: [_____________]                        │ │
-│ │  קורס: [נקודת מפנה ▼]  ← הקורס הנבחר מראש     │ │
-│ │                            [שמור]              │ │
-│ └─────────────────────────────────────────────────┘ │
-│                                                     │
-│ רשימת שיעורים (מסוננת לפי הקורס הנבחר):            │
-│ ...                                                 │
-└─────────────────────────────────────────────────────┘
-```
-
-## פורטל הסטודנט (עדכון)
-
-### סטודנט עם קורס אחד
-
-אין שינוי - הממשק נשאר כמו היום, רק מסנן את השיעורים לפי הקורס שהוא רשום אליו.
-
-### סטודנט עם מספר קורסים
-
-```
-┌─────────────────────────────────────────────────────┐
-│ 📚 הקורסים שלי                                      │
-│─────────────────────────────────────────────────────│
-│                                                     │
-│ ┌──────────────┐  ┌──────────────┐                  │
-│ │ 📕 נקודת מפנה│  │ 📗 קורס מתקדם│                  │
-│ │   3/5 שיעורים│  │   0/8 שיעורים│                  │
-│ │   [המשך]     │  │   [התחל]     │                  │
-│ └──────────────┘  └──────────────┘                  │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-או לחלופין, הוספת Tabs בראש הדף:
-
-```
-[נקודת מפנה] [קורס מתקדם]
-```
-
-## Hook לניהול קורסים
-
-```typescript
-// useCourseManagement.ts
-export function useCourseManagement() {
-  const { data: courses } = useQuery({
-    queryKey: ['courses'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('courses')
-        .select('*, cohort:cohorts(id, name_he, name_en)')
-        .order('created_at');
-      return data;
-    },
-  });
-
-  const createCourse = useMutation({
-    mutationFn: async ({ courseKey, nameHe, nameEn, cohortId }) => {
-      await supabase.from('courses').insert({
-        course_key: courseKey,
-        name_he: nameHe,
-        name_en: nameEn,
-        cohort_id: cohortId,
-      });
-    },
-  });
-
-  const updateCourse = useMutation({...});
-  
-  return { courses, createCourse, updateCourse };
-}
-```
-
-## Hook לקורסים של הסטודנט
-
-```typescript
-// useUserEnrolledCourses.ts
-export function useUserEnrolledCourses() {
-  const { user } = useAuth();
-  
-  const { data: enrolledCourses } = useQuery({
-    queryKey: ['user-enrolled-courses', user?.id],
-    queryFn: async () => {
-      // Get enrollments for user
-      const { data: enrollments } = await supabase
-        .from('student_enrollments')
-        .select('course_key')
-        .eq('user_id', user.id);
-      
-      // Get course details
-      const courseKeys = [...new Set(enrollments.map(e => e.course_key))];
-      const { data: courses } = await supabase
-        .from('courses')
-        .select('*')
-        .in('course_key', courseKeys);
-      
-      return courses;
-    },
-    enabled: !!user,
-  });
-
-  return { enrolledCourses };
-}
-```
-
-## עדכון שליפת השיעורים
-
-```typescript
-// StudentPortal.tsx - עדכון fetchLessons
-const fetchLessons = async (courseKey: string) => {
-  const { data } = await supabase
-    .from('lessons')
-    .select('*')
-    .eq('course_key', courseKey)  // סינון לפי קורס
-    .order('order_index');
-  // ...
-};
-```
-
-## סיכום קבצים
-
-### חדשים (3)
-- `src/components/admin/CourseManager.tsx` - ניהול קורסים
-- `src/hooks/useCourseManagement.ts` - Hook לקורסים
-- `src/hooks/useUserEnrolledCourses.ts` - קורסים של סטודנט
-
-### עדכונים (4)
-- `src/pages/CoursesAdmin.tsx` - הוספת רשימת קורסים
-- `src/components/portal/admin/AdminLessonForm.tsx` - בחירת קורס
-- `src/pages/PortalAdmin.tsx` - סינון לפי קורס
-- `src/pages/StudentPortal.tsx` - בורר קורסים
-
-## הערות
-
-1. **RLS קיים** - הפונקציה `is_enrolled_in_course` כבר מגבילה גישה
-2. **אדמין רואה הכל** - הלוגיקה הקיימת תומכת בזה
-3. **תאימות לאחור** - השיעורים הקיימים כבר משויכים ל-"turning_point"
-4. **סטודנט במספר קורסים** - ה-UI יתמוך בזה דרך בורר או Tabs
+| `public/_redirects` | עדכון תוכן |
+| `src/pages/PortalAdmin.tsx` | תיקון Select |
