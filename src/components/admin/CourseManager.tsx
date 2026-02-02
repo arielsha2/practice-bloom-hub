@@ -278,14 +278,14 @@ export function CourseManager() {
             <div className="space-y-2">
               <Label>{isRTL ? 'שיוך למחזור' : 'Assign to Cohort'}</Label>
               <Select
-                value={formData.cohortId}
-                onValueChange={(value) => setFormData({ ...formData, cohortId: value })}
+                value={formData.cohortId || '__none__'}
+                onValueChange={(value) => setFormData({ ...formData, cohortId: value === '__none__' ? '' : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={isRTL ? 'בחר מחזור (אופציונלי)' : 'Select cohort (optional)'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="__none__">
                     {isRTL ? 'ללא מחזור' : 'No cohort'}
                   </SelectItem>
                   {cohorts?.map((cohort) => (
