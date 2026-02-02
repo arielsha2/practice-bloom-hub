@@ -1,143 +1,119 @@
 
-# תיקון Edge Function - check-admin
+# תיקון התנתקויות תכופות ב-useIsAdmin
 
 ## הבעיה
 
-הפונקציה נכשלת ב-`supabaseAuth.auth.getUser(token)` כי:
-1. `verify_jwt = false` מוגדר ב-config.toml
-2. כאשר JWT verification מושבת, ה-client הרגיל לא יכול לאמת טוקנים כראוי
-3. צריך לפענח את ה-JWT ידנית ולאמת את המשתמש דרך ה-admin API
+הקריאה ל-`supabase.auth.refreshSession()` ב-hook גורמת לקונפליקט עם ה-`AuthContext` הגלובלי, מה שמוביל להתנתקויות מיידיות.
 
 ## הפתרון
 
-שכתוב הפונקציה כך ש:
-1. תפענח את ה-JWT ידנית כדי לחלץ את ה-`sub` (User ID)
-2. תאמת שהמשתמש קיים דרך `auth.admin.getUserById()`
-3. תבדוק את התפקיד עם `has_role` RPC
+עדכון ה-hook כך ש:
+1. **לא יבצע רענון סשן אגרסיבי** - ישתמש בטוקן הקיים מה-AuthContext
+2. **ירענן רק אם הטוקן פג תוקף** - בדיקת `session.expires_at`
+3. **לא יגרום להתנתקות בשגיאה** - רק יגדיר `isAdmin = false`
 
 ## שינויים נדרשים
 
-### קובץ `supabase/functions/check-admin/index.ts`
+### קובץ `src/hooks/useIsAdmin.ts`
 
 ```typescript
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+export function useIsAdmin() {
+  const { user, session, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-// Helper function to decode JWT payload (without verification)
-function decodeJwtPayload(token: string): { sub?: string; exp?: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    
-    const payload = parts[1];
-    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
+  useEffect(() => {
+    async function checkAdminStatus() {
+      // Wait for auth to finish loading
+      if (authLoading) {
+        return;
+      }
+
+      if (!user || !session) {
+        setIsAdmin(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if token is expired
+      const isTokenExpired = session.expires_at 
+        && session.expires_at * 1000 < Date.now();
+
+      try {
+        let currentToken = session.access_token;
+
+        // Only refresh if token is expired
+        if (isTokenExpired) {
+          const { data: refreshData, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshData?.session) {
+            // Token refresh failed - user session is invalid
+            // Don't sign out, just mark as not admin
+            console.error('Session refresh failed:', refreshError?.message);
+            setIsAdmin(false);
+            setIsLoading(false);
+            return;
+          }
+          
+          currentToken = refreshData.session.access_token;
+        }
+
+        // Call check-admin with current token
+        const { data, error } = await supabase.functions.invoke('check-admin', {
+          headers: {
+            Authorization: `Bearer ${currentToken}`
+          }
+        });
+
+        if (error) {
+          console.error('Error checking admin status:', error);
+          // Don't sign out on error - just set isAdmin to false
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data?.isAdmin === true);
+        }
+      } catch (error) {
+        console.error('Error invoking check-admin:', error);
+        // Don't sign out on error - just set isAdmin to false
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    checkAdminStatus();
+  }, [user, session, authLoading]);
+
+  return { isAdmin, isLoading };
 }
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: 'No authorization header' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Decode JWT to get user ID
-    const payload = decodeJwtPayload(token);
-    if (!payload?.sub) {
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: 'Invalid token format' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    // Check if token is expired
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: 'Token expired' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    const userId = payload.sub;
-    
-    // Create service role client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify user exists using admin API
-    const { data: userData, error: userError } = 
-      await supabaseAdmin.auth.admin.getUserById(userId);
-
-    if (userError || !userData?.user) {
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: 'User not found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
-    }
-
-    // Check admin role using RPC
-    const { data, error } = await supabaseAdmin.rpc('has_role', {
-      _user_id: userId,
-      _role: 'admin'
-    });
-
-    if (error) {
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: 'Error checking role' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ isAdmin: data === true }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ isAdmin: false, error: 'Internal server error' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-});
 ```
 
-## שינויים עיקריים
+## השינויים העיקריים
 
-| שינוי | תיאור |
-|-------|--------|
-| `decodeJwtPayload()` | פונקציה חדשה לפענוח ה-JWT ידנית |
-| הסרת `auth.getUser()` | במקום זה, פענוח ישיר של ה-JWT |
-| בדיקת תוקף | בדיקה אם הטוקן פג תוקף לפי `exp` |
-| `auth.admin.getUserById()` | אימות שהמשתמש קיים דרך ה-admin API |
-| Service role client בלבד | שימוש רק ב-service role key |
+| לפני | אחרי |
+|------|------|
+| רענון סשן בכל בדיקה | רענון רק אם הטוקן פג תוקף |
+| שימוש בטוקן מרוענן תמיד | שימוש בטוקן קיים כברירת מחדל |
+| אין טיפול בשגיאת רענון | טיפול נכון בשגיאה - לא מתנתק |
 
-## זרימת האימות החדשה
+## לוגיקת הזרימה החדשה
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  1. קבלת Authorization header                               │
-│  2. פענוח JWT ידני → חילוץ userId מ-sub claim               │
-│  3. בדיקת תוקף הטוקן (exp)                                  │
-│  4. אימות המשתמש דרך auth.admin.getUserById()               │
-│  5. בדיקת תפקיד admin דרך has_role RPC                      │
-│  6. החזרת תוצאה                                             │
+│  1. בדיקה: authLoading? → המתנה                             │
+│  2. בדיקה: !user || !session? → isAdmin = false             │
+│  3. בדיקה: session.expires_at < now?                        │
+│     ├─ כן: נסה רענון סשן                                    │
+│     │   ├─ הצלחה: השתמש בטוקן חדש                           │
+│     │   └─ כשלון: isAdmin = false (ללא התנתקות)            │
+│     └─ לא: השתמש בטוקן הקיים                                │
+│  4. קריאה ל-check-admin                                     │
+│  5. עדכון isAdmin לפי תוצאה                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -145,11 +121,11 @@ Deno.serve(async (req) => {
 
 | קובץ | פעולה |
 |------|-------|
-| `supabase/functions/check-admin/index.ts` | שכתוב מלא |
+| `src/hooks/useIsAdmin.ts` | עדכון הלוגיקה |
 
 ## סיכום
 
-הגישה החדשה עוקפת את הבעיה עם `auth.getUser()` על ידי:
-- פענוח ידני של ה-JWT לחילוץ ה-user ID
-- שימוש ב-admin API לאימות שהמשתמש קיים
-- שימוש בלעדי ב-service role client שעוקף RLS
+התיקון מונע התנתקויות על ידי:
+- שימוש בטוקן הקיים מה-AuthContext במקום רענון אגרסיבי
+- רענון סשן רק כשהטוקן באמת פג תוקף
+- אי-התנתקות בשגיאות - רק הגדרת `isAdmin = false`
