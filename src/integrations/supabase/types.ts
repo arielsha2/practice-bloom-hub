@@ -328,6 +328,36 @@ export type Database = {
           },
         ]
       }
+      courses: {
+        Row: {
+          course_key: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name_en: string
+          name_he: string
+        }
+        Insert: {
+          course_key: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en: string
+          name_he: string
+        }
+        Update: {
+          course_key?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en?: string
+          name_he?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string | null
@@ -437,6 +467,7 @@ export type Database = {
       }
       lessons: {
         Row: {
+          course_key: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -444,6 +475,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          course_key?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -451,13 +483,22 @@ export type Database = {
           title: string
         }
         Update: {
+          course_key?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           order_index?: number | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_key_fkey"
+            columns: ["course_key"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["course_key"]
+          },
+        ]
       }
       media_library: {
         Row: {
@@ -733,6 +774,10 @@ export type Database = {
         Returns: boolean
       }
       is_course_member: { Args: { _user_id: string }; Returns: boolean }
+      is_enrolled_in_course: {
+        Args: { _course_key: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "course_member"
