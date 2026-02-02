@@ -294,11 +294,17 @@ export default function PortalAdmin() {
               <span className="text-sm font-medium">
                 {isRTL ? 'סנן לפי קורס:' : 'Filter by course:'}
               </span>
-              <Select value={selectedCourseKey} onValueChange={setSelectedCourseKey}>
+              <Select 
+                value={selectedCourseKey || '__none__'} 
+                onValueChange={(value) => setSelectedCourseKey(value === '__none__' ? '' : value)}
+              >
                 <SelectTrigger className="w-[250px]">
                   <SelectValue placeholder={isRTL ? 'בחר קורס' : 'Select course'} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__none__">
+                    {isRTL ? 'כל הקורסים' : 'All courses'}
+                  </SelectItem>
                   {courses.map((course) => (
                     <SelectItem key={course.course_key} value={course.course_key}>
                       {isRTL ? course.name_he : course.name_en} ({course.lesson_count || 0} {isRTL ? 'שיעורים' : 'lessons'})
