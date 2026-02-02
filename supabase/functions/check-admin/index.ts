@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('No authorization header provided');
       return new Response(
         JSON.stringify({ isAdmin: false, error: 'No authorization header' }),
@@ -22,27 +22,35 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create client with the user's auth header for token validation
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
-    // Get user from the JWT token
+    // Validate JWT using getClaims
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getUser(token);
 
-    if (userError || !user) {
-      console.log('Error getting user:', userError?.message);
+    if (claimsError || !claimsData?.user) {
+      console.log('Error validating token:', claimsError?.message);
       return new Response(
         JSON.stringify({ isAdmin: false, error: 'Invalid token' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
-    console.log('Checking admin status for user:', user.id);
+    const userId = claimsData.user.id;
+    console.log('Checking admin status for user:', userId);
+
+    // Use service role client to check roles (bypasses RLS)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if user has admin role using the has_role function
-    const { data, error } = await supabase.rpc('has_role', {
-      _user_id: user.id,
+    const { data, error } = await supabaseAdmin.rpc('has_role', {
+      _user_id: userId,
       _role: 'admin'
     });
 
