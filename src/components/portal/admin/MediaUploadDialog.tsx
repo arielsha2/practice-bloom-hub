@@ -32,12 +32,13 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  HardDrive,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateVideoUrl, type VideoSource } from '@/lib/videoUtils';
 
 type MediaKind = 'video' | 'document' | 'presentation' | 'audio' | 'link';
-type VideoUploadMode = 'file' | 'youtube' | 'vimeo' | 'zoom';
+type VideoUploadMode = 'file' | 'youtube' | 'vimeo' | 'zoom' | 'gdrive';
 
 interface MediaUploadDialogProps {
   open: boolean;
@@ -334,6 +335,13 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                     Zoom
                   </Label>
                 </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="gdrive" id="mode-gdrive" />
+                  <Label htmlFor="mode-gdrive" className="flex items-center gap-1 cursor-pointer">
+                    <HardDrive className="w-4 h-4" />
+                    Google Drive
+                  </Label>
+                </div>
               </RadioGroup>
 
               {/* Zoom warning */}
@@ -342,6 +350,16 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                   <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
                     {t('portal.admin.zoomWarning')}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Google Drive warning */}
+              {videoMode === 'gdrive' && (
+                <Alert variant="default" className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
+                  <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
+                    {t('portal.admin.gdriveWarning')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -364,6 +382,8 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                       ? 'https://www.youtube.com/watch?v=...'
                       : videoMode === 'vimeo'
                       ? 'https://vimeo.com/...'
+                      : videoMode === 'gdrive'
+                      ? 'https://drive.google.com/file/d/.../view'
                       : 'https://zoom.us/rec/...'
                   }
                   className="pe-10"
