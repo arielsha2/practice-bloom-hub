@@ -1,215 +1,249 @@
 
-# מערכת ניהול משתמשים וקורסים מקיפה
 
-## סקירה
+# מימוש מערכת מחזורים וניהול תפקידים מתקדם
 
-המערכת הנוכחית כבר כוללת תשתית טובה לאימות משתמשים ותפקידים. נרחיב אותה כדי לתמוך:
-- רישום לקורסים ספציפיים (לא רק "course_member" כללי)
-- עמוד ניהול משתמשים חדש
-- גישה מבוקרת לתכנים לפי קורס
-
-## מה קיים כבר
+## סקירת המצב הנוכחי
 
 | רכיב | סטטוס |
 |------|-------|
-| התחברות עם מייל וסיסמא | קיים ועובד |
-| טבלת `user_roles` עם תפקיד admin | קיים |
-| טבלת `student_enrollments` עם course_key | קיים (ריקה) |
-| פונקציית `is_course_member` | קיימת (בודקת תפקיד כללי) |
-| טבלת `lessons` | קיימת (ללא שיוך לקורס) |
+| טבלת `courses` | קיימת עם קורס אחד (turning_point) |
+| טבלת `student_enrollments` | קיימת (ריקה), כוללת course_key |
+| טבלת `user_roles` | קיימת עם admin אחד |
+| פונקציות RLS | `is_enrolled_in_course`, `has_role` קיימות |
 
 ## שינויים נדרשים
 
-### 1. שינויי Database
+### שלב 1: עדכוני Database
 
-#### א. טבלה חדשה: `courses`
-טבלה להגדרת קורסים זמינים במערכת:
-
-| עמודה | טיפוס | תיאור |
-|-------|-------|-------|
-| id | uuid | מזהה ייחודי |
-| course_key | text | מפתח ייחודי (לדוגמה: "turning_point") |
-| name_he | text | שם הקורס בעברית |
-| name_en | text | שם הקורס באנגלית |
-| description | text | תיאור הקורס |
-| is_active | boolean | האם הקורס פעיל |
-| created_at | timestamp | תאריך יצירה |
-
-#### ב. עדכון טבלת `lessons`
-הוספת עמודה `course_key` לשיוך שיעורים לקורס ספציפי:
+#### א. יצירת טבלת מחזורים (cohorts)
 
 ```sql
-ALTER TABLE lessons 
-ADD COLUMN course_key text DEFAULT 'turning_point';
-```
-
-#### ג. פונקציה חדשה: `is_enrolled_in_course`
-בדיקת האם משתמש רשום לקורס ספציפי:
-
-```sql
-CREATE FUNCTION is_enrolled_in_course(_user_id uuid, _course_key text)
-RETURNS boolean
--- בודקת אם המשתמש רשום לקורס הספציפי או שהוא admin
-```
-
-#### ד. עדכון RLS Policies
-עדכון מדיניות הגישה לשיעורים כך שמשתמש יראה רק שיעורים של הקורסים שהוא רשום אליהם.
-
-### 2. קומפוננטות Frontend חדשות
-
-#### א. עמוד ניהול משתמשים (`/admin/users`)
-
-**תצוגה ראשית:**
-- טבלה של כל המשתמשים הרשומים (מ-profiles)
-- עמודות: מייל, שם, תאריך הצטרפות, קורסים משויכים, פעולות
-
-**יכולות:**
-- צפייה ברשימת משתמשים רשומים
-- שיוך/ביטול שיוך משתמש לקורס
-- סינון לפי קורס
-
-**קבצים:**
-- `src/pages/UsersAdmin.tsx` - עמוד ניהול ראשי
-- `src/components/admin/UsersTable.tsx` - טבלת משתמשים
-- `src/components/admin/CourseAssignmentDialog.tsx` - דיאלוג שיוך לקורס
-- `src/hooks/useUsersManagement.ts` - hook לניהול נתונים
-
-#### ב. קומפוננטת Access Denied משודרגת
-
-**עדכון ל-`PortalAccessDenied.tsx`:**
-- הוספת אייקון מנעול בולט
-- הבחנה בין משתמש לא מחובר למשתמש ללא גישה
-- כפתור להפניה לדף ההתחברות
-
-#### ג. עדכון תפריט הניהול
-
-**עדכון `AdminQuickActions.tsx`:**
-- הוספת קישור לעמוד ניהול משתמשים
-
-### 3. Hook חדש לבדיקת גישה לקורס
-
-**קובץ: `src/hooks/useCourseAccess.ts`**
-```typescript
-function useCourseAccess(courseKey: string) {
-  // מחזיר: { hasAccess, isLoading, isEnrolled }
-  // בודק אם המשתמש רשום לקורס הספציפי
-}
-```
-
-### 4. עדכון נתיבים ב-App.tsx
-
-הוספת נתיב חדש:
-```typescript
-<Route path="/admin/users" element={<UsersAdmin />} />
-```
-
-## זרימת עבודה
-
-```text
-מנהל/ת:
-1. נכנס/ת לעמוד ניהול משתמשים
-2. רואה רשימת כל המשתמשים הרשומים
-3. בוחר/ת משתמש ולוחץ/ת "שייך לקורס"
-4. בוחר/ת קורס מהרשימה
-5. המשתמש מקבל גישה מיידית
-
-משתמש/ת רגיל/ה:
-1. נרשם/ת לאתר עם מייל וסיסמא
-2. מנסה לגשת לפורטל הקורס
-3. אם לא משויך/ת - רואה מסך עם מנעול
-4. אחרי שיוך ע"י מנהל - מקבל/ת גישה
-```
-
-## קבצים שייווצרו או ישתנו
-
-| קובץ | פעולה | תיאור |
-|------|-------|-------|
-| `src/pages/UsersAdmin.tsx` | חדש | עמוד ניהול משתמשים |
-| `src/components/admin/UsersTable.tsx` | חדש | טבלת משתמשים |
-| `src/components/admin/CourseAssignmentDialog.tsx` | חדש | דיאלוג שיוך |
-| `src/hooks/useUsersManagement.ts` | חדש | ניהול נתונים |
-| `src/hooks/useCourseAccess.ts` | חדש | בדיקת גישה לקורס |
-| `src/components/portal/PortalAccessDenied.tsx` | עדכון | הוספת מנעול |
-| `src/components/dashboard/AdminQuickActions.tsx` | עדכון | קישור לניהול משתמשים |
-| `src/App.tsx` | עדכון | נתיב חדש |
-| `src/contexts/LanguageContext.tsx` | עדכון | תרגומים |
-
-## שינויי Database (SQL)
-
-### יצירת טבלת קורסים
-```sql
-CREATE TABLE courses (
+CREATE TABLE public.cohorts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  course_key text UNIQUE NOT NULL,
   name_he text NOT NULL,
   name_en text NOT NULL,
-  description text,
+  start_date date,
+  end_date date,
   is_active boolean DEFAULT true,
   created_at timestamptz DEFAULT now()
 );
-
--- הכנסת הקורס הקיים
-INSERT INTO courses (course_key, name_he, name_en)
-VALUES ('turning_point', 'נקודת מפנה', 'Turning Point');
 ```
 
-### עדכון טבלת שיעורים
+#### ב. הוספת עמודת cohort_id לטבלאות קיימות
+
 ```sql
-ALTER TABLE lessons 
-ADD COLUMN course_key text REFERENCES courses(course_key) DEFAULT 'turning_point';
+-- שיוך קורסים למחזור
+ALTER TABLE public.courses 
+ADD COLUMN cohort_id uuid REFERENCES public.cohorts(id);
+
+-- שיוך הרשמות למחזור
+ALTER TABLE public.student_enrollments 
+ADD COLUMN cohort_id uuid REFERENCES public.cohorts(id);
 ```
 
-### פונקציה לבדיקת הרשמה לקורס
+#### ג. יצירת מחזור ראשון ושיוך הקורס הקיים
+
 ```sql
-CREATE FUNCTION is_enrolled_in_course(_user_id uuid, _course_key text)
-RETURNS boolean
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM student_enrollments
-    WHERE user_id = _user_id 
-    AND course_key = _course_key
-  ) OR has_role(_user_id, 'admin')
-$$;
+INSERT INTO public.cohorts (name_he, name_en)
+VALUES ('מחזור א׳', 'Cohort A');
+
+UPDATE public.courses 
+SET cohort_id = (SELECT id FROM cohorts WHERE name_en = 'Cohort A');
 ```
 
-### RLS Policies מעודכנות
+#### ד. RLS Policies עבור cohorts
 
-**על טבלת `lessons`:**
 ```sql
--- מדיניות קיימת תוחלף
-CREATE POLICY "Users can view lessons for enrolled courses"
-ON lessons FOR SELECT
-USING (
-  has_role(auth.uid(), 'admin') 
-  OR is_enrolled_in_course(auth.uid(), course_key)
-);
-```
-
-**על טבלת `courses`:**
-```sql
--- כולם יכולים לראות קורסים פעילים
-CREATE POLICY "Anyone can view active courses"
-ON courses FOR SELECT
+-- כולם יכולים לראות מחזורים פעילים
+CREATE POLICY "Anyone can view active cohorts"
+ON public.cohorts FOR SELECT
 USING (is_active = true OR has_role(auth.uid(), 'admin'));
 
--- רק admin יכול לנהל
-CREATE POLICY "Admins can manage courses"
-ON courses FOR ALL
+-- רק admin יכול לנהל מחזורים
+CREATE POLICY "Admins can manage cohorts" 
+ON public.cohorts FOR ALL
 USING (has_role(auth.uid(), 'admin'));
 ```
 
-## אבטחה
+### שלב 2: קומפוננטות Frontend
 
-- כל הבדיקות נעשות בצד השרת דרך RLS
-- פונקציות `SECURITY DEFINER` למניעת גישה ישירה לטבלאות
-- Admin מזוהה לפי תפקיד ב-`user_roles` ולא לפי מייל בקוד
-- המייל `dr.ariel.shapira@gmail.com` כבר מוגדר כ-admin ב-DB
+#### קבצים חדשים
 
-## הערות חשובות
+| קובץ | תיאור |
+|------|-------|
+| `src/pages/CoursesAdmin.tsx` | עמוד ניהול קורסים ומחזורים |
+| `src/components/admin/CohortsManager.tsx` | רכיב ליצירה ועריכת מחזורים |
+| `src/components/admin/RoleChangeDialog.tsx` | דיאלוג לשינוי תפקיד משתמש |
+| `src/hooks/useCohortsManagement.ts` | Hook לניהול מחזורים |
 
-1. **תאימות לאחור**: השיעורים הקיימים ישויכו אוטומטית לקורס "turning_point"
-2. **גמישות**: ניתן להוסיף קורסים נוספים בעתיד
-3. **ביצועים**: שימוש ב-RLS במקום בדיקות בצד הלקוח
+#### קבצים לעדכון
+
+| קובץ | שינויים |
+|------|----------|
+| `src/components/admin/UsersTable.tsx` | הוספת עמודות: תפקיד, מחזור, סינון לפי מחזור |
+| `src/components/admin/CourseAssignmentDialog.tsx` | בחירת מחזור בנוסף לקורס |
+| `src/hooks/useUsersManagement.ts` | הוספת fetch לתפקידים ומחזורים, פונקציות לשינוי תפקיד |
+| `src/pages/UsersAdmin.tsx` | תמיכה בדיאלוג שינוי תפקיד |
+| `src/components/dashboard/AdminQuickActions.tsx` | הוספת קישור לניהול קורסים |
+| `src/App.tsx` | נתיב חדש `/admin/courses` |
+
+### שלב 3: פירוט ממשק ניהול משתמשים מעודכן
+
+#### טבלת משתמשים חדשה
+
+| מייל | שם | תפקיד | מחזור | קורסים | פעולות |
+|------|-----|-------|-------|--------|--------|
+| user@example.com | יוסי | סטודנט | מחזור א׳ | נקודת מפנה | [שייך] [תפקיד] |
+| admin@example.com | אריאל | מנהל | - | הכל | [תפקיד] |
+
+#### סינון לפי מחזור
+
+- Dropdown לבחירת מחזור
+- אופציה "הכל" להצגת כל המשתמשים
+- אופציה "ללא מחזור" למשתמשים לא משויכים
+
+#### תגיות תפקיד (Badges)
+
+- **מנהל** - Badge כתום/אדום
+- **סטודנט** - Badge ירוק (יש לפחות הרשמה אחת פעילה)
+- **לא רשום** - Badge אפור (רשום לאתר אבל לא לקורס)
+
+#### שיוך למספר מחזורים
+
+בדיאלוג שיוך לקורס:
+1. בחירת מחזור מהרשימה
+2. בחירת קורס מהמחזור הנבחר
+3. ניתן לחזור ולשייך לקורס אחר ממחזור אחר
+
+### שלב 4: לוגיקת הרשאות
+
+#### אדמין רואה הכל
+
+הפונקציה `is_enrolled_in_course` כבר כוללת בדיקה:
+```sql
+SELECT EXISTS (...) OR has_role(_user_id, 'admin')
+```
+
+כך שאדמין תמיד מקבל גישה לכל התכנים ללא קשר למחזור או קורס.
+
+#### משתמש רגיל
+
+- רואה רק קורסים שהוא רשום אליהם
+- יכול להיות רשום למספר קורסים ממחזורים שונים
+- כל הרשמה נפרדת ב-student_enrollments
+
+### שלב 5: Hook לניהול מחזורים
+
+```typescript
+// useCohortsManagement.ts
+export function useCohortsManagement() {
+  // שליפת כל המחזורים
+  const { data: cohorts } = useQuery({
+    queryKey: ['cohorts'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('cohorts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return data;
+    },
+  });
+
+  // יצירת מחזור חדש
+  const createCohort = useMutation({...});
+
+  // עדכון מחזור
+  const updateCohort = useMutation({...});
+
+  // מחיקת/כיבוי מחזור
+  const deactivateCohort = useMutation({...});
+
+  return { cohorts, createCohort, updateCohort, deactivateCohort };
+}
+```
+
+### שלב 6: עדכון Hook לניהול משתמשים
+
+```typescript
+// useUsersManagement.ts - הוספות
+// שליפת תפקידי משתמשים
+const { data: userRoles = [] } = useQuery({
+  queryKey: ['admin-user-roles'],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('*');
+    return data;
+  },
+});
+
+// שליפת מחזורים
+const { data: cohorts = [] } = useQuery({
+  queryKey: ['cohorts'],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('cohorts')
+      .select('*');
+    return data;
+  },
+});
+
+// שינוי תפקיד משתמש
+const changeRole = useMutation({
+  mutationFn: async ({ userId, newRole, currentRole }) => {
+    if (currentRole) {
+      // מחיקת התפקיד הקודם
+      await supabase.from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', currentRole);
+    }
+    if (newRole) {
+      // הוספת התפקיד החדש
+      await supabase.from('user_roles')
+        .insert({ user_id: userId, role: newRole });
+    }
+  },
+});
+
+// פונקציה לקבלת התפקיד הראשי של משתמש
+const getUserRole = (userId: string) => {
+  const roles = userRoles.filter(r => r.user_id === userId);
+  if (roles.some(r => r.role === 'admin')) return 'admin';
+  if (roles.some(r => r.role === 'course_member')) return 'student';
+  return 'none';
+};
+```
+
+### שלב 7: עדכון דיאלוג שיוך לקורס
+
+הדיאלוג יציג:
+1. בחירת מחזור (dropdown)
+2. רשימת קורסים מהמחזור הנבחר
+3. כפתור שיוך לכל קורס
+
+כך ניתן לשייך משתמש לקורסים ממחזורים שונים.
+
+### שלב 8: סיכום קבצים
+
+#### קבצים חדשים (4)
+- `src/pages/CoursesAdmin.tsx`
+- `src/components/admin/CohortsManager.tsx`
+- `src/components/admin/RoleChangeDialog.tsx`
+- `src/hooks/useCohortsManagement.ts`
+
+#### קבצים לעדכון (6)
+- `src/components/admin/UsersTable.tsx`
+- `src/components/admin/CourseAssignmentDialog.tsx`
+- `src/hooks/useUsersManagement.ts`
+- `src/pages/UsersAdmin.tsx`
+- `src/components/dashboard/AdminQuickActions.tsx`
+- `src/App.tsx`
+
+### הערות חשובות
+
+1. **אדמין רואה הכל** - הפונקציה `is_enrolled_in_course` כבר מטפלת בזה
+2. **מספר מחזורים** - ניתן ליצור הרשמות מרובות לאותו משתמש
+3. **סינון לפי מחזור** - יאפשר לראות רק סטודנטים ממחזור ספציפי
+4. **תאימות לאחור** - הקורס הקיים ישויך למחזור ראשון אוטומטית
+
