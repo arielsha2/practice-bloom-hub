@@ -6,7 +6,7 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Play, FileDown, Phone } from 'lucide-react';
+import { Video, Users, ClipboardCheck, BookOpen, Infinity as InfinityIcon, FileText, Heart, MessageCircle, Gift, ArrowLeft, ArrowRight, Play, FileDown, Phone, Lock } from 'lucide-react';
 import { PaymentOptionsDialog } from './PaymentOptionsDialog';
 import { PortalTestimonials } from './PortalTestimonials';
 
@@ -84,14 +84,31 @@ export function PortalAccessDenied() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* Lock icon for logged-in users without access */}
+            {user && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                className="mb-6"
+              >
+                <div className="w-20 h-20 mx-auto rounded-full bg-primary-foreground/10 flex items-center justify-center">
+                  <Lock className="w-10 h-10 text-accent" />
+                </div>
+              </motion.div>
+            )}
+            
             <span className="inline-block text-accent font-medium text-sm mb-4 tracking-wider uppercase">
               {t('howItWorks.label')}
             </span>
             <h1 className="text-4xl md:text-5xl font-display text-primary-foreground mb-6 tracking-wide">
-              {t('portal.course.title')}
+              {user ? (isRTL ? 'אין לך גישה לקורס זה' : 'No Access to This Course') : t('portal.course.title')}
             </h1>
             <p className="text-xl text-primary-foreground/80">
-              {t('portal.course.subtitle')}
+              {user 
+                ? (isRTL ? 'נראה שאינך רשום/ה לקורס זה. פנה/י למנהל המערכת לקבלת גישה.' : 'You are not enrolled in this course. Contact the administrator for access.')
+                : t('portal.course.subtitle')
+              }
             </p>
             
             {/* CTA in Hero */}
@@ -110,6 +127,26 @@ export function PortalAccessDenied() {
                   {t('portal.course.signup')}
                   <ArrowIcon className="w-5 h-5 ms-2" />
                 </Button>
+              </motion.div>
+            )}
+
+            {/* Button for logged-in users to go home */}
+            {user && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="mt-8"
+              >
+                <Link to="/">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="text-lg px-8 py-6 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                  >
+                    {isRTL ? 'חזרה לדף הבית' : 'Back to Home'}
+                  </Button>
+                </Link>
               </motion.div>
             )}
           </motion.div>

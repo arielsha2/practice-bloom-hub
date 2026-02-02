@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import ContentsAdmin from "./pages/ContentsAdmin";
 import BotAdmin from "./pages/BotAdmin";
 import BotChat from "./pages/BotChat";
+import UsersAdmin from "./pages/UsersAdmin";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/media-library" element={<MediaLibrary />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin/bots" element={<BotAdmin />} />
+              <Route path="/admin/users" element={<UsersAdmin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

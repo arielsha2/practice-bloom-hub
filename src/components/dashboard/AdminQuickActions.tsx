@@ -1,13 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { GraduationCap, FolderOpen, FileText } from 'lucide-react';
+import { GraduationCap, FolderOpen, FileText, Users } from 'lucide-react';
 
 export function AdminQuickActions() {
   const navigate = useNavigate();
   const { isRTL } = useLanguage();
 
   const actions = [
+    {
+      id: 'users',
+      title: isRTL ? 'ניהול משתמשים' : 'Manage Users',
+      description: isRTL ? 'שייך משתמשים לקורסים' : 'Assign users to courses',
+      icon: Users,
+      path: '/admin/users',
+    },
     {
       id: 'lessons',
       title: isRTL ? 'ניהול שיעורים' : 'Manage Lessons',
@@ -36,7 +43,7 @@ export function AdminQuickActions() {
       <h3 className="text-sm font-medium text-muted-foreground">
         {isRTL ? 'גישה מהירה' : 'Quick Actions'}
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {actions.map((action) => (
           <Card
             key={action.id}
