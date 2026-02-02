@@ -3,12 +3,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useIsAdmin() {
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function checkAdminStatus() {
+      // Wait for auth to finish loading
+      if (authLoading) {
+        return;
+      }
+
       if (!user || !session) {
         setIsAdmin(false);
         setIsLoading(false);
@@ -16,9 +21,15 @@ export function useIsAdmin() {
       }
 
       try {
+        // Refresh session before calling edge function to ensure valid token
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        
+        const currentToken = refreshData?.session?.access_token 
+          || session.access_token;
+
         const { data, error } = await supabase.functions.invoke('check-admin', {
           headers: {
-            Authorization: `Bearer ${session.access_token}`
+            Authorization: `Bearer ${currentToken}`
           }
         });
 
@@ -37,7 +48,7 @@ export function useIsAdmin() {
     }
 
     checkAdminStatus();
-  }, [user, session]);
+  }, [user, session, authLoading]);
 
   return { isAdmin, isLoading };
 }
