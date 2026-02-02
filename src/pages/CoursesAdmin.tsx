@@ -6,8 +6,10 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { CohortsManager } from '@/components/admin/CohortsManager';
+import { CourseManager } from '@/components/admin/CourseManager';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, GraduationCap, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Users, Loader2 } from 'lucide-react';
 
 export default function CoursesAdmin() {
   const navigate = useNavigate();
@@ -75,10 +77,27 @@ export default function CoursesAdmin() {
             </div>
           </div>
 
-          {/* Cohorts Manager */}
-          <div className="max-w-3xl">
-            <CohortsManager />
-          </div>
+          {/* Tabs for Courses and Cohorts */}
+          <Tabs defaultValue="courses" className="max-w-4xl">
+            <TabsList className="mb-6">
+              <TabsTrigger value="courses" className="gap-2">
+                <BookOpen className="w-4 h-4" />
+                {isRTL ? 'קורסים' : 'Courses'}
+              </TabsTrigger>
+              <TabsTrigger value="cohorts" className="gap-2">
+                <Users className="w-4 h-4" />
+                {isRTL ? 'מחזורים' : 'Cohorts'}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="courses">
+              <CourseManager />
+            </TabsContent>
+
+            <TabsContent value="cohorts">
+              <CohortsManager />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

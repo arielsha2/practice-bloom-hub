@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsCourseMember } from '@/hooks/useIsCourseMember';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useUserEnrolledCourses } from '@/hooks/useUserEnrolledCourses';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { PortalAccessDenied } from '@/components/portal/PortalAccessDenied';
@@ -23,6 +24,7 @@ interface Lesson {
   title: string;
   description: string | null;
   order_index: number;
+  course_key: string | null;
 }
 
 interface MediaItem {
@@ -43,20 +45,31 @@ export default function StudentPortal() {
   const { hasAccess, isLoading: accessLoading } = useIsCourseMember();
   const { isAdmin } = useIsAdmin();
   const { isLessonWatched, getLessonProgress, isLoading: progressLoading } = useUserProgress();
+  const { enrolledCourses, hasMultipleCourses, isLoading: coursesLoading } = useUserEnrolledCourses();
   const [lessons, setLessons] = useState<LessonWithMedia[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCourseKey, setSelectedCourseKey] = useState<string>('');
+
+  // Set default course when enrolled courses load
+  useEffect(() => {
+    if (enrolledCourses.length > 0 && !selectedCourseKey) {
+      setSelectedCourseKey(enrolledCourses[0].course_key);
+    }
+  }, [enrolledCourses, selectedCourseKey]);
 
   useEffect(() => {
-    if (hasAccess) {
+    if (hasAccess && selectedCourseKey) {
       fetchLessons();
     }
-  }, [hasAccess]);
+  }, [hasAccess, selectedCourseKey]);
 
   const fetchLessons = async () => {
     try {
+      setIsLoading(true);
       const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
+        .eq('course_key', selectedCourseKey)
         .order('order_index', { ascending: true });
 
       if (lessonsError) throw lessonsError;
@@ -131,7 +144,7 @@ export default function StudentPortal() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (authLoading || accessLoading || progressLoading) {
+  if (authLoading || accessLoading || progressLoading || coursesLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -148,6 +161,12 @@ export default function StudentPortal() {
     return <PortalAccessDenied />;
   }
 
+  // Get current course name
+  const currentCourse = enrolledCourses.find(c => c.course_key === selectedCourseKey);
+  const courseName = currentCourse 
+    ? (isRTL ? currentCourse.name_he : currentCourse.name_en)
+    : '';
+
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
@@ -157,6 +176,7 @@ export default function StudentPortal() {
         <CourseProgressHeader 
           totalLessons={totalCount}
           completedLessons={completedCount}
+          courseTitle={courseName}
         />
       </div>
 
@@ -169,6 +189,25 @@ export default function StudentPortal() {
               {t('portal.admin.title')}
             </Button>
           </Link>
+        </div>
+      )}
+
+      {/* Course Tabs - only show if enrolled in multiple courses */}
+      {hasMultipleCourses && (
+        <div className="container mx-auto px-4 pt-4">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {enrolledCourses.map((course) => (
+              <Button
+                key={course.course_key}
+                variant={selectedCourseKey === course.course_key ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCourseKey(course.course_key)}
+                className="whitespace-nowrap"
+              >
+                {isRTL ? course.name_he : course.name_en}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
       
