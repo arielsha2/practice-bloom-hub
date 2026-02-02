@@ -1,101 +1,103 @@
 
-## תוכנית יישום: מערכת רישום סטודנטים מראש
+# הוספת תמיכה בקישורי וידאו מ-Google Drive
 
-### מיגרציית Database
+## סקירה כללית
+הוספת אפשרות להעלות קישורי וידאו מ-Google Drive לספריית המדיה. Google Drive תומך בהטמעה (embed) של סרטונים, כך שהם יוצגו ישירות במערכת בדומה ל-YouTube ו-Vimeo.
 
-#### 1. יצירת טבלת `student_enrollments`
+## שינויים נדרשים
 
-```sql
-CREATE TABLE public.student_enrollments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL,
-  full_name text,
-  course_key text NOT NULL DEFAULT 'turning_point',
-  enrolled_at timestamptz DEFAULT now(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  activated_at timestamptz,
-  notes text,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(email, course_key)
-);
+### 1. עדכון טיפוסי וידאו (`src/lib/videoUtils.ts`)
+
+**הוספת Google Drive לרשימת המקורות:**
+```typescript
+export type VideoSource = 'file' | 'youtube' | 'vimeo' | 'zoom' | 'gdrive';
 ```
 
-#### 2. אינדקסים לחיפוש מהיר
-```sql
-CREATE INDEX idx_student_enrollments_email ON public.student_enrollments(email);
-CREATE INDEX idx_student_enrollments_user_id ON public.student_enrollments(user_id);
+**הוספת פונקציה לחילוץ ID מקישור Google Drive:**
+- תמיכה בפורמטים:
+  - `https://drive.google.com/file/d/FILE_ID/view`
+  - `https://drive.google.com/open?id=FILE_ID`
+  - `https://docs.google.com/file/d/FILE_ID/...`
+
+**יצירת URL להטמעה:**
+```typescript
+// Format: https://drive.google.com/file/d/{FILE_ID}/preview
 ```
 
-#### 3. טריגר לנרמול אימייל ל-Lowercase
-```sql
-CREATE OR REPLACE FUNCTION public.normalize_enrollment_email()
-RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  NEW.email = LOWER(TRIM(NEW.email));
-  RETURN NEW;
-END;
-$$;
+### 2. עדכון דיאלוג העלאת מדיה (`src/components/portal/admin/MediaUploadDialog.tsx`)
 
-CREATE TRIGGER normalize_email_before_save
-  BEFORE INSERT OR UPDATE ON public.student_enrollments
-  FOR EACH ROW EXECUTE FUNCTION public.normalize_enrollment_email();
-```
+**הוספת אפשרות Google Drive בבחירת מקור וידאו:**
+- הוספת רדיו באטן עם אייקון של Google Drive
+- placeholder מתאים: `https://drive.google.com/file/d/.../view`
 
-#### 4. מדיניות RLS
+### 3. עדכון נגן הוידאו (`src/components/portal/VideoPlayerInline.tsx`)
 
-| Policy | פעולה | תנאי |
-|--------|-------|------|
-| Admins can manage enrollments | ALL | `has_role(auth.uid(), 'admin')` |
-| Users can view own enrollments | SELECT | אימייל תואם לפרופיל המחובר |
+**הוספת טיפול ב-Google Drive:**
+- שימוש ב-iframe עם URL מסוג `/preview`
+- Google Drive נפתח ב-embed כמו YouTube/Vimeo
 
-#### 5. טריגר 1: משתמש חדש נרשם
-כאשר נוצר פרופיל חדש - בודק אם האימייל ברשימת ההרשמות:
-- משתמש ב-`LOWER()` להשוואה
-- מוסיף role `course_member`
-- מעדכן `user_id` ו-`activated_at`
+### 4. עדכון ResourceItem (`src/components/portal/ResourceItem.tsx`)
 
-#### 6. טריגר 2: אדמין מוסיף הרשמה
-כאשר מתווספת הרשמה חדשה - בודק אם המשתמש כבר קיים:
-- אם קיים - מקצה role אוטומטית
-- ממלא `user_id` ו-`activated_at`
+**הוספת אייקון ותווית עבור Google Drive**
+
+### 5. עדכון תרגומים (`src/contexts/LanguageContext.tsx`)
+
+**הוספת מחרוזות:**
+- `portal.googleDrive` - תווית לתצוגה
+- `portal.admin.gdriveWarning` - אזהרה על הרשאות שיתוף
 
 ---
 
-### תרשים זרימה
+## פרטים טכניים
 
+### חילוץ FILE_ID מ-Google Drive URL
+```typescript
+export function extractGoogleDriveId(url: string): string | null {
+  const patterns = [
+    // drive.google.com/file/d/FILE_ID/...
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+    // drive.google.com/open?id=FILE_ID
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
+    // docs.google.com/file/d/FILE_ID/...
+    /docs\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return null;
+}
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    תרחיש א': משתמש חדש                       │
-├─────────────────────────────────────────────────────────────┤
-│  1. אדמין מוסיף: student@email.com → student_enrollments   │
-│  2. סטודנט נרשם לאתר עם student@email.com                  │
-│  3. טריגר on_profile_created_check_enrollment מופעל        │
-│  4. ✓ נמצאה התאמה → מוסיף course_member role               │
-│  5. סטודנט מקבל גישה מיידית לקורס                          │
-└─────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│                  תרחיש ב': משתמש קיים                        │
-├─────────────────────────────────────────────────────────────┤
-│  1. סטודנט כבר רשום באתר עם student@email.com              │
-│  2. אדמין מוסיף את האימייל ל-student_enrollments           │
-│  3. טריגר on_enrollment_check_existing_user מופעל          │
-│  4. ✓ משתמש קיים → מוסיף course_member role אוטומטית       │
-│  5. סטודנט מקבל גישה מיידית (ללא צורך ברישום מחדש)         │
-└─────────────────────────────────────────────────────────────┘
+### יצירת Embed URL
+```typescript
+// Input: https://drive.google.com/file/d/1ABC123xyz/view
+// Output: https://drive.google.com/file/d/1ABC123xyz/preview
 ```
+
+### הערה חשובה למשתמש
+כדי שוידאו מ-Google Drive יעבוד במערכת, הקובץ חייב להיות משותף בהרשאה "Anyone with the link". אם הקובץ פרטי, הנגן יציג שגיאה.
 
 ---
 
-### קבצים לעדכון
+## קבצים שישתנו
 
-| קובץ | פעולה |
+| קובץ | שינוי |
 |------|-------|
-| `supabase/migrations/20250129_student_enrollments.sql` | מיגרציה חדשה |
+| `src/lib/videoUtils.ts` | הוספת פונקציות לזיהוי וחילוץ Google Drive |
+| `src/components/portal/admin/MediaUploadDialog.tsx` | הוספת אפשרות Google Drive בבחירת מקור |
+| `src/components/portal/VideoPlayerInline.tsx` | תמיכה בהטמעת Google Drive |
+| `src/components/portal/ResourceItem.tsx` | אייקון ותווית ל-Google Drive |
+| `src/contexts/LanguageContext.tsx` | תרגומים חדשים |
 
-### הערות טכניות
-
-- **אין צורך בשינויי קוד** - המערכת הקיימת (`useIsCourseMember`) כבר בודקת את `user_roles`
-- הטריגרים עובדים ברמת ה-Database ולא דורשים שינוי בקוד React
-- האימייל תמיד נשמר ב-lowercase למניעת כפילויות
-- השוואת אימיילים מתבצעת עם `LOWER()` לבטיחות מלאה
+## זרימת עבודה אחרי השינוי
+```
+1. מנהל פותח את ספריית המדיה
+2. לוחץ "העלאה חדשה"
+3. בוחר סוג: וידאו
+4. בוחר מקור: Google Drive
+5. מדביק קישור לקובץ משותף
+6. המערכת מאמתת את הפורמט
+7. הוידאו נשמר ויוצג ב-embed בעמוד השיעור
+```
