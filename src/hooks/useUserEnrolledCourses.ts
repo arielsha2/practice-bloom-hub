@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EnrolledCourse {
@@ -13,55 +14,56 @@ interface EnrolledCourse {
 
 export function useUserEnrolledCourses() {
   const { user } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
 
   const { data: enrolledCourses, isLoading } = useQuery({
-    queryKey: ['user-enrolled-courses', user?.id, user?.email],
+    queryKey: ['user-enrolled-courses', user?.id, user?.email, isAdmin],
     queryFn: async () => {
       if (!user?.email) {
-        console.log('[useUserEnrolledCourses] No user or email');
         return [];
       }
 
-      console.log('[useUserEnrolledCourses] Fetching enrollments for email:', user.email);
+      // Admins see all active courses
+      if (isAdmin) {
+        const { data: allCourses, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('is_active', true);
+        
+        if (error) throw error;
+        return (allCourses || []) as EnrolledCourse[];
+      }
 
-      // Get enrollments for user by email (matching RLS policy)
+      // Regular users - check enrollments by email
       const { data: enrollments, error: enrollmentError } = await supabase
         .from('student_enrollments')
         .select('course_key')
         .ilike('email', user.email);
 
-      console.log('[useUserEnrolledCourses] Enrollments result:', { enrollments, error: enrollmentError });
-
       if (enrollmentError) throw enrollmentError;
 
       if (!enrollments || enrollments.length === 0) {
-        console.log('[useUserEnrolledCourses] No enrollments found');
         return [];
       }
 
-      // Get unique course keys
       const courseKeys = [...new Set(enrollments.map(e => e.course_key))];
-      console.log('[useUserEnrolledCourses] Course keys:', courseKeys);
 
-      // Get course details
       const { data: courses, error: coursesError } = await supabase
         .from('courses')
         .select('*')
         .in('course_key', courseKeys)
         .eq('is_active', true);
 
-      console.log('[useUserEnrolledCourses] Courses result:', { courses, error: coursesError });
-
       if (coursesError) throw coursesError;
 
       return (courses || []) as EnrolledCourse[];
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email && !adminLoading,
   });
 
   return {
     enrolledCourses: enrolledCourses || [],
-    isLoading,
+    isLoading: isLoading || adminLoading,
     hasMultipleCourses: (enrolledCourses?.length || 0) > 1,
   };
 }
