@@ -1,131 +1,101 @@
 
-# תיקון התנתקויות תכופות ב-useIsAdmin
+# תיקון תצוגת קורסים לאדמינים
 
 ## הבעיה
 
-הקריאה ל-`supabase.auth.refreshSession()` ב-hook גורמת לקונפליקט עם ה-`AuthContext` הגלובלי, מה שמוביל להתנתקויות מיידיות.
+אדמינים לא רואים קורסים בפורטל כי הם לא רשומים בטבלת `student_enrollments`.
 
 ## הפתרון
 
-עדכון ה-hook כך ש:
-1. **לא יבצע רענון סשן אגרסיבי** - ישתמש בטוקן הקיים מה-AuthContext
-2. **ירענן רק אם הטוקן פג תוקף** - בדיקת `session.expires_at`
-3. **לא יגרום להתנתקות בשגיאה** - רק יגדיר `isAdmin = false`
+עדכון `useUserEnrolledCourses` - אדמינים יראו את כל הקורסים הפעילים אוטומטית.
 
 ## שינויים נדרשים
 
-### קובץ `src/hooks/useIsAdmin.ts`
+### קובץ `src/hooks/useUserEnrolledCourses.ts`
 
 ```typescript
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 
-export function useIsAdmin() {
-  const { user, session, loading: authLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+interface EnrolledCourse {
+  id: string;
+  course_key: string;
+  name_he: string;
+  name_en: string;
+  description: string | null;
+  is_active: boolean | null;
+}
 
-  useEffect(() => {
-    async function checkAdminStatus() {
-      // Wait for auth to finish loading
-      if (authLoading) {
-        return;
+export function useUserEnrolledCourses() {
+  const { user } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
+
+  const { data: enrolledCourses, isLoading } = useQuery({
+    queryKey: ['user-enrolled-courses', user?.id, user?.email, isAdmin],
+    queryFn: async () => {
+      if (!user?.email) {
+        return [];
       }
 
-      if (!user || !session) {
-        setIsAdmin(false);
-        setIsLoading(false);
-        return;
+      // Admins see all active courses
+      if (isAdmin) {
+        const { data: allCourses, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('is_active', true);
+        
+        if (error) throw error;
+        return (allCourses || []) as EnrolledCourse[];
       }
 
-      // Check if token is expired
-      const isTokenExpired = session.expires_at 
-        && session.expires_at * 1000 < Date.now();
+      // Regular users - check enrollments by email
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from('student_enrollments')
+        .select('course_key')
+        .ilike('email', user.email);
 
-      try {
-        let currentToken = session.access_token;
+      if (enrollmentError) throw enrollmentError;
 
-        // Only refresh if token is expired
-        if (isTokenExpired) {
-          const { data: refreshData, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshData?.session) {
-            // Token refresh failed - user session is invalid
-            // Don't sign out, just mark as not admin
-            console.error('Session refresh failed:', refreshError?.message);
-            setIsAdmin(false);
-            setIsLoading(false);
-            return;
-          }
-          
-          currentToken = refreshData.session.access_token;
-        }
-
-        // Call check-admin with current token
-        const { data, error } = await supabase.functions.invoke('check-admin', {
-          headers: {
-            Authorization: `Bearer ${currentToken}`
-          }
-        });
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          // Don't sign out on error - just set isAdmin to false
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(data?.isAdmin === true);
-        }
-      } catch (error) {
-        console.error('Error invoking check-admin:', error);
-        // Don't sign out on error - just set isAdmin to false
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
+      if (!enrollments || enrollments.length === 0) {
+        return [];
       }
-    }
 
-    checkAdminStatus();
-  }, [user, session, authLoading]);
+      const courseKeys = [...new Set(enrollments.map(e => e.course_key))];
 
-  return { isAdmin, isLoading };
+      const { data: courses, error: coursesError } = await supabase
+        .from('courses')
+        .select('*')
+        .in('course_key', courseKeys)
+        .eq('is_active', true);
+
+      if (coursesError) throw coursesError;
+
+      return (courses || []) as EnrolledCourse[];
+    },
+    enabled: !!user?.email && !adminLoading,
+  });
+
+  return {
+    enrolledCourses: enrolledCourses || [],
+    isLoading: isLoading || adminLoading,
+    hasMultipleCourses: (enrolledCourses?.length || 0) > 1,
+  };
 }
 ```
 
 ## השינויים העיקריים
 
-| לפני | אחרי |
-|------|------|
-| רענון סשן בכל בדיקה | רענון רק אם הטוקן פג תוקף |
-| שימוש בטוקן מרוענן תמיד | שימוש בטוקן קיים כברירת מחדל |
-| אין טיפול בשגיאת רענון | טיפול נכון בשגיאה - לא מתנתק |
-
-## לוגיקת הזרימה החדשה
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  1. בדיקה: authLoading? → המתנה                             │
-│  2. בדיקה: !user || !session? → isAdmin = false             │
-│  3. בדיקה: session.expires_at < now?                        │
-│     ├─ כן: נסה רענון סשן                                    │
-│     │   ├─ הצלחה: השתמש בטוקן חדש                           │
-│     │   └─ כשלון: isAdmin = false (ללא התנתקות)            │
-│     └─ לא: השתמש בטוקן הקיים                                │
-│  4. קריאה ל-check-admin                                     │
-│  5. עדכון isAdmin לפי תוצאה                                 │
-└─────────────────────────────────────────────────────────────┘
-```
+| שינוי | תיאור |
+|-------|--------|
+| ייבוא `useIsAdmin` | בדיקת סטטוס admin |
+| לוגיקה חדשה | אם admin → כל הקורסים הפעילים |
+| `enabled` מעודכן | ממתין לבדיקת admin לפני השאילתה |
+| `isLoading` משולב | כולל את adminLoading |
 
 ## קבצים לעדכון
 
 | קובץ | פעולה |
 |------|-------|
-| `src/hooks/useIsAdmin.ts` | עדכון הלוגיקה |
-
-## סיכום
-
-התיקון מונע התנתקויות על ידי:
-- שימוש בטוקן הקיים מה-AuthContext במקום רענון אגרסיבי
-- רענון סשן רק כשהטוקן באמת פג תוקף
-- אי-התנתקות בשגיאות - רק הגדרת `isAdmin = false`
+| `src/hooks/useUserEnrolledCourses.ts` | הוספת לוגיקה לאדמינים |
