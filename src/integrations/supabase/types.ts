@@ -616,6 +616,33 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_ai_settings: {
+        Row: {
+          id: string
+          max_tokens: number
+          model: string
+          system_prompt: string
+          temperature: number
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt?: string
+          temperature?: number
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt?: string
+          temperature?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       qa_threads: {
         Row: {
           answer: string | null
