@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageCircle, Send, Clock, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { MessageCircle, Send, Clock, CheckCircle, Eye, EyeOff, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QAThread {
@@ -23,6 +23,7 @@ export function AdminQAList() {
   const [answeringId, setAnsweringId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQuestions();
@@ -69,6 +70,27 @@ export function AdminQAList() {
       toast.error(t('portal.admin.answerError'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGenerateAI = async (questionId: string) => {
+    setGeneratingId(questionId);
+    try {
+      const { data, error } = await supabase.functions.invoke('qa-ai-answer', {
+        body: { question_id: questionId },
+      });
+
+      if (error) throw error;
+      if (data?.answer) {
+        setAnsweringId(questionId);
+        setAnswerText(data.answer);
+        toast.success(isRTL ? 'תשובת AI נוצרה - ניתן לערוך לפני שליחה' : 'AI answer generated - edit before sending');
+      }
+    } catch (error: any) {
+      console.error('Error generating AI answer:', error);
+      toast.error(isRTL ? 'שגיאה ביצירת תשובת AI' : 'Error generating AI answer');
+    } finally {
+      setGeneratingId(null);
     }
   };
 
@@ -161,13 +183,28 @@ export function AdminQAList() {
                     </div>
                   </div>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setAnsweringId(q.id)}
-                  >
-                    {t('portal.admin.answer')}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAnsweringId(q.id)}
+                    >
+                      {t('portal.admin.answer')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGenerateAI(q.id)}
+                      disabled={generatingId === q.id}
+                    >
+                      {generatingId === q.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin me-1" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 me-1" />
+                      )}
+                      {isRTL ? 'צור תשובה עם AI' : 'Generate AI Answer'}
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>
