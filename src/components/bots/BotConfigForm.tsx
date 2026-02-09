@@ -52,9 +52,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const models = [
-  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (מהיר)' },
+  { value: 'openai/gpt-4o', label: 'GPT-4o (מומלץ)' },
+  { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini (מהיר)' },
+  { value: 'google/gemini-2.0-flash-001', label: 'Gemini 2.0 Flash' },
   { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash (מאוזן)' },
   { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro (מתקדם)' },
+  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (מהיר)' },
   { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini (מאוזן)' },
   { value: 'openai/gpt-5', label: 'GPT-5 (מתקדם)' },
 ];
@@ -236,13 +239,18 @@ export function BotConfigForm({ bot, onSubmit, onCancel, isSubmitting }: BotConf
                 <Textarea 
                   {...field} 
                   placeholder="אתה עוזר AI מקצועי..." 
-                  rows={10}
-                  className="font-mono text-sm"
+                  className="min-h-64 max-h-[500px] overflow-y-auto text-sm"
+                  dir="auto"
                 />
               </FormControl>
-              <FormDescription>
-                ההנחיות הראשיות שמגדירות את אופי הבוט והתנהגותו
-              </FormDescription>
+              <div className="flex justify-between items-center">
+                <FormDescription>
+                  ההנחיות הראשיות שמגדירות את אופי הבוט. ניתן להדביק תמלולים ודוגמאות שאלה-תשובה
+                </FormDescription>
+                <p className="text-xs text-muted-foreground" dir="ltr">
+                  {field.value?.length || 0} תווים
+                </p>
+              </div>
               <FormMessage />
             </FormItem>
           )}
