@@ -1,27 +1,34 @@
 
 
-# שיפורים להגדרות AI לשאלות ותשובות
+# שיפור שדה System Prompt לתמיכה בטקסט ארוך + היסטוריית גרסאות
 
-## 1. עדכון ברירת מחדל ל-System Prompt
+## הבעיות הנוכחיות
 
-עדכון ה-default בטבלת `qa_ai_settings` + עדכון הערך הקיים בטבלה:
+1. ה-Textarea מוגבל ל-`min-h-32` (כ-8 שורות) -- לא מספיק לפרומפט ארוך עם דוגמאות שאלה-תשובה
+2. `dir="ltr"` -- עברית מוצגת הפוך
+3. אין היסטוריית גרסאות לפרומפט
+4. רשימת המודלים חסרה את `gpt-4o`, `gpt-4o-mini`, `gemini-2.0-flash-001`
+5. ה-`max_tokens` של ה-AI מוגבל ל-4000 -- לא מספיק אם הפרומפט עצמו ארוך
+
+## שינויים נדרשים
+
+### 1. מיגרציית מסד נתונים
+
+- עדכון ברירת המחדל של `system_prompt` לפרומפט המנטור
+- יצירת טבלת `qa_ai_settings_history` לשמירת גרסאות קודמות
+- הגדלת מגבלת `max_tokens` ל-8000
+- הגדרת RLS: רק admins יכולים לצפות ולנהל היסטוריה
 
 ```sql
--- Migration: שינוי ברירת המחדל
+-- עדכון default + ערך קיים
 ALTER TABLE public.qa_ai_settings 
   ALTER COLUMN system_prompt 
-  SET DEFAULT 'You are a mentor for psychotherapists. Your tone is professional, warm, and encouraging. You provide business and marketing advice that is ethical and authentic. Always respond in Hebrew.';
+  SET DEFAULT 'You are a mentor for psychotherapists...';
 
--- עדכון הרשומה הקיימת
 UPDATE public.qa_ai_settings 
   SET system_prompt = 'You are a mentor for psychotherapists. Your tone is professional, warm, and encouraging. You provide business and marketing advice that is ethical and authentic. Always respond in Hebrew.';
-```
 
-## 2. טבלת היסטוריית Prompt
-
-יצירת טבלה חדשה `qa_ai_settings_history` לשמירת גרסאות קודמות:
-
-```sql
+-- טבלת היסטוריה
 CREATE TABLE public.qa_ai_settings_history (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   system_prompt text NOT NULL,
@@ -33,16 +40,21 @@ CREATE TABLE public.qa_ai_settings_history (
 );
 
 ALTER TABLE public.qa_ai_settings_history ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "Admins can manage prompt history"
   ON public.qa_ai_settings_history FOR ALL
   USING (has_role(auth.uid(), 'admin'::app_role));
 ```
 
-## 3. עדכון רשימת המודלים
+### 2. עדכון `QASettingsCard.tsx`
 
-שינוי ב-`QASettingsCard.tsx`:
+**Textarea משודרג:**
+- `min-h-64` (גובה מינימלי גדול יותר -- כ-16 שורות)
+- `max-h-[500px] overflow-y-auto` לגלילה עם גובה מקסימלי
+- `dir="auto"` לתמיכה נכונה ב-RTL
+- הסרת `font-mono` כי הפרומפט בעברית
+- מונה תווים שמראה את אורך הפרומפט הנוכחי
 
+**רשימת מודלים מעודכנת:**
 ```typescript
 const AVAILABLE_MODELS = [
   { value: 'openai/gpt-4o', label: 'GPT-4o (Recommended)' },
@@ -56,59 +68,25 @@ const AVAILABLE_MODELS = [
 ];
 ```
 
-## 4. תיקון RTL ב-Textarea
+**היסטוריית גרסאות:**
+- שמירת ההגדרות הנוכחיות לטבלת `qa_ai_settings_history` לפני כל עדכון
+- סקציית Collapsible בתחתית הכרטיסיה שמציגה גרסאות קודמות
+- כפתור "שחזר" ליד כל גרסה שמאפשר להחזיר פרומפט ישן
+- תצוגת תאריך + תצוגה מקוצרת של הפרומפט (100 תווים ראשונים)
 
-שינוי ב-Textarea של ה-system prompt מ-`dir="ltr"` ל-`dir="auto"` כדי שטקסט עברי יוצג נכון:
+**הגדלת טווח Max Tokens:**
+- שינוי הסליידר מ-`max={4000}` ל-`max={8000}` כדי לתמוך בתשובות ארוכות יותר כשהפרומפט ארוך
 
-```tsx
-<Textarea
-  value={settings.system_prompt}
-  onChange={(e) => setSettings({ ...settings, system_prompt: e.target.value })}
-  className="min-h-32 text-sm"
-  dir="auto"
-/>
-```
+### 3. עדכון Edge Function
 
-## 5. שמירת היסטוריה בעת שמירה
-
-עדכון `handleSave` ב-`QASettingsCard.tsx` - לפני שמירת ההגדרות החדשות, שמירת ההגדרות הנוכחיות בטבלת ההיסטוריה:
-
-```typescript
-const handleSave = async () => {
-  if (!settings) return;
-  setIsSaving(true);
-  try {
-    // Save current settings to history before updating
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('qa_ai_settings_history').insert({
-      system_prompt: originalSettings.system_prompt,
-      model: originalSettings.model,
-      temperature: originalSettings.temperature,
-      max_tokens: originalSettings.max_tokens,
-      changed_by: user?.id,
-    });
-
-    // Then update current settings
-    const { error } = await supabase.from('qa_ai_settings').update({...}).eq('id', settings.id);
-    // ...
-  }
-};
-```
-
-## 6. תצוגת היסטוריה (Collapsible)
-
-הוספת אקורדיון בתחתית הכרטיסיה שמציג גרסאות קודמות עם אפשרות לשחזר:
-
-| תאריך | מודל | פעולה |
-|--------|------|-------|
-| 09/02/2026 14:30 | GPT-4o | [שחזר] |
-| 09/02/2026 12:00 | Gemini 3 Flash | [שחזר] |
+- עדכון ברירת מחדל של fallback prompt לפרומפט המנטור החדש
 
 ## קבצים לעדכון
 
 | קובץ | פעולה |
 |------|-------|
-| Migration SQL | יצירת טבלת history + עדכון default |
-| `src/components/portal/admin/QASettingsCard.tsx` | מודלים, RTL, היסטוריה, שחזור |
-| `supabase/functions/qa-ai-answer/index.ts` | עדכון fallback default prompt |
+| מיגרציית SQL | יצירת טבלת history, עדכון defaults |
+| `src/components/portal/admin/QASettingsCard.tsx` | Textarea גדול, RTL, מודלים, היסטוריה |
+| `supabase/functions/qa-ai-answer/index.ts` | עדכון fallback prompt |
+| `src/integrations/supabase/types.ts` | עדכון טיפוסים לטבלה חדשה |
 
