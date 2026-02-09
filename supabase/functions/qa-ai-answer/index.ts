@@ -77,7 +77,7 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    const systemPrompt = settings?.system_prompt || "You are a helpful teaching assistant.";
+    const systemPrompt = settings?.system_prompt || "You are a mentor for psychotherapists. Your tone is professional, warm, and encouraging. You provide business and marketing advice that is ethical and authentic. Always respond in Hebrew.";
     const model = settings?.model || "google/gemini-3-flash-preview";
     const temperature = settings?.temperature || 0.7;
     const maxTokens = settings?.max_tokens || 1000;
