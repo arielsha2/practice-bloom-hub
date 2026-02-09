@@ -643,6 +643,44 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_ai_settings_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          max_tokens: number
+          model: string
+          system_prompt: string
+          temperature: number
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          max_tokens: number
+          model: string
+          system_prompt: string
+          temperature: number
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt?: string
+          temperature?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_ai_settings_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qa_threads: {
         Row: {
           answer: string | null
