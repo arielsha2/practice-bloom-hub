@@ -18,7 +18,7 @@ import { ResourceItem } from '@/components/portal/ResourceItem';
 import { QASection } from '@/components/portal/QASection';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Info, PanelLeftClose, PanelLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Info, PanelLeftClose, PanelLeft, ChevronLeft, ChevronRight, StickyNote, Presentation } from 'lucide-react';
 import type { VideoSource } from '@/lib/videoUtils';
 import { cn } from '@/lib/utils';
 
@@ -273,73 +273,58 @@ export default function LessonDetail() {
                   />
                 )}
 
-                {/* Split view: Video + Presentation */}
-                <div className={cn(
-                  "flex gap-4",
-                  "flex-col lg:flex-row",
-                  isRTL && "lg:flex-row-reverse"
-                )}>
-                  {/* Video - 60% on desktop */}
-                  <div className="lg:w-[60%] w-full">
-                    {videoUrl ? (
-                      <VideoPlayerInline
-                        url={videoUrl}
-                        source={primaryVideo?.source}
-                        onProgress={handleVideoProgress}
-                        onEnded={handleVideoEnded}
-                      />
-                    ) : (
-                      <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                        <p className="text-muted-foreground">
-                          {isRTL ? 'אין וידאו זמין' : 'No video available'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Presentation - 40% on desktop */}
-                  <div className="lg:w-[40%] w-full aspect-[3/4] lg:aspect-auto lg:min-h-[400px]">
-                    <PresentationViewer
-                      filePath={presentation?.file_path || null}
-                      url={presentation?.url || null}
-                      source={presentation?.source || 'file'}
+                {/* Full-width Video */}
+                <div className="w-full">
+                  {videoUrl ? (
+                    <VideoPlayerInline
+                      url={videoUrl}
+                      source={primaryVideo?.source}
+                      onProgress={handleVideoProgress}
+                      onEnded={handleVideoEnded}
                     />
-                  </div>
+                  ) : (
+                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">
+                        {isRTL ? 'אין וידאו זמין' : 'No video available'}
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Lesson title */}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {isRTL ? `שיעור ${currentIndex + 1}` : `Lesson ${currentIndex + 1}`}
-                  </p>
-                  <h1 className="text-2xl font-bold">{currentLesson.title}</h1>
-                </div>
-
-                {/* Personal Notes */}
-                <LessonNotes lessonId={id} />
 
                 {/* Tabs */}
-                <Tabs defaultValue="overview" className="space-y-4">
+                <Tabs defaultValue="notes" className="space-y-4">
                   <TabsList>
+                    <TabsTrigger value="notes" className="flex items-center gap-2">
+                      <StickyNote className="w-4 h-4" />
+                      {isRTL ? 'הערות אישיות' : 'Notes'}
+                    </TabsTrigger>
+                    {presentation && (
+                      <TabsTrigger value="slides" className="flex items-center gap-2">
+                        <Presentation className="w-4 h-4" />
+                        {isRTL ? 'שקפים' : 'Slides'}
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="files" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      {isRTL ? 'קבצים' : 'Files'} ({files.length})
+                    </TabsTrigger>
                     <TabsTrigger value="overview" className="flex items-center gap-2">
                       <Info className="w-4 h-4" />
                       {isRTL ? 'סקירה' : 'Overview'}
                     </TabsTrigger>
-                    <TabsTrigger value="files" className="flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      {isRTL ? 'קבצים מצורפים' : 'Attachments'} ({files.length})
-                    </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="overview" className="space-y-6">
-                    <ExpandableDescription description={currentLesson.description} />
-                    
-                    {/* Q&A Section */}
-                    <div className="pt-6 border-t">
-                      <h2 className="text-lg font-semibold mb-4">
-                        {isRTL ? 'שאלות ותשובות' : 'Questions & Answers'}
-                      </h2>
-                      <QASection lessonId={id} />
+                  <TabsContent value="notes">
+                    <LessonNotes lessonId={id} />
+                  </TabsContent>
+
+                  <TabsContent value="slides">
+                    <div className="h-[500px]">
+                      <PresentationViewer
+                        filePath={presentation?.file_path || null}
+                        url={presentation?.url || null}
+                        source={presentation?.source || 'file'}
+                      />
                     </div>
                   </TabsContent>
 
@@ -363,6 +348,16 @@ export default function LessonDetail() {
                         ))}
                       </div>
                     )}
+                  </TabsContent>
+
+                  <TabsContent value="overview" className="space-y-6">
+                    <ExpandableDescription description={currentLesson.description} />
+                    <div className="pt-6 border-t">
+                      <h2 className="text-lg font-semibold mb-4">
+                        {isRTL ? 'שאלות ותשובות' : 'Questions & Answers'}
+                      </h2>
+                      <QASection lessonId={id} />
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
