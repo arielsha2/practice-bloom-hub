@@ -11,6 +11,8 @@ import { PortalAccessDenied } from '@/components/portal/PortalAccessDenied';
 import { LessonSidebar } from '@/components/portal/LessonSidebar';
 import { LessonAdminControls } from '@/components/portal/admin/LessonAdminControls';
 import { VideoPlayerInline } from '@/components/portal/VideoPlayerInline';
+import { PresentationViewer } from '@/components/portal/PresentationViewer';
+import { LessonNotes } from '@/components/portal/LessonNotes';
 import { ExpandableDescription } from '@/components/portal/ExpandableDescription';
 import { ResourceItem } from '@/components/portal/ResourceItem';
 import { QASection } from '@/components/portal/QASection';
@@ -158,7 +160,8 @@ export default function LessonDetail() {
 
   // Split resources
   const primaryVideo = resources.find(r => r.type === 'video');
-  const files = resources.filter(r => r.type !== 'video');
+  const presentation = resources.find(r => r.type === 'presentation');
+  const files = resources.filter(r => r.type !== 'video' && r.type !== 'presentation');
 
   // Get video URL
   const videoUrl = primaryVideo?.url || (primaryVideo?.file_path 
@@ -261,7 +264,7 @@ export default function LessonDetail() {
                 {t('portal.lessonNotFound')}
               </div>
             ) : (
-              <div className="max-w-4xl mx-auto space-y-6">
+              <div className="space-y-6">
                 {/* Admin Controls */}
                 {isAdmin && currentLesson && (
                   <LessonAdminControls
@@ -270,21 +273,39 @@ export default function LessonDetail() {
                   />
                 )}
 
-                {/* Video Player */}
-                {videoUrl ? (
-                  <VideoPlayerInline
-                    url={videoUrl}
-                    source={primaryVideo?.source}
-                    onProgress={handleVideoProgress}
-                    onEnded={handleVideoEnded}
-                  />
-                ) : (
-                  <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    <p className="text-muted-foreground">
-                      {isRTL ? 'אין וידאו זמין' : 'No video available'}
-                    </p>
+                {/* Split view: Video + Presentation */}
+                <div className={cn(
+                  "flex gap-4",
+                  "flex-col lg:flex-row",
+                  isRTL && "lg:flex-row-reverse"
+                )}>
+                  {/* Video - 60% on desktop */}
+                  <div className="lg:w-[60%] w-full">
+                    {videoUrl ? (
+                      <VideoPlayerInline
+                        url={videoUrl}
+                        source={primaryVideo?.source}
+                        onProgress={handleVideoProgress}
+                        onEnded={handleVideoEnded}
+                      />
+                    ) : (
+                      <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                        <p className="text-muted-foreground">
+                          {isRTL ? 'אין וידאו זמין' : 'No video available'}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Presentation - 40% on desktop */}
+                  <div className="lg:w-[40%] w-full aspect-[3/4] lg:aspect-auto lg:min-h-[400px]">
+                    <PresentationViewer
+                      filePath={presentation?.file_path || null}
+                      url={presentation?.url || null}
+                      source={presentation?.source || 'file'}
+                    />
+                  </div>
+                </div>
 
                 {/* Lesson title */}
                 <div>
@@ -293,6 +314,9 @@ export default function LessonDetail() {
                   </p>
                   <h1 className="text-2xl font-bold">{currentLesson.title}</h1>
                 </div>
+
+                {/* Personal Notes */}
+                <LessonNotes lessonId={id} />
 
                 {/* Tabs */}
                 <Tabs defaultValue="overview" className="space-y-4">
@@ -331,7 +355,7 @@ export default function LessonDetail() {
                             key={resource.id}
                             id={resource.id}
                             title={resource.title}
-                            type={resource.type === 'document' ? 'pdf' : resource.type === 'presentation' ? 'ppt' : 'pdf'}
+                            type={resource.type === 'document' ? 'pdf' : 'pdf'}
                             filePath={resource.file_path}
                             url={resource.url}
                             source={resource.source}

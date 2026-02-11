@@ -772,6 +772,41 @@ export type Database = {
           },
         ]
       }
+      user_lesson_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          lesson_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          lesson_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          lesson_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_lesson_notes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_lesson_progress: {
         Row: {
           created_at: string | null
