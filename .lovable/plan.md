@@ -1,75 +1,137 @@
 
+# מסך לימוד מפוצל: וידאו + מצגת + הערות אישיות
 
-# שדרוג שדה System Prompt בטופס ניהול בוטים
+## סקירה כללית
 
-## הבעיה
+שדרוג דף השיעור (`LessonDetail`) כך שבמסך רחב (דסקטופ) התוכן יוצג בתצורה מפוצלת:
+- **צד ימין (60%)**: נגן הוידאו
+- **צד שמאל (40%)**: מציג המצגת (PDF) של אותו שיעור
+- **מתחת**: אזור הערות אישיות של הסטודנט, שנשמרות במסד הנתונים
 
-שדה ה-System Prompt בטופס יצירת/עריכת בוט (`BotConfigForm.tsx`) מוגבל מדי לשימוש עם תמלולים ארוכים:
+במסכים צרים (מובייל/טאבלט) התצוגה תהיה אנכית (וידאו מעל, מצגת מתחת).
 
-- גובה קבוע של 10 שורות בלבד (`rows={10}`)
-- `font-mono` -- לא מתאים לעברית
-- חסר `dir="auto"` לתמיכת RTL
-- אין מונה תווים
-- אין גלילה עם גובה מקסימלי
+## מה צריך לבנות
 
-## שינויים נדרשים
+### 1. טבלת מסד נתונים חדשה: `user_lesson_notes`
 
-### קובץ: `src/components/bots/BotConfigForm.tsx`
-
-**1. שדרוג ה-Textarea של System Prompt (שורות 236-248):**
-
-- שינוי מ-`rows={10}` ו-`font-mono` ל-`min-h-64 max-h-[500px] overflow-y-auto`
-- הוספת `dir="auto"` לתמיכת RTL
-- הסרת `font-mono` כדי שעברית תוצג טוב
-- הוספת מונה תווים מתחת לשדה
-
-**2. עדכון רשימת המודלים (שורות 54-60):**
-
-הוספת `openai/gpt-4o`, `openai/gpt-4o-mini`, ו-`google/gemini-2.0-flash-001`:
+טבלה לשמירת הערות אישיות של סטודנטים לכל שיעור:
 
 ```text
-openai/gpt-4o          -> GPT-4o (מומלץ)
-openai/gpt-4o-mini     -> GPT-4o Mini (מהיר)
-google/gemini-2.0-flash-001 -> Gemini 2.0 Flash
-google/gemini-2.5-flash -> Gemini 2.5 Flash (מאוזן)
-google/gemini-2.5-pro  -> Gemini 2.5 Pro (מתקדם)
-google/gemini-3-flash-preview -> Gemini 3 Flash (מהיר)
-openai/gpt-5-mini      -> GPT-5 Mini (מאוזן)
-openai/gpt-5           -> GPT-5 (מתקדם)
+user_lesson_notes
+-----------------
+id            uuid (PK)
+user_id       uuid (NOT NULL)
+lesson_id     uuid (NOT NULL, FK -> lessons)
+content       text (default '')
+updated_at    timestamptz
+created_at    timestamptz
+UNIQUE(user_id, lesson_id)
 ```
 
-**3. עדכון הנחיית השדה:**
+מדיניות RLS:
+- סטודנטים יכולים לראות, ליצור ולעדכן רק את ההערות שלהם
+- אדמינים יכולים לצפות בכל ההערות
 
-שינוי ה-FormDescription לכלול הנחיה על הדבקת תמלולים ודוגמאות שאלה-תשובה.
+### 2. רכיב מציג מצגת (PresentationViewer)
 
-### לפני ואחרי
+רכיב חדש `src/components/portal/PresentationViewer.tsx` שמציג PDF באמצעות iframe:
+- יפיק signed URL מ-Supabase Storage עבור קובץ המצגת
+- יציג את ה-PDF ב-iframe עם גלילה
+- יציג הודעה אם אין מצגת זמינה לשיעור
 
-**לפני:**
-```tsx
-<Textarea 
-  {...field} 
-  placeholder="אתה עוזר AI מקצועי..." 
-  rows={10}
-  className="font-mono text-sm"
-/>
+### 3. רכיב הערות אישיות (LessonNotes)
+
+רכיב חדש `src/components/portal/LessonNotes.tsx`:
+- Textarea עם `dir="auto"` לתמיכת RTL
+- שמירה אוטומטית (auto-save) אחרי 2 שניות של הפסקת הקלדה (debounce)
+- אינדיקציית "נשמר" / "שומר..."
+- טעינת ההערות הקיימות בעת כניסה לשיעור
+
+### 4. שינוי תצוגת דף השיעור (LessonDetail)
+
+שינוי הלייאוט הראשי מתצוגה אנכית לתצוגה מפוצלת:
+
+```text
++--------------------------------------------------+
+|  סרגל ניווט (כותרת + חצים קדימה/אחורה)            |
++--------------------------------------------------+
+|                    |                              |
+|   מצגת PDF (40%)   |      וידאו (60%)             |
+|                    |                              |
++--------------------------------------------------+
+|  הערות אישיות + כותרת השיעור + טאבים             |
++--------------------------------------------------+
 ```
 
-**אחרי:**
-```tsx
-<Textarea 
-  {...field} 
-  placeholder="אתה עוזר AI מקצועי..." 
-  className="min-h-64 max-h-[500px] overflow-y-auto text-sm"
-  dir="auto"
-/>
-<p className="text-xs text-muted-foreground text-left" dir="ltr">
-  {field.value?.length || 0} characters
-</p>
+- שימוש ב-CSS Grid/Flex עם `w-[60%]` ו-`w-[40%]`
+- במובייל: תצוגה אנכית (וידאו מעל, מצגת מתחת)
+- המצגת תזוהה אוטומטית מתוך ה-resources של השיעור (סוג `presentation`)
+
+### 5. Hook חדש: `useLessonNotes`
+
+`src/hooks/useLessonNotes.ts` - hook לניהול הערות:
+- טעינה מ-Supabase
+- שמירה עם debounce
+- מצב שמירה (saving/saved)
+
+## פירוט טכני
+
+### מיגרציית SQL
+
+```sql
+CREATE TABLE public.user_lesson_notes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  lesson_id uuid NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
+  content text NOT NULL DEFAULT '',
+  updated_at timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, lesson_id)
+);
+
+ALTER TABLE public.user_lesson_notes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own notes"
+  ON public.user_lesson_notes FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own notes"
+  ON public.user_lesson_notes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own notes"
+  ON public.user_lesson_notes FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all notes"
+  ON public.user_lesson_notes FOR SELECT
+  USING (has_role(auth.uid(), 'admin'::app_role));
 ```
 
-## קובץ יחיד לעדכון
+### זיהוי מצגת
 
-| קובץ | שינוי |
+המצגת תזוהה מתוך ה-resources הקיימים של השיעור:
+```typescript
+const presentation = resources.find(r => r.type === 'presentation');
+```
+ללא צורך בשינוי מבנה הנתונים.
+
+### Auto-save עם Debounce
+
+ההערות יישמרו אוטומטית אחרי 2 שניות ללא הקלדה באמצעות `upsert` על הצירוף הייחודי `(user_id, lesson_id)`.
+
+### Responsive Layout
+
+- דסקטופ (מעל 1024px): פיצול אופקי 60/40
+- מובייל/טאבלט: תצוגה אנכית, וידאו מעל מצגת
+
+## קבצים לעדכון/יצירה
+
+| קובץ | פעולה |
 |------|-------|
-| `src/components/bots/BotConfigForm.tsx` | Textarea גדול, RTL, מונה תווים, מודלים מעודכנים |
-
+| מיגרציית SQL | יצירת טבלת `user_lesson_notes` עם RLS |
+| `src/components/portal/PresentationViewer.tsx` | רכיב חדש - מציג PDF |
+| `src/components/portal/LessonNotes.tsx` | רכיב חדש - הערות אישיות |
+| `src/hooks/useLessonNotes.ts` | Hook חדש - ניהול הערות |
+| `src/pages/LessonDetail.tsx` | שינוי לייאוט מפוצל |
+| `src/integrations/supabase/types.ts` | עדכון טיפוסים |
