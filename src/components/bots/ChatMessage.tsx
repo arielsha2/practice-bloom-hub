@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { playTypewriterClick } from '@/lib/typewriterSound';
 import { Bot, User } from 'lucide-react';
 
 // Simple markdown parser for bold and italic text
@@ -80,6 +81,8 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       const typeNextChar = () => {
         if (index < content.length) {
           setDisplayedContent(content.slice(0, index + 1));
+          // Play click every few characters for subtlety
+          if (index % 3 === 0) playTypewriterClick();
           index++;
           setTimeout(typeNextChar, typingSpeed);
         } else {
