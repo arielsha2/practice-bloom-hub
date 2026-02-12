@@ -71,3 +71,8 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Developed by:
+
+Dr. Ariel Shapira - Clinical Psychologist and Expert in Marketing for Therapists.
+Founder of על שפת הקליניקה (Al Sfat HaKlinika).
+Helping therapists build and grow their private practice through authentic marketing and AI tools.
