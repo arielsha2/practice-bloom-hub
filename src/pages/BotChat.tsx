@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Compass, Map, PenTool } from 'lucide-react';
+import { Compass, Map, PenTool, Handshake } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBotConfiguration } from '@/hooks/useBotConfigurations';
@@ -13,6 +13,7 @@ import { ChatMessage } from '@/components/bots/ChatMessage';
 import { ChatInput } from '@/components/bots/ChatInput';
 import { TypingIndicator } from '@/components/bots/TypingIndicator';
 import { ConversationSidebar } from '@/components/bots/ConversationSidebar';
+import { ConnectionBridgeStepper } from '@/components/bots/ConnectionBridgeStepper';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,6 +26,7 @@ const botIcons: Record<string, React.ReactNode> = {
   'niche-finder': <Compass className="w-5 h-5 text-primary" />,
   'strategy-planner': <Map className="w-5 h-5 text-primary" />,
   'content-creator': <PenTool className="w-5 h-5 text-primary" />,
+  'connection-bridge': <Handshake className="w-5 h-5 text-primary" />,
 };
 
 const BotChat = () => {
@@ -37,6 +39,7 @@ const BotChat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isStreamingRef = useRef(false);
+  const [currentStage, setCurrentStage] = useState(1);
 
   // Data fetching
   const { data: botConfig, isLoading: botLoading } = useBotConfiguration(botKey || '');
@@ -99,6 +102,25 @@ const BotChat = () => {
     return () => clearTimeout(timeoutId);
   }, [savedMessages, activeConversationId, loadMessages, clearMessages, messages]);
 
+  // Parse stage markers from messages for connection-bridge bot
+  useEffect(() => {
+    if (botKey !== 'connection-bridge') return;
+    // Find the last assistant message with a stage marker
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant') {
+        const match = msg.content.match(/\[STAGE:(\d)\]/);
+        if (match) {
+          setCurrentStage(parseInt(match[1], 10));
+          break;
+        }
+      }
+    }
+  }, [messages, botKey]);
+
+  // Helper to strip stage markers from content
+  const stripStageMarker = (content: string) => content.replace(/\[STAGE:\d\]\s*/g, '');
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,6 +158,7 @@ const BotChat = () => {
   const handleNewConversation = () => {
     setActiveConversationId(null);
     clearMessages();
+    setCurrentStage(1);
     setSidebarOpen(false);
   };
 
@@ -207,6 +230,11 @@ const BotChat = () => {
           showMenuButton
         />
 
+        {/* Connection Bridge Stepper */}
+        {botKey === 'connection-bridge' && (
+          <ConnectionBridgeStepper currentStage={currentStage} />
+        )}
+
         {/* Messages Area */}
         <ScrollArea className="flex-1 p-4">
           <div className="max-w-3xl mx-auto space-y-4">
@@ -223,7 +251,7 @@ const BotChat = () => {
               <ChatMessage
                 key={msg.id}
                 role={msg.role}
-                content={msg.content}
+                content={botKey === 'connection-bridge' ? stripStageMarker(msg.content) : msg.content}
                 isStreaming={msg.isStreaming}
               />
             ))}
