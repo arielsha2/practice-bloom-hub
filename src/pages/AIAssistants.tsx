@@ -2,19 +2,21 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
-import { Compass, Map, PenTool, Bot } from 'lucide-react';
+import { Compass, Map, PenTool, Calculator, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const botData = [
   { key: 'niche', icon: Compass },
   { key: 'strategy', icon: Map },
   { key: 'content', icon: PenTool },
+  { key: 'pricing', icon: Calculator },
 ];
 
 const botKeyMapping: Record<string, string> = {
   'niche': 'niche-finder',
   'strategy': 'strategy-planner',
   'content': 'content-creator',
+  'pricing': 'pricing-calculator',
 };
 
 const AIAssistants = () => {
