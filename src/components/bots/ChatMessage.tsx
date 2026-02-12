@@ -82,7 +82,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
         if (index < content.length) {
           setDisplayedContent(content.slice(0, index + 1));
           // Play click every few characters for subtlety
-          if (index % 3 === 0) playTypewriterClick();
+          // Sound removed
           index++;
           setTimeout(typeNextChar, typingSpeed);
         } else {
