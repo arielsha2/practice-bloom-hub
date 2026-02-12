@@ -98,9 +98,15 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.content.desc": "Generate authentic content ideas that showcase your expertise and attract clients",
     "bots.pricing.title": "Pricing Calculator Bot",
     "bots.pricing.desc": "Discover the right price for your therapy sessions — one that reflects your true value",
+    "bots.connection.title": "Connection Bridge Bot",
+    "bots.connection.desc": "Practice referral conversations with AI-simulated professionals and get actionable feedback",
     "bots.cta": "Try Now",
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
+    "stepper.research": "Research",
+    "stepper.profile": "Profile",
+    "stepper.simulation": "Simulation",
+    "stepper.feedback": "Feedback",
 
     // How It Works
     "howItWorks.label": "The Turning Point Program",
@@ -430,9 +436,15 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.content.desc": "הפיקו רעיונות תוכן אותנטיים שמציגים את המומחיות שלכם ומושכים לקוחות",
     "bots.pricing.title": "מחשבון התמחור",
     "bots.pricing.desc": "גלו את המחיר הנכון לשעה טיפולית — מחיר שמשקף את הערך האמיתי שלכם",
+    "bots.connection.title": "גשר הקשר",
+    "bots.connection.desc": "תרגלו שיחות הפניה עם אנשי מקצוע מדומים וקבלו משוב מעשי ומעצים",
     "bots.cta": "נסו עכשיו",
     "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
     "bots.teaserLink": "למידע נוסף",
+    "stepper.research": "מחקר",
+    "stepper.profile": "פרופיל",
+    "stepper.simulation": "סימולציה",
+    "stepper.feedback": "משוב",
 
     // How It Works
     "howItWorks.label": "תוכנית נקודת המפנה",
