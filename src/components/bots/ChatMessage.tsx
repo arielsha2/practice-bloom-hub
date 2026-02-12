@@ -75,7 +75,7 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       setIsTyping(true);
       setDisplayedContent('');
       let index = 0;
-      const typingSpeed = 12;
+      const typingSpeed = 35;
 
       const typeNextChar = () => {
         if (index < content.length) {
