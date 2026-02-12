@@ -24,13 +24,13 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
   const [error, setError] = useState<string | null>(null);
 
   const sendMessage = useCallback(async (content: string) => {
-    if (!session?.access_token || !content.trim()) return;
+    if (!session?.access_token || !content.trim() || isLoading) return;
 
     setError(null);
     setIsLoading(true);
 
-    // Track new conversation ID for proper invalidation
-    let effectiveConversationId: string | null = conversationId;
+    // Store new conversation ID locally, only notify after streaming ends
+    let pendingConversationId: string | null = null;
 
     // Add user message immediately
     const userMessage: ChatMessage = {
@@ -64,11 +64,10 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
         }
       );
 
-      // Check for new conversation ID in header
+      // Check for new conversation ID in header - store but don't notify yet
       const headerConversationId = response.headers.get('X-Conversation-Id');
       if (headerConversationId && headerConversationId !== conversationId) {
-        effectiveConversationId = headerConversationId;
-        onConversationCreated?.(headerConversationId);
+        pendingConversationId = headerConversationId;
       }
 
       if (!response.ok) {
@@ -139,6 +138,11 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
             : msg
         )
       );
+
+      // Notify about new conversation AFTER streaming is complete
+      if (pendingConversationId) {
+        onConversationCreated?.(pendingConversationId);
+      }
 
       // Invalidate conversation list only - local state already has the messages
       queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
