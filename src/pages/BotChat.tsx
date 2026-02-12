@@ -81,6 +81,10 @@ const BotChat = () => {
       if (isStreamingRef.current) return;
       
       if (savedMessages.length > 0) {
+        // Don't overwrite local state if it has more messages (DB hasn't caught up yet)
+        if (messages.length > savedMessages.length) {
+          return;
+        }
         // Compare content to avoid unnecessary re-renders that restart animations
         const savedContents = savedMessages.map(m => m.content);
         const localContents = messages.map(m => m.content);

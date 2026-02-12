@@ -146,6 +146,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
 
       // Invalidate conversation list only - local state already has the messages
       queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
+      queryClient.invalidateQueries({ queryKey: ['bot-messages', conversationId || pendingConversationId] });
     } catch (err) {
       console.error('Chat error:', err);
       setError(err instanceof Error ? err.message : 'שגיאה בשליחת ההודעה');
