@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { FileContentImport } from "./FileContentImport";
 
 interface Category {
   id: string;
@@ -33,7 +34,7 @@ interface ContentFormProps {
 }
 
 export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
-  const { t, language: currentLanguage } = useLanguage();
+  const { t, language: currentLanguage, isRTL } = useLanguage();
 
   const [title, setTitle] = useState(content?.title || "");
   const [contentText, setContentText] = useState(content?.content || "");
@@ -184,6 +185,17 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
         <ImageUpload 
           imageUrl={featuredImageUrl} 
           onImageChange={setFeaturedImageUrl} 
+        />
+      </div>
+
+      {/* File Import (PDF / DOCX) */}
+      <div className="space-y-2">
+        <Label>{isRTL ? 'ייבוא מקובץ' : 'Import from file'}</Label>
+        <FileContentImport
+          onContentImported={({ title: importedTitle, content: importedContent }) => {
+            if (!title && importedTitle) setTitle(importedTitle);
+            setContentText(importedContent);
+          }}
         />
       </div>
 
