@@ -69,7 +69,7 @@ const BotChat = () => {
   // Load saved messages when conversation changes
   // Don't sync during streaming to prevent overwriting local streaming state
   useEffect(() => {
-    if (isStreamingRef.current) {
+    if (isStreamingRef.current || chatLoading) {
       return;
     }
 
