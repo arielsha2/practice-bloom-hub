@@ -140,11 +140,8 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
         )
       );
 
-      // Invalidate queries to refresh conversation list and messages
+      // Invalidate conversation list only - local state already has the messages
       queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
-      if (effectiveConversationId) {
-        queryClient.invalidateQueries({ queryKey: ['bot-messages', effectiveConversationId] });
-      }
     } catch (err) {
       console.error('Chat error:', err);
       setError(err instanceof Error ? err.message : 'שגיאה בשליחת ההודעה');

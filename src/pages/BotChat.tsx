@@ -78,18 +78,26 @@ const BotChat = () => {
       if (isStreamingRef.current) return;
       
       if (savedMessages.length > 0) {
-        const formattedMessages: ChatMessageType[] = savedMessages.map((msg) => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-        }));
-        loadMessages(formattedMessages);
+        // Compare content to avoid unnecessary re-renders that restart animations
+        const savedContents = savedMessages.map(m => m.content);
+        const localContents = messages.map(m => m.content);
+        const isSameContent = savedContents.length === localContents.length &&
+          savedContents[savedContents.length - 1] === localContents[localContents.length - 1];
+        
+        if (!isSameContent) {
+          const formattedMessages: ChatMessageType[] = savedMessages.map((msg) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+          }));
+          loadMessages(formattedMessages);
+        }
       }
       // Removed auto-clear: clearing is only done via handleNewConversation
     }, 150);
 
     return () => clearTimeout(timeoutId);
-  }, [savedMessages, activeConversationId, loadMessages, clearMessages]);
+  }, [savedMessages, activeConversationId, loadMessages, clearMessages, messages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
