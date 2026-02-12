@@ -1,67 +1,43 @@
 
 
-# הוספת בוט "גשר הקשר" (Connection Bridge)
+# Fix: Bot Messages Reset After Answering (Sync Race Condition)
 
-## סקירה
-הוספת בוט AI חדש - מאמן נטוורקינג והפניות למטפלים, עם תהליך מובנה בן 4 שלבים וסרגל התקדמות ייחודי לבוט הזה. פיצ'ר השמע נדחה לשלב מאוחר יותר.
+## The Problem
+After sending a message and receiving a response, the conversation "resets" to a previous state. The user's latest messages disappear and the bot appears to go back to earlier questions.
 
-## שינויים נדרשים
+## Root Cause
+In `src/hooks/useBotChat.ts` (line 148), after streaming completes, only the conversations list query is invalidated:
+```
+queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
+```
+The `['bot-messages', conversationId]` query is **not** invalidated, so it retains stale data.
 
-### 1. מיגרציית SQL - הוספת הבוט לדאטאבייס
-INSERT לטבלת `bot_configurations` עם:
-- `bot_key`: `connection-bridge`
-- `name_he`: גשר הקשר
-- `name_en`: Connection Bridge Bot
-- `icon`: Handshake
-- `color`: #4A90E2
-- `welcome_message_he`: ההודעה שצוינה בבקשה
-- `system_prompt`: הפרומפט המלא עם 4 השלבים (מחקר, פרופיל, סימולציה, משוב)
+Then in `src/pages/BotChat.tsx` (lines 74-103), the sync effect runs 150ms after streaming ends, compares the stale `savedMessages` (from cache) with the fresh local `messages`, sees they differ, and **overwrites** local state with the stale cached data -- effectively erasing the latest exchange.
 
-### 2. `src/pages/AIAssistants.tsx`
-- הוספת `Handshake` ל-imports מ-lucide-react
-- הוספת `{ key: 'connection', icon: Handshake }` למערך `botData`
-- הוספת `'connection': 'connection-bridge'` ל-`botKeyMapping`
+## Fix (2 changes)
 
-### 3. `src/contexts/LanguageContext.tsx`
-הוספת תרגומים:
-- `bots.connection.title` - "Connection Bridge Bot" / "גשר הקשר"
-- `bots.connection.desc` - תיאור קצר באנגלית ובעברית
-
-### 4. `src/pages/BotChat.tsx` - סרגל התקדמות
-- הוספת `Handshake` ל-imports
-- הוספת הבוט ל-`botIcons`
-- הוספת קומפוננטת Stepper שמופיעה רק כש-`botKey === 'connection-bridge'`
-- הסטפר יציג 4 שלבים: מחקר -> פרופיל -> סימולציה -> משוב
-- מעקב אחרי השלב הנוכחי על בסיס ניתוח תוכן ההודעות מהבוט (הפרומפט יכלול סמנים מיוחדים כמו `[STAGE:2]` בתגובות)
-
-### 5. קומפוננטת `src/components/bots/ConnectionBridgeStepper.tsx` (חדש)
-- קומפוננטה ויזואלית של 4 שלבים עם אייקונים
-- שלב פעיל מודגש, שלבים שהושלמו מסומנים בוי
-- עיצוב RTL-friendly עם קווים מחברים בין השלבים
-
-## פרטים טכניים
-
-### System Prompt (יכלול הוראה לסמן שלבים)
-הפרומפט יכלול הנחיה לבוט להוסיף סמן שלב בתחילת כל תגובה: `[STAGE:1]`, `[STAGE:2]`, `[STAGE:3]`, `[STAGE:4]`. הסמן יפורסר מהתוכן לפני הצגתו למשתמש, וישמש לעדכון סרגל ההתקדמות.
-
-### זיהוי שלבים בקוד
-```text
-- הוק useBotChat או BotChat ינתח את תגובות הבוט
-- חיפוש תבנית [STAGE:X] בתחילת כל תגובה
-- הסמן יוסר מהתוכן המוצג
-- state של currentStage יעדכן את הסטפר
+### 1. `src/hooks/useBotChat.ts` - Invalidate messages query after streaming
+After line 148, also invalidate the bot-messages cache so the DB data is fresh:
+```typescript
+queryClient.invalidateQueries({ queryKey: ['bot-conversations', botKey] });
+queryClient.invalidateQueries({ queryKey: ['bot-messages', conversationId || pendingConversationId] });
 ```
 
-### קובץ config.toml
-הבוט משתמש בפונקציית `bot-chat` הקיימת - אין צורך בשינוי.
+### 2. `src/pages/BotChat.tsx` - Smarter sync guard
+Change the comparison logic so that if local state has MORE messages than saved (i.e., we just finished streaming and DB hasn't caught up), we skip the sync instead of overwriting:
+```typescript
+if (savedMessages.length > 0) {
+  // Don't overwrite local state if it has more messages (DB hasn't caught up yet)
+  if (messages.length > savedMessages.length) {
+    return;
+  }
+  // ... existing comparison logic
+}
+```
 
-## סיכום קבצים
-
-| קובץ | שינוי |
-|------|-------|
-| מיגרציית SQL | INSERT לטבלת bot_configurations |
-| `src/pages/AIAssistants.tsx` | הוספת כרטיס connection עם אייקון Handshake |
-| `src/contexts/LanguageContext.tsx` | הוספת תרגומים bots.connection.title ו-desc |
-| `src/pages/BotChat.tsx` | הוספת Handshake icon, לוגיקת שלבים, הצגת Stepper |
-| `src/components/bots/ConnectionBridgeStepper.tsx` | קומפוננטה חדשה - סרגל התקדמות 4 שלבים |
+## Summary
+| File | Change |
+|------|--------|
+| `src/hooks/useBotChat.ts` | Add invalidation of `bot-messages` query after streaming |
+| `src/pages/BotChat.tsx` | Add guard: skip sync if local state has more messages than DB |
 
