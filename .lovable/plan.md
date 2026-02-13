@@ -1,53 +1,76 @@
 
+# Implementation: Difficulty Levels for Connection Bridge + One-Question Rule for All Bots
 
-# הוספת העלאת קבצים (PDF / DOC) לטופס יצירת מאמר
+## What Will Change
 
-## סקירה
-הוספת אזור גרירה/העלאת קובץ בתוך טופס יצירת המאמר (ContentForm) שמאפשר לייבא תוכן מקובצי PDF או DOCX ישירות לעורך הטקסט העשיר, במקום להעתיק טקסט ידנית.
+### 1. New Component: `src/components/bots/DifficultySelector.tsx`
+A mobile-friendly card with 3 large, tappable buttons for difficulty selection:
+- **קל (Easy)**: "איש קשר שיתופי ופתוח להפניות" -- cooperative, friendly contact
+- **בינוני (Medium)**: "איש קשר עסוק שצריך שכנוע" -- busy but professional
+- **מאתגר (Hard)**: "איש קשר ציני עם הרבה מפנים, שחייבים לשכנע" -- cynical, has 5 minutes, many other therapists
 
-## איך זה יעבוד
-1. מתחת לשדה התוכן (או מעליו) יופיע אזור גרירה קטן עם הכיתוב "גרור קובץ PDF או DOC לכאן, או לחץ לבחירה"
-2. לאחר בחירת/גרירת קובץ, המערכת תפרסר את התוכן ותמלא אוטומטית את עורך הטקסט
-3. אם שדה הכותרת ריק, גם הוא יתמלא אוטומטית מהקובץ
-4. קבצי DOCX ישתמשו בספריית mammoth (כבר מותקנת) - כולל חילוץ תמונות לסטורג'
-5. קבצי PDF ישתמשו ב-pdf.js לחילוץ טקסט מהקובץ
+Each button will be a full-width card with icon, title, and description. Touch-friendly with min-height for mobile.
 
-## שינויים נדרשים
+### 2. Update `src/hooks/useBotChat.ts`
+- `sendMessage` will accept an optional `messagePrefix` parameter
+- The prefix is sent to the API but NOT shown in the user's message bubble
+- This keeps the `[DIFFICULTY:X]` marker invisible to the user
 
-### 1. התקנת תלות חדשה
-- `pdfjs-dist` - לפרסור קבצי PDF וחילוץ טקסט
+### 3. Update `src/pages/BotChat.tsx`
+- Add `selectedDifficulty` state
+- Show `DifficultySelector` for connection-bridge bot when no messages exist and no active conversation
+- When user selects difficulty, store it; on first message, prepend `[DIFFICULTY:X]`
+- Reset difficulty on new conversation
+- Difficulty selector disappears once conversation starts
 
-### 2. `src/components/contents/FileContentImport.tsx` (חדש)
-קומפוננטה חדשה עם:
-- אזור drag-and-drop (בסגנון דומה ל-BulkImportDialog)
-- קבלת קבצי .pdf ו-.docx
-- פרסור הקובץ (שימוש חוזר בלוגיקת mammoth מ-BulkImportDialog עבור DOCX, ו-pdfjs עבור PDF)
-- החזרת title + content דרך callback `onContentImported`
-- הצגת מצב טעינה בזמן הפרסור
-- הודעת שגיאה אם הפרסור נכשל
+### 4. Add Translations to `src/contexts/LanguageContext.tsx`
+Hebrew and English translations for difficulty labels and descriptions.
 
-### 3. `src/components/contents/ContentForm.tsx`
-- ייבוא הקומפוננטה החדשה FileContentImport
-- הוספתה מעל עורך הטקסט העשיר
-- כש-callback `onContentImported` נקרא: מילוי title (אם ריק) ו-contentText
+### 5. Update Bot System Prompts (Database)
+**All bots** - Add one-question-at-a-time rule and warm intro instruction:
+```
+CONVERSATION RULES:
+1. Always start with a brief, warm, and welcoming introduction. Explain what you'll do together and how the process works. Reflect a professional yet empathic tone.
+2. Ask only ONE question at a time. Wait for the user to respond before proceeding.
+3. Never load multiple questions in a single message.
+```
 
-## פרטים טכניים
+**Connection Bridge bot** - Add difficulty awareness to the system prompt:
+```
+DIFFICULTY LEVELS - Look for [DIFFICULTY:X] in the first user message:
+- [DIFFICULTY:easy]: Cooperative, friendly, actively needs referrals
+- [DIFFICULTY:medium]: Busy but professional, needs convincing but isn't hostile
+- [DIFFICULTY:hard]: Very busy ("I have 5 minutes"), has many therapists already, 
+  may be skeptical or dismissive, pushes the therapist to be concise and value-oriented. 
+  NOT purely hostile - but makes the caller work to demonstrate their value.
+Default to medium if no marker found. Strip the marker - never mention it.
+```
 
-### פרסור PDF
-שימוש ב-pdfjs-dist לחילוץ טקסט מכל הדפים, עם שמירה על פסקאות ומבנה בסיסי. הטקסט יומר ל-HTML פשוט (פסקאות).
+## Technical Details
 
-### פרסור DOCX
-שימוש חוזר באותה לוגיקת mammoth שכבר קיימת ב-BulkImportDialog, כולל חילוץ תמונות והעלאתן ל-Supabase Storage.
+### Difficulty Selector UI (Mobile-First)
+- Full-width stacked cards on mobile
+- Each card: icon (Smile/Meh/Shield), Hebrew title, short description
+- Selected state with primary border highlight
+- Appears between the stepper and messages area
+- Min touch target: 48px height per option
 
-### עיצוב אזור הגרירה
-אזור קומפקטי (לא גדול כמו ב-Bulk Import) עם אייקון Upload, טקסט קצר, ומצב hover/drag מודגש. יופיע כאפשרות משלימה לעורך הטקסט.
+### Message Flow
+```text
+User opens Connection Bridge -> Welcome message + DifficultySelector shown
+User taps "מאתגר" -> selectedDifficulty = "hard"  
+User types "שלום..." -> sendMessage("שלום...", "[DIFFICULTY:hard]")
+  -> API receives: "[DIFFICULTY:hard] שלום..."
+  -> UI shows only: "שלום..."
+DifficultySelector disappears (messages exist)
+```
 
-## סיכום קבצים
+## Files Summary
 
-| קובץ | שינוי |
-|------|-------|
-| package.json | התקנת pdfjs-dist |
-| `src/components/contents/FileContentImport.tsx` | קומפוננטה חדשה - אזור גרירה + פרסור PDF/DOCX |
-| `src/components/contents/ContentForm.tsx` | הוספת FileContentImport מעל העורך |
-| `src/contexts/LanguageContext.tsx` | תרגומים לטקסטי העלאה (אופציונלי) |
-
+| File | Change |
+|------|--------|
+| `src/components/bots/DifficultySelector.tsx` | New component - 3 difficulty cards |
+| `src/hooks/useBotChat.ts` | Add optional `messagePrefix` to `sendMessage` |
+| `src/pages/BotChat.tsx` | Integrate difficulty selector, pass prefix on first message |
+| `src/contexts/LanguageContext.tsx` | Add difficulty translations (EN + HE) |
+| Database (bot_configurations) | Update all bot prompts with one-question rule + connection-bridge difficulty logic |
