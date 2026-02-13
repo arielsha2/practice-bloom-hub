@@ -108,6 +108,15 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.simulation": "Simulation",
     "stepper.feedback": "Feedback",
 
+    // Difficulty selector
+    "difficulty.title": "Choose Difficulty Level",
+    "difficulty.easy": "Easy",
+    "difficulty.easyDesc": "Cooperative and open contact, happy to talk",
+    "difficulty.medium": "Medium",
+    "difficulty.mediumDesc": "Busy contact who needs some convincing",
+    "difficulty.hard": "Challenging",
+    "difficulty.hardDesc": "Cynical contact, very busy, has many other referrers",
+
     // How It Works
     "howItWorks.label": "The Turning Point Program",
     "howItWorks.title": "4 Steps to a Thriving Practice",
@@ -445,6 +454,15 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.profile": "פרופיל",
     "stepper.simulation": "סימולציה",
     "stepper.feedback": "משוב",
+
+    // Difficulty selector
+    "difficulty.title": "בחרו רמת קושי לסימולציה",
+    "difficulty.easy": "קל",
+    "difficulty.easyDesc": "איש קשר שיתופי ופתוח להפניות",
+    "difficulty.medium": "בינוני",
+    "difficulty.mediumDesc": "איש קשר עסוק שצריך שכנוע",
+    "difficulty.hard": "מאתגר",
+    "difficulty.hardDesc": "איש קשר ציני עם הרבה מפנים, שחייבים לשכנע",
 
     // How It Works
     "howItWorks.label": "תוכנית נקודת המפנה",

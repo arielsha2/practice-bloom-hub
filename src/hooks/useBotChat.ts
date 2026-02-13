@@ -23,7 +23,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, messagePrefix?: string) => {
     if (!session?.access_token || !content.trim() || isLoading) return;
 
     setError(null);
@@ -59,7 +59,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
           body: JSON.stringify({
             botKey,
             conversationId,
-            message: content.trim(),
+            message: messagePrefix ? `${messagePrefix} ${content.trim()}` : content.trim(),
           }),
         }
       );
