@@ -14,6 +14,7 @@ import { ChatInput } from '@/components/bots/ChatInput';
 import { TypingIndicator } from '@/components/bots/TypingIndicator';
 import { ConversationSidebar } from '@/components/bots/ConversationSidebar';
 import { ConnectionBridgeStepper } from '@/components/bots/ConnectionBridgeStepper';
+import { DifficultySelector } from '@/components/bots/DifficultySelector';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +41,7 @@ const BotChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isStreamingRef = useRef(false);
   const [currentStage, setCurrentStage] = useState(1);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
 
   // Data fetching
   const { data: botConfig, isLoading: botLoading } = useBotConfiguration(botKey || '');
@@ -163,6 +165,7 @@ const BotChat = () => {
     setActiveConversationId(null);
     clearMessages();
     setCurrentStage(1);
+    setSelectedDifficulty(null);
     setSidebarOpen(false);
   };
 
@@ -206,6 +209,15 @@ const BotChat = () => {
   // Show welcome message if no messages and bot has welcome message
   const welcomeMessage = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
   const showWelcome = messages.length === 0 && welcomeMessage;
+  const showDifficultySelector = botKey === 'connection-bridge' && messages.length === 0 && !activeConversationId;
+
+  const handleSend = (content: string) => {
+    if (botKey === 'connection-bridge' && messages.length === 0 && selectedDifficulty) {
+      sendMessage(content, `[DIFFICULTY:${selectedDifficulty}]`);
+    } else {
+      sendMessage(content);
+    }
+  };
 
   const sidebarContent = (
     <ConversationSidebar
@@ -242,6 +254,14 @@ const BotChat = () => {
         {/* Messages Area */}
         <ScrollArea className="flex-1 p-4">
           <div className="max-w-3xl mx-auto space-y-4">
+            {/* Difficulty selector for connection-bridge */}
+            {showDifficultySelector && (
+              <DifficultySelector
+                selected={selectedDifficulty}
+                onSelect={setSelectedDifficulty}
+              />
+            )}
+
             {/* Welcome message */}
             {showWelcome && welcomeMessage && (
               <ChatMessage
@@ -273,7 +293,7 @@ const BotChat = () => {
         <div className="border-t border-border bg-card p-4">
           <div className="max-w-3xl mx-auto space-y-3">
             <ChatInput
-              onSend={sendMessage}
+              onSend={handleSend}
               isLoading={chatLoading}
             />
             <div className="flex justify-start">
