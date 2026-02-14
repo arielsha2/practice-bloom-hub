@@ -19,7 +19,7 @@ export interface TTSControls {
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-export function useTTS(): TTSControls {
+export function useTTS(voiceId?: string): TTSControls {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -65,7 +65,7 @@ export function useTTS(): TTSControls {
         apikey: ANON_KEY,
         Authorization: `Bearer ${ANON_KEY}`,
       },
-      body: JSON.stringify({ text: cleaned }),
+      body: JSON.stringify({ text: cleaned, voiceId }),
       signal: controller.signal,
     })
       .then((res) => {
