@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const VOICE_ID = 'TX3LPaxmHKxFdv7VOQHJ'; // Liam
+const DEFAULT_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9'; // Daniel - works well with Hebrew
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,7 +21,8 @@ serve(async (req) => {
       });
     }
 
-    const { text } = await req.json();
+    const { text, voiceId } = await req.json();
+    const VOICE_ID = voiceId || DEFAULT_VOICE_ID;
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({ error: 'Missing text' }), {
         status: 400,
