@@ -1,69 +1,45 @@
 
+# Fix Hebrew Voice in ElevenLabs TTS
 
-# Voice Control: Stage-Based TTS and Audio Overlap Fix
-
-## Issues
-1. **Voice plays in all stages** - TTS auto-plays for every assistant message in the connection-bridge bot, but it should only activate during the simulation stage (stage 3)
-2. **Audio overlap** - When a user answers while previous TTS is still playing, the new response starts a second audio track on top of the old one instead of stopping the previous one first
+## Problem
+The TTS voice "Liam" (TX3LPaxmHKxFdv7VOQHJ) is primarily an English voice. Even though the model `eleven_multilingual_v2` supports Hebrew, the voice itself doesn't produce natural Hebrew speech.
 
 ## Solution
 
-### 1. Pass current stage to control voice activation (BotChat.tsx)
+### 1. Change the default voice to one that works better with Hebrew
 
-Change the `enableVoice` prop from a simple boolean to be stage-aware:
+Replace the hardcoded "Liam" voice ID in the edge function with a voice better suited for Hebrew. Recommended options:
+- **Daniel** (`onwK4e9ZLuTAKqWW03F9`) - warm, professional male voice
+- **George** (`JBFqnCBsd6RMkjVDRZzb`) - warm, trustworthy male narrator
 
-```tsx
-// Before:
-enableVoice={botKey === 'connection-bridge'}
+### 2. Make voice ID configurable from the client
 
-// After:
-enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
-```
-
-This ensures stages 1 (Research) and 2 (Profiling) remain text-only, and voice activates only from stage 3 (Simulation) onward.
-
-### 2. Global TTS stop when user sends a message (BotChat.tsx)
-
-Add a shared TTS instance at the page level and stop any playing audio when the user sends a new message:
-
-- Lift a `useTTS()` hook to the `BotChat` component level
-- Call `tts.stop()` inside `handleSend` before dispatching the message
-- Pass `tts` down to `ChatMessage` components (or use a simpler approach: stop via a global event/ref)
-
-**Simpler approach**: Since each `ChatMessage` creates its own `useTTS` instance, we'll create a global TTS stop mechanism:
-- Add a `stopAllTTS` event on `window` that all `useTTS` hooks listen to
-- Dispatch this event in `handleSend` before sending the message
-- Each `useTTS` hook listens for this event and calls its `stop()` method
+Instead of hardcoding the voice in the edge function, allow the client to pass a `voiceId` parameter. This way different bots can use different voices.
 
 ### Files to modify
 
-1. **`src/hooks/useTTS.ts`** - Add global stop event listener so any active TTS instance stops when `window.dispatchEvent(new Event('stopAllTTS'))` is fired
-2. **`src/components/bots/ChatMessage.tsx`** - No changes needed (enableVoice prop already controls behavior)
-3. **`src/pages/BotChat.tsx`** - Two changes:
-   - Pass `enableVoice={botKey === 'connection-bridge' && currentStage >= 3}` instead of just `botKey === 'connection-bridge'`
-   - In `handleSend`, dispatch `window.dispatchEvent(new Event('stopAllTTS'))` before sending
+**`supabase/functions/elevenlabs-tts/index.ts`**:
+- Accept an optional `voiceId` in the request body
+- Fall back to a Hebrew-friendly default (Daniel: `onwK4e9ZLuTAKqWW03F9`)
 
-### Technical Details
-
-**useTTS.ts changes:**
 ```typescript
-useEffect(() => {
-  const handleGlobalStop = () => stop();
-  window.addEventListener('stopAllTTS', handleGlobalStop);
-  return () => window.removeEventListener('stopAllTTS', handleGlobalStop);
-}, [stop]);
+const { text, voiceId } = await req.json();
+const VOICE_ID = voiceId || 'onwK4e9ZLuTAKqWW03F9'; // Daniel - works well with Hebrew
 ```
 
-**BotChat.tsx handleSend:**
+**`src/hooks/useTTS.ts`**:
+- Accept an optional `voiceId` parameter in the hook
+- Pass it to the edge function request
+
 ```typescript
-const handleSend = (content: string) => {
-  // Stop any playing TTS before sending new message
-  window.dispatchEvent(new Event('stopAllTTS'));
-  // ... existing send logic
-};
+export function useTTS(voiceId?: string): TTSControls {
+  // ...
+  body: JSON.stringify({ text: cleaned, voiceId }),
+}
 ```
 
-**BotChat.tsx message rendering:**
-```tsx
-enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
-```
+**`src/components/bots/ChatMessage.tsx`**:
+- No changes needed (voice ID flows through useTTS)
+
+### Technical note
+The `eleven_multilingual_v2` model auto-detects the language from the text. With Hebrew text and a multilingual-capable voice, it will speak Hebrew naturally. The key is picking a voice that produces clear Hebrew output.
