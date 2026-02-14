@@ -1,76 +1,51 @@
 
-# Implementation: Difficulty Levels for Connection Bridge + One-Question Rule for All Bots
 
-## What Will Change
+# Voice Audio for Connection Bridge Bot (Using Browser Web Speech API)
 
-### 1. New Component: `src/components/bots/DifficultySelector.tsx`
-A mobile-friendly card with 3 large, tappable buttons for difficulty selection:
-- **קל (Easy)**: "איש קשר שיתופי ופתוח להפניות" -- cooperative, friendly contact
-- **בינוני (Medium)**: "איש קשר עסוק שצריך שכנוע" -- busy but professional
-- **מאתגר (Hard)**: "איש קשר ציני עם הרבה מפנים, שחייבים לשכנע" -- cynical, has 5 minutes, many other therapists
+## Overview
+Add Hebrew text-to-speech to the Connection Bridge bot using the browser's built-in `window.speechSynthesis` API. This is free, requires no API keys or edge functions, and works entirely client-side. The code will be modular so you can swap in ElevenLabs later.
 
-Each button will be a full-width card with icon, title, and description. Touch-friendly with min-height for mobile.
+## What Will Be Created/Changed
 
-### 2. Update `src/hooks/useBotChat.ts`
-- `sendMessage` will accept an optional `messagePrefix` parameter
-- The prefix is sent to the API but NOT shown in the user's message bubble
-- This keeps the `[DIFFICULTY:X]` marker invisible to the user
+### 1. New Hook: `src/hooks/useTTS.ts`
+A modular TTS hook using `window.speechSynthesis`:
+- Accepts text and a `lang` parameter (defaults to `he-IL`)
+- Provides `speak(text)`, `stop()`, `isPlaying`, `isSupported` 
+- Strips markdown markers before speaking
+- Uses `SpeechSynthesisUtterance` with Hebrew language target
+- Tries to find a Hebrew voice from available voices, falls back to default
+- Handles cleanup on unmount (cancels speech)
+- Designed with a clean interface so replacing with ElevenLabs later means only changing this one file
 
-### 3. Update `src/pages/BotChat.tsx`
-- Add `selectedDifficulty` state
-- Show `DifficultySelector` for connection-bridge bot when no messages exist and no active conversation
-- When user selects difficulty, store it; on first message, prepend `[DIFFICULTY:X]`
-- Reset difficulty on new conversation
-- Difficulty selector disappears once conversation starts
+### 2. Update: `src/components/bots/ChatMessage.tsx`
+- Add optional `enableVoice` prop
+- For assistant messages with `enableVoice=true`:
+  - Show a small speaker button (Volume2 / VolumeX icons) in the message header
+  - Auto-play voice when streaming finishes (only for the latest message, not history)
+  - Toggle play/stop on click
+  - Visual states: idle (gray), playing (highlighted with animation)
 
-### 4. Add Translations to `src/contexts/LanguageContext.tsx`
-Hebrew and English translations for difficulty labels and descriptions.
+### 3. Update: `src/pages/BotChat.tsx`
+- Pass `enableVoice={botKey === 'connection-bridge'}` to ChatMessage components
+- Pass `isLatestAssistant` flag so only the newest assistant message auto-plays
 
-### 5. Update Bot System Prompts (Database)
-**All bots** - Add one-question-at-a-time rule and warm intro instruction:
-```
-CONVERSATION RULES:
-1. Always start with a brief, warm, and welcoming introduction. Explain what you'll do together and how the process works. Reflect a professional yet empathic tone.
-2. Ask only ONE question at a time. Wait for the user to respond before proceeding.
-3. Never load multiple questions in a single message.
-```
+### 4. Update: `src/contexts/LanguageContext.tsx`
+Add translations:
+- `voice.play` / `voice.stop` / `voice.notSupported` (EN + HE)
 
-**Connection Bridge bot** - Add difficulty awareness to the system prompt:
-```
-DIFFICULTY LEVELS - Look for [DIFFICULTY:X] in the first user message:
-- [DIFFICULTY:easy]: Cooperative, friendly, actively needs referrals
-- [DIFFICULTY:medium]: Busy but professional, needs convincing but isn't hostile
-- [DIFFICULTY:hard]: Very busy ("I have 5 minutes"), has many therapists already, 
-  may be skeptical or dismissive, pushes the therapist to be concise and value-oriented. 
-  NOT purely hostile - but makes the caller work to demonstrate their value.
-Default to medium if no marker found. Strip the marker - never mention it.
-```
+## Technical Notes
 
-## Technical Details
-
-### Difficulty Selector UI (Mobile-First)
-- Full-width stacked cards on mobile
-- Each card: icon (Smile/Meh/Shield), Hebrew title, short description
-- Selected state with primary border highlight
-- Appears between the stepper and messages area
-- Min touch target: 48px height per option
-
-### Message Flow
-```text
-User opens Connection Bridge -> Welcome message + DifficultySelector shown
-User taps "מאתגר" -> selectedDifficulty = "hard"  
-User types "שלום..." -> sendMessage("שלום...", "[DIFFICULTY:hard]")
-  -> API receives: "[DIFFICULTY:hard] שלום..."
-  -> UI shows only: "שלום..."
-DifficultySelector disappears (messages exist)
-```
+- **No edge function needed** -- everything runs in the browser
+- **Hebrew voice availability** varies by device/browser. The hook will attempt to find `he-IL` voices; on devices without Hebrew voices, it will use the default voice (still better than nothing)
+- **Auto-play**: Only the latest assistant message auto-plays after streaming ends. Historical messages show a manual play button only
+- **Modular design**: To switch to ElevenLabs later, only `src/hooks/useTTS.ts` needs to change -- the ChatMessage component calls the same interface
 
 ## Files Summary
 
 | File | Change |
 |------|--------|
-| `src/components/bots/DifficultySelector.tsx` | New component - 3 difficulty cards |
-| `src/hooks/useBotChat.ts` | Add optional `messagePrefix` to `sendMessage` |
-| `src/pages/BotChat.tsx` | Integrate difficulty selector, pass prefix on first message |
-| `src/contexts/LanguageContext.tsx` | Add difficulty translations (EN + HE) |
-| Database (bot_configurations) | Update all bot prompts with one-question rule + connection-bridge difficulty logic |
+| `src/hooks/useTTS.ts` | New -- Web Speech API TTS hook |
+| `src/components/bots/ChatMessage.tsx` | Add speaker button + auto-play for voice-enabled messages |
+| `src/pages/BotChat.tsx` | Pass `enableVoice` and `isLatestAssistant` props |
+| `src/contexts/LanguageContext.tsx` | Add voice translations |
+
