@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DEFAULT_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9'; // Daniel - works well with Hebrew
+const DEFAULT_VOICE_ID = 'u8hSBdUhoLus6YkI9YJt'; // Lewinsky - custom Hebrew voice
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
