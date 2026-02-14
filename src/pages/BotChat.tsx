@@ -271,14 +271,20 @@ const BotChat = () => {
             )}
 
             {/* Chat messages */}
-            {messages.map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                role={msg.role}
-                content={botKey === 'connection-bridge' ? stripStageMarker(msg.content) : msg.content}
-                isStreaming={msg.isStreaming}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              const isLatestAssistant = msg.role === 'assistant' && 
+                index === messages.map(m => m.role).lastIndexOf('assistant');
+              return (
+                <ChatMessage
+                  key={msg.id}
+                  role={msg.role}
+                  content={botKey === 'connection-bridge' ? stripStageMarker(msg.content) : msg.content}
+                  isStreaming={msg.isStreaming}
+                  enableVoice={botKey === 'connection-bridge'}
+                  isLatestAssistant={isLatestAssistant}
+                />
+              );
+            })}
 
             {/* Typing indicator */}
             {chatLoading && messages[messages.length - 1]?.role === 'user' && (

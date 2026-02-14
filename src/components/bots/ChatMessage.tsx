@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { playTypewriterClick } from '@/lib/typewriterSound';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { useTTS } from '@/hooks/useTTS';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Simple markdown parser for bold and italic text
 function parseMarkdown(text: string): React.ReactNode[] {
@@ -10,19 +11,15 @@ function parseMarkdown(text: string): React.ReactNode[] {
   let key = 0;
 
   while (remaining.length > 0) {
-    // Match bold (**text**)
     const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
     
     if (boldMatch && boldMatch.index !== undefined) {
-      // Add text before the match
       if (boldMatch.index > 0) {
         parts.push(remaining.slice(0, boldMatch.index));
       }
-      // Add bold text
       parts.push(<strong key={key++} className="font-semibold">{boldMatch[1]}</strong>);
       remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
     } else {
-      // No more matches, add remaining text
       parts.push(remaining);
       break;
     }
@@ -35,43 +32,69 @@ interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
   isStreaming?: boolean;
+  enableVoice?: boolean;
+  isLatestAssistant?: boolean;
 }
 
-export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
+export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestAssistant }: ChatMessageProps) {
   const isUser = role === 'user';
+  const { t } = useLanguage();
   const [displayedContent, setDisplayedContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasCompletedRef = useRef(false);
   const wasStreamingRef = useRef(false);
+  const hasAutoPlayedRef = useRef(false);
+
+  const tts = useTTS();
+  const showVoiceButton = enableVoice && !isUser && tts.isSupported;
+
+  // Auto-play voice when streaming finishes (only for latest assistant message)
+  useEffect(() => {
+    if (
+      enableVoice &&
+      isLatestAssistant &&
+      !isUser &&
+      wasStreamingRef.current &&
+      !isStreaming &&
+      !hasAutoPlayedRef.current &&
+      content.trim()
+    ) {
+      hasAutoPlayedRef.current = true;
+      tts.speak(content);
+    }
+  }, [isStreaming, enableVoice, isLatestAssistant, isUser, content]);
+
+  const handleVoiceToggle = () => {
+    if (tts.isPlaying) {
+      tts.stop();
+    } else {
+      tts.speak(content);
+    }
+  };
 
   useEffect(() => {
-    // User messages - show immediately
     if (isUser) {
       setDisplayedContent(content);
       return;
     }
 
-    // During streaming - show content as it arrives
     if (isStreaming) {
       setDisplayedContent(content);
       wasStreamingRef.current = true;
       return;
     }
 
-    // Just finished streaming - keep the content, don't re-animate
     if (wasStreamingRef.current) {
       setDisplayedContent(content);
       hasCompletedRef.current = true;
       return;
     }
 
-    // Already completed (e.g., re-render) - show immediately
     if (hasCompletedRef.current) {
       setDisplayedContent(content);
       return;
     }
 
-    // New message from history - animate typing
     if (content && !hasCompletedRef.current) {
       setIsTyping(true);
       setDisplayedContent('');
@@ -81,8 +104,6 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
       const typeNextChar = () => {
         if (index < content.length) {
           setDisplayedContent(content.slice(0, index + 1));
-          // Play click every few characters for subtlety
-          // Sound removed
           index++;
           setTimeout(typeNextChar, typingSpeed);
         } else {
@@ -124,12 +145,34 @@ export function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right" dir="rtl">
-          {parseMarkdown(displayedContent)}
-          {showCursor && (
-            <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
+            {parseMarkdown(displayedContent)}
+            {showCursor && (
+              <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
+            )}
+          </p>
+
+          {/* Voice button */}
+          {showVoiceButton && !isStreaming && displayedContent && (
+            <button
+              onClick={handleVoiceToggle}
+              className={cn(
+                'flex-shrink-0 p-1.5 rounded-full transition-all',
+                tts.isPlaying
+                  ? 'bg-primary/20 text-primary animate-pulse'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              )}
+              title={tts.isPlaying ? t('voice.stop') : t('voice.play')}
+            >
+              {tts.isPlaying ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
           )}
-        </p>
+        </div>
       </div>
     </div>
   );

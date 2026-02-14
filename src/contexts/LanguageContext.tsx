@@ -357,6 +357,11 @@ const translations: Record<Language, Record<string, string>> = {
     "media.removeFromLesson": "Remove from lesson",
     "media.removedFromLesson": "Removed from lesson",
     "media.selectedCount": "{count} selected",
+
+    // Voice TTS
+    "voice.play": "Play voice",
+    "voice.stop": "Stop voice",
+    "voice.notSupported": "Voice not supported on this browser",
   },
   he: {
     // Header
@@ -703,6 +708,11 @@ const translations: Record<Language, Record<string, string>> = {
     "media.removeFromLesson": "הסר משיעור",
     "media.removedFromLesson": "הוסר מהשיעור",
     "media.selectedCount": "{count} נבחרו",
+
+    // Voice TTS
+    "voice.play": "השמע קול",
+    "voice.stop": "עצור קול",
+    "voice.notSupported": "הקול לא נתמך בדפדפן זה",
   },
 };
 
