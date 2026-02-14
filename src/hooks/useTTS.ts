@@ -103,6 +103,13 @@ export function useTTS(): TTSControls {
       });
   }, [cleanup]);
 
+  // Listen for global stop event (e.g. when user sends a new message)
+  useEffect(() => {
+    const handleGlobalStop = () => stop();
+    window.addEventListener('stopAllTTS', handleGlobalStop);
+    return () => window.removeEventListener('stopAllTTS', handleGlobalStop);
+  }, [stop]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => cleanup();

@@ -212,6 +212,8 @@ const BotChat = () => {
   const showDifficultySelector = botKey === 'connection-bridge' && messages.length === 0 && !activeConversationId;
 
   const handleSend = (content: string) => {
+    // Stop any playing TTS before sending new message
+    window.dispatchEvent(new Event('stopAllTTS'));
     if (botKey === 'connection-bridge' && messages.length === 0 && selectedDifficulty) {
       sendMessage(content, `[DIFFICULTY:${selectedDifficulty}]`);
     } else {
@@ -280,7 +282,7 @@ const BotChat = () => {
                   role={msg.role}
                   content={botKey === 'connection-bridge' ? stripStageMarker(msg.content) : msg.content}
                   isStreaming={msg.isStreaming}
-                  enableVoice={botKey === 'connection-bridge'}
+                  enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
                   isLatestAssistant={isLatestAssistant}
                 />
               );
