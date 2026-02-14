@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 function stripMarkdown(text: string): string {
   return text
@@ -8,74 +8,105 @@ function stripMarkdown(text: string): string {
     .replace(/\[DIFFICULTY:\w+\]\s*/g, '');
 }
 
-function getHebrewVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find(v => v.lang === 'he-IL') ||
-    voices.find(v => v.lang.startsWith('he')) ||
-    null
-  );
-}
-
 export interface TTSControls {
   speak: (text: string) => void;
   stop: () => void;
   isPlaying: boolean;
+  isLoading: boolean;
   isSupported: boolean;
 }
 
-export function useTTS(lang = 'he-IL'): TTSControls {
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export function useTTS(): TTSControls {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isSupported] = useState(() => typeof window !== 'undefined' && 'speechSynthesis' in window);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cleanup = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+  }, []);
 
   const stop = useCallback(() => {
-    if (isSupported) {
-      window.speechSynthesis.cancel();
-    }
+    cleanup();
     setIsPlaying(false);
-  }, [isSupported]);
+    setIsLoading(false);
+  }, [cleanup]);
 
   const speak = useCallback((text: string) => {
-    if (!isSupported) return;
-
-    // Stop any current speech
-    window.speechSynthesis.cancel();
+    // Stop any current playback
+    cleanup();
 
     const cleaned = stripMarkdown(text);
     if (!cleaned.trim()) return;
 
-    const utterance = new SpeechSynthesisUtterance(cleaned);
-    utterance.lang = lang;
-    utterance.rate = 1;
-    utterance.pitch = 1;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setIsLoading(true);
 
-    const voice = getHebrewVoice();
-    if (voice) utterance.voice = voice;
+    fetch(TTS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: ANON_KEY,
+        Authorization: `Bearer ${ANON_KEY}`,
+      },
+      body: JSON.stringify({ text: cleaned }),
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`TTS failed: ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        urlRef.current = url;
+        const audio = new Audio(url);
+        audioRef.current = audio;
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
+        audio.onplay = () => {
+          setIsLoading(false);
+          setIsPlaying(true);
+        };
+        audio.onended = () => {
+          setIsPlaying(false);
+          cleanup();
+        };
+        audio.onerror = () => {
+          setIsPlaying(false);
+          setIsLoading(false);
+          cleanup();
+        };
 
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [isSupported, lang]);
+        audio.play();
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error('TTS error:', err);
+        }
+        setIsLoading(false);
+        setIsPlaying(false);
+      });
+  }, [cleanup]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (isSupported) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [isSupported]);
+    return () => cleanup();
+  }, [cleanup]);
 
-  // Preload voices (some browsers load them async)
-  useEffect(() => {
-    if (isSupported && window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = () => {};
-    }
-  }, [isSupported]);
-
-  return { speak, stop, isPlaying, isSupported };
+  return { speak, stop, isPlaying, isLoading, isSupported: true };
 }

@@ -47,6 +47,7 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
 
   const tts = useTTS();
   const showVoiceButton = enableVoice && !isUser && tts.isSupported;
+  const isVoiceBusy = tts.isLoading || tts.isPlaying;
 
   // Auto-play voice when streaming finishes (only for latest assistant message)
   useEffect(() => {
@@ -65,7 +66,7 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   }, [isStreaming, enableVoice, isLatestAssistant, isUser, content]);
 
   const handleVoiceToggle = () => {
-    if (tts.isPlaying) {
+    if (tts.isPlaying || tts.isLoading) {
       tts.stop();
     } else {
       tts.speak(content);
@@ -157,15 +158,19 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
           {showVoiceButton && !isStreaming && displayedContent && (
             <button
               onClick={handleVoiceToggle}
+              disabled={tts.isLoading}
               className={cn(
                 'flex-shrink-0 p-1.5 rounded-full transition-all',
-                tts.isPlaying
-                  ? 'bg-primary/20 text-primary animate-pulse'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                isVoiceBusy
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                tts.isPlaying && 'animate-pulse'
               )}
-              title={tts.isPlaying ? t('voice.stop') : t('voice.play')}
+              title={tts.isLoading ? t('voice.loading') : tts.isPlaying ? t('voice.stop') : t('voice.play')}
             >
-              {tts.isPlaying ? (
+              {tts.isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : tts.isPlaying ? (
                 <VolumeX className="w-4 h-4" />
               ) : (
                 <Volume2 className="w-4 h-4" />

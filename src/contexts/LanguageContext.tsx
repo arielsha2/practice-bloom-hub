@@ -361,6 +361,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Voice TTS
     "voice.play": "Play voice",
     "voice.stop": "Stop voice",
+    "voice.loading": "Loading voice...",
     "voice.notSupported": "Voice not supported on this browser",
   },
   he: {
@@ -712,6 +713,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Voice TTS
     "voice.play": "השמע קול",
     "voice.stop": "עצור קול",
+    "voice.loading": "טוען קול...",
     "voice.notSupported": "הקול לא נתמך בדפדפן זה",
   },
 };
