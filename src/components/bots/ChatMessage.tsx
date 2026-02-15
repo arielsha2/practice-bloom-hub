@@ -44,26 +44,83 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   const hasCompletedRef = useRef(false);
   const wasStreamingRef = useRef(false);
   const hasAutoPlayedRef = useRef(false);
+  const voiceSyncActiveRef = useRef(false);
+  const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const tts = useTTS();
   const showVoiceButton = enableVoice && !isUser && tts.isSupported;
   const isVoiceBusy = tts.isLoading || tts.isPlaying;
 
-  // Auto-play voice when streaming finishes (only for latest assistant message)
+  // Voice-synced mode: hide text during streaming, reveal synced with audio
+  const isVoiceSyncMode = enableVoice && isLatestAssistant && !isUser;
+
+  // Clear typing interval helper
+  const clearTypingInterval = () => {
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+  };
+
+  // When TTS starts playing and we have duration, start synced text reveal
+  useEffect(() => {
+    if (!isVoiceSyncMode) return;
+
+    if (tts.isPlaying && tts.duration && tts.duration > 0 && voiceSyncActiveRef.current) {
+      const totalChars = content.length;
+      if (totalChars === 0) return;
+
+      const msPerChar = (tts.duration * 1000) / totalChars;
+      let charIndex = 0;
+
+      clearTypingInterval();
+      setIsTyping(true);
+
+      typingIntervalRef.current = setInterval(() => {
+        charIndex++;
+        if (charIndex >= totalChars) {
+          clearTypingInterval();
+          setDisplayedContent(content);
+          setIsTyping(false);
+          hasCompletedRef.current = true;
+          voiceSyncActiveRef.current = false;
+        } else {
+          setDisplayedContent(content.slice(0, charIndex));
+        }
+      }, msPerChar);
+    }
+
+    return () => clearTypingInterval();
+  }, [tts.isPlaying, tts.duration, isVoiceSyncMode, content]);
+
+  // When TTS stops (ended or manually stopped), show full text immediately
+  useEffect(() => {
+    if (!isVoiceSyncMode) return;
+
+    if (!tts.isPlaying && !tts.isLoading && voiceSyncActiveRef.current) {
+      clearTypingInterval();
+      voiceSyncActiveRef.current = false;
+      setDisplayedContent(content);
+      setIsTyping(false);
+      hasCompletedRef.current = true;
+    }
+  }, [tts.isPlaying, tts.isLoading, isVoiceSyncMode, content]);
+
+  // Auto-play voice when streaming finishes (only for latest assistant message with voice)
   useEffect(() => {
     if (
-      enableVoice &&
-      isLatestAssistant &&
-      !isUser &&
+      isVoiceSyncMode &&
       wasStreamingRef.current &&
       !isStreaming &&
       !hasAutoPlayedRef.current &&
       content.trim()
     ) {
       hasAutoPlayedRef.current = true;
+      voiceSyncActiveRef.current = true;
+      setDisplayedContent('');
       tts.speak(content);
     }
-  }, [isStreaming, enableVoice, isLatestAssistant, isUser, content]);
+  }, [isStreaming, isVoiceSyncMode, content]);
 
   const handleVoiceToggle = () => {
     if (tts.isPlaying || tts.isLoading) {
@@ -73,9 +130,22 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     }
   };
 
+  // Main content display logic
   useEffect(() => {
     if (isUser) {
       setDisplayedContent(content);
+      return;
+    }
+
+    // In voice-sync mode during streaming: hide text
+    if (isVoiceSyncMode && isStreaming) {
+      wasStreamingRef.current = true;
+      setDisplayedContent('');
+      return;
+    }
+
+    // In voice-sync mode after streaming: text is controlled by TTS sync above
+    if (isVoiceSyncMode && wasStreamingRef.current && !hasCompletedRef.current) {
       return;
     }
 
@@ -117,9 +187,13 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     } else {
       setDisplayedContent(content);
     }
-  }, [content, isStreaming, isUser]);
+  }, [content, isStreaming, isUser, isVoiceSyncMode]);
 
-  const showCursor = isStreaming || isTyping;
+  const showCursor = isStreaming && !isVoiceSyncMode || isTyping;
+
+  // Show loading indicator during voice-sync streaming/loading phase
+  const showVoiceLoading = isVoiceSyncMode && (isStreaming || tts.isLoading) && !tts.isPlaying && !hasCompletedRef.current && wasStreamingRef.current || 
+    (isVoiceSyncMode && isStreaming);
 
   return (
     <div
@@ -147,12 +221,19 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
-            {parseMarkdown(displayedContent)}
-            {showCursor && (
-              <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
-            )}
-          </p>
+          {showVoiceLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground py-1" dir="rtl">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">{t('voice.preparing') || 'מכין תשובה...'}</span>
+            </div>
+          ) : (
+            <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
+              {parseMarkdown(displayedContent)}
+              {showCursor && (
+                <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
+              )}
+            </p>
+          )}
 
           {/* Voice button */}
           {showVoiceButton && !isStreaming && displayedContent && (

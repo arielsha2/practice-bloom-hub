@@ -14,6 +14,7 @@ export interface TTSControls {
   isPlaying: boolean;
   isLoading: boolean;
   isSupported: boolean;
+  duration: number | null;
 }
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
@@ -22,10 +23,10 @@ const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export function useTTS(voiceId?: string): TTSControls {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const mediaSourceRef = useRef<MediaSource | null>(null);
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
@@ -40,13 +41,13 @@ export function useTTS(voiceId?: string): TTSControls {
       abortRef.current.abort();
       abortRef.current = null;
     }
-    mediaSourceRef.current = null;
   }, []);
 
   const stop = useCallback(() => {
     cleanup();
     setIsPlaying(false);
     setIsLoading(false);
+    setDuration(null);
   }, [cleanup]);
 
   const speak = useCallback((text: string) => {
@@ -58,6 +59,7 @@ export function useTTS(voiceId?: string): TTSControls {
     const controller = new AbortController();
     abortRef.current = controller;
     setIsLoading(true);
+    setDuration(null);
 
     fetch(TTS_URL, {
       method: 'POST',
@@ -73,59 +75,58 @@ export function useTTS(voiceId?: string): TTSControls {
         if (!res.ok) throw new Error(`TTS failed: ${res.status}`);
         if (!res.body) throw new Error('No response body');
 
-        // Collect chunks and start playing as soon as we have enough data
+        // Collect ALL chunks before playing
         const reader = res.body.getReader();
         const chunks: Uint8Array[] = [];
         let totalSize = 0;
-        let audioStarted = false;
-
-        const startPlayback = (allChunks: Uint8Array[], size: number) => {
-          const combined = new Uint8Array(size);
-          let offset = 0;
-          for (const chunk of allChunks) {
-            combined.set(chunk, offset);
-            offset += chunk.length;
-          }
-          const blob = new Blob([combined], { type: 'audio/mpeg' });
-          const url = URL.createObjectURL(blob);
-          urlRef.current = url;
-          const audio = new Audio(url);
-          audioRef.current = audio;
-
-          audio.onplay = () => {
-            setIsLoading(false);
-            setIsPlaying(true);
-          };
-          audio.onended = () => {
-            setIsPlaying(false);
-            cleanup();
-          };
-          audio.onerror = () => {
-            setIsPlaying(false);
-            setIsLoading(false);
-            cleanup();
-          };
-
-          audio.play();
-        };
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           chunks.push(value);
           totalSize += value.length;
-
-          // Start playback early once we have ~8KB of audio data
-          if (!audioStarted && totalSize >= 8192) {
-            audioStarted = true;
-            startPlayback(chunks, totalSize);
-          }
         }
 
-        // If we never reached 8KB threshold (short text), play now
-        if (!audioStarted && totalSize > 0) {
-          startPlayback(chunks, totalSize);
+        if (totalSize === 0) return;
+
+        const combined = new Uint8Array(totalSize);
+        let offset = 0;
+        for (const chunk of chunks) {
+          combined.set(chunk, offset);
+          offset += chunk.length;
         }
+        const blob = new Blob([combined], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+        urlRef.current = url;
+        const audio = new Audio(url);
+        audioRef.current = audio;
+
+        // Wait for metadata to get duration
+        await new Promise<void>((resolve) => {
+          audio.onloadedmetadata = () => resolve();
+          // fallback if metadata already loaded
+          if (audio.readyState >= 1) resolve();
+        });
+
+        setDuration(audio.duration);
+
+        audio.onplay = () => {
+          setIsLoading(false);
+          setIsPlaying(true);
+        };
+        audio.onended = () => {
+          setIsPlaying(false);
+          setDuration(null);
+          cleanup();
+        };
+        audio.onerror = () => {
+          setIsPlaying(false);
+          setIsLoading(false);
+          setDuration(null);
+          cleanup();
+        };
+
+        audio.play();
       })
       .catch((err) => {
         if (err.name !== 'AbortError') {
@@ -133,6 +134,7 @@ export function useTTS(voiceId?: string): TTSControls {
         }
         setIsLoading(false);
         setIsPlaying(false);
+        setDuration(null);
       });
   }, [cleanup, voiceId]);
 
@@ -148,5 +150,5 @@ export function useTTS(voiceId?: string): TTSControls {
     return () => cleanup();
   }, [cleanup]);
 
-  return { speak, stop, isPlaying, isLoading, isSupported: true };
+  return { speak, stop, isPlaying, isLoading, isSupported: true, duration };
 }
