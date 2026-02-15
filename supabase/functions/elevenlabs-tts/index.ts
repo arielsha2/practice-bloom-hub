@@ -41,6 +41,7 @@ serve(async (req) => {
         body: JSON.stringify({
           text: text.trim(),
           model_id: 'eleven_multilingual_v2',
+          language: language || 'he',
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
