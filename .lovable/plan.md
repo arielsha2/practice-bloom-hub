@@ -1,29 +1,30 @@
 
-# תיקון שפת הדיבור - הוספת פרמטר language
+
+# תיקון שפת הדיבור - מעבר למודל eleven_v3
 
 ## הבעיה
-הפרמטר `language` חסר בגוף הבקשה ל-ElevenLabs. המודל `eleven_multilingual_v2` תומך בעברית אבל צריך לציין את השפה במפורש באמצעות הפרמטר `language` (לא `language_code` שגרם לשגיאה קודם).
+הקול המשובט (Lewinsky, `u8hSBdUhoLus6YkI9YJt`) עובד נכון רק עם מודל `eleven_v3` - זה המודל שצוין בזיכרון הפרויקט כמודל שנבחר בשל "התמיכה המשופרת שלו בעברית". המודל `eleven_multilingual_v2` לא מפיק עברית נכונה עם הקול הזה.
 
 ## הפתרון
-שינוי של שורה אחת בקובץ `supabase/functions/elevenlabs-tts/index.ts` - הוספת `language: language || 'he'` לגוף הבקשה:
+שינוי קטן בקובץ אחד:
 
+### קובץ: `supabase/functions/elevenlabs-tts/index.ts`
+- שינוי `model_id` מ-`eleven_multilingual_v2` ל-`eleven_v3`
+- הסרת פרמטר `language` (מודל v3 מזהה שפה אוטומטית ולא צריך אותו)
+
+### לפני:
 ```text
-body: JSON.stringify({
-  text: text.trim(),
-  model_id: 'eleven_multilingual_v2',
-  language: language || 'he',        // <-- שורה חדשה
-  voice_settings: {
-    stability: 0.5,
-    similarity_boost: 0.75,
-    style: 0.0,
-    use_speaker_boost: true,
-    speed: 1.15,
-  },
-}),
+model_id: 'eleven_multilingual_v2',
+language: language || 'he',
 ```
 
-הפרמטר `language` כבר נקרא מהבקשה בשורה 24, וברירת המחדל תהיה `"he"` (עברית).
+### אחרי:
+```text
+model_id: 'eleven_v3',
+```
 
-## הבדל מהניסיון הקודם
-- קודם השתמשנו ב-`language_code` שגרם לשגיאת 400
-- הפעם נשתמש ב-`language` שהוא הפרמטר הנכון עבור מודל `eleven_multilingual_v2`
+## סיבה
+מודל `eleven_v3` הוא המודל העדכני והמתקדם ביותר של ElevenLabs, תומך ב-70+ שפות כולל עברית, ובמיוחד - הקול המשובט הזה אומן/הוגדר לעבוד איתו. זה המודל שעבד קודם לפני השינויים.
+
+## פריסה
+ה-Edge Function תיפרס מחדש אוטומטית.
