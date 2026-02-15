@@ -21,7 +21,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, language } = await req.json();
     const VOICE_ID = voiceId || DEFAULT_VOICE_ID;
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({ error: 'Missing text' }), {
@@ -40,13 +40,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: text.trim(),
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-          stability: 0.75,
-          similarity_boost: 1.0,
-          style: 0.0,
-            use_speaker_boost: true,
-          },
+          model_id: 'eleven_v3',
         }),
       }
     );
