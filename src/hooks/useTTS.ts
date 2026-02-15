@@ -25,6 +25,7 @@ export function useTTS(voiceId?: string): TTSControls {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const mediaSourceRef = useRef<MediaSource | null>(null);
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
@@ -39,6 +40,7 @@ export function useTTS(voiceId?: string): TTSControls {
       abortRef.current.abort();
       abortRef.current = null;
     }
+    mediaSourceRef.current = null;
   }, []);
 
   const stop = useCallback(() => {
@@ -48,7 +50,6 @@ export function useTTS(voiceId?: string): TTSControls {
   }, [cleanup]);
 
   const speak = useCallback((text: string) => {
-    // Stop any current playback
     cleanup();
 
     const cleaned = stripMarkdown(text);
@@ -68,31 +69,63 @@ export function useTTS(voiceId?: string): TTSControls {
       body: JSON.stringify({ text: cleaned, voiceId }),
       signal: controller.signal,
     })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) throw new Error(`TTS failed: ${res.status}`);
-        return res.blob();
-      })
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        urlRef.current = url;
-        const audio = new Audio(url);
-        audioRef.current = audio;
+        if (!res.body) throw new Error('No response body');
 
-        audio.onplay = () => {
-          setIsLoading(false);
-          setIsPlaying(true);
-        };
-        audio.onended = () => {
-          setIsPlaying(false);
-          cleanup();
-        };
-        audio.onerror = () => {
-          setIsPlaying(false);
-          setIsLoading(false);
-          cleanup();
+        // Collect chunks and start playing as soon as we have enough data
+        const reader = res.body.getReader();
+        const chunks: Uint8Array[] = [];
+        let totalSize = 0;
+        let audioStarted = false;
+
+        const startPlayback = (allChunks: Uint8Array[], size: number) => {
+          const combined = new Uint8Array(size);
+          let offset = 0;
+          for (const chunk of allChunks) {
+            combined.set(chunk, offset);
+            offset += chunk.length;
+          }
+          const blob = new Blob([combined], { type: 'audio/mpeg' });
+          const url = URL.createObjectURL(blob);
+          urlRef.current = url;
+          const audio = new Audio(url);
+          audioRef.current = audio;
+
+          audio.onplay = () => {
+            setIsLoading(false);
+            setIsPlaying(true);
+          };
+          audio.onended = () => {
+            setIsPlaying(false);
+            cleanup();
+          };
+          audio.onerror = () => {
+            setIsPlaying(false);
+            setIsLoading(false);
+            cleanup();
+          };
+
+          audio.play();
         };
 
-        audio.play();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          totalSize += value.length;
+
+          // Start playback early once we have ~8KB of audio data
+          if (!audioStarted && totalSize >= 8192) {
+            audioStarted = true;
+            startPlayback(chunks, totalSize);
+          }
+        }
+
+        // If we never reached 8KB threshold (short text), play now
+        if (!audioStarted && totalSize > 0) {
+          startPlayback(chunks, totalSize);
+        }
       })
       .catch((err) => {
         if (err.name !== 'AbortError') {
@@ -101,9 +134,9 @@ export function useTTS(voiceId?: string): TTSControls {
         setIsLoading(false);
         setIsPlaying(false);
       });
-  }, [cleanup]);
+  }, [cleanup, voiceId]);
 
-  // Listen for global stop event (e.g. when user sends a new message)
+  // Listen for global stop event
   useEffect(() => {
     const handleGlobalStop = () => stop();
     window.addEventListener('stopAllTTS', handleGlobalStop);

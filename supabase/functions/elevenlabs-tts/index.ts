@@ -31,7 +31,7 @@ serve(async (req) => {
     }
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream?output_format=mp3_22050_32`,
       {
         method: 'POST',
         headers: {
@@ -40,7 +40,14 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: text.trim(),
-          model_id: 'eleven_v3',
+          model_id: 'eleven_turbo_v2_5',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.0,
+            use_speaker_boost: true,
+            speed: 1.15,
+          },
         }),
       }
     );
@@ -54,12 +61,12 @@ serve(async (req) => {
       });
     }
 
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
+    // Stream the response back to the client
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'audio/mpeg',
+        'Transfer-Encoding': 'chunked',
       },
     });
   } catch (error) {
