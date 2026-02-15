@@ -1,30 +1,41 @@
 
+# תיקון שפת הדיבור - הוספת language_code לעברית
 
-# Fix Custom "Lewinsky" Voice - Adjust Voice Settings
+## הבעיה
+כל הקולות (כולל Liam, Lewinsky ואחרים) נשמעים בשפה זרה במקום בעברית. הסיבה: המודל `eleven_multilingual_v2` מנסה לזהות את השפה אוטומטית מהטקסט, אבל הזיהוי האוטומטי נכשל - במיוחד כשהטקסט מכיל מספרים, מילים באנגלית, או משפטים קצרים.
 
-## Problem
-The voice sounds like a completely different person. The model (`eleven_multilingual_v2`) and voice ID are already correct. The issue is the `voice_settings` parameters distorting the cloned voice.
+## הפתרון
+ה-API של ElevenLabs תומך בפרמטר `language_code` שמאלץ את המודל לדבר בשפה מסוימת. נוסיף `language_code: "he"` (קוד ISO 639-1 לעברית) לבקשה.
 
-## Current Settings (causing distortion)
+## שינויים
+
+### קובץ: `supabase/functions/elevenlabs-tts/index.ts`
+
+1. לקבל פרמטר `language` אופציונלי מהקליינט (ברירת מחדל: `"he"`)
+2. להוסיף `language_code` לבקשה ל-ElevenLabs API
+
+שינוי בשורה 24 - לקבל גם `language` מהבקשה:
 ```text
-stability: 0.4       -- too low, causes voice variation
-similarity_boost: 0.7 -- not maximum fidelity
-style: 0.3           -- adds stylistic changes that alter the voice
+const { text, voiceId, language } = await req.json();
 ```
 
-## New Settings (faithful to cloned voice)
+שינוי בשורות 41-49 - להוסיף `language_code` לגוף הבקשה:
 ```text
-stability: 0.75      -- consistent, faithful to source
-similarity_boost: 1.0 -- maximum similarity to original recording
-style: 0.0           -- no stylistic distortion
+body: JSON.stringify({
+  text: text.trim(),
+  model_id: 'eleven_multilingual_v2',
+  language_code: language || 'he',
+  voice_settings: {
+    stability: 0.75,
+    similarity_boost: 1.0,
+    style: 0.0,
+    use_speaker_boost: true,
+  },
+}),
 ```
 
-## File to modify
+### ללא שינוי בצד הקליינט
+ברירת המחדל היא עברית (`"he"`), כך שה-hook `useTTS` לא צריך שינוי. אם בעתיד תרצה לתמוך בשפות נוספות, תוכל להעביר פרמטר `language` מהקליינט.
 
-**`supabase/functions/elevenlabs-tts/index.ts`** — lines 44-47, change voice_settings values:
-- `stability`: 0.4 -> 0.75
-- `similarity_boost`: 0.7 -> 1.0
-- `style`: 0.3 -> 0.0
-
-Edge function will be redeployed after the change.
-
+### פריסה
+ה-Edge Function תיפרס מחדש אוטומטית אחרי השינוי.
