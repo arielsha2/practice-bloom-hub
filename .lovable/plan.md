@@ -1,15 +1,20 @@
 
 
-# העלאת קצב הדיבור ל-1.5
+# הטמעת סרטון YouTube בעמוד הבית
 
-## שינוי
-קובץ אחד: `supabase/functions/elevenlabs-tts/index.ts` - שינוי `speed` מ-`1.4` ל-`1.5`.
+## מה ישתנה
+ה-placeholder של הסרטון בסקציית Hero יוחלף בנגן YouTube מוטמע עם הסרטון `https://youtu.be/Q1YXKvx6orI`.
 
-## פרטים טכניים
-שורה 49 בקובץ:
-```text
-speed: 1.4  -->  speed: 1.5
-```
+## שינוי יחיד
 
-פריסה מחדש אוטומטית של ה-Edge Function.
+**קובץ: `src/components/landing/Hero.tsx`**
+
+החלפת ה-div של ה-Video Placeholder (שורות 93-115 בערך) ב-iframe של YouTube:
+
+- הסרת כפתור ה-Play המזויף והטקסט "videoPlaceholder"
+- הוספת iframe עם `src="https://www.youtube.com/embed/Q1YXKvx6orI"` בתוך מיכל `aspect-video` עם פינות מעוגלות וצל
+- שמירה על האנימציה והעיצוב הקיימים (rounded-2xl, shadow, border)
+
+## תוצאה
+במקום placeholder סטטי עם אייקון Play, המבקרים יראו את סרטון ההיכרות מוטמע ישירות בעמוד הבית.
 
