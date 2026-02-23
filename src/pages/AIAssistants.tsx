@@ -2,7 +2,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
-import { Compass, Map, PenTool, Calculator, Bot, Handshake } from 'lucide-react';
+import { Compass, Map, PenTool, Calculator, Bot, Handshake, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const botData = [
@@ -11,6 +11,7 @@ const botData = [
   { key: 'content', icon: PenTool },
   { key: 'pricing', icon: Calculator },
   { key: 'connection', icon: Handshake },
+  { key: 'presentation', icon: Mic },
 ];
 
 const botKeyMapping: Record<string, string> = {
@@ -19,6 +20,7 @@ const botKeyMapping: Record<string, string> = {
   'content': 'content-creator',
   'pricing': 'pricing-calculator',
   'connection': 'connection-bridge',
+  'presentation': 'self-presentation',
 };
 
 const AIAssistants = () => {
