@@ -94,23 +94,15 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 }}
             >
-              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-card bg-gradient-to-br from-primary/10 to-accent/10 border border-border/50 cursor-pointer group hover:shadow-elevated transition-all duration-300">
-                {/* Placeholder background pattern */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-                
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-elevated group-hover:scale-110 group-hover:bg-primary transition-all duration-300">
-                    <Play className="w-7 h-7 md:w-8 md:h-8 text-primary-foreground fill-current ml-1" />
-                  </div>
-                </div>
-                
-                {/* Video placeholder text */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <p className={`text-sm text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-2 rounded-lg inline-block ${isRTL ? "text-right" : ""}`}>
-                    {t("hero.videoPlaceholder")}
-                  </p>
-                </div>
+              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-card border border-border/50">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/Q1YXKvx6orI"
+                  title="Introduction Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
               </div>
             </motion.div>
 
