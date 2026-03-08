@@ -53,7 +53,7 @@ export function Hero() {
                 asChild
               >
                 <a href="https://api.whatsapp.com/send?phone=972544928993" target="_blank" rel="noopener noreferrer">
-                לשיחת ייעוץ ראשונית
+                {t("hero.cta")}
                 <Arrow
                   className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                 />
