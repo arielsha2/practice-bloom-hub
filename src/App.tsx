@@ -40,6 +40,7 @@ const App = () => (
               <Route path="/contents/:id" element={<ContentDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/portal" element={<StudentPortal />} />
+              <Route path="/portal/:tab" element={<StudentPortal />} />
               <Route path="/portal/lesson/:id" element={<LessonDetail />} />
               <Route path="/portal/admin" element={<PortalAdmin />} />
               <Route path="/media-library" element={<MediaLibrary />} />
