@@ -214,7 +214,7 @@ export default function StudentPortal() {
       )}
       
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="lessons" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(val) => navigate(`/portal/${val}`, { replace: true })} className="space-y-6">
           <TabsList>
             <TabsTrigger value="lessons" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />

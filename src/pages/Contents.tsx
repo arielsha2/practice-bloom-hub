@@ -40,14 +40,34 @@ interface Content {
 }
 
 export default function Contents() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, isRTL, language } = useLanguage();
   const { isAdmin } = useIsAdmin();
   const [contents, setContents] = useState<Content[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Derive selectedCategory from URL search params
+  const selectedCategorySlug = searchParams.get('category');
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategorySlug) return null;
+    const cat = categories.find(c => c.slug === selectedCategorySlug);
+    return cat ? cat.id : null;
+  }, [selectedCategorySlug, categories]);
+
+  const setSelectedCategory = (categoryId: string | null) => {
+    if (!categoryId) {
+      searchParams.delete('category');
+    } else {
+      const cat = categories.find(c => c.id === categoryId);
+      if (cat) {
+        searchParams.set('category', cat.slug);
+      }
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
