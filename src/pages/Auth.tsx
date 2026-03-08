@@ -51,7 +51,7 @@ export default function Auth() {
       const refreshToken = hashParams?.get('refresh_token');
       const type = hashParams?.get('type');
       
-      if (accessToken && refreshToken && type === 'recovery') {
+      if (accessToken && refreshToken && (type === 'recovery' || type === 'invite')) {
         setMode('reset');
         setResetStatus('loading');
         
