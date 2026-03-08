@@ -51,7 +51,7 @@ export default function Auth() {
       const refreshToken = hashParams?.get('refresh_token');
       const type = hashParams?.get('type');
       
-      if (accessToken && refreshToken && type === 'recovery') {
+      if (accessToken && refreshToken && (type === 'recovery' || type === 'invite')) {
         setMode('reset');
         setResetStatus('loading');
         
@@ -137,15 +137,18 @@ export default function Auth() {
           navigate('/dashboard');
         }
       } else if (mode === 'signup') {
-        const { error } = await signUp(email, password);
-        if (error) {
-          if (error.message.includes('already registered')) {
+        const { data, error: fnError } = await supabase.functions.invoke('signup-passwordless', {
+          body: { email },
+        });
+        if (fnError || data?.error) {
+          const errMsg = data?.error || fnError?.message;
+          if (errMsg === 'already_registered') {
             toast.error(t('auth.alreadyRegistered'));
           } else {
-            toast.error(error.message);
+            toast.error(errMsg || t('auth.signupError'));
           }
         } else {
-          toast.success(t('auth.signupSuccess'));
+          toast.success(t('auth.signupSuccessPasswordless'));
         }
       } else if (mode === 'forgot') {
         const { error } = await resetPasswordForEmail(email);
@@ -191,7 +194,7 @@ export default function Auth() {
   const getSubtitle = () => {
     switch (mode) {
       case 'login': return t('auth.loginSubtitle');
-      case 'signup': return t('auth.signupSubtitle');
+      case 'signup': return t('auth.signupSubtitlePasswordless');
       case 'forgot': return t('auth.forgotSubtitle');
       case 'reset': return t('auth.resetSubtitle');
     }
@@ -277,8 +280,8 @@ export default function Auth() {
                     </div>
                   )}
                   
-                  {/* Password field - shown for login, signup */}
-                  {(mode === 'login' || mode === 'signup') && (
+                  {/* Password field - shown for login only */}
+                  {mode === 'login' && (
                     <div className="space-y-2">
                       <Label htmlFor="password">{t('auth.password')}</Label>
                       <Input
