@@ -238,9 +238,10 @@ export function Hero() {
 
               <motion.div
                 className="absolute top-1/3 right-1/3 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.2, 1],
-                  transition: { duration: 2.5, repeat: Infinity, delay: 1 },
+                  transition: { duration: 2.5, repeat: Infinity, delay: 1, type: "tween" },
                 }}
               >
                 <Heart className="w-4 h-4 text-primary" />
