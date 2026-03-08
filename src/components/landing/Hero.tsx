@@ -215,10 +215,11 @@ export function Hero() {
               {/* Floating icons */}
               <motion.div
                 className="absolute top-1/4 left-1/4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, -5, 0],
-                  transition: { duration: 4, repeat: Infinity },
+                  transition: { duration: 4, repeat: Infinity, type: "tween" },
                 }}
               >
                 <Sparkles className="w-6 h-6 text-primary" />
@@ -226,9 +227,10 @@ export function Hero() {
 
               <motion.div
                 className="absolute bottom-1/3 right-1/4 w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.15, 1],
-                  transition: { duration: 3, repeat: Infinity, delay: 0.5 },
+                  transition: { duration: 3, repeat: Infinity, delay: 0.5, type: "tween" },
                 }}
               >
                 <Target className="w-5 h-5 text-accent" />
