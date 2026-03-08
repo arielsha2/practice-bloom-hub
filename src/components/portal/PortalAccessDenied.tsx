@@ -2,11 +2,12 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { TurningPointHero } from './landing/TurningPointHero';
 import { TurningPointStory } from './landing/TurningPointStory';
+import { TurningPointVideo } from './landing/TurningPointVideo';
 import { TurningPointProgram } from './landing/TurningPointProgram';
 import { TurningPointOutcomes } from './landing/TurningPointOutcomes';
 import { TurningPointMeetings } from './landing/TurningPointMeetings';
 import { TurningPointPricing } from './landing/TurningPointPricing';
-import { PortalTestimonials } from './PortalTestimonials';
+import { TurningPointTestimonials } from './landing/TurningPointTestimonials';
 import { TurningPointFounders } from './landing/TurningPointFounders';
 import { TurningPointCTA } from './landing/TurningPointCTA';
 
@@ -16,11 +17,12 @@ export function PortalAccessDenied() {
       <Header />
       <TurningPointHero />
       <TurningPointStory />
+      <TurningPointVideo />
       <TurningPointProgram />
       <TurningPointOutcomes />
       <TurningPointMeetings />
       <TurningPointPricing />
-      <PortalTestimonials />
+      <TurningPointTestimonials />
       <TurningPointFounders />
       <TurningPointCTA />
       <Footer />
