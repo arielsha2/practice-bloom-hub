@@ -280,8 +280,8 @@ export default function Auth() {
                     </div>
                   )}
                   
-                  {/* Password field - shown for login, signup */}
-                  {(mode === 'login' || mode === 'signup') && (
+                  {/* Password field - shown for login only */}
+                  {mode === 'login' && (
                     <div className="space-y-2">
                       <Label htmlFor="password">{t('auth.password')}</Label>
                       <Input
