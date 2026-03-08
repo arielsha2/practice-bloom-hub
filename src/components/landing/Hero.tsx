@@ -185,13 +185,15 @@ export function Hero() {
 
               <motion.div
                 className="absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 bg-background/80 backdrop-blur-md rounded-xl p-4 shadow-elevated border border-border/50"
+                style={{ willChange: "transform" }}
                 animate={{
-                  y: ["-50%", "calc(-50% - 12px)", "-50%"],
+                  y: [0, -12, 0],
                   transition: {
                     duration: 3.5,
                     repeat: Infinity,
                     ease: "easeInOut",
                     delay: 0.5,
+                    type: "tween",
                   },
                 }}
               >
