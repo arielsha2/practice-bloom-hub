@@ -50,6 +50,7 @@ const App = () => (
               <Route path="/admin/users" element={<UsersAdmin />} />
               <Route path="/admin/courses" element={<CoursesAdmin />} />
               <Route path="/turning-point" element={<TurningPoint />} />
+              <Route path="/contact-finder" element={<BotChat />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
