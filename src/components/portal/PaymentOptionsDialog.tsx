@@ -110,7 +110,10 @@ export function PaymentOptionsDialog({ open, onOpenChange }: PaymentOptionsDialo
                       <p className="text-muted-foreground text-sm">
                         {option.subtitle}
                       </p>
-                      <p className="text-primary text-xs font-medium mt-1">
+                      <p className="text-xl font-bold text-primary mt-1">
+                        {option.price}
+                      </p>
+                      <p className="text-teal text-xs font-medium">
                         {option.description}
                       </p>
                     </div>
