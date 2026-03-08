@@ -46,6 +46,11 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   const hasAutoPlayedRef = useRef(false);
   const voiceSyncActiveRef = useRef(false);
   const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  // For buffered typing during streaming
+  const targetContentRef = useRef('');
+  const revealIndexRef = useRef(0);
+  const revealTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const tts = useTTS();
   const showVoiceButton = enableVoice && !isUser && tts.isSupported;
@@ -59,6 +64,13 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
       typingIntervalRef.current = null;
+    }
+  };
+
+  const clearRevealTimer = () => {
+    if (revealTimerRef.current) {
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
     }
   };
 
@@ -130,34 +142,89 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     }
   };
 
-  // Main content display logic
+  // Buffered character-by-character reveal during streaming
+  useEffect(() => {
+    if (!isStreaming || isUser || isVoiceSyncMode) return;
+    
+    wasStreamingRef.current = true;
+    targetContentRef.current = content;
+    
+    // Start reveal timer if not already running
+    if (!revealTimerRef.current) {
+      const TYPING_SPEED = 20; // ms per character
+      revealTimerRef.current = setInterval(() => {
+        const target = targetContentRef.current;
+        if (revealIndexRef.current < target.length) {
+          revealIndexRef.current++;
+          setDisplayedContent(target.slice(0, revealIndexRef.current));
+        }
+      }, TYPING_SPEED);
+    }
+    
+    return () => {}; // Don't clear on every content update, only on unmount or stream end
+  }, [content, isStreaming, isUser, isVoiceSyncMode]);
+
+  // When streaming ends, let the reveal timer catch up then clean up
+  useEffect(() => {
+    if (!isUser && wasStreamingRef.current && !isStreaming && !isVoiceSyncMode) {
+      targetContentRef.current = content;
+      
+      // Let the reveal timer finish catching up, then clean up
+      const checkInterval = setInterval(() => {
+        if (revealIndexRef.current >= content.length) {
+          clearInterval(checkInterval);
+          clearRevealTimer();
+          setDisplayedContent(content);
+          setIsTyping(false);
+          hasCompletedRef.current = true;
+        }
+      }, 50);
+      
+      // Safety timeout: show full content after 3 seconds max
+      const safetyTimeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        clearRevealTimer();
+        revealIndexRef.current = content.length;
+        setDisplayedContent(content);
+        setIsTyping(false);
+        hasCompletedRef.current = true;
+      }, 3000);
+      
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(safetyTimeout);
+      };
+    }
+  }, [isStreaming, isUser, isVoiceSyncMode, content]);
+
+  // Cleanup reveal timer on unmount
+  useEffect(() => {
+    return () => {
+      clearRevealTimer();
+      clearTypingInterval();
+    };
+  }, []);
+
+  // Main content display logic (for non-streaming cases)
   useEffect(() => {
     if (isUser) {
       setDisplayedContent(content);
       return;
     }
 
-    // In voice-sync mode during streaming: hide text
-    if (isVoiceSyncMode && isStreaming) {
+    // Streaming is handled by the buffered reveal above
+    if (isStreaming) {
       wasStreamingRef.current = true;
-      setDisplayedContent('');
       return;
     }
 
-    // In voice-sync mode after streaming: text is controlled by TTS sync above
+    // In voice-sync mode during/after streaming: controlled by TTS sync
     if (isVoiceSyncMode && wasStreamingRef.current && !hasCompletedRef.current) {
       return;
     }
 
-    if (isStreaming) {
-      setDisplayedContent(content);
-      wasStreamingRef.current = true;
-      return;
-    }
-
-    if (wasStreamingRef.current) {
-      setDisplayedContent(content);
-      hasCompletedRef.current = true;
+    // Post-streaming catch-up is handled above
+    if (wasStreamingRef.current && !hasCompletedRef.current) {
       return;
     }
 
@@ -166,11 +233,12 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
       return;
     }
 
+    // Initial load: typing animation for historical messages
     if (content && !hasCompletedRef.current) {
       setIsTyping(true);
       setDisplayedContent('');
       let index = 0;
-      const typingSpeed = 35;
+      const typingSpeed = 20;
 
       const typeNextChar = () => {
         if (index < content.length) {
@@ -189,7 +257,8 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     }
   }, [content, isStreaming, isUser, isVoiceSyncMode]);
 
-  const showCursor = isStreaming && !isVoiceSyncMode || isTyping;
+  const isRevealing = isStreaming && !isVoiceSyncMode && revealIndexRef.current < targetContentRef.current.length;
+  const showCursor = isRevealing || isTyping;
 
   // Show loading indicator during voice-sync streaming/loading phase
   const showVoiceLoading = isVoiceSyncMode && (isStreaming || tts.isLoading) && !tts.isPlaying && !hasCompletedRef.current && wasStreamingRef.current || 
