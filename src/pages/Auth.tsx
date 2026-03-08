@@ -248,7 +248,22 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {mode === 'forgot' && resetSent ? (
+            {mode === 'signup' && signupSent ? (
+              <div className="text-center space-y-4">
+                <CheckCircle className="w-16 h-16 text-success mx-auto" />
+                <p className="text-muted-foreground">{t('auth.signupSuccessPasswordless')}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setSignupSent(false);
+                  }}
+                  className="text-sm text-primary hover:underline transition-colors"
+                >
+                  {t('auth.backToLogin')}
+                </button>
+              </div>
+            ) : mode === 'forgot' && resetSent ? (
               <div className="text-center space-y-4">
                 <CheckCircle className="w-16 h-16 text-success mx-auto" />
                 <p className="text-muted-foreground">{t('auth.resetSent')}</p>
