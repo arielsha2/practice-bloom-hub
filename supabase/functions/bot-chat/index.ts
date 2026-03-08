@@ -267,8 +267,8 @@ serve(async (req) => {
           }
         }
 
-        // 8. Save assistant response to database
-        if (fullAssistantResponse) {
+        // 8. Save assistant response to database (only for authenticated users)
+        if (fullAssistantResponse && !isAnonymous) {
           const { error: saveAssistantMsgError } = await supabase
             .from("bot_messages")
             .insert({
