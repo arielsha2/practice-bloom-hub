@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award, Play } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award } from "lucide-react";
+import infographicImg from "@/assets/infographic-clinic-edge.png";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
