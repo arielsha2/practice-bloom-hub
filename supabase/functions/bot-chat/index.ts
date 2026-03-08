@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Expose-Headers": "X-Conversation-Id",
 };
 
+// Bots that allow anonymous (unauthenticated) access
+const PUBLIC_BOTS: Record<string, string> = {
+  "contact-finder": "2026-03-22",
+};
+
 interface ChatRequest {
   botKey: string;
   conversationId?: string;
@@ -24,16 +29,9 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
     if (!lovableApiKey) {
@@ -43,21 +41,37 @@ serve(async (req) => {
       });
     }
 
-    // Create Supabase client with user's auth token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Parse request body first to check if it's a public bot
+    const { botKey, conversationId, message }: ChatRequest = await req.json();
+    
+    const isPublicBot = PUBLIC_BOTS[botKey] && new Date() < new Date(PUBLIC_BOTS[botKey]);
 
-    // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const authHeader = req.headers.get("Authorization");
+    let user: { id: string } | null = null;
+    let supabase: any;
+
+    if (authHeader) {
+      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      if (!userError && authUser) {
+        user = authUser;
+      }
+    }
+
+    // If not authenticated and not a public bot, reject
+    if (!user && !isPublicBot) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { botKey, conversationId, message }: ChatRequest = await req.json();
+    // For anonymous public bot access, use service role client (read-only for bot config)
+    if (!supabase) {
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
+    }
 
     // 1. Load bot configuration
     const { data: botConfig, error: botError } = await supabase
