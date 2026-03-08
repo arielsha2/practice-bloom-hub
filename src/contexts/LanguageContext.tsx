@@ -51,9 +51,9 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.admin.page": "Page",
 
     // Hero
-    "hero.title": "Market Your Practice with Authenticity",
-    "hero.subtitle": "Build a thriving private practice without anxiety or compromising who you are",
-    "hero.cta": "Get Free Resources",
+    "hero.title": "Build Your Practice Your Way – With Purpose and Business Success",
+    "hero.subtitle": "Join the therapist community of \"Al Sfat HaClinica\" and discover how to build a stable business without compromising your values and unique voice.",
+    "hero.cta": "Book a Free Consultation",
     "hero.videoPlaceholder": "Watch Introduction Video",
 
     // Founders
@@ -412,9 +412,9 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.admin.page": "עמוד",
 
     // Hero
-    "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
-    "hero.subtitle": " איך ליצור קליניקה שמתאימה לך",
-    "hero.cta": "הצטרפו לקהילת על שפת הקליניקה",
+    "hero.title": "לבנות קליניקה בדרך שלכם – מתוך שליחות והצלחה עסקית",
+    "hero.subtitle": "הצטרפו לקהילת המטפלים של \"על שפת הקליניקה\" וגלו איך לבנות עסק יציב בלי לוותר על הערכים והקול הייחודי שלכם.",
+    "hero.cta": "לשיחת ייעוץ ראשונית",
     "hero.videoPlaceholder": "צפו בסרטון ההכרות",
 
     // Founders

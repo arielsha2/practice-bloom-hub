@@ -31,7 +31,7 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
-              לבנות קליניקה בדרך שלכם – מתוך שליחות והצלחה עסקית
+              {t("hero.title")}
             </motion.h1>
 
             <motion.p
@@ -39,7 +39,7 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
             >
-              הצטרפו לקהילת המטפלים של "על שפת הקליניקה" וגלו איך לבנות עסק יציב בלי לוותר על הערכים והקול הייחודי שלכם.
+              {t("hero.subtitle")}
             </motion.p>
 
             <motion.div
@@ -53,7 +53,7 @@ export function Hero() {
                 asChild
               >
                 <a href="https://api.whatsapp.com/send?phone=972544928993" target="_blank" rel="noopener noreferrer">
-                לשיחת ייעוץ ראשונית
+                {t("hero.cta")}
                 <Arrow
                   className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                 />
@@ -72,7 +72,7 @@ export function Hero() {
             <div className="relative w-full max-w-lg">
               <img
                 src={heroFoundersImg}
-                alt="אליאנה ואריאל – על שפת הקליניקה"
+                alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
                 className="w-full h-auto rounded-2xl shadow-elevated border border-border/50"
                 loading="eager"
               />
