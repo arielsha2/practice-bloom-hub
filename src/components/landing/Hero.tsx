@@ -72,7 +72,7 @@ export function Hero() {
             <div className="relative w-full max-w-lg">
               <img
                 src={heroFoundersImg}
-                alt="אליאנה ואריאל – על שפת הקליניקה"
+                alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
                 className="w-full h-auto rounded-2xl shadow-elevated border border-border/50"
                 loading="eager"
               />
