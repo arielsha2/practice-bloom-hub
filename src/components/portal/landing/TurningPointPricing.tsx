@@ -58,7 +58,7 @@ export function TurningPointPricing() {
                       בתשלום אחד + הנחה
                     </p>
                     <p className="text-3xl font-bold text-primary">4,650 ₪</p>
-                    <p className="text-sm text-green-600 font-medium">חיסכון של 300 ₪</p>
+                    <p className="text-sm text-teal font-medium">חיסכון של 300 ₪</p>
                   </div>
                 </div>
               </div>

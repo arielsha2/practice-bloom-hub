@@ -21,6 +21,7 @@ import BotAdmin from "./pages/BotAdmin";
 import BotChat from "./pages/BotChat";
 import UsersAdmin from "./pages/UsersAdmin";
 import CoursesAdmin from "./pages/CoursesAdmin";
+import TurningPoint from "./pages/TurningPoint";
 const queryClient = new QueryClient();
 
 const App = () => (
