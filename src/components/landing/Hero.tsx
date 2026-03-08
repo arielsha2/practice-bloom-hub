@@ -39,7 +39,7 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
             >
-              הצטרפו לקהילת המטפלים של "על שפת הקליניקה" וגלו איך לבנות עסק יציב בלי לוותר על הערכים והקול הייחודי שלכם.
+              {t("hero.subtitle")}
             </motion.p>
 
             <motion.div
