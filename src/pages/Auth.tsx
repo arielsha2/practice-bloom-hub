@@ -27,6 +27,7 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
   const [resetStatus, setResetStatus] = useState<ResetStatus>('idle');
 
   // Handle password reset tokens from URL (both hash and query params)
@@ -143,12 +144,12 @@ export default function Auth() {
         if (fnError || data?.error) {
           const errMsg = data?.error || fnError?.message;
           if (errMsg === 'already_registered') {
-            toast.error(t('auth.alreadyRegistered'));
+            toast.error(t('auth.alreadyRegisteredFull'));
           } else {
             toast.error(errMsg || t('auth.signupError'));
           }
         } else {
-          toast.success(t('auth.signupSuccessPasswordless'));
+          setSignupSent(true);
         }
       } else if (mode === 'forgot') {
         const { error } = await resetPasswordForEmail(email);
@@ -247,7 +248,22 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {mode === 'forgot' && resetSent ? (
+            {mode === 'signup' && signupSent ? (
+              <div className="text-center space-y-4">
+                <CheckCircle className="w-16 h-16 text-success mx-auto" />
+                <p className="text-muted-foreground">{t('auth.signupSuccessPasswordless')}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setSignupSent(false);
+                  }}
+                  className="text-sm text-primary hover:underline transition-colors"
+                >
+                  {t('auth.backToLogin')}
+                </button>
+              </div>
+            ) : mode === 'forgot' && resetSent ? (
               <div className="text-center space-y-4">
                 <CheckCircle className="w-16 h-16 text-success mx-auto" />
                 <p className="text-muted-foreground">{t('auth.resetSent')}</p>
@@ -277,6 +293,11 @@ export default function Auth() {
                         placeholder="email@example.com"
                         required
                       />
+                      {mode === 'signup' && (
+                        <p className="text-sm text-muted-foreground">
+                          {t('auth.signupHelperText')}
+                        </p>
+                      )}
                     </div>
                   )}
                   
