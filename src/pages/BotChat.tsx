@@ -317,12 +317,14 @@ const BotChat = () => {
               onSend={handleSend}
               isLoading={chatLoading}
             />
-            <div className="flex justify-start">
-              <InsightButton
-                onClick={() => setInsightDialogOpen(true)}
-                disabled={chatLoading}
-              />
-            </div>
+            {user && (
+              <div className="flex justify-start">
+                <InsightButton
+                  onClick={() => setInsightDialogOpen(true)}
+                  disabled={chatLoading}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
