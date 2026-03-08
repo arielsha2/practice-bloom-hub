@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsCourseMember } from '@/hooks/useIsCourseMember';
@@ -39,6 +39,8 @@ interface LessonWithMedia extends Lesson {
 }
 
 export default function StudentPortal() {
+  const { tab } = useParams<{ tab?: string }>();
+  const activeTab = tab === 'qa' ? 'qa' : 'lessons';
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
   const { loading: authLoading } = useAuth();
@@ -212,7 +214,7 @@ export default function StudentPortal() {
       )}
       
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="lessons" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(val) => navigate(`/portal/${val}`, { replace: true })} className="space-y-6">
           <TabsList>
             <TabsTrigger value="lessons" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
