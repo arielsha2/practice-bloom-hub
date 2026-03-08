@@ -51,9 +51,9 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.admin.page": "Page",
 
     // Hero
-    "hero.title": "Market Your Practice with Authenticity",
-    "hero.subtitle": "Build a thriving private practice without anxiety or compromising who you are",
-    "hero.cta": "Get Free Resources",
+    "hero.title": "Build Your Practice Your Way – With Purpose and Business Success",
+    "hero.subtitle": "Join the therapist community of \"Al Sfat HaClinica\" and discover how to build a stable business without compromising your values and unique voice.",
+    "hero.cta": "Book a Free Consultation",
     "hero.videoPlaceholder": "Watch Introduction Video",
 
     // Founders
