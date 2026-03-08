@@ -144,12 +144,12 @@ export default function Auth() {
         if (fnError || data?.error) {
           const errMsg = data?.error || fnError?.message;
           if (errMsg === 'already_registered') {
-            toast.error(t('auth.alreadyRegistered'));
+            toast.error(t('auth.alreadyRegisteredFull'));
           } else {
             toast.error(errMsg || t('auth.signupError'));
           }
         } else {
-          toast.success(t('auth.signupSuccessPasswordless'));
+          setSignupSent(true);
         }
       } else if (mode === 'forgot') {
         const { error } = await resetPasswordForEmail(email);
