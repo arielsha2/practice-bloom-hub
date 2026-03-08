@@ -173,6 +173,12 @@ serve(async (req) => {
       }
     }
 
+    // Add new user message
+    messages.push({ role: "user", content: message });
+
+    // Update system prompt in messages array (it may have been modified by memory injection)
+    messages[0] = { role: "system", content: systemPrompt };
+
     // 7. Call Lovable AI with streaming
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
