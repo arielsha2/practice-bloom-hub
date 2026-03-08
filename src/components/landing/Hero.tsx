@@ -15,8 +15,10 @@ const floatAnimation = {
       duration: 3,
       repeat: Infinity,
       ease: "easeInOut",
+      type: "tween",
     },
   },
+  style: { willChange: "transform" },
 };
 
 const floatAnimationDelayed = {
@@ -27,8 +29,10 @@ const floatAnimationDelayed = {
       repeat: Infinity,
       ease: "easeInOut",
       delay: 1,
+      type: "tween",
     },
   },
+  style: { willChange: "transform" },
 };
 
 export function Hero() {
@@ -181,13 +185,15 @@ export function Hero() {
 
               <motion.div
                 className="absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 bg-background/80 backdrop-blur-md rounded-xl p-4 shadow-elevated border border-border/50"
+                style={{ willChange: "transform" }}
                 animate={{
-                  y: ["-50%", "calc(-50% - 12px)", "-50%"],
+                  y: [0, -12, 0],
                   transition: {
                     duration: 3.5,
                     repeat: Infinity,
                     ease: "easeInOut",
                     delay: 0.5,
+                    type: "tween",
                   },
                 }}
               >
@@ -209,10 +215,11 @@ export function Hero() {
               {/* Floating icons */}
               <motion.div
                 className="absolute top-1/4 left-1/4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, -5, 0],
-                  transition: { duration: 4, repeat: Infinity },
+                  transition: { duration: 4, repeat: Infinity, type: "tween" },
                 }}
               >
                 <Sparkles className="w-6 h-6 text-primary" />
@@ -220,9 +227,10 @@ export function Hero() {
 
               <motion.div
                 className="absolute bottom-1/3 right-1/4 w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.15, 1],
-                  transition: { duration: 3, repeat: Infinity, delay: 0.5 },
+                  transition: { duration: 3, repeat: Infinity, delay: 0.5, type: "tween" },
                 }}
               >
                 <Target className="w-5 h-5 text-accent" />
@@ -230,9 +238,10 @@ export function Hero() {
 
               <motion.div
                 className="absolute top-1/3 right-1/3 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
+                style={{ willChange: "transform" }}
                 animate={{
                   scale: [1, 1.2, 1],
-                  transition: { duration: 2.5, repeat: Infinity, delay: 1 },
+                  transition: { duration: 2.5, repeat: Infinity, delay: 1, type: "tween" },
                 }}
               >
                 <Heart className="w-4 h-4 text-primary" />
