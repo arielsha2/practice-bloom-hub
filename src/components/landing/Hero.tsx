@@ -15,8 +15,10 @@ const floatAnimation = {
       duration: 3,
       repeat: Infinity,
       ease: "easeInOut",
+      type: "tween",
     },
   },
+  style: { willChange: "transform" },
 };
 
 const floatAnimationDelayed = {
@@ -27,8 +29,10 @@ const floatAnimationDelayed = {
       repeat: Infinity,
       ease: "easeInOut",
       delay: 1,
+      type: "tween",
     },
   },
+  style: { willChange: "transform" },
 };
 
 export function Hero() {
