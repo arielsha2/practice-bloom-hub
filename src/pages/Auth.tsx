@@ -293,6 +293,11 @@ export default function Auth() {
                         placeholder="email@example.com"
                         required
                       />
+                      {mode === 'signup' && (
+                        <p className="text-sm text-muted-foreground">
+                          {t('auth.signupHelperText')}
+                        </p>
+                      )}
                     </div>
                   )}
                   
