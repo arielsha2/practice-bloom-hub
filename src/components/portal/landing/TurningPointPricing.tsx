@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle, Shield, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { PaymentOptionsDialog } from '../PaymentOptionsDialog';
+import { CountdownTimer } from './CountdownTimer';
 
 export function TurningPointPricing() {
   const { user } = useAuth();
@@ -11,7 +12,8 @@ export function TurningPointPricing() {
 
   if (user) return null;
 
-
+  // Countdown target: March 12, 2026 at midnight
+  const countdownTarget = new Date('2026-03-12T00:00:00+03:00');
 
   return (
     <>
@@ -23,9 +25,18 @@ export function TurningPointPricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl md:text-3xl font-display text-foreground mb-8">
+            <h2 className="text-2xl md:text-3xl font-display text-foreground mb-4">
               ההשקעה בתוכנית
             </h2>
+
+            <p className="text-accent font-bold mb-6">
+              עכשיו במחיר מיוחד – המבצע מסתיים בקרוב!
+            </p>
+
+            {/* Countdown Timer */}
+            <div className="mb-8">
+              <CountdownTimer targetDate={countdownTarget} />
+            </div>
 
             <div className="bg-card rounded-2xl border-2 border-primary/20 p-8 md:p-10 shadow-card relative overflow-hidden">
               {/* Decorative corner */}
