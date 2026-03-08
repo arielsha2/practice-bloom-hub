@@ -88,92 +88,83 @@ serve(async (req) => {
       });
     }
 
-    // 2. Get or create conversation
+    // 2. Get or create conversation (only for authenticated users)
     let currentConversationId = conversationId;
     let isNewConversation = false;
+    const isAnonymous = !user;
 
-    if (!currentConversationId) {
-      const { data: newConv, error: convError } = await supabase
-        .from("bot_conversations")
-        .insert({
-          user_id: user.id,
-          bot_key: botKey,
-          title: "שיחה חדשה",
-        })
-        .select()
-        .single();
+    if (!isAnonymous) {
+      if (!currentConversationId) {
+        const { data: newConv, error: convError } = await supabase
+          .from("bot_conversations")
+          .insert({
+            user_id: user!.id,
+            bot_key: botKey,
+            title: "שיחה חדשה",
+          })
+          .select()
+          .single();
 
-      if (convError) {
-        console.error("Error creating conversation:", convError);
-        return new Response(JSON.stringify({ error: "Failed to create conversation" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (convError) {
+          console.error("Error creating conversation:", convError);
+          return new Response(JSON.stringify({ error: "Failed to create conversation" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        currentConversationId = newConv.id;
+        isNewConversation = true;
       }
 
-      currentConversationId = newConv.id;
-      isNewConversation = true;
-    }
+      // 3. Load user memory (personal insights)
+      const { data: userMemories } = await supabase
+        .from("bot_user_memory")
+        .select("key, value")
+        .eq("user_id", user!.id)
+        .eq("bot_key", botKey)
+        .order("created_at", { ascending: false });
 
-    // 3. Load user memory (personal insights)
-    const { data: userMemories } = await supabase
-      .from("bot_user_memory")
-      .select("key, value")
-      .eq("user_id", user.id)
-      .eq("bot_key", botKey)
-      .order("created_at", { ascending: false });
-
-    // 4. Load conversation history (last 20 messages)
-    const { data: conversationHistory } = await supabase
-      .from("bot_messages")
-      .select("role, content")
-      .eq("conversation_id", currentConversationId)
-      .order("created_at", { ascending: true })
-      .limit(20);
-
-    // 5. Build context with memory injection
-    let systemPrompt = botConfig.system_prompt || "You are a helpful assistant.";
-
-    if (userMemories && userMemories.length > 0) {
-      const memorySection = userMemories
-        .map((m) => `- ${m.value}`)
-        .join("\n");
-      
-      systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
-    }
-
-    // Welcome message if provided and new conversation
-    const welcomeMessage = botConfig.welcome_message;
-
-    // Build messages array
-    const messages: Message[] = [
-      { role: "system", content: systemPrompt },
-    ];
-
-    // Add conversation history
-    if (conversationHistory && conversationHistory.length > 0) {
-      for (const msg of conversationHistory) {
-        messages.push({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        });
+      if (userMemories && userMemories.length > 0) {
+        const memorySection = userMemories
+          .map((m: any) => `- ${m.value}`)
+          .join("\n");
+        systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
       }
-    }
 
-    // Add new user message
-    messages.push({ role: "user", content: message });
+      // 4. Load conversation history (last 20 messages)
+      if (currentConversationId) {
+        const { data: conversationHistory } = await supabase
+          .from("bot_messages")
+          .select("role, content")
+          .eq("conversation_id", currentConversationId)
+          .order("created_at", { ascending: true })
+          .limit(20);
 
-    // 6. Save user message to database
-    const { error: saveUserMsgError } = await supabase
-      .from("bot_messages")
-      .insert({
-        conversation_id: currentConversationId,
-        role: "user",
-        content: message,
-      });
+        if (conversationHistory && conversationHistory.length > 0) {
+          for (const msg of conversationHistory) {
+            messages.push({
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+            });
+          }
+        }
+      }
 
-    if (saveUserMsgError) {
-      console.error("Error saving user message:", saveUserMsgError);
+      // Save user message to database
+      if (currentConversationId) {
+        const { error: saveUserMsgError } = await supabase
+          .from("bot_messages")
+          .insert({
+            conversation_id: currentConversationId,
+            role: "user",
+            content: message,
+          });
+
+        if (saveUserMsgError) {
+          console.error("Error saving user message:", saveUserMsgError);
+        }
+      }
     }
 
     // 7. Call Lovable AI with streaming
