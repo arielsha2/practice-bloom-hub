@@ -57,6 +57,7 @@ export function Hero() {
                 <Arrow
                   className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                 />
+                </a>
               </Button>
             </motion.div>
           </div>
