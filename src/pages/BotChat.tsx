@@ -31,6 +31,16 @@ const botIcons: Record<string, React.ReactNode> = {
   'contact-finder': <Users className="w-5 h-5 text-primary" />,
 };
 
+// Bots that are publicly accessible without authentication (with expiry dates)
+const PUBLIC_BOTS: Record<string, string> = {
+  'contact-finder': '2026-03-22', // accessible until March 22, 2026
+};
+
+const isPublicBot = (key: string | undefined): boolean => {
+  if (!key || !PUBLIC_BOTS[key]) return false;
+  return new Date() < new Date(PUBLIC_BOTS[key]);
+};
+
 const BotChat = () => {
   const { botKey } = useParams<{ botKey: string }>();
   const { user, loading: authLoading } = useAuth();
