@@ -194,7 +194,7 @@ export default function Auth() {
   const getSubtitle = () => {
     switch (mode) {
       case 'login': return t('auth.loginSubtitle');
-      case 'signup': return t('auth.signupSubtitle');
+      case 'signup': return t('auth.signupSubtitlePasswordless');
       case 'forgot': return t('auth.forgotSubtitle');
       case 'reset': return t('auth.resetSubtitle');
     }
