@@ -245,10 +245,12 @@ const BotChat = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-secondary flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block w-72 flex-shrink-0">
-        {sidebarContent}
-      </div>
+      {/* Desktop Sidebar - hidden for anonymous users */}
+      {user && (
+        <div className="hidden md:block w-72 flex-shrink-0">
+          {sidebarContent}
+        </div>
+      )}
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
