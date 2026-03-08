@@ -102,6 +102,8 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.connection.desc": "Practice referral conversations with AI-simulated professionals and get actionable feedback",
     "bots.presentation.title": "Self-Presentation Bot",
     "bots.presentation.desc": "Craft a professional self-presentation that speaks your client's language — for meetings, networking, and ads",
+    "bots.contacts.title": "Contact Finder Bot",
+    "bots.contacts.desc": "Identify potential contacts for your niche and build a professional, authentic outreach strategy",
     "bots.cta": "Try Now",
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
