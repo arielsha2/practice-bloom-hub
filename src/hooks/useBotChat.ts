@@ -24,7 +24,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
   const [error, setError] = useState<string | null>(null);
 
   const sendMessage = useCallback(async (content: string, messagePrefix?: string) => {
-    if (!session?.access_token || !content.trim() || isLoading) return;
+    if (!content.trim() || isLoading) return;
 
     setError(null);
     setIsLoading(true);
