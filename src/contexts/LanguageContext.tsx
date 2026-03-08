@@ -464,6 +464,8 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.connection.desc": "תרגלו שיחות הפניה עם אנשי מקצוע מדומים וקבלו משוב מעשי ומעצים",
     "bots.presentation.title": "בוט הצגה עצמית",
     "bots.presentation.desc": "בנו הצגה עצמית מקצועית שמדברת בשפת הלקוח — לשימוש בשיחות, מפגשים ומודעות",
+    "bots.contacts.title": "מציאת אנשי קשר",
+    "bots.contacts.desc": "זהו אנשי קשר פוטנציאליים לנישה שלכם ובנו אסטרטגיית פנייה מקצועית ואותנטית",
     "bots.cta": "נסו עכשיו",
     "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
     "bots.teaserLink": "למידע נוסף",

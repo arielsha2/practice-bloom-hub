@@ -22,6 +22,7 @@ const botKeyMapping: Record<string, string> = {
   'pricing': 'pricing-calculator',
   'connection': 'connection-bridge',
   'presentation': 'self-presentation',
+  'contacts': 'contact-finder',
 };
 
 const AIAssistants = () => {

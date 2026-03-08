@@ -28,6 +28,7 @@ const botIcons: Record<string, React.ReactNode> = {
   'strategy-planner': <Map className="w-5 h-5 text-primary" />,
   'content-creator': <PenTool className="w-5 h-5 text-primary" />,
   'connection-bridge': <Handshake className="w-5 h-5 text-primary" />,
+  'contact-finder': <Users className="w-5 h-5 text-primary" />,
 };
 
 const BotChat = () => {
