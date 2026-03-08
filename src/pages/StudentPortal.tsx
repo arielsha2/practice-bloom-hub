@@ -39,6 +39,8 @@ interface LessonWithMedia extends Lesson {
 }
 
 export default function StudentPortal() {
+  const { tab } = useParams<{ tab?: string }>();
+  const activeTab = tab === 'qa' ? 'qa' : 'lessons';
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
   const { loading: authLoading } = useAuth();
