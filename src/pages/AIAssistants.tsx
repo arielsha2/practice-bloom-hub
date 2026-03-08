@@ -12,6 +12,7 @@ const botData = [
   { key: 'pricing', icon: Calculator },
   { key: 'connection', icon: Handshake },
   { key: 'presentation', icon: Mic },
+  { key: 'contacts', icon: Users },
 ];
 
 const botKeyMapping: Record<string, string> = {
