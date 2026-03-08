@@ -27,6 +27,7 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
   const [resetStatus, setResetStatus] = useState<ResetStatus>('idle');
 
   // Handle password reset tokens from URL (both hash and query params)
