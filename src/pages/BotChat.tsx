@@ -150,8 +150,8 @@ const BotChat = () => {
     }
   }, [chatError]);
 
-  // Redirect if not authenticated
-  if (!authLoading && !user) {
+  // Redirect if not authenticated (unless it's a public bot)
+  if (!authLoading && !user && !isPublicBot(botKey)) {
     return <Navigate to="/auth" replace />;
   }
 
