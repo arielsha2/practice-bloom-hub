@@ -11,7 +11,7 @@ export function TurningPointPricing() {
 
   if (user) return null;
 
-  const greenTextClass = "text-[hsl(142,71%,45%)] font-medium";
+
 
   return (
     <>
