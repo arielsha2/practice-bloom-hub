@@ -329,20 +329,24 @@ const BotChat = () => {
         </div>
       </div>
 
-      {/* Mobile Sidebar Sheet */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side={isRTL ? 'right' : 'left'} className="w-72 p-0">
-          {sidebarContent}
-        </SheetContent>
-      </Sheet>
+      {/* Mobile Sidebar Sheet - hidden for anonymous users */}
+      {user && (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side={isRTL ? 'right' : 'left'} className="w-72 p-0">
+            {sidebarContent}
+          </SheetContent>
+        </Sheet>
+      )}
 
-      {/* Insight Dialog */}
-      <InsightDialog
-        open={insightDialogOpen}
-        onOpenChange={setInsightDialogOpen}
-        onSave={handleSaveInsight}
-        isLoading={addUserMemory.isPending}
-      />
+      {/* Insight Dialog - hidden for anonymous users */}
+      {user && (
+        <InsightDialog
+          open={insightDialogOpen}
+          onOpenChange={setInsightDialogOpen}
+          onSave={handleSaveInsight}
+          isLoading={addUserMemory.isPending}
+        />
+      )}
     </div>
   );
 };
