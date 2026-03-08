@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Compass, Map, PenTool, Handshake } from 'lucide-react';
+import { Compass, Map, PenTool, Handshake, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBotConfiguration } from '@/hooks/useBotConfigurations';
@@ -28,6 +28,17 @@ const botIcons: Record<string, React.ReactNode> = {
   'strategy-planner': <Map className="w-5 h-5 text-primary" />,
   'content-creator': <PenTool className="w-5 h-5 text-primary" />,
   'connection-bridge': <Handshake className="w-5 h-5 text-primary" />,
+  'contact-finder': <Users className="w-5 h-5 text-primary" />,
+};
+
+// Bots that are publicly accessible without authentication (with expiry dates)
+const PUBLIC_BOTS: Record<string, string> = {
+  'contact-finder': '2026-03-22', // accessible until March 22, 2026
+};
+
+const isPublicBot = (key: string | undefined): boolean => {
+  if (!key || !PUBLIC_BOTS[key]) return false;
+  return new Date() < new Date(PUBLIC_BOTS[key]);
 };
 
 const BotChat = () => {
@@ -139,8 +150,8 @@ const BotChat = () => {
     }
   }, [chatError]);
 
-  // Redirect if not authenticated
-  if (!authLoading && !user) {
+  // Redirect if not authenticated (unless it's a public bot)
+  if (!authLoading && !user && !isPublicBot(botKey)) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -234,10 +245,12 @@ const BotChat = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-secondary flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block w-72 flex-shrink-0">
-        {sidebarContent}
-      </div>
+      {/* Desktop Sidebar - hidden for anonymous users */}
+      {user && (
+        <div className="hidden md:block w-72 flex-shrink-0">
+          {sidebarContent}
+        </div>
+      )}
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -304,30 +317,36 @@ const BotChat = () => {
               onSend={handleSend}
               isLoading={chatLoading}
             />
-            <div className="flex justify-start">
-              <InsightButton
-                onClick={() => setInsightDialogOpen(true)}
-                disabled={chatLoading}
-              />
-            </div>
+            {user && (
+              <div className="flex justify-start">
+                <InsightButton
+                  onClick={() => setInsightDialogOpen(true)}
+                  disabled={chatLoading}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile Sidebar Sheet */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side={isRTL ? 'right' : 'left'} className="w-72 p-0">
-          {sidebarContent}
-        </SheetContent>
-      </Sheet>
+      {/* Mobile Sidebar Sheet - hidden for anonymous users */}
+      {user && (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side={isRTL ? 'right' : 'left'} className="w-72 p-0">
+            {sidebarContent}
+          </SheetContent>
+        </Sheet>
+      )}
 
-      {/* Insight Dialog */}
-      <InsightDialog
-        open={insightDialogOpen}
-        onOpenChange={setInsightDialogOpen}
-        onSave={handleSaveInsight}
-        isLoading={addUserMemory.isPending}
-      />
+      {/* Insight Dialog - hidden for anonymous users */}
+      {user && (
+        <InsightDialog
+          open={insightDialogOpen}
+          onOpenChange={setInsightDialogOpen}
+          onSave={handleSaveInsight}
+          isLoading={addUserMemory.isPending}
+        />
+      )}
     </div>
   );
 };

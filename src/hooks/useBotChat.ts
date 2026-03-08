@@ -24,7 +24,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
   const [error, setError] = useState<string | null>(null);
 
   const sendMessage = useCallback(async (content: string, messagePrefix?: string) => {
-    if (!session?.access_token || !content.trim() || isLoading) return;
+    if (!content.trim() || isLoading) return;
 
     setError(null);
     setIsLoading(true);
@@ -48,14 +48,18 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
     ]);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-chat`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers,
           body: JSON.stringify({
             botKey,
             conversationId,

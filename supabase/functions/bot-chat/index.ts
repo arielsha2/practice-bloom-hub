@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Expose-Headers": "X-Conversation-Id",
 };
 
+// Bots that allow anonymous (unauthenticated) access
+const PUBLIC_BOTS: Record<string, string> = {
+  "contact-finder": "2026-03-22",
+};
+
 interface ChatRequest {
   botKey: string;
   conversationId?: string;
@@ -24,16 +29,9 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
     if (!lovableApiKey) {
@@ -43,21 +41,37 @@ serve(async (req) => {
       });
     }
 
-    // Create Supabase client with user's auth token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Parse request body first to check if it's a public bot
+    const { botKey, conversationId, message }: ChatRequest = await req.json();
+    
+    const isPublicBot = PUBLIC_BOTS[botKey] && new Date() < new Date(PUBLIC_BOTS[botKey]);
 
-    // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const authHeader = req.headers.get("Authorization");
+    let user: { id: string } | null = null;
+    let supabase: any;
+
+    if (authHeader) {
+      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      if (!userError && authUser) {
+        user = authUser;
+      }
+    }
+
+    // If not authenticated and not a public bot, reject
+    if (!user && !isPublicBot) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { botKey, conversationId, message }: ChatRequest = await req.json();
+    // For anonymous public bot access, use service role client (read-only for bot config)
+    if (!supabase) {
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
+    }
 
     // 1. Load bot configuration
     const { data: botConfig, error: botError } = await supabase
@@ -74,93 +88,96 @@ serve(async (req) => {
       });
     }
 
-    // 2. Get or create conversation
-    let currentConversationId = conversationId;
-    let isNewConversation = false;
-
-    if (!currentConversationId) {
-      const { data: newConv, error: convError } = await supabase
-        .from("bot_conversations")
-        .insert({
-          user_id: user.id,
-          bot_key: botKey,
-          title: "שיחה חדשה",
-        })
-        .select()
-        .single();
-
-      if (convError) {
-        console.error("Error creating conversation:", convError);
-        return new Response(JSON.stringify({ error: "Failed to create conversation" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      currentConversationId = newConv.id;
-      isNewConversation = true;
-    }
-
-    // 3. Load user memory (personal insights)
-    const { data: userMemories } = await supabase
-      .from("bot_user_memory")
-      .select("key, value")
-      .eq("user_id", user.id)
-      .eq("bot_key", botKey)
-      .order("created_at", { ascending: false });
-
-    // 4. Load conversation history (last 20 messages)
-    const { data: conversationHistory } = await supabase
-      .from("bot_messages")
-      .select("role, content")
-      .eq("conversation_id", currentConversationId)
-      .order("created_at", { ascending: true })
-      .limit(20);
-
-    // 5. Build context with memory injection
+    // Build system prompt and messages array
     let systemPrompt = botConfig.system_prompt || "You are a helpful assistant.";
-
-    if (userMemories && userMemories.length > 0) {
-      const memorySection = userMemories
-        .map((m) => `- ${m.value}`)
-        .join("\n");
-      
-      systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
-    }
-
-    // Welcome message if provided and new conversation
-    const welcomeMessage = botConfig.welcome_message;
-
-    // Build messages array
     const messages: Message[] = [
       { role: "system", content: systemPrompt },
     ];
 
-    // Add conversation history
-    if (conversationHistory && conversationHistory.length > 0) {
-      for (const msg of conversationHistory) {
-        messages.push({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        });
+    // 2. Get or create conversation (only for authenticated users)
+    let currentConversationId = conversationId;
+    let isNewConversation = false;
+    const isAnonymous = !user;
+
+    if (!isAnonymous) {
+      if (!currentConversationId) {
+        const { data: newConv, error: convError } = await supabase
+          .from("bot_conversations")
+          .insert({
+            user_id: user!.id,
+            bot_key: botKey,
+            title: "שיחה חדשה",
+          })
+          .select()
+          .single();
+
+        if (convError) {
+          console.error("Error creating conversation:", convError);
+          return new Response(JSON.stringify({ error: "Failed to create conversation" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        currentConversationId = newConv.id;
+        isNewConversation = true;
+      }
+
+      // 3. Load user memory (personal insights)
+      const { data: userMemories } = await supabase
+        .from("bot_user_memory")
+        .select("key, value")
+        .eq("user_id", user!.id)
+        .eq("bot_key", botKey)
+        .order("created_at", { ascending: false });
+
+      if (userMemories && userMemories.length > 0) {
+        const memorySection = userMemories
+          .map((m: any) => `- ${m.value}`)
+          .join("\n");
+        systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
+      }
+
+      // 4. Load conversation history (last 20 messages)
+      if (currentConversationId) {
+        const { data: conversationHistory } = await supabase
+          .from("bot_messages")
+          .select("role, content")
+          .eq("conversation_id", currentConversationId)
+          .order("created_at", { ascending: true })
+          .limit(20);
+
+        if (conversationHistory && conversationHistory.length > 0) {
+          for (const msg of conversationHistory) {
+            messages.push({
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+            });
+          }
+        }
+      }
+
+      // Save user message to database
+      if (currentConversationId) {
+        const { error: saveUserMsgError } = await supabase
+          .from("bot_messages")
+          .insert({
+            conversation_id: currentConversationId,
+            role: "user",
+            content: message,
+          });
+
+        if (saveUserMsgError) {
+          console.error("Error saving user message:", saveUserMsgError);
+        }
       }
     }
 
     // Add new user message
     messages.push({ role: "user", content: message });
 
-    // 6. Save user message to database
-    const { error: saveUserMsgError } = await supabase
-      .from("bot_messages")
-      .insert({
-        conversation_id: currentConversationId,
-        role: "user",
-        content: message,
-      });
-
-    if (saveUserMsgError) {
-      console.error("Error saving user message:", saveUserMsgError);
-    }
+    // Update system prompt in messages array (it may have been modified by memory injection)
+    messages[0] = { role: "system", content: systemPrompt };
 
     // 7. Call Lovable AI with streaming
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -250,8 +267,8 @@ serve(async (req) => {
           }
         }
 
-        // 8. Save assistant response to database
-        if (fullAssistantResponse) {
+        // 8. Save assistant response to database (only for authenticated users)
+        if (fullAssistantResponse && !isAnonymous) {
           const { error: saveAssistantMsgError } = await supabase
             .from("bot_messages")
             .insert({
