@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Compass, Map, PenTool, Handshake } from 'lucide-react';
+import { Compass, Map, PenTool, Handshake, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBotConfiguration } from '@/hooks/useBotConfigurations';
