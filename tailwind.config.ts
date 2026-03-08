@@ -14,10 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Assistant', 'sans-serif'],
+        sans: ['Heebo', 'sans-serif'],
         serif: ['Heebo', 'sans-serif'],
         display: ['Heebo', 'sans-serif'],
-        body: ['Assistant', 'sans-serif'],
+        body: ['Heebo', 'sans-serif'],
       },
       lineHeight: {
         'relaxed': '1.6',
