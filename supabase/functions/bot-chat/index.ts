@@ -88,6 +88,12 @@ serve(async (req) => {
       });
     }
 
+    // Build system prompt and messages array
+    let systemPrompt = botConfig.system_prompt || "You are a helpful assistant.";
+    const messages: Message[] = [
+      { role: "system", content: systemPrompt },
+    ];
+
     // 2. Get or create conversation (only for authenticated users)
     let currentConversationId = conversationId;
     let isNewConversation = false;
