@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award, Play } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Target, Heart, Users, BookOpen, Award } from "lucide-react";
+import infographicImg from "@/assets/infographic-clinic-edge.png";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -98,13 +99,11 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 }}
             >
-              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-card border border-border/50">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/Q1YXKvx6orI"
-                  title="Introduction Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+              <div className="relative rounded-2xl overflow-hidden shadow-card border border-border/50">
+                <img
+                  src={infographicImg}
+                  alt="על שפת הקליניקה - אינפוגרפיקה"
+                  className="w-full h-auto"
                   loading="lazy"
                 />
               </div>
