@@ -41,9 +41,9 @@ export function TurningPointCTA() {
               </Button>
               <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm mt-4 flex-row-reverse">
                 <Phone className="w-4 h-4" />
-                <span>או התקשרי אלינו:</span>
-                <a href="tel:050-0000000" className="text-teal hover:underline font-medium">
-                  050-000-0000
+                <span>או שלחי לנו הודעה בוואטסאפ:</span>
+                <a href="https://wa.me/972544928993" target="_blank" rel="noopener noreferrer" className="text-teal hover:underline font-medium">
+                  054-4928993
                 </a>
               </div>
             </div>
