@@ -31,7 +31,7 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
-              לבנות קליניקה בדרך שלכם – מתוך שליחות והצלחה עסקית
+              {t("hero.title")}
             </motion.h1>
 
             <motion.p
