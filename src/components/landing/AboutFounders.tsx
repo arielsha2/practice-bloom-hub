@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import foundersImage from "@/assets/founders/founders.jpg";
+import arielImg from "@/assets/founders/ariel-clinic.png";
+import elianaImg from "@/assets/founders/eliana-clinic.png";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -20,74 +21,75 @@ export function AboutFounders() {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Top Part: Image + Main Text */}
-        <div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center`}>
-          {/* Image */}
-          <motion.div
-            className={`${isRTL ? "lg:order-2" : "lg:order-1"}`}
-            {...fadeUp}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-          >
-            <div className="relative">
-              <img
-                src={foundersImage}
-                alt={t("founders.imageAlt")}
-                className="w-full h-auto rounded-3xl shadow-card object-cover"
-              />
-              {/* Decorative accent */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-accent/10 rounded-2xl -z-10" />
-              <div className="absolute -top-4 -left-4 w-16 h-16 bg-primary/10 rounded-2xl -z-10" />
-            </div>
-          </motion.div>
+        {/* Section Title */}
+        <motion.div
+          className="text-center mb-12"
+          {...fadeUp}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+        >
+          <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-6">
+            {t("founders.title")}
+          </h2>
+          <div className="max-w-3xl mx-auto space-y-4 text-lg text-muted-foreground leading-relaxed">
+            <p>{t("founders.textPart1")}</p>
+            <p>
+              {t("founders.textPart2Prefix")}
+              <span className="font-bold text-foreground">{t("founders.textPart2Bold")}</span>
+              {t("founders.textPart2Suffix")}
+            </p>
+          </div>
+        </motion.div>
 
-          {/* Text Content */}
-          <motion.div
-            className={`${isRTL ? "lg:order-1 text-right" : "lg:order-2"}`}
-            {...fadeUp}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-6">
-              {t("founders.title")}
-            </h2>
-            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-              <p>{t("founders.textPart1")}</p>
-              <p>
-                {t("founders.textPart2Prefix")}
-                <span className="font-bold text-foreground">{t("founders.textPart2Bold")}</span>
-                {t("founders.textPart2Suffix")}
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Bottom Part: Individual Bios */}
-        <div className={`grid md:grid-cols-2 gap-8 mt-16`}>
+        {/* Individual Bios with Images */}
+        <div className="grid md:grid-cols-2 gap-8 mt-16">
           {/* Ariel Bio */}
           <motion.div
             className={`bg-white/60 rounded-2xl p-6 md:p-8 shadow-sm ${isRTL ? "text-right" : ""}`}
             {...fadeUp}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
           >
             <h3 className="text-xl font-semibold text-foreground mb-3">
               {t("founders.ariel.name")}
             </h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-6">
               {t("founders.ariel.bio")}
             </p>
+            <div className="flex flex-col items-center">
+              <img
+                src={arielImg}
+                alt="ד״ר אריאל שפירא בקליניקה"
+                className="w-full max-w-xs h-72 object-cover object-top rounded-xl shadow-card border border-border/30"
+                loading="lazy"
+              />
+              <span className="text-sm text-muted-foreground mt-3">
+                ד״ר אריאל שפירא בקליניקה
+              </span>
+            </div>
           </motion.div>
 
           {/* Eliana Bio */}
           <motion.div
             className={`bg-white/60 rounded-2xl p-6 md:p-8 shadow-sm ${isRTL ? "text-right" : ""}`}
             {...fadeUp}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.5 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
           >
             <h3 className="text-xl font-semibold text-foreground mb-3">
               {t("founders.eliana.name")}
             </h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-6">
               {t("founders.eliana.bio")}
             </p>
+            <div className="flex flex-col items-center">
+              <img
+                src={elianaImg}
+                alt="אליענה שפירא בקליניקה"
+                className="w-full max-w-xs h-72 object-cover object-top rounded-xl shadow-card border border-border/30"
+                loading="lazy"
+              />
+              <span className="text-sm text-muted-foreground mt-3">
+                אליענה שפירא בקליניקה
+              </span>
+            </div>
           </motion.div>
         </div>
       </div>
