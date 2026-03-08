@@ -42,7 +42,9 @@ const isPublicBot = (key: string | undefined): boolean => {
 };
 
 const BotChat = () => {
-  const { botKey } = useParams<{ botKey: string }>();
+  const { botKey: paramBotKey } = useParams<{ botKey: string }>();
+  // Support /contact-finder as a direct route (no param)
+  const botKey = paramBotKey || 'contact-finder';
   const { user, loading: authLoading } = useAuth();
   const { t, isRTL, language } = useLanguage();
   
