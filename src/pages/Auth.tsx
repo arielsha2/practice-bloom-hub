@@ -137,15 +137,18 @@ export default function Auth() {
           navigate('/dashboard');
         }
       } else if (mode === 'signup') {
-        const { error } = await signUp(email, password);
-        if (error) {
-          if (error.message.includes('already registered')) {
+        const { data, error: fnError } = await supabase.functions.invoke('signup-passwordless', {
+          body: { email },
+        });
+        if (fnError || data?.error) {
+          const errMsg = data?.error || fnError?.message;
+          if (errMsg === 'already_registered') {
             toast.error(t('auth.alreadyRegistered'));
           } else {
-            toast.error(error.message);
+            toast.error(errMsg || t('auth.signupError'));
           }
         } else {
-          toast.success(t('auth.signupSuccess'));
+          toast.success(t('auth.signupSuccessPasswordless'));
         }
       } else if (mode === 'forgot') {
         const { error } = await resetPasswordForEmail(email);
