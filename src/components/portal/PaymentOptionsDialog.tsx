@@ -33,7 +33,8 @@ const paymentOptions = [
     id: 'installments',
     icon: CreditCard,
     title: 'תשלומים',
-    subtitle: 'עד 6 תשלומים נוחים',
+    subtitle: '10 תשלומים של 495 ₪',
+    price: '4,950 ₪',
     description: 'גמישות מקסימלית',
     url: 'https://meshulam.co.il/quick_payment?b=e376c65543a9913786f2ffe0c97a0a18',
     badge: null
@@ -41,9 +42,10 @@ const paymentOptions = [
   {
     id: 'cash',
     icon: Banknote,
-    title: 'מזומן',
-    subtitle: 'תשלום אחד וקבלי הנחה',
-    description: 'חיסכון מיידי',
+    title: 'תשלום אחד',
+    subtitle: 'תשלום חד-פעמי עם הנחה',
+    price: '4,650 ₪',
+    description: 'חיסכון של 300 ₪',
     url: 'https://meshulam.co.il/quick_payment?b=deaf4934c9000063786c3e30488b40f4',
     badge: 'הנחה 300₪'
   }
