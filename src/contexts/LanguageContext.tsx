@@ -52,7 +52,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Hero
     "hero.title": "Build Your Practice Your Way – With Purpose and Business Success",
-    "hero.subtitle": "Join the therapist community of \"Al Sfat HaClinica\" and discover how to build a stable business without compromising your values and unique voice.",
+    "hero.subtitle":
+      'Join the therapist community of "Al Sfat HaClinica" and discover how to build a stable business without compromising your values and unique voice.',
     "hero.cta": "Book a Free Consultation",
     "hero.videoPlaceholder": "Watch Introduction Video",
 
@@ -99,11 +100,14 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.pricing.title": "Pricing Calculator Bot",
     "bots.pricing.desc": "Discover the right price for your therapy sessions — one that reflects your true value",
     "bots.connection.title": "Connection Bridge Bot",
-    "bots.connection.desc": "Practice referral conversations with AI-simulated professionals and get actionable feedback",
+    "bots.connection.desc":
+      "Practice referral conversations with AI-simulated professionals and get actionable feedback",
     "bots.presentation.title": "Self-Presentation Bot",
-    "bots.presentation.desc": "Craft a professional self-presentation that speaks your client's language — for meetings, networking, and ads",
+    "bots.presentation.desc":
+      "Craft a professional self-presentation that speaks your client's language — for meetings, networking, and ads",
     "bots.contacts.title": "Contact Finder Bot",
-    "bots.contacts.desc": "Identify potential contacts for your niche and build a professional, authentic outreach strategy",
+    "bots.contacts.desc":
+      "Identify potential contacts for your niche and build a professional, authentic outreach strategy",
     "bots.cta": "Try Now",
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
@@ -216,12 +220,15 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.hasAccount": "Already have an account? Sign in",
     "auth.loginSuccess": "Welcome back!",
     "auth.signupSuccess": "Account created! Check your email to confirm.",
-    "auth.signupSuccessPasswordless": "Check your inbox! We've sent you a link to complete your registration and set your password.",
+    "auth.signupSuccessPasswordless":
+      "Check your inbox! We've sent you a link to complete your registration and set your password.",
     "auth.signupError": "Error creating account. Please try again.",
     "auth.signupSubtitlePasswordless": "Enter your email and we'll send you a link to get started",
-    "auth.signupHelperText": "Enter your email address, and we will send you a secure link to finish setting up your account.",
+    "auth.signupHelperText":
+      "Enter your email address, and we will send you a secure link to finish setting up your account.",
     "auth.alreadyRegistered": "This email is already registered",
-    "auth.alreadyRegisteredFull": "This email is already registered. Please check your inbox for the invitation link, or try signing in.",
+    "auth.alreadyRegisteredFull":
+      "This email is already registered. Please check your inbox for the invitation link, or try signing in.",
     "auth.forgotPassword": "Forgot your password?",
     "auth.forgotTitle": "Reset Password",
     "auth.forgotSubtitle": "Enter your email to receive a reset link",
@@ -414,8 +421,9 @@ const translations: Record<Language, Record<string, string>> = {
     "dashboard.admin.page": "עמוד",
 
     // Hero
-    "hero.title": "לבנות קליניקה בדרך שלכם – מתוך שליחות והצלחה עסקית",
-    "hero.subtitle": "הצטרפו לקהילת המטפלים של \"על שפת הקליניקה\" וגלו איך לבנות עסק יציב בלי לוותר על הערכים והקול הייחודי שלכם.",
+    "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
+    "hero.subtitle":
+      'הצטרפו לקהילת המטפלים של "על שפת הקליניקה" וגלו איך לבנות עסק יציב בלי לוותר על הערכים והקול הייחודי שלכם.',
     "hero.cta": "לשיחת ייעוץ ראשונית",
     "hero.videoPlaceholder": "צפו בסרטון ההכרות",
 
