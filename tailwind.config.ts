@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Assistant', 'sans-serif'],
-        serif: ['Playfair Display', 'serif'],
-        display: ['Playfair Display', 'serif'],
+        sans: ['Heebo', 'sans-serif'],
+        serif: ['Heebo', 'sans-serif'],
+        display: ['Heebo', 'sans-serif'],
         body: ['Assistant', 'sans-serif'],
       },
       lineHeight: {
