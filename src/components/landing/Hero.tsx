@@ -89,6 +89,8 @@ export function Hero() {
           </motion.div>
         </div>
       </div>
+      {/* Gradient transition to next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }} />
     </section>
   );
 }
