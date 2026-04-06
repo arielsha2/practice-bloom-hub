@@ -15,8 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Heebo', 'sans-serif'],
-        serif: ['Heebo', 'sans-serif'],
-        display: ['Heebo', 'sans-serif'],
+        serif: ['DM Serif Display', 'serif'],
+        display: ['DM Serif Display', 'serif'],
         body: ['Assistant', 'sans-serif'],
       },
       lineHeight: {
