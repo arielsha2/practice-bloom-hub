@@ -30,7 +30,7 @@ export function LessonSidebar({
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="w-80 border-e border-primary-foreground/10 bg-primary text-primary-foreground flex flex-col h-[calc(100vh-64px)] sticky top-16">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className={cn("w-80 border-e border-primary-foreground/10 bg-primary text-primary-foreground flex flex-col h-[calc(100vh-64px)] sticky top-16", isRTL ? "text-right" : "text-left")}>
       {/* Header with progress */}
       <div className="p-4 border-b border-primary-foreground/10">
         <h2 className="font-semibold text-base mb-3">
@@ -64,7 +64,8 @@ export function LessonSidebar({
                 key={lesson.id}
                 onClick={() => onSelectLesson(lesson.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-start transition-all group",
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all group",
+                  isRTL ? "text-right" : "text-left",
                   isActive 
                     ? "bg-accent text-accent-foreground shadow-sm" 
                     : "hover:bg-primary-foreground/10"
