@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import arielImg from '@/assets/turning-point/ariel.webp';
-import elianaImg from '@/assets/turning-point/eliana.webp';
+import { motion } from "framer-motion";
+import arielImg from "@/assets/turning-point/ariel.webp";
+import elianaImg from "@/assets/turning-point/eliana.webp";
 
 export function TurningPointFounders() {
   return (
@@ -12,9 +12,7 @@ export function TurningPointFounders() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-3xl font-display text-foreground mb-10 text-center">
-            נעים להכיר
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-display text-foreground mb-10 text-center">נעים להכיר</h2>
 
           <div className="grid md:grid-cols-2 gap-10">
             {/* Ariel */}
@@ -30,14 +28,11 @@ export function TurningPointFounders() {
                 alt="ד״ר אריאל שפירא"
                 className="w-48 h-64 object-cover object-top rounded-xl shadow-lg mx-auto mb-4 border-2 border-border/30"
               />
-              <h3 className="text-lg font-bold text-foreground mb-2">
-                ד"ר אריאל שפירא
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">ד"ר אריאל שפירא</h3>
               <p className="text-sm text-muted-foreground leading-relaxed text-right">
-                פסיכולוג קליני מומחה. מטפל מזה 12 שנה במסגרות ציבוריות ובקליניקה הפרטית שלו.
-                במסגרת עבודתו כמדריך קליני נחשף לקושי של המטפלים לבסס קליניקה פרטית כמקור
-                הכנסה יציב. מתוך כך צמח מודל "ממריאים לקליניקה" – תוכנית קבוצתית ליצירת
-                קליניקה רווחית בשפה טיפולית.
+                פסיכולוג קליני מומחה. מטפל מזה 12 שנה במסגרות ציבוריות ובקליניקה הפרטית שלו. במסגרת עבודתו כמדריך קליני
+                נחשף לקושי של המטפלים לבסס קליניקה פרטית כמקור הכנסה יציב. מתוך כך צמח מודל "ממריאים לקליניקה" – תוכנית
+                קבוצתית ליצירת קליניקה רווחית בשפה טיפולית.
               </p>
             </motion.div>
 
@@ -54,13 +49,10 @@ export function TurningPointFounders() {
                 alt="אליענה שפירא"
                 className="w-48 h-64 object-cover object-top rounded-xl shadow-lg mx-auto mb-4 border-2 border-border/30"
               />
-              <h3 className="text-lg font-bold text-foreground mb-2">
-                אליענה שפירא
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">אליענה שפירא</h3>
               <p className="text-sm text-muted-foreground leading-relaxed text-right">
-                פסיכותרפיסטית ויוצרת תוכן. בעלת הסמכה בינלאומית כמדריכת מודעות עצמית עם
-                הכשרה מעמיקה בשיווק אמפתי ומומחיות בכלי בינה מלאכותית ליצירת תוכן שיווקי
-                ויצירתי. עבדה במשך 12 שנה כיועצת חינוכית במגוון בתי ספר.
+                מטפלת זוגית ויוצרת תוכן. בעלת הסמכה בינלאומית כמדריכת מודעות עצמית עם הכשרה מעמיקה בשיווק אמפתי ומומחיות
+                בכלי בינה מלאכותית ליצירת תוכן שיווקי ויצירתי. עבדה במשך 12 שנה כיועצת חינוכית במגוון בתי ספר.
               </p>
             </motion.div>
           </div>
@@ -72,9 +64,9 @@ export function TurningPointFounders() {
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-            אנחנו ד"ר אריאל ואליענה שפירא – זוג מטפלים שאחרי שלמדנו איך משווקים קליניקה
-            באופן אמפתי ומזמין, רצינו להביא את הבשורה הזו לקהל המטפלים, כדי שאנשי מקצוע
-            מוכשרים כמוך יגשימו את חלום הקליניקה ויבססו מקור הכנסה רווחי ומתגמל.
+            אנחנו ד"ר אריאל ואליענה שפירא – זוג מטפלים שאחרי שלמדנו איך משווקים קליניקה באופן אמפתי ומזמין, רצינו להביא
+            את הבשורה הזו לקהל המטפלים, כדי שאנשי מקצוע מוכשרים כמוך יגשימו את חלום הקליניקה ויבססו מקור הכנסה רווחי
+            ומתגמל.
           </motion.p>
         </motion.div>
       </div>
