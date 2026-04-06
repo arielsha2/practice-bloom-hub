@@ -49,6 +49,9 @@
 
     --radius: 0.5rem;
 
+    /* Hero warm beige */
+    --hero-bg: 35 40% 96%;
+
     /* Custom tokens */
     --sand: 253 100% 97%;
     --forest: 299 100% 18%;
