@@ -36,7 +36,7 @@ export function Hero() {
           {/* Text Content - Right side */}
           <div className={`flex flex-col ${isRTL ? "text-right lg:order-1" : "lg:order-2"}`}>
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-display text-foreground mb-6 leading-[1.15] tracking-wide"
+              className="text-5xl md:text-6xl lg:text-7xl font-display font-header text-foreground mb-6 leading-[1.15] tracking-wide"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
@@ -82,7 +82,7 @@ export function Hero() {
               <img
                 src={heroFoundersImg}
                 alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
-                className="w-full h-auto rounded-xl shadow-md"
+                className="w-full h-auto rounded-tl-3xl rounded-br-3xl shadow-3d-float"
                 loading="eager"
               />
             </div>

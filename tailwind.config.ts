@@ -15,12 +15,18 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Heebo', 'sans-serif'],
+        display: ['Heebo', 'sans-serif'],
         serif: ['DM Serif Display', 'serif'],
-        display: ['DM Serif Display', 'serif'],
         body: ['Assistant', 'sans-serif'],
+      },
+      fontWeight: {
+        header: '800',
       },
       lineHeight: {
         'relaxed': '1.6',
+      },
+      boxShadow: {
+        '3d-float': '0 20px 50px -12px rgba(0, 0, 0, 0.15), 0 30px 60px -15px rgba(0, 0, 0, 0.2)',
       },
       colors: {
         border: "hsl(var(--border))",
