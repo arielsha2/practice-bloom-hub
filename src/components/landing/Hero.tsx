@@ -14,7 +14,7 @@ export function Hero() {
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   return (
-    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: 'hsl(var(--hero-bg))' }}>
+    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: 'hsl(35, 40%, 96%)' }}>
       {/* Subtle grain/noise texture overlay */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.035] mix-blend-multiply"
@@ -36,7 +36,7 @@ export function Hero() {
           {/* Text Content - Right side */}
           <div className={`flex flex-col ${isRTL ? "text-right lg:order-1" : "lg:order-2"}`}>
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-display font-header text-foreground mb-6 leading-[1.15] tracking-wide"
+              className="text-5xl md:text-6xl lg:text-7xl font-display tracking-tight text-foreground mb-6 leading-[1.15]"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
@@ -71,7 +71,7 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Image - Left side — minimal frame */}
+          {/* Image - Left side — frameless 3D float */}
           <motion.div
             className={`${isRTL ? "lg:order-2" : "lg:order-1"} flex items-center justify-center`}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -82,15 +82,19 @@ export function Hero() {
               <img
                 src={heroFoundersImg}
                 alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
-                className="w-full h-auto rounded-tl-3xl rounded-br-3xl shadow-3d-float"
+                className="w-full h-auto rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
                 loading="eager"
               />
             </div>
           </motion.div>
         </div>
       </div>
+
       {/* Gradient transition to next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }} />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }}
+      />
     </section>
   );
 }

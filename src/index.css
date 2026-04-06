@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Heebo:wght@400;500;600;700&family=Assistant:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap');
 
 /* Design System for Therapist Marketing Landing Page
    Hybrid palette: Wine/Bordeaux + Muted Gold + Teal accents */
@@ -143,7 +143,10 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Heebo', sans-serif;
     font-weight: 800;
-    letter-spacing: 0.01em;
+  }
+
+  h1, h2 {
+    letter-spacing: -0.025em;
   }
 
   /* Reading-friendly line height for body text */
@@ -154,8 +157,8 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'DM Serif Display', serif;
-    font-weight: 400;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 800;
   }
 
   .font-body {
