@@ -236,9 +236,9 @@ export default function StudentPortal() {
                 {t('portal.noLessons')}
               </div>
             ) : (
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Course Content - appears on the end side (right in RTL, left in LTR) */}
-                <Card className="lg:col-span-2 lg:order-1">
+              <div className="grid gap-6 lg:grid-cols-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                {/* Course Content */}
+                <Card className="lg:col-span-2">
                   <CardHeader className="pb-3 border-b">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg font-medium">
@@ -275,8 +275,8 @@ export default function StudentPortal() {
                   </CardContent>
                 </Card>
 
-                {/* Continue Learning Card - appears on the start side (left in RTL, right in LTR) */}
-                <Card className="lg:col-span-1 lg:order-2 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                {/* Continue Learning Card */}
+                <Card className="lg:col-span-1 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg font-medium text-muted-foreground">
                       {isInProgress 

@@ -27,13 +27,15 @@ export function LessonListItem({
   return (
     <motion.button
       onClick={onClick}
+      dir={isRTL ? 'rtl' : 'ltr'}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       whileHover={{ scale: 1.01, x: isRTL ? -4 : 4 }}
       whileTap={{ scale: 0.99 }}
       className={cn(
-        "w-full flex items-center gap-4 px-4 py-3 text-start transition-colors rounded-lg group",
+        "w-full flex items-center gap-4 px-4 py-3 transition-colors rounded-lg group",
+        isRTL ? "text-right" : "text-left",
         isActive 
           ? "bg-primary/10 border border-primary/30" 
           : "hover:bg-muted/50 border border-transparent",
@@ -68,7 +70,7 @@ export function LessonListItem({
       </motion.div>
 
       {/* Lesson Info */}
-      <div className="flex-1 min-w-0 text-start">
+      <div className={cn("flex-1 min-w-0 w-full", isRTL ? "text-right" : "text-left")}>
         <div className="flex items-center gap-2">
           {isActive && (
             <motion.div
