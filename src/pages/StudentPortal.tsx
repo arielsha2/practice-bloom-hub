@@ -276,7 +276,7 @@ export default function StudentPortal() {
                 </Card>
 
                 {/* Continue Learning Card - appears on the start side (left in RTL, right in LTR) */}
-                <Card className="lg:col-span-1 lg:order-1 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <Card className="lg:col-span-1 lg:order-2 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg font-medium text-muted-foreground">
                       {isInProgress 
