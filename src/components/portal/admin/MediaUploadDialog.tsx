@@ -39,6 +39,7 @@ import { validateVideoUrl, type VideoSource } from '@/lib/videoUtils';
 
 type MediaKind = 'video' | 'document' | 'presentation' | 'audio' | 'link';
 type VideoUploadMode = 'file' | 'youtube' | 'vimeo' | 'zoom' | 'gdrive';
+type DocUploadMode = 'file' | 'link';
 
 interface MediaUploadDialogProps {
   open: boolean;
