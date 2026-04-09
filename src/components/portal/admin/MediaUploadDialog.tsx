@@ -39,6 +39,7 @@ import { validateVideoUrl, type VideoSource } from '@/lib/videoUtils';
 
 type MediaKind = 'video' | 'document' | 'presentation' | 'audio' | 'link';
 type VideoUploadMode = 'file' | 'youtube' | 'vimeo' | 'zoom' | 'gdrive';
+type DocUploadMode = 'file' | 'link';
 
 interface MediaUploadDialogProps {
   open: boolean;
@@ -55,14 +56,31 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
   const [mediaKind, setMediaKind] = useState<MediaKind>('video');
   const [file, setFile] = useState<File | null>(null);
   const [videoMode, setVideoMode] = useState<VideoUploadMode>('file');
+  const [docMode, setDocMode] = useState<DocUploadMode>('file');
   const [videoUrl, setVideoUrl] = useState('');
   const [urlValidation, setUrlValidation] = useState<{ isValid: boolean; message: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   // Validate URL when it changes
   useEffect(() => {
-    if (mediaKind !== 'video' || videoMode === 'file' || !videoUrl.trim()) {
+    const isDocLinkMode = (mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link';
+    if (!isDocLinkMode && (mediaKind !== 'video' || videoMode === 'file') && mediaKind !== 'link') {
       setUrlValidation(null);
+      return;
+    }
+    if (!videoUrl.trim()) {
+      setUrlValidation(null);
+      return;
+    }
+
+    if (isDocLinkMode || mediaKind === 'link') {
+      // Simple URL validation for docs/presentations/links
+      try {
+        new URL(videoUrl);
+        setUrlValidation({ isValid: true, message: t('portal.admin.validUrl') });
+      } catch {
+        setUrlValidation({ isValid: false, message: t('portal.admin.invalidUrl') });
+      }
       return;
     }
 
@@ -71,7 +89,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
       isValid,
       message: isValid ? t('portal.admin.validUrl') : t('portal.admin.invalidUrl'),
     });
-  }, [videoUrl, videoMode, mediaKind, t]);
+  }, [videoUrl, videoMode, docMode, mediaKind, t]);
 
   const getFileConfig = () => {
     switch (mediaKind) {
@@ -112,6 +130,32 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
           description: description.trim() || null,
           media_kind: mediaKind,
           source: videoMode,
+          url: videoUrl.trim(),
+          file_path: null,
+          file_format: null,
+        });
+
+        if (error) throw error;
+
+        toast.success(t('portal.admin.fileUploaded'));
+        resetForm();
+        onUploaded();
+        onOpenChange(false);
+        return;
+      }
+
+      // For document/presentation with external link
+      if ((mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link') {
+        if (!videoUrl.trim() || !urlValidation?.isValid) {
+          toast.error(t('portal.admin.invalidUrl'));
+          return;
+        }
+
+        const { error } = await supabase.from('media_library').insert({
+          title: title.trim(),
+          description: description.trim() || null,
+          media_kind: mediaKind,
+          source: 'external',
           url: videoUrl.trim(),
           file_path: null,
           file_format: null,
@@ -195,6 +239,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
     setMediaKind('video');
     setFile(null);
     setVideoMode('file');
+    setDocMode('file');
     setVideoUrl('');
     setUrlValidation(null);
     if (fileInputRef.current) {
@@ -213,11 +258,15 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
     if (mediaKind === 'video' && videoMode !== 'file') {
       return !videoUrl.trim() || !urlValidation?.isValid;
     }
+    if ((mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link') {
+      return !videoUrl.trim() || !urlValidation?.isValid;
+    }
     return !file;
   };
 
-  const showUrlInput = mediaKind === 'link' || (mediaKind === 'video' && videoMode !== 'file');
-  const showFileInput = mediaKind !== 'link' && (mediaKind !== 'video' || videoMode === 'file');
+  const isDocLinkMode = (mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link';
+  const showUrlInput = mediaKind === 'link' || (mediaKind === 'video' && videoMode !== 'file') || isDocLinkMode;
+  const showFileInput = !showUrlInput;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -366,7 +415,39 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
             </div>
           )}
 
-          {/* URL input */}
+          {/* Document/Presentation source selection */}
+          {(mediaKind === 'document' || mediaKind === 'presentation') && (
+            <div className="space-y-3">
+              <Label>{isRTL ? 'מקור' : 'Source'}</Label>
+              <RadioGroup
+                value={docMode}
+                onValueChange={(v) => {
+                  setDocMode(v as DocUploadMode);
+                  setVideoUrl('');
+                  setUrlValidation(null);
+                  setFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="grid grid-cols-2 gap-2"
+              >
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="file" id="doc-mode-file" />
+                  <Label htmlFor="doc-mode-file" className="flex items-center gap-1 cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    {t('portal.admin.uploadFile')}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="link" id="doc-mode-link" />
+                  <Label htmlFor="doc-mode-link" className="flex items-center gap-1 cursor-pointer">
+                    <Link className="w-4 h-4" />
+                    {isRTL ? 'קישור חיצוני' : 'External link'}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
           {showUrlInput && (
             <div className="space-y-2">
               <Label htmlFor="media-url">{t('portal.admin.enterUrl')}</Label>
@@ -376,7 +457,9 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   placeholder={
-                    mediaKind === 'link'
+                    isDocLinkMode
+                      ? 'https://drive.google.com/file/d/... or https://...'
+                      : mediaKind === 'link'
                       ? 'https://...'
                       : videoMode === 'youtube'
                       ? 'https://www.youtube.com/watch?v=...'
