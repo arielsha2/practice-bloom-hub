@@ -63,8 +63,24 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
 
   // Validate URL when it changes
   useEffect(() => {
-    if (mediaKind !== 'video' || videoMode === 'file' || !videoUrl.trim()) {
+    const isDocLinkMode = (mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link';
+    if (!isDocLinkMode && (mediaKind !== 'video' || videoMode === 'file') && mediaKind !== 'link') {
       setUrlValidation(null);
+      return;
+    }
+    if (!videoUrl.trim()) {
+      setUrlValidation(null);
+      return;
+    }
+
+    if (isDocLinkMode || mediaKind === 'link') {
+      // Simple URL validation for docs/presentations/links
+      try {
+        new URL(videoUrl);
+        setUrlValidation({ isValid: true, message: t('portal.admin.validUrl') });
+      } catch {
+        setUrlValidation({ isValid: false, message: t('portal.admin.invalidUrl') });
+      }
       return;
     }
 
@@ -73,7 +89,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
       isValid,
       message: isValid ? t('portal.admin.validUrl') : t('portal.admin.invalidUrl'),
     });
-  }, [videoUrl, videoMode, mediaKind, t]);
+  }, [videoUrl, videoMode, docMode, mediaKind, t]);
 
   const getFileConfig = () => {
     switch (mediaKind) {
