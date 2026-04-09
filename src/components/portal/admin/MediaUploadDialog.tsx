@@ -457,7 +457,9 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   placeholder={
-                    mediaKind === 'link'
+                    isDocLinkMode
+                      ? 'https://drive.google.com/file/d/... or https://...'
+                      : mediaKind === 'link'
                       ? 'https://...'
                       : videoMode === 'youtube'
                       ? 'https://www.youtube.com/watch?v=...'
