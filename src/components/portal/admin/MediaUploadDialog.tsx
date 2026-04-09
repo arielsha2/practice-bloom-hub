@@ -56,6 +56,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
   const [mediaKind, setMediaKind] = useState<MediaKind>('video');
   const [file, setFile] = useState<File | null>(null);
   const [videoMode, setVideoMode] = useState<VideoUploadMode>('file');
+  const [docMode, setDocMode] = useState<DocUploadMode>('file');
   const [videoUrl, setVideoUrl] = useState('');
   const [urlValidation, setUrlValidation] = useState<{ isValid: boolean; message: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
