@@ -415,7 +415,39 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
             </div>
           )}
 
-          {/* URL input */}
+          {/* Document/Presentation source selection */}
+          {(mediaKind === 'document' || mediaKind === 'presentation') && (
+            <div className="space-y-3">
+              <Label>{isRTL ? 'מקור' : 'Source'}</Label>
+              <RadioGroup
+                value={docMode}
+                onValueChange={(v) => {
+                  setDocMode(v as DocUploadMode);
+                  setVideoUrl('');
+                  setUrlValidation(null);
+                  setFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="grid grid-cols-2 gap-2"
+              >
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="file" id="doc-mode-file" />
+                  <Label htmlFor="doc-mode-file" className="flex items-center gap-1 cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    {t('portal.admin.uploadFile')}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <RadioGroupItem value="link" id="doc-mode-link" />
+                  <Label htmlFor="doc-mode-link" className="flex items-center gap-1 cursor-pointer">
+                    <Link className="w-4 h-4" />
+                    {isRTL ? 'קישור חיצוני' : 'External link'}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
           {showUrlInput && (
             <div className="space-y-2">
               <Label htmlFor="media-url">{t('portal.admin.enterUrl')}</Label>
