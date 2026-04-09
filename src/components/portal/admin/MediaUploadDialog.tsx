@@ -239,6 +239,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
     setMediaKind('video');
     setFile(null);
     setVideoMode('file');
+    setDocMode('file');
     setVideoUrl('');
     setUrlValidation(null);
     if (fileInputRef.current) {
@@ -257,11 +258,15 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
     if (mediaKind === 'video' && videoMode !== 'file') {
       return !videoUrl.trim() || !urlValidation?.isValid;
     }
+    if ((mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link') {
+      return !videoUrl.trim() || !urlValidation?.isValid;
+    }
     return !file;
   };
 
-  const showUrlInput = mediaKind === 'link' || (mediaKind === 'video' && videoMode !== 'file');
-  const showFileInput = mediaKind !== 'link' && (mediaKind !== 'video' || videoMode === 'file');
+  const isDocLinkMode = (mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link';
+  const showUrlInput = mediaKind === 'link' || (mediaKind === 'video' && videoMode !== 'file') || isDocLinkMode;
+  const showFileInput = !showUrlInput && mediaKind !== 'link';
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
