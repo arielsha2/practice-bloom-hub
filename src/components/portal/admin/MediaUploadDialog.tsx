@@ -144,6 +144,32 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
         return;
       }
 
+      // For document/presentation with external link
+      if ((mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link') {
+        if (!videoUrl.trim() || !urlValidation?.isValid) {
+          toast.error(t('portal.admin.invalidUrl'));
+          return;
+        }
+
+        const { error } = await supabase.from('media_library').insert({
+          title: title.trim(),
+          description: description.trim() || null,
+          media_kind: mediaKind,
+          source: 'external',
+          url: videoUrl.trim(),
+          file_path: null,
+          file_format: null,
+        });
+
+        if (error) throw error;
+
+        toast.success(t('portal.admin.fileUploaded'));
+        resetForm();
+        onUploaded();
+        onOpenChange(false);
+        return;
+      }
+
       // For link type
       if (mediaKind === 'link') {
         if (!videoUrl.trim()) {
