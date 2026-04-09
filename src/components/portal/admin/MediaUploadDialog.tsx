@@ -266,7 +266,7 @@ export function MediaUploadDialog({ open, onOpenChange, onUploaded }: MediaUploa
 
   const isDocLinkMode = (mediaKind === 'document' || mediaKind === 'presentation') && docMode === 'link';
   const showUrlInput = mediaKind === 'link' || (mediaKind === 'video' && videoMode !== 'file') || isDocLinkMode;
-  const showFileInput = !showUrlInput && mediaKind !== 'link';
+  const showFileInput = !showUrlInput;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
