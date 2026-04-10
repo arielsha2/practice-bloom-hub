@@ -1,23 +1,39 @@
 
 
-## Plan: New Color Palette & Typography Update ✅ COMPLETED
+## Problem
 
-### Color Analysis
+The folder system is "virtual" - folders only exist as values in the `folder` column of media items. If you create a folder but don't immediately drag a file into it, the folder disappears on refresh. Empty folders cannot exist.
 
-Converting your hex colors to HSL for the CSS variable system:
+## Solution
 
-| Hex | HSL | Role |
-|-----|-----|------|
-| `#58005a` | `299 100% 18%` | Primary — fonts, borders, headings |
-| `#f5f2ff` | `253 100% 97%` | Background — soft lavender white |
-| `#3b267a` | `253 52% 31%` | Accent dark — depth, sidebar |
-| `#5327d8` | `255 72% 50%` | Accent bright — links, highlights |
-| `#ff6f61` | `5 100% 69%` | CTA — warm coral for action buttons |
+Create a `media_folders` table to persist folder names independently of media items.
 
-### What Was Done
+### Step 1: Database Migration
+Create a `media_folders` table:
+```sql
+CREATE TABLE public.media_folders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.media_folders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can manage media folders" ON public.media_folders
+  FOR ALL TO authenticated USING (has_role(auth.uid(), 'admin'));
+CREATE POLICY "Course members can view media folders" ON public.media_folders
+  FOR SELECT TO authenticated USING (is_course_member(auth.uid()));
+```
 
-1. ✅ **`src/index.css`** — All CSS custom properties updated (light + dark themes)
-2. ✅ **`tailwind.config.ts`** — Font families updated: `display` → Heebo 800, `serif` kept as DM Serif Display, added `boxShadow.3d-float`
-3. ✅ **`src/components/ui/button.tsx`** — CTA variant uses `bg-accent text-accent-foreground` (coral)
-4. ✅ **`src/components/landing/Hero.tsx`** — Warm beige bg, grain texture, asymmetric 3D image frame, gradient transition to next section
-5. ✅ **Typography** — H1–H6 use Heebo weight 800 (Extra Bold)
+### Step 2: Update MediaLibrary.tsx
+- Fetch folders from `media_folders` table instead of deriving them from media items.
+- `handleCreateFolder` inserts a row into `media_folders`.
+- `handleDeleteFolder` deletes the row from `media_folders` (and moves items to root).
+- Merge DB folders with any folders found on media items (for backward compatibility).
+
+### Step 3: Update CreateFolderDialog
+- Check duplicates against the DB-persisted folder list.
+
+### Technical Details
+- **Files to modify**: `src/pages/MediaLibrary.tsx`
+- **New migration**: Create `media_folders` table with RLS
+- **No changes needed** to `FolderCard.tsx`, `MediaLibraryTable.tsx`, or `CreateFolderDialog.tsx` (they receive folders as props)
+
