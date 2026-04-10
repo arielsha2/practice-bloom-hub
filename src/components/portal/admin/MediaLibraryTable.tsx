@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MediaItem } from '@/pages/MediaLibrary';
 import { supabase } from '@/integrations/supabase/client';
+import { extractYouTubeId, extractVimeoId, extractGoogleDriveId } from '@/lib/videoUtils';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -68,15 +69,81 @@ function MediaThumbnail({ item }: { item: MediaItem }) {
 
   const Icon = getMediaIcon(item.media_kind, item.source);
 
+  // Derive IDs from URL at render time since external_id may be null
+  const youtubeId = item.external_id || (item.url ? extractYouTubeId(item.url) : null);
+  const vimeoId = item.url ? extractVimeoId(item.url) : null;
+  const gdriveId = item.url ? extractGoogleDriveId(item.url) : null;
+
   const getThumbnailUrl = (): string | null => {
-    if (item.source === 'youtube' && item.external_id) {
-      return `https://img.youtube.com/vi/${item.external_id}/mqdefault.jpg`;
+    if (item.source === 'youtube' && youtubeId) {
+      return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
     }
     return item.thumbnail_url;
   };
 
   const thumbnailUrl = getThumbnailUrl();
   const isVideo = item.media_kind === 'video';
+
+  const renderHoverPreview = () => {
+    // YouTube
+    if (isVideo && youtubeId) {
+      return (
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&start=0&end=5&loop=1&playlist=${youtubeId}&controls=0`}
+          className="w-full h-full"
+          allow="autoplay"
+          title="Preview"
+        />
+      );
+    }
+    // Vimeo
+    if (isVideo && vimeoId) {
+      return (
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`}
+          className="w-full h-full"
+          allow="autoplay"
+          title="Preview"
+        />
+      );
+    }
+    // Google Drive
+    if (gdriveId) {
+      return (
+        <iframe
+          src={`https://drive.google.com/file/d/${gdriveId}/preview`}
+          className="w-full h-full"
+          title="Preview"
+        />
+      );
+    }
+    // Local file video
+    if (isVideo && item.url && item.source === 'file') {
+      return (
+        <video
+          ref={videoRef}
+          src={item.url}
+          autoPlay
+          muted
+          loop
+          className="w-full h-full object-cover"
+          onTimeUpdate={(e) => {
+            if (e.currentTarget.currentTime >= 5) e.currentTarget.currentTime = 0;
+          }}
+        />
+      );
+    }
+    // Thumbnail fallback
+    if (thumbnailUrl) {
+      return <img src={thumbnailUrl} alt="" className="w-full h-full object-contain bg-muted" />;
+    }
+    // Icon fallback
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <Icon className="w-12 h-12 text-muted-foreground/40" />
+      </div>
+    );
+  };
 
   return (
     <div
@@ -103,32 +170,7 @@ function MediaThumbnail({ item }: { item: MediaItem }) {
           className="absolute z-50 bottom-full mb-2 start-0 bg-background border rounded-lg shadow-xl overflow-hidden"
           style={{ width: 240, height: 160 }}
         >
-          {isVideo && item.source === 'youtube' && item.external_id ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${item.external_id}?autoplay=1&mute=1&start=0&end=5&loop=1&playlist=${item.external_id}&controls=0`}
-              className="w-full h-full"
-              allow="autoplay"
-              title="Preview"
-            />
-          ) : isVideo && item.url ? (
-            <video
-              ref={videoRef}
-              src={item.url}
-              autoPlay
-              muted
-              loop
-              className="w-full h-full object-cover"
-              onTimeUpdate={(e) => {
-                if (e.currentTarget.currentTime >= 5) e.currentTarget.currentTime = 0;
-              }}
-            />
-          ) : thumbnailUrl ? (
-            <img src={thumbnailUrl} alt="" className="w-full h-full object-contain bg-muted" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <Icon className="w-12 h-12 text-muted-foreground/40" />
-            </div>
-          )}
+          {renderHoverPreview()}
         </div>
       )}
     </div>
