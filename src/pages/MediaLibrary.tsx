@@ -184,7 +184,6 @@ export default function MediaLibrary() {
   }
 
   const unsortedCount = media.filter((m) => !m.folder).length;
-  const showFolderView = currentFolder === null && !searchQuery;
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
