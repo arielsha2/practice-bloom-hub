@@ -22,6 +22,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Video,
   FileText,
   Presentation,
@@ -31,42 +38,39 @@ import {
   Trash2,
   Youtube,
   Clock,
+  GripVertical,
+  FolderInput,
+  FolderOutput,
+  Folder,
 } from 'lucide-react';
 
 interface MediaLibraryTableProps {
   media: MediaItem[];
+  folders: string[];
+  currentFolder: string | null;
   onEdit: (item: MediaItem) => void;
   onDelete: (item: MediaItem) => void;
+  onMoveToFolder: (itemId: string, folder: string | null) => void;
 }
 
 const getMediaIcon = (kind: string, source?: string) => {
   if (kind === 'video' && source === 'youtube') return Youtube;
   switch (kind) {
-    case 'video':
-      return Video;
-    case 'document':
-      return FileText;
-    case 'presentation':
-      return Presentation;
-    case 'audio':
-      return Music;
-    case 'link':
-      return Link;
-    default:
-      return FileText;
+    case 'video': return Video;
+    case 'document': return FileText;
+    case 'presentation': return Presentation;
+    case 'audio': return Music;
+    case 'link': return Link;
+    default: return FileText;
   }
 };
 
 const getMediaKindBadgeVariant = (kind: string): 'default' | 'secondary' | 'outline' => {
   switch (kind) {
-    case 'video':
-      return 'default';
-    case 'document':
-      return 'secondary';
-    case 'presentation':
-      return 'outline';
-    default:
-      return 'secondary';
+    case 'video': return 'default';
+    case 'document': return 'secondary';
+    case 'presentation': return 'outline';
+    default: return 'secondary';
   }
 };
 
@@ -77,7 +81,7 @@ const formatDuration = (seconds: number | null): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-export function MediaLibraryTable({ media, onEdit, onDelete }: MediaLibraryTableProps) {
+export function MediaLibraryTable({ media, folders, currentFolder, onEdit, onDelete, onMoveToFolder }: MediaLibraryTableProps) {
   const { t, isRTL } = useLanguage();
 
   if (media.length === 0) {
@@ -93,26 +97,49 @@ export function MediaLibraryTable({ media, onEdit, onDelete }: MediaLibraryTable
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10"></TableHead>
             <TableHead className="w-12"></TableHead>
             <TableHead>{t('media.columnTitle')}</TableHead>
             <TableHead>{t('media.columnType')}</TableHead>
             <TableHead>{t('media.columnSource')}</TableHead>
             <TableHead>{t('media.columnDuration')}</TableHead>
             <TableHead>{t('media.columnUsage')}</TableHead>
-            <TableHead className="w-24">{t('media.columnActions')}</TableHead>
+            <TableHead className="w-28">{t('media.columnActions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {media.map((item) => {
             const Icon = getMediaIcon(item.media_kind, item.source);
             return (
-              <TableRow key={item.id}>
+              <TableRow
+                key={item.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('media-id', item.id);
+                  e.currentTarget.classList.add('opacity-50');
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.classList.remove('opacity-50');
+                }}
+                className="cursor-grab active:cursor-grabbing"
+              >
+                <TableCell className="px-2">
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                </TableCell>
                 <TableCell>
                   <Icon className="w-5 h-5 text-muted-foreground" />
                 </TableCell>
                 <TableCell className="font-medium">
                   <div>
-                    <div>{item.title}</div>
+                    <div className="flex items-center gap-2">
+                      {item.title}
+                      {item.folder && currentFolder === null && (
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <Folder className="w-3 h-3" />
+                          {item.folder}
+                        </Badge>
+                      )}
+                    </div>
                     {item.description && (
                       <div className="text-sm text-muted-foreground truncate max-w-xs">
                         {item.description}
@@ -134,9 +161,7 @@ export function MediaLibraryTable({ media, onEdit, onDelete }: MediaLibraryTable
                       <Clock className="w-3 h-3" />
                       {formatDuration(item.duration_seconds)}
                     </span>
-                  ) : (
-                    '-'
-                  )}
+                  ) : '-'}
                 </TableCell>
                 <TableCell>
                   <span className="text-muted-foreground">
@@ -145,11 +170,40 @@ export function MediaLibraryTable({ media, onEdit, onDelete }: MediaLibraryTable
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(item)}
-                    >
+                    {/* Move to folder dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <FolderInput className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {item.folder && (
+                          <>
+                            <DropdownMenuItem onClick={() => onMoveToFolder(item.id, null)}>
+                              <FolderOutput className="w-4 h-4 me-2" />
+                              {t('media.movedToRoot')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        {folders
+                          .filter((f) => f !== item.folder)
+                          .map((folder) => (
+                            <DropdownMenuItem key={folder} onClick={() => onMoveToFolder(item.id, folder)}>
+                              <Folder className="w-4 h-4 me-2" />
+                              {folder}
+                            </DropdownMenuItem>
+                          ))}
+                        {folders.filter((f) => f !== item.folder).length === 0 && !item.folder && (
+                          <DropdownMenuItem disabled>
+                            {isRTL ? 'אין תיקיות' : 'No folders'}
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <AlertDialog>
