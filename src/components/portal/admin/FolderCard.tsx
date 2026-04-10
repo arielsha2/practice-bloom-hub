@@ -60,7 +60,7 @@ export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnso
       <span className="text-xs text-muted-foreground whitespace-nowrap">({count})</span>
 
       {onDelete && !isUnsorted && (
-        <div className="absolute top-1 end-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity ms-auto">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
