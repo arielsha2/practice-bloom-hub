@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MediaPickerDialog } from './MediaPickerDialog';
-import type { VideoSource } from '@/lib/videoUtils';
+import { extractYouTubeId, extractVimeoId, extractGoogleDriveId, type VideoSource } from '@/lib/videoUtils';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, DragEndEvent,
@@ -54,9 +54,14 @@ function ResourceThumbnail({ resource }: { resource: Resource }) {
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Derive IDs from URL at render time since external_id may be null
+  const youtubeId = resource.external_id || (resource.url ? extractYouTubeId(resource.url) : null);
+  const vimeoId = resource.url ? extractVimeoId(resource.url) : null;
+  const gdriveId = resource.url ? extractGoogleDriveId(resource.url) : null;
+
   const getThumbnailUrl = (): string | null => {
-    if (resource.source === 'youtube' && resource.external_id) {
-      return `https://img.youtube.com/vi/${resource.external_id}/mqdefault.jpg`;
+    if (resource.source === 'youtube' && youtubeId) {
+      return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
     }
     return resource.thumbnail_url;
   };
@@ -64,18 +69,63 @@ function ResourceThumbnail({ resource }: { resource: Resource }) {
   const thumbnailUrl = getThumbnailUrl();
   const isVideo = resource.type === 'video';
 
-  const getVideoPreviewUrl = (): string | null => {
-    if (resource.source === 'youtube' && resource.external_id) {
-      return null; // Will use iframe for YouTube
-    }
-    if (resource.url && resource.source === 'file') {
-      return resource.url;
-    }
-    return null;
-  };
-
   const TypeIcon = resource.type === 'video' ? Video
     : resource.type === 'presentation' ? Presentation : FileText;
+
+  const renderHoverPreview = () => {
+    if (isVideo && youtubeId) {
+      return (
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&start=0&end=5&loop=1&playlist=${youtubeId}&controls=0`}
+          className="w-full h-full"
+          allow="autoplay"
+          title="Preview"
+        />
+      );
+    }
+    if (isVideo && vimeoId) {
+      return (
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`}
+          className="w-full h-full"
+          allow="autoplay"
+          title="Preview"
+        />
+      );
+    }
+    if (gdriveId) {
+      return (
+        <iframe
+          src={`https://drive.google.com/file/d/${gdriveId}/preview`}
+          className="w-full h-full"
+          title="Preview"
+        />
+      );
+    }
+    if (isVideo && resource.url && resource.source === 'file') {
+      return (
+        <video
+          ref={videoRef}
+          src={resource.url}
+          autoPlay
+          muted
+          loop
+          className="w-full h-full object-cover"
+          onTimeUpdate={(e) => {
+            if (e.currentTarget.currentTime >= 5) e.currentTarget.currentTime = 0;
+          }}
+        />
+      );
+    }
+    if (thumbnailUrl) {
+      return <img src={thumbnailUrl} alt="" className="w-full h-full object-contain bg-muted" />;
+    }
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <TypeIcon className="w-12 h-12 text-muted-foreground/40" />
+      </div>
+    );
+  };
 
   return (
     <div
@@ -89,57 +139,20 @@ function ResourceThumbnail({ resource }: { resource: Resource }) {
         }
       }}
     >
-      {/* Static thumbnail */}
       <div className="w-10 h-8 rounded overflow-hidden bg-muted flex items-center justify-center">
         {thumbnailUrl ? (
-          <img
-            src={thumbnailUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-cover"
-          />
+          <img src={thumbnailUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
         ) : (
           <TypeIcon className="w-4 h-4 text-muted-foreground" />
         )}
       </div>
 
-      {/* Hover preview */}
       {isHovering && (
-        <div className="absolute z-50 bottom-full mb-2 start-0 bg-background border rounded-lg shadow-xl overflow-hidden"
+        <div
+          className="absolute z-50 bottom-full mb-2 start-0 bg-background border rounded-lg shadow-xl overflow-hidden"
           style={{ width: 240, height: 160 }}
         >
-          {isVideo && resource.source === 'youtube' && resource.external_id ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${resource.external_id}?autoplay=1&mute=1&start=0&end=5&loop=1&playlist=${resource.external_id}&controls=0`}
-              className="w-full h-full"
-              allow="autoplay"
-              title="Preview"
-            />
-          ) : isVideo && getVideoPreviewUrl() ? (
-            <video
-              ref={videoRef}
-              src={getVideoPreviewUrl()!}
-              autoPlay
-              muted
-              loop
-              className="w-full h-full object-cover"
-              onTimeUpdate={(e) => {
-                if (e.currentTarget.currentTime >= 5) {
-                  e.currentTarget.currentTime = 0;
-                }
-              }}
-            />
-          ) : thumbnailUrl ? (
-            <img
-              src={thumbnailUrl}
-              alt=""
-              className="w-full h-full object-contain bg-muted"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <TypeIcon className="w-12 h-12 text-muted-foreground/40" />
-            </div>
-          )}
+          {renderHoverPreview()}
         </div>
       )}
     </div>
