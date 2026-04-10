@@ -21,29 +21,28 @@ interface FolderCardProps {
   onDelete?: () => void;
   onDropMedia?: (mediaId: string) => void;
   isUnsorted?: boolean;
+  isActive?: boolean;
 }
 
-export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnsorted }: FolderCardProps) {
+export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnsorted, isActive }: FolderCardProps) {
   const { t, isRTL } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   return (
     <div
-      className={`relative group border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors flex flex-col items-center gap-2 ${
-        isDragOver && !isUnsorted ? 'ring-2 ring-primary bg-primary/5' : ''
-      }`}
+      className={`relative group border rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50 transition-colors flex items-center gap-3 ${
+        isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''
+      } ${isActive ? 'bg-primary/10 border-primary' : ''}`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onDragOver={(e) => {
-        if (isUnsorted) return;
         e.preventDefault();
         setIsDragOver(true);
       }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={(e) => {
-        if (isUnsorted) return;
         e.preventDefault();
         setIsDragOver(false);
         const mediaId = e.dataTransfer.getData('media-id');
@@ -53,17 +52,15 @@ export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnso
       }}
     >
       {isHovered || isDragOver ? (
-        <FolderOpen className="w-10 h-10 text-primary" />
+        <FolderOpen className="w-5 h-5 text-primary flex-shrink-0" />
       ) : (
-        <Folder className={`w-10 h-10 ${isUnsorted ? 'text-muted-foreground' : 'text-primary'}`} />
+        <Folder className={`w-5 h-5 flex-shrink-0 ${isUnsorted ? 'text-muted-foreground' : 'text-primary'}`} />
       )}
-      <span className="text-sm font-medium text-center truncate w-full">{name}</span>
-      <span className="text-xs text-muted-foreground">
-        {t('media.filesCount').replace('{count}', String(count))}
-      </span>
+      <span className="text-sm font-medium truncate">{name}</span>
+      <span className="text-xs text-muted-foreground whitespace-nowrap">({count})</span>
 
       {onDelete && !isUnsorted && (
-        <div className="absolute top-1 end-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity ms-auto">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
