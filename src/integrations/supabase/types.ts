@@ -549,6 +549,7 @@ export type Database = {
           external_id: string | null
           file_format: string | null
           file_path: string | null
+          folder: string | null
           id: string
           intended_use: Database["public"]["Enums"]["intended_use"] | null
           media_kind: Database["public"]["Enums"]["media_kind"]
@@ -566,6 +567,7 @@ export type Database = {
           external_id?: string | null
           file_format?: string | null
           file_path?: string | null
+          folder?: string | null
           id?: string
           intended_use?: Database["public"]["Enums"]["intended_use"] | null
           media_kind: Database["public"]["Enums"]["media_kind"]
@@ -583,6 +585,7 @@ export type Database = {
           external_id?: string | null
           file_format?: string | null
           file_path?: string | null
+          folder?: string | null
           id?: string
           intended_use?: Database["public"]["Enums"]["intended_use"] | null
           media_kind?: Database["public"]["Enums"]["media_kind"]

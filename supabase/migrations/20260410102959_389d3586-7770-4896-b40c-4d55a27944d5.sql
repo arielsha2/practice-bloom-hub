@@ -1,0 +1,1 @@
+ALTER TABLE public.media_library ADD COLUMN folder text DEFAULT NULL;
