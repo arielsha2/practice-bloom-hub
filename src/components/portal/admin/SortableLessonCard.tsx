@@ -19,6 +19,8 @@ interface Resource {
   url: string | null;
   source: VideoSource;
   display_order: number;
+  thumbnail_url: string | null;
+  external_id: string | null;
 }
 
 interface SortableLessonCardProps {
