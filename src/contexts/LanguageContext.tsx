@@ -386,6 +386,15 @@ const translations: Record<Language, Record<string, string>> = {
     "media.folderDeleted": "Folder deleted",
     "media.backToFolders": "Back",
     "media.filesCount": "{count} files",
+    "media.assignToFolder": "Assign to folder",
+    "media.fileAssignedToFolder": "File assigned to folder '{folder}'",
+    "media.keepInPreviousFolder": "Keep in previous folder too?",
+    "media.keepPrevious": "Yes, keep",
+    "media.removePrevious": "No, move only",
+    "media.selectFolder": "Select folder",
+    "media.renameSuccess": "Name updated",
+    "media.renameError": "Error updating name",
+    "media.noFoldersYet": "No folders yet",
 
     // Voice TTS
     "voice.play": "Play voice",
@@ -761,6 +770,15 @@ const translations: Record<Language, Record<string, string>> = {
     "media.folderDeleted": "תיקייה נמחקה",
     "media.backToFolders": "חזרה",
     "media.filesCount": "{count} קבצים",
+    "media.assignToFolder": "שייך לתיקייה",
+    "media.fileAssignedToFolder": "הקובץ שויך לתיקייה '{folder}'",
+    "media.keepInPreviousFolder": "להשאיר גם בתיקייה הקודמת?",
+    "media.keepPrevious": "כן, השאר",
+    "media.removePrevious": "לא, העבר בלבד",
+    "media.selectFolder": "בחר תיקייה",
+    "media.renameSuccess": "השם עודכן",
+    "media.renameError": "שגיאה בעדכון השם",
+    "media.noFoldersYet": "אין תיקיות עדיין",
 
     // Voice TTS
     "voice.play": "השמע קול",

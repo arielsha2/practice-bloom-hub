@@ -56,6 +56,8 @@ interface MediaLink {
     file_path: string | null;
     url: string | null;
     source: string;
+    thumbnail_url: string | null;
+    external_id: string | null;
   };
 }
 
@@ -103,7 +105,7 @@ export default function PortalAdmin() {
             media_id,
             lesson_id,
             display_order,
-            media:media_library(id, title, media_kind, file_path, url, source)
+            media:media_library(id, title, media_kind, file_path, url, source, thumbnail_url, external_id)
           `)
           .order('display_order', { ascending: true }),
       ]);
@@ -228,6 +230,8 @@ export default function PortalAdmin() {
         url: ml.media?.url || null,
         source: (ml.media?.source || 'file') as 'file' | 'youtube' | 'vimeo' | 'zoom',
         display_order: ml.display_order,
+        thumbnail_url: ml.media?.thumbnail_url || null,
+        external_id: ml.media?.external_id || null,
       }));
   };
 
