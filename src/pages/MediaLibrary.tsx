@@ -275,6 +275,7 @@ export default function MediaLibrary() {
                     count={count}
                     onClick={() => setCurrentFolder(folder)}
                     onDelete={() => handleDeleteFolder(folder)}
+                    onDropMedia={(mediaId) => handleMoveToFolder(mediaId, folder)}
                   />
                 );
               })}
