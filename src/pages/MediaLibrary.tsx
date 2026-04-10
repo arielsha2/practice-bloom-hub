@@ -6,10 +6,12 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ArrowLeft, Plus, Search, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Plus, Search, Loader2, FolderPlus, Folder, ArrowUp } from 'lucide-react';
 import { MediaLibraryTable } from '@/components/portal/admin/MediaLibraryTable';
 import { MediaUploadDialog } from '@/components/portal/admin/MediaUploadDialog';
 import { MediaEditDialog } from '@/components/portal/admin/MediaEditDialog';
+import { FolderCard } from '@/components/portal/admin/FolderCard';
+import { CreateFolderDialog } from '@/components/portal/admin/CreateFolderDialog';
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ export interface MediaItem {
   created_at: string;
   updated_at: string;
   usage_count?: number;
+  folder: string | null;
 }
 
 type MediaKindFilter = 'all' | 'video' | 'document' | 'presentation' | 'audio' | 'link';
@@ -52,6 +55,8 @@ export default function MediaLibrary() {
   const [kindFilter, setKindFilter] = useState<MediaKindFilter>('all');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editingMedia, setEditingMedia] = useState<MediaItem | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
 
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
@@ -64,7 +69,6 @@ export default function MediaLibrary() {
   const fetchMedia = async () => {
     setIsLoading(true);
     try {
-      // Fetch media with usage count
       const { data: mediaData, error: mediaError } = await supabase
         .from('media_library')
         .select('*')
@@ -72,20 +76,17 @@ export default function MediaLibrary() {
 
       if (mediaError) throw mediaError;
 
-      // Fetch usage counts
       const { data: linksData, error: linksError } = await supabase
         .from('lesson_media_links')
         .select('media_id');
 
       if (linksError) throw linksError;
 
-      // Count usage per media
       const usageMap = new Map<string, number>();
       linksData?.forEach((link) => {
         usageMap.set(link.media_id, (usageMap.get(link.media_id) || 0) + 1);
       });
 
-      // Combine data
       const mediaWithUsage = (mediaData || []).map((item) => ({
         ...item,
         usage_count: usageMap.get(item.id) || 0,
@@ -102,16 +103,11 @@ export default function MediaLibrary() {
 
   const handleDelete = async (item: MediaItem) => {
     try {
-      // Delete from storage if it's a file
       if (item.file_path) {
         await supabase.storage.from('course-materials').remove([item.file_path]);
       }
-
-      // Delete from database
       const { error } = await supabase.from('media_library').delete().eq('id', item.id);
-
       if (error) throw error;
-
       toast.success(t('portal.admin.resourceDeleted'));
       fetchMedia();
     } catch (error) {
@@ -120,11 +116,56 @@ export default function MediaLibrary() {
     }
   };
 
+  const handleMoveToFolder = async (itemId: string, folder: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('media_library')
+        .update({ folder })
+        .eq('id', itemId);
+      if (error) throw error;
+      toast.success(folder ? t('media.moveToFolder') : t('media.movedToRoot'));
+      fetchMedia();
+    } catch (error) {
+      console.error('Error moving media:', error);
+      toast.error(t('portal.admin.deleteError'));
+    }
+  };
+
+  const handleDeleteFolder = async (folderName: string) => {
+    try {
+      // Move all items in folder to unsorted
+      const { error } = await supabase
+        .from('media_library')
+        .update({ folder: null })
+        .eq('folder', folderName);
+      if (error) throw error;
+      toast.success(t('media.folderDeleted'));
+      if (currentFolder === folderName) setCurrentFolder(null);
+      fetchMedia();
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      toast.error(t('portal.admin.deleteError'));
+    }
+  };
+
+  const handleCreateFolder = async (name: string) => {
+    // Folder is just a text value - no DB table needed
+    // We create a "virtual" folder by assigning it to a dummy or just let user know
+    toast.success(t('media.folderCreated'));
+    setCreateFolderOpen(false);
+    // Navigate into the new folder
+    setCurrentFolder(name);
+  };
+
+  // Get unique folder names
+  const folders = [...new Set(media.map((m) => m.folder).filter(Boolean))] as string[];
+
   // Filter media
   const filteredMedia = media.filter((item) => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = !searchQuery || item.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesKind = kindFilter === 'all' || item.media_kind === kindFilter;
-    return matchesSearch && matchesKind;
+    const matchesFolder = currentFolder === null ? true : (currentFolder === '__unsorted__' ? !item.folder : item.folder === currentFolder);
+    return matchesSearch && matchesKind && matchesFolder;
   });
 
   // Loading state
@@ -142,6 +183,9 @@ export default function MediaLibrary() {
     return null;
   }
 
+  const unsortedCount = media.filter((m) => !m.folder).length;
+  const showFolderView = currentFolder === null && !searchQuery;
+
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 py-8">
@@ -153,11 +197,37 @@ export default function MediaLibrary() {
             </Button>
             <h1 className="text-2xl font-bold text-foreground">{t('media.title')}</h1>
           </div>
-          <Button onClick={() => setUploadDialogOpen(true)}>
-            <Plus className="w-4 h-4 me-2" />
-            {t('media.upload')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setCreateFolderOpen(true)}>
+              <FolderPlus className="w-4 h-4 me-2" />
+              {t('media.createFolder')}
+            </Button>
+            <Button onClick={() => setUploadDialogOpen(true)}>
+              <Plus className="w-4 h-4 me-2" />
+              {t('media.upload')}
+            </Button>
+          </div>
         </div>
+
+        {/* Breadcrumb / Back button when inside a folder */}
+        {currentFolder !== null && (
+          <div className="flex items-center gap-2 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentFolder(null)}
+              className="gap-1"
+            >
+              <ArrowUp className="w-4 h-4" />
+              {t('media.backToFolders')}
+            </Button>
+            <span className="text-muted-foreground">/</span>
+            <span className="font-medium flex items-center gap-1">
+              <Folder className="w-4 h-4" />
+              {currentFolder === '__unsorted__' ? t('media.unsorted') : currentFolder}
+            </span>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -188,18 +258,92 @@ export default function MediaLibrary() {
           </Select>
         </div>
 
-        {/* Table */}
-        <MediaLibraryTable
-          media={filteredMedia}
-          onEdit={setEditingMedia}
-          onDelete={handleDelete}
-        />
+        {/* Folders Grid (only shown at root level without search) */}
+        {showFolderView && folders.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <Folder className="w-4 h-4" />
+              {t('media.folders')}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {folders.map((folder) => {
+                const count = media.filter((m) => m.folder === folder).length;
+                return (
+                  <FolderCard
+                    key={folder}
+                    name={folder}
+                    count={count}
+                    onClick={() => setCurrentFolder(folder)}
+                    onDelete={() => handleDeleteFolder(folder)}
+                  />
+                );
+              })}
+              {/* Unsorted folder */}
+              {unsortedCount > 0 && (
+                <FolderCard
+                  name={t('media.unsorted')}
+                  count={unsortedCount}
+                  onClick={() => setCurrentFolder('__unsorted__')}
+                  isUnsorted
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Table - show all when searching, or folder contents when inside a folder */}
+        {(searchQuery || currentFolder !== null || folders.length === 0) && (
+          <MediaLibraryTable
+            media={filteredMedia}
+            folders={folders}
+            currentFolder={currentFolder}
+            onEdit={setEditingMedia}
+            onDelete={handleDelete}
+            onMoveToFolder={handleMoveToFolder}
+          />
+        )}
+
+        {/* If at root with no search, also show unsorted items below folders */}
+        {showFolderView && folders.length > 0 && unsortedCount > 0 && !currentFolder && (
+          <div className="mt-6">
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">
+              {t('media.unsorted')} ({unsortedCount})
+            </h2>
+            <MediaLibraryTable
+              media={media.filter((m) => !m.folder && (kindFilter === 'all' || m.media_kind === kindFilter))}
+              folders={folders}
+              currentFolder={null}
+              onEdit={setEditingMedia}
+              onDelete={handleDelete}
+              onMoveToFolder={handleMoveToFolder}
+            />
+          </div>
+        )}
+
+        {/* Show all if no folders exist */}
+        {showFolderView && folders.length === 0 && (
+          <MediaLibraryTable
+            media={filteredMedia}
+            folders={folders}
+            currentFolder={currentFolder}
+            onEdit={setEditingMedia}
+            onDelete={handleDelete}
+            onMoveToFolder={handleMoveToFolder}
+          />
+        )}
 
         {/* Dialogs */}
         <MediaUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           onUploaded={fetchMedia}
+        />
+
+        <CreateFolderDialog
+          open={createFolderOpen}
+          onOpenChange={setCreateFolderOpen}
+          existingFolders={folders}
+          onCreate={handleCreateFolder}
         />
 
         {editingMedia && (
