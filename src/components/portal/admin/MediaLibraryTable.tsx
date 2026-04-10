@@ -177,7 +177,7 @@ export function MediaLibraryTable({ media, folders, currentFolder, onEdit, onDel
                           <FolderInput className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent dir={isRTL ? 'rtl' : 'ltr'} align="end">
+                      <DropdownMenuContent align="end">
                         {item.folder && (
                           <>
                             <DropdownMenuItem onClick={() => onMoveToFolder(item.id, null)}>
