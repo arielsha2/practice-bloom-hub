@@ -1,12 +1,15 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { GripVertical, ChevronDown, ChevronUp, Trash2, Video, Presentation, FileText } from 'lucide-react';
 import { LessonResourceManager } from './LessonResourceManager';
+import { toast } from 'sonner';
 
 import type { VideoSource } from '@/lib/videoUtils';
 
@@ -44,6 +47,9 @@ export function SortableLessonCard({
 }: SortableLessonCardProps) {
   const { t, isRTL } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(lesson.title);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     attributes,
@@ -60,7 +66,36 @@ export function SortableLessonCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Count resources by type (media_kind)
+  useEffect(() => {
+    if (isEditingTitle) {
+      setEditTitle(lesson.title);
+      setTimeout(() => inputRef.current?.select(), 50);
+    }
+  }, [isEditingTitle, lesson.title]);
+
+  const handleSaveTitle = async () => {
+    setIsEditingTitle(false);
+    const newTitle = editTitle.trim();
+    if (!newTitle || newTitle === lesson.title) return;
+    try {
+      const { error } = await supabase
+        .from('lessons')
+        .update({ title: newTitle })
+        .eq('id', lesson.id);
+      if (error) throw error;
+      toast.success(t('media.renameSuccess'));
+      onResourceChange();
+    } catch (error) {
+      console.error('Error renaming lesson:', error);
+      toast.error(t('media.renameError'));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+
   const videoCount = resources.filter((r) => r.type === 'video').length;
   const presentationCount = resources.filter((r) => r.type === 'presentation').length;
   const documentCount = resources.filter((r) => r.type === 'document').length;
@@ -75,7 +110,6 @@ export function SortableLessonCard({
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CardHeader className="p-3">
           <div className="flex items-center gap-2">
-            {/* Drag Handle */}
             <button
               {...attributes}
               {...listeners}
@@ -85,15 +119,30 @@ export function SortableLessonCard({
               <GripVertical className="w-5 h-5 text-muted-foreground" />
             </button>
 
-            {/* Index */}
             <span className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary shrink-0">
               {index + 1}
             </span>
 
-            {/* Title */}
-            <span className="font-medium flex-1 truncate">{lesson.title}</span>
+            {/* Title - inline editable */}
+            {isEditingTitle ? (
+              <Input
+                ref={inputRef}
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onBlur={handleSaveTitle}
+                onKeyDown={handleKeyDown}
+                className="h-8 text-sm font-medium flex-1 min-w-0"
+              />
+            ) : (
+              <span
+                className="font-medium flex-1 truncate cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setIsEditingTitle(true)}
+                title={lesson.title}
+              >
+                {lesson.title}
+              </span>
+            )}
 
-            {/* Resource Counts */}
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               {videoCount > 0 && (
                 <span className="flex items-center gap-1">
@@ -115,18 +164,12 @@ export function SortableLessonCard({
               )}
             </div>
 
-            {/* Expand/Collapse */}
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="icon" className="shrink-0">
-                {isOpen ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
+                {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </CollapsibleTrigger>
 
-            {/* Delete */}
             <Button
               variant="ghost"
               size="icon"
