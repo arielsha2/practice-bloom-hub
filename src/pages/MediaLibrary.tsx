@@ -60,11 +60,27 @@ export default function MediaLibrary() {
 
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
+  const [dbFolders, setDbFolders] = useState<string[]>([]);
+
   useEffect(() => {
     if (isAdmin) {
       fetchMedia();
+      fetchFolders();
     }
   }, [isAdmin]);
+
+  const fetchFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('media_folders')
+        .select('name')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setDbFolders((data || []).map((f) => f.name));
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
 
   const fetchMedia = async () => {
     setIsLoading(true);
@@ -133,15 +149,22 @@ export default function MediaLibrary() {
 
   const handleDeleteFolder = async (folderName: string) => {
     try {
-      // Move all items in folder to unsorted
-      const { error } = await supabase
+      const { error: moveError } = await supabase
         .from('media_library')
         .update({ folder: null })
         .eq('folder', folderName);
-      if (error) throw error;
+      if (moveError) throw moveError;
+
+      const { error: delError } = await supabase
+        .from('media_folders')
+        .delete()
+        .eq('name', folderName);
+      if (delError) throw delError;
+
       toast.success(t('media.folderDeleted'));
       if (currentFolder === folderName) setCurrentFolder(null);
       fetchMedia();
+      fetchFolders();
     } catch (error) {
       console.error('Error deleting folder:', error);
       toast.error(t('portal.admin.deleteError'));
@@ -149,16 +172,24 @@ export default function MediaLibrary() {
   };
 
   const handleCreateFolder = async (name: string) => {
-    // Folder is just a text value - no DB table needed
-    // We create a "virtual" folder by assigning it to a dummy or just let user know
-    toast.success(t('media.folderCreated'));
-    setCreateFolderOpen(false);
-    // Navigate into the new folder
-    setCurrentFolder(name);
+    try {
+      const { error } = await supabase
+        .from('media_folders')
+        .insert({ name });
+      if (error) throw error;
+      toast.success(t('media.folderCreated'));
+      setCreateFolderOpen(false);
+      setCurrentFolder(name);
+      fetchFolders();
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      toast.error(t('portal.admin.deleteError'));
+    }
   };
 
-  // Get unique folder names
-  const folders = [...new Set(media.map((m) => m.folder).filter(Boolean))] as string[];
+  // Merge DB folders with any folder values on media items (backward compat)
+  const mediaFolders = media.map((m) => m.folder).filter(Boolean) as string[];
+  const folders = [...new Set([...dbFolders, ...mediaFolders])];
 
   // Filter media
   const filteredMedia = media.filter((item) => {
