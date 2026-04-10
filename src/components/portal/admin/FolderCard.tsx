@@ -21,18 +21,19 @@ interface FolderCardProps {
   onDelete?: () => void;
   onDropMedia?: (mediaId: string) => void;
   isUnsorted?: boolean;
+  isActive?: boolean;
 }
 
-export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnsorted }: FolderCardProps) {
+export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnsorted, isActive }: FolderCardProps) {
   const { t, isRTL } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   return (
     <div
-      className={`relative group border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors flex flex-col items-center gap-2 ${
-        isDragOver && !isUnsorted ? 'ring-2 ring-primary bg-primary/5' : ''
-      }`}
+      className={`relative group border rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50 transition-colors flex items-center gap-3 ${
+        isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''
+      } ${isActive ? 'bg-primary/10 border-primary' : ''}`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
