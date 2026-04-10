@@ -19,43 +19,40 @@ interface FolderCardProps {
   count: number;
   onClick: () => void;
   onDelete?: () => void;
+  onDropMedia?: (mediaId: string) => void;
   isUnsorted?: boolean;
 }
 
-export function FolderCard({ name, count, onClick, onDelete, isUnsorted }: FolderCardProps) {
+export function FolderCard({ name, count, onClick, onDelete, onDropMedia, isUnsorted }: FolderCardProps) {
   const { t, isRTL } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   return (
     <div
-      className="relative group border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors flex flex-col items-center gap-2"
+      className={`relative group border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors flex flex-col items-center gap-2 ${
+        isDragOver && !isUnsorted ? 'ring-2 ring-primary bg-primary/5' : ''
+      }`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onDragOver={(e) => {
         if (isUnsorted) return;
         e.preventDefault();
-        e.currentTarget.classList.add('ring-2', 'ring-primary', 'bg-primary/5');
+        setIsDragOver(true);
       }}
-      onDragLeave={(e) => {
-        e.currentTarget.classList.remove('ring-2', 'ring-primary', 'bg-primary/5');
-      }}
+      onDragLeave={() => setIsDragOver(false)}
       onDrop={(e) => {
         if (isUnsorted) return;
         e.preventDefault();
-        e.currentTarget.classList.remove('ring-2', 'ring-primary', 'bg-primary/5');
+        setIsDragOver(false);
         const mediaId = e.dataTransfer.getData('media-id');
-        if (mediaId && onDelete) {
-          // onDelete is only set for real folders, not unsorted
-          // We'll handle the drop via a custom event
-          const event = new CustomEvent('media-drop-to-folder', {
-            detail: { mediaId, folder: name },
-          });
-          window.dispatchEvent(event);
+        if (mediaId && onDropMedia) {
+          onDropMedia(mediaId);
         }
       }}
     >
-      {isHovered ? (
+      {isHovered || isDragOver ? (
         <FolderOpen className="w-10 h-10 text-primary" />
       ) : (
         <Folder className={`w-10 h-10 ${isUnsorted ? 'text-muted-foreground' : 'text-primary'}`} />
@@ -65,7 +62,6 @@ export function FolderCard({ name, count, onClick, onDelete, isUnsorted }: Folde
         {t('media.filesCount').replace('{count}', String(count))}
       </span>
 
-      {/* Delete button */}
       {onDelete && !isUnsorted && (
         <div className="absolute top-1 end-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <AlertDialog>
