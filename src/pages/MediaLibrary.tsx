@@ -258,80 +258,51 @@ export default function MediaLibrary() {
           </Select>
         </div>
 
-        {/* Folders Grid (only shown at root level without search) */}
-        {showFolderView && folders.length > 0 && (
+        {/* Folders as drop targets - always visible when folders exist */}
+        {folders.length > 0 && (
           <div className="mb-6">
             <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
               <Folder className="w-4 h-4" />
               {t('media.folders')}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="flex flex-wrap gap-3">
               {folders.map((folder) => {
                 const count = media.filter((m) => m.folder === folder).length;
+                const isActive = currentFolder === folder;
                 return (
                   <FolderCard
                     key={folder}
                     name={folder}
                     count={count}
-                    onClick={() => setCurrentFolder(folder)}
+                    onClick={() => setCurrentFolder(isActive ? null : folder)}
                     onDelete={() => handleDeleteFolder(folder)}
                     onDropMedia={(mediaId) => handleMoveToFolder(mediaId, folder)}
+                    isActive={isActive}
                   />
                 );
               })}
-              {/* Unsorted folder */}
-              {unsortedCount > 0 && (
-                <FolderCard
-                  name={t('media.unsorted')}
-                  count={unsortedCount}
-                  onClick={() => setCurrentFolder('__unsorted__')}
-                  isUnsorted
-                />
-              )}
+              {/* Unsorted "folder" */}
+              <FolderCard
+                name={t('media.unsorted')}
+                count={unsortedCount}
+                onClick={() => setCurrentFolder(currentFolder === '__unsorted__' ? null : '__unsorted__')}
+                onDropMedia={(mediaId) => handleMoveToFolder(mediaId, null)}
+                isUnsorted
+                isActive={currentFolder === '__unsorted__'}
+              />
             </div>
           </div>
         )}
 
-        {/* Table - show all when searching, or folder contents when inside a folder */}
-        {(searchQuery || currentFolder !== null || folders.length === 0) && (
-          <MediaLibraryTable
-            media={filteredMedia}
-            folders={folders}
-            currentFolder={currentFolder}
-            onEdit={setEditingMedia}
-            onDelete={handleDelete}
-            onMoveToFolder={handleMoveToFolder}
-          />
-        )}
-
-        {/* If at root with no search, also show unsorted items below folders */}
-        {showFolderView && folders.length > 0 && unsortedCount > 0 && !currentFolder && (
-          <div className="mt-6">
-            <h2 className="text-sm font-medium text-muted-foreground mb-3">
-              {t('media.unsorted')} ({unsortedCount})
-            </h2>
-            <MediaLibraryTable
-              media={media.filter((m) => !m.folder && (kindFilter === 'all' || m.media_kind === kindFilter))}
-              folders={folders}
-              currentFolder={null}
-              onEdit={setEditingMedia}
-              onDelete={handleDelete}
-              onMoveToFolder={handleMoveToFolder}
-            />
-          </div>
-        )}
-
-        {/* Show all if no folders exist */}
-        {showFolderView && folders.length === 0 && (
-          <MediaLibraryTable
-            media={filteredMedia}
-            folders={folders}
-            currentFolder={currentFolder}
-            onEdit={setEditingMedia}
-            onDelete={handleDelete}
-            onMoveToFolder={handleMoveToFolder}
-          />
-        )}
+        {/* Media table - always shown */}
+        <MediaLibraryTable
+          media={filteredMedia}
+          folders={folders}
+          currentFolder={currentFolder}
+          onEdit={setEditingMedia}
+          onDelete={handleDelete}
+          onMoveToFolder={handleMoveToFolder}
+        />
 
         {/* Dialogs */}
         <MediaUploadDialog
