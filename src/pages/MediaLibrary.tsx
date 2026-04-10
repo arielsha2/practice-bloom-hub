@@ -331,6 +331,7 @@ export default function MediaLibrary() {
           onEdit={setEditingMedia}
           onDelete={handleDelete}
           onMoveToFolder={handleMoveToFolder}
+          onRenamed={fetchMedia}
         />
 
         {/* Dialogs */}
