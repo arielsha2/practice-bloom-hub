@@ -208,7 +208,7 @@ export default function MediaLibrary() {
           </div>
         </div>
 
-        {/* Breadcrumb / Back button when inside a folder */}
+        {/* Active folder indicator */}
         {currentFolder !== null && (
           <div className="flex items-center gap-2 mb-4">
             <Button
@@ -220,9 +220,8 @@ export default function MediaLibrary() {
               <ArrowUp className="w-4 h-4" />
               {t('media.backToFolders')}
             </Button>
-            <span className="text-muted-foreground">/</span>
-            <span className="font-medium flex items-center gap-1">
-              <Folder className="w-4 h-4" />
+            <span className="text-muted-foreground">→</span>
+            <span className="font-medium text-sm">
               {currentFolder === '__unsorted__' ? t('media.unsorted') : currentFolder}
             </span>
           </div>
