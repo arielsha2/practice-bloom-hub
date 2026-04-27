@@ -122,27 +122,36 @@ export function Hero() {
               variant="cta"
               size="lg"
               className="w-full"
-              onClick={() => {
-                window.open("https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93", "_blank", "noopener,noreferrer");
-                setOpen(false);
-              }}
+              asChild
             >
-              <Mail className="w-5 h-5" />
-              {isRTL ? "הצטרפות לרשימת התפוצה במייל" : "Join the email newsletter"}
+              <a
+                href="https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+              >
+                <Mail className="w-5 h-5" />
+                {isRTL ? "הצטרפות לרשימת התפוצה במייל" : "Join the email newsletter"}
+              </a>
             </Button>
 
             <Button
               size="lg"
               className="w-full bg-[#25D366] text-white hover:bg-[#20BD5A]"
-              onClick={() => {
-                window.open("https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv", "_blank", "noopener,noreferrer");
-                setOpen(false);
-              }}
+              asChild
             >
-              <MessageCircle className="w-5 h-5" />
-              {isRTL ? "הצטרפות לקבוצת הוואטסאפ" : "Join the WhatsApp group"}
+              <a
+                href="https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+              >
+                <MessageCircle className="w-5 h-5" />
+                {isRTL ? "הצטרפות לקבוצת הוואטסאפ" : "Join the WhatsApp group"}
+              </a>
             </Button>
           </div>
+
         </DialogContent>
       </Dialog>
     </section>

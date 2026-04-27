@@ -1,55 +1,18 @@
-
-
 ## Problem
 
-The hover preview boxes appear white/empty because:
+הקישור לקבוצת הוואטסאפ עובד כשפותחים אותו ידנית בכרטיסייה חדשה, אבל לא נפתח כשלוחצים על הכפתור בתצוגה המקדימה של Lovable. הסיבה: התצוגה המקדימה רצה בתוך `iframe`, וקריאת `window.open(...)` עלולה להיחסם או להיכשל בשקט בתוך iframes (במיוחד עם דומיינים כמו `chat.whatsapp.com`).
 
-1. **YouTube thumbnails don't load**: The code checks `item.external_id` for YouTube video IDs, but **all YouTube items in the database have `external_id: null`**. The video ID was never extracted from the URL and saved.
-2. **Google Drive videos can't play in `<video>` tags**: The fallback path tries to render Google Drive URLs in a `<video src="...">` element, which doesn't work — GDrive requires an `<iframe>` embed.
-3. **No `thumbnail_url` stored**: Most items have `thumbnail_url: null`, so there's no fallback image either.
+## Fix
 
-The same issue affects both `MediaLibraryTable.tsx` and `LessonResourceManager.tsx`.
+ב-`src/components/landing/Hero.tsx`, בתוך ה-`Dialog` של "הצטרפות לקהילה":
 
-## Solution
+החלפת שני כפתורי ה-`window.open` בכפתורי `<Button asChild>` שעוטפים תגית `<a target="_blank" rel="noopener noreferrer">`. ניווט עם תגית `<a>` אמיתית הוא הדרך האמינה ביותר לפתוח קישור חיצוני מתוך iframe — הדפדפן מתייחס אליה כפעולת משתמש ישירה ולא חוסם אותה.
 
-Extract YouTube/Vimeo/GDrive IDs at **render time** from the URL using the existing `videoUtils.ts` utility functions, instead of relying on the (empty) `external_id` column.
+- כפתור הניוזלטר: `<a href="https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93" target="_blank" rel="noopener noreferrer">`
+- כפתור הוואטסאפ: `<a href="https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv" target="_blank" rel="noopener noreferrer">`
 
-### Changes to `MediaLibraryTable.tsx` — `MediaThumbnail` component
+נוסיף `onClick={() => setOpen(false)}` על כל קישור כדי שה-Dialog ייסגר אחרי הלחיצה.
 
-Update `getThumbnailUrl()` and the hover preview logic:
+## Files
 
-```typescript
-import { extractYouTubeId, extractVimeoId, extractGoogleDriveId } from '@/lib/videoUtils';
-
-// In getThumbnailUrl:
-const youtubeId = item.external_id || (item.url ? extractYouTubeId(item.url) : null);
-if (item.source === 'youtube' && youtubeId) {
-  return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
-}
-
-// In hover preview, use the derived youtubeId for YouTube embed
-// For GDrive videos, use iframe with /preview URL instead of <video>
-// For Vimeo, use player.vimeo.com embed
-```
-
-### Changes to `LessonResourceManager.tsx` — `ResourceThumbnail` component
-
-Apply the same fix: derive `youtubeId` / `gdriveId` from the URL at render time.
-
-### Specific hover preview logic by source
-
-| Source | Static Thumbnail | Hover Preview |
-|--------|---------|------|
-| YouTube | `img.youtube.com/vi/{id}/mqdefault.jpg` | YouTube embed iframe with autoplay+mute |
-| Google Drive | GDrive icon placeholder | GDrive iframe with `/preview` URL |
-| Vimeo | Vimeo icon placeholder | Vimeo player iframe |
-| File (video) | `thumbnail_url` or icon | `<video>` tag with file URL |
-| File (doc/pres) | `thumbnail_url` or icon | Enlarged thumbnail or icon |
-
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `src/components/portal/admin/MediaLibraryTable.tsx` | Fix `MediaThumbnail` to extract IDs from URL, add GDrive iframe support |
-| `src/components/portal/admin/LessonResourceManager.tsx` | Fix `ResourceThumbnail` with same URL-based ID extraction |
-
+- `src/components/landing/Hero.tsx` — שינוי שני הכפתורים בלבד; שאר הקובץ ללא שינוי.
