@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ArrowRight, ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import heroFoundersImg from "@/assets/hero-founders.png";
 
 const fadeUp = {
@@ -12,6 +20,7 @@ const fadeUp = {
 export function Hero() {
   const { t, isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const [open, setOpen] = useState(false);
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: 'hsl(35, 40%, 96%)' }}>
@@ -59,14 +68,12 @@ export function Hero() {
                 variant="cta"
                 size="xl"
                 className="group"
-                asChild
+                onClick={() => setOpen(true)}
               >
-                <a href="https://api.whatsapp.com/send?phone=972544928993" target="_blank" rel="noopener noreferrer">
                 {t("hero.cta")}
                 <Arrow
                   className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                 />
-                </a>
               </Button>
             </motion.div>
           </div>
@@ -95,6 +102,49 @@ export function Hero() {
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
         style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }}
       />
+
+      {/* Join community dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className={`text-2xl font-display ${isRTL ? "text-right" : ""}`}>
+              {isRTL ? 'הצטרפו לקהילת "על שפת הקליניקה"' : 'Join the "Al Sfat HaClinica" community'}
+            </DialogTitle>
+            <DialogDescription className={isRTL ? "text-right" : ""}>
+              {isRTL
+                ? "בחרו את הדרך המועדפת עליכם להישאר בקשר"
+                : "Choose your preferred way to stay in touch"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              variant="cta"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                window.open("https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93", "_blank", "noopener,noreferrer");
+                setOpen(false);
+              }}
+            >
+              <Mail className="w-5 h-5" />
+              {isRTL ? "הצטרפות לרשימת התפוצה במייל" : "Join the email newsletter"}
+            </Button>
+
+            <Button
+              size="lg"
+              className="w-full bg-[#25D366] text-white hover:bg-[#20BD5A]"
+              onClick={() => {
+                window.open("https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv", "_blank", "noopener,noreferrer");
+                setOpen(false);
+              }}
+            >
+              <MessageCircle className="w-5 h-5" />
+              {isRTL ? "הצטרפות לקבוצת הוואטסאפ" : "Join the WhatsApp group"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

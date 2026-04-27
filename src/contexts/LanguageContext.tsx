@@ -54,7 +54,7 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "Build Your Practice Your Way – With Purpose and Business Success",
     "hero.subtitle":
       'Join the therapist community of "Al Sfat HaClinica" and discover how to build a stable business without compromising your values and unique voice.',
-    "hero.cta": "Book a Free Consultation",
+    "hero.cta": 'Join the "Al Sfat HaClinica" community',
     "hero.videoPlaceholder": "Watch Introduction Video",
 
     // Founders
@@ -446,7 +446,7 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.title": "הדרך שלך לקליניקה יציבה ומבוקשת",
     "hero.subtitle":
       'הצטרפו לקהילת המטפלים של "על שפת הקליניקה" וגלו איך לבנות את הקליניקה שלכם בלי לוותר על הערכים והקול הייחודי שלכם.',
-    "hero.cta": "לשיחת ייעוץ ראשונית",
+    "hero.cta": 'להצטרפות לקהילת "על שפת הקליניקה"',
     "hero.videoPlaceholder": "צפו בסרטון ההכרות",
 
     // Founders
