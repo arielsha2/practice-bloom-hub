@@ -829,6 +829,36 @@ export type Database = {
           },
         ]
       }
+      therapist_journeys: {
+        Row: {
+          created_at: string
+          id: string
+          reflection: Json
+          step_number: number
+          stuck_points: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reflection?: Json
+          step_number?: number
+          stuck_points?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reflection?: Json
+          step_number?: number
+          stuck_points?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_lesson_notes: {
         Row: {
           content: string
