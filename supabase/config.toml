@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.bot-chat]
 verify_jwt = false
+
+[functions.mentor-chat]
+verify_jwt = false
