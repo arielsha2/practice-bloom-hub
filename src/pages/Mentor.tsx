@@ -209,9 +209,9 @@ export default function Mentor() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-3 md:py-4">
-          {/* Chat — full width, centered */}
-          <div className="max-w-4xl mx-auto bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
+        <section className="container mx-auto px-4 py-6 md:py-8 -mt-4 md:-mt-6 relative z-10">
+          {/* Chat — floating pop-out card */}
+          <div className="max-w-4xl mx-auto bg-card border-2 border-mentor-accent/20 rounded-3xl shadow-2xl shadow-mentor-accent/10 ring-1 ring-mentor-border/40 flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
             <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-mentor-accent" />
