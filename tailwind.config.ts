@@ -79,6 +79,13 @@ export default {
           dark: "hsl(var(--gold-dark))",
         },
         charcoal: "hsl(var(--charcoal))",
+        "mentor-bg": "hsl(var(--mentor-bg))",
+        "mentor-surface": "hsl(var(--mentor-surface))",
+        "mentor-border": "hsl(var(--mentor-border))",
+        "mentor-accent": {
+          DEFAULT: "hsl(var(--mentor-accent))",
+          foreground: "hsl(var(--mentor-accent-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
