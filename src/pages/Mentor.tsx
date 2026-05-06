@@ -8,6 +8,47 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Upsert the current user's mentor journey progress.
+ * Appends `stuck_point` to the existing array (no overwrite) and updates step + reflection.
+ */
+export async function updateTherapistProgress(
+  step_number: number,
+  stuck_point: string,
+  reflection: Record<string, unknown>
+) {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return { data: null, error: new Error("Not authenticated") };
+
+  const { data: existing } = await supabase
+    .from("therapist_journeys")
+    .select("stuck_points")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const merged = [...((existing?.stuck_points as string[] | null) ?? [])];
+  if (stuck_point && stuck_point.trim()) merged.push(stuck_point);
+
+  const { data, error } = await supabase
+    .from("therapist_journeys")
+    .upsert(
+      {
+        user_id: user.id,
+        step_number,
+        stuck_points: merged,
+        reflection: reflection as any,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    )
+    .select()
+    .single();
+
+  return { data, error };
+}
 
 type Msg = { role: "user" | "assistant"; content: string };
 
