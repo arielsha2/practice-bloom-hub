@@ -210,140 +210,138 @@ export default function Mentor() {
         </section>
 
         <section className="container mx-auto px-4 py-10 md:py-14">
-          <div className="grid lg:grid-cols-5 gap-6 lg:gap-8 max-w-7xl mx-auto">
-            {/* Chat — 60% */}
-            <div className="lg:col-span-3 bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[70vh] min-h-[520px] overflow-hidden">
-              <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-mentor-accent" />
-                </div>
-                <div>
-                  <h2 className="font-serif font-semibold text-foreground leading-tight">
-                    {isRTL ? "המנטור" : "The Mentor"}
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
-                  </p>
-                </div>
+          {/* Chat — full width, centered */}
+          <div className="max-w-4xl mx-auto bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[65vh] min-h-[520px] overflow-hidden">
+            <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-mentor-accent" />
               </div>
-
-              <ScrollArea className="flex-1 px-5 py-6">
-                <div className="space-y-4 max-w-2xl mx-auto">
-                  {showWelcome && (
-                    <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
-                      <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
-                        {isRTL
-                          ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
-                          : "Tell me what you'd like to change in your practice — and we'll start there."}
-                      </p>
-                      <div className="grid sm:grid-cols-2 gap-2 mt-4">
-                        {starters.map((s, i) => (
-                          <button
-                            key={i}
-                            onClick={() => send(s)}
-                            className={`text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors ${isRTL ? "text-right" : "text-left"}`}
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {messages.map((m, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                          m.role === "user"
-                            ? "bg-mentor-accent text-mentor-accent-foreground"
-                            : "bg-mentor-surface border border-mentor-border/60 text-foreground"
-                        }`}
-                      >
-                        <div
-                          dir={isRTL ? "rtl" : "ltr"}
-                          className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
-                        >
-                          <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={endRef} />
-                </div>
-              </ScrollArea>
-
-              <div className="border-t border-mentor-border/60 p-4 bg-mentor-surface">
-                <div className="flex gap-2 items-end max-w-2xl mx-auto">
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        send(input);
-                      }
-                    }}
-                    placeholder={isRTL ? "כתבו את שאלתכם…" : "Type your question…"}
-                    className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={() => send(input)}
-                    disabled={!input.trim() || isLoading}
-                    size="icon"
-                    className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div>
+                <h2 className="font-serif font-semibold text-foreground leading-tight">
+                  {isRTL ? "המנטור" : "The Mentor"}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+                </p>
               </div>
             </div>
 
-            {/* Benefits & Outcomes — 40% */}
-            <aside className="lg:col-span-2 space-y-6">
-              <div className="bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm">
-                <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
-                  {isRTL ? "מה תקבלו" : "What You Gain"}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-5">
-                  {isRTL ? "התועלות שמטפלים מרגישים מהשיחה הראשונה" : "Benefits therapists feel from the first conversation"}
-                </p>
+            <ScrollArea className="flex-1 px-5 py-6">
+              <div className="space-y-4 max-w-3xl mx-auto">
+                {showWelcome && (
+                  <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
+                    <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                      {isRTL
+                        ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
+                        : "Tell me what you'd like to change in your practice — and we'll start there."}
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-2 mt-4">
+                      {starters.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => send(s)}
+                          className={`text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                <ul className="space-y-3">
-                  {benefits.map((b, i) => {
-                    const Icon = b.icon;
-                    return (
-                      <li key={i} className="flex gap-3">
-                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                          <Icon className="w-4 h-4 text-mentor-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold text-foreground">{b.title}</h4>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                        m.role === "user"
+                          ? "bg-mentor-accent text-mentor-accent-foreground"
+                          : "bg-mentor-surface border border-mentor-border/60 text-foreground"
+                      }`}
+                    >
+                      <div
+                        dir={isRTL ? "rtl" : "ltr"}
+                        className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
+                      >
+                        <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={endRef} />
               </div>
+            </ScrollArea>
 
-              <div className="bg-mentor-accent/5 border border-mentor-accent/20 rounded-2xl p-6">
-                <h3 className="text-lg font-serif font-semibold text-foreground mb-4">
-                  {isRTL ? "התוצאות שאליהן תגיעו" : "The Outcomes You'll Reach"}
-                </h3>
-                <ul className="space-y-2.5">
-                  {outcomes.map((o, i) => (
-                    <li key={i} className="flex gap-2 items-start">
-                      <CheckCircle2 className="w-4 h-4 text-mentor-accent flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground leading-relaxed">{o}</span>
+            <div className="border-t border-mentor-border/60 p-4 bg-mentor-surface">
+              <div className="flex gap-2 items-end max-w-3xl mx-auto">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send(input);
+                    }
+                  }}
+                  placeholder={isRTL ? "כתבו את שאלתכם…" : "Type your question…"}
+                  className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
+                  disabled={isLoading}
+                />
+                <Button
+                  onClick={() => send(input)}
+                  disabled={!input.trim() || isLoading}
+                  size="icon"
+                  className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefits & Outcomes — below chat, two columns */}
+          <div className="max-w-5xl mx-auto mt-10 md:mt-14 grid md:grid-cols-2 gap-6">
+            <div className="bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
+                {isRTL ? "מה תקבלו" : "What You Gain"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                {isRTL ? "התועלות שמטפלים מרגישים מהשיחה הראשונה" : "Benefits therapists feel from the first conversation"}
+              </p>
+
+              <ul className="space-y-3">
+                {benefits.map((b, i) => {
+                  const Icon = b.icon;
+                  return (
+                    <li key={i} className="flex gap-3">
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-mentor-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-foreground">{b.title}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+                      </div>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            </aside>
+                  );
+                })}
+              </ul>
+            </div>
+
+            <div className="bg-mentor-accent/5 border border-mentor-accent/20 rounded-2xl p-6">
+              <h3 className="text-lg font-serif font-semibold text-foreground mb-4">
+                {isRTL ? "התוצאות שאליהן תגיעו" : "The Outcomes You'll Reach"}
+              </h3>
+              <ul className="space-y-2.5">
+                {outcomes.map((o, i) => (
+                  <li key={i} className="flex gap-2 items-start">
+                    <CheckCircle2 className="w-4 h-4 text-mentor-accent flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground leading-relaxed">{o}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
       </main>
