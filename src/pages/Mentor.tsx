@@ -113,6 +113,13 @@ export default function Mentor() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Reset the conversation whenever the user switches language so the locked
+  // language (HE/RTL or EN/LTR) applies from the very first message.
+  useEffect(() => {
+    setMessages([]);
+    setInput("");
+  }, [language]);
+
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
@@ -125,7 +132,7 @@ export default function Mentor() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, language }),
       });
 
       if (!resp.ok || !resp.body) {
