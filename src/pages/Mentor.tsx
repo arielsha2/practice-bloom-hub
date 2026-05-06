@@ -209,9 +209,9 @@ export default function Mentor() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-3 md:py-4">
-          {/* Chat — full width, centered */}
-          <div className="max-w-4xl mx-auto bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
+        <section className="container mx-auto px-4 py-6 md:py-8 -mt-4 md:-mt-6 relative z-10">
+          {/* Chat — floating pop-out card */}
+          <div className="max-w-4xl mx-auto bg-card border-2 border-mentor-accent/20 rounded-3xl shadow-2xl shadow-mentor-accent/10 ring-1 ring-mentor-border/40 flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
             <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-mentor-accent" />
@@ -235,12 +235,12 @@ export default function Mentor() {
                         ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
                         : "Tell me what you'd like to change in your practice — and we'll start there."}
                     </p>
-                    <div className="grid sm:grid-cols-2 gap-2 mt-4">
+                    <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
                       {starters.map((s, i) => (
                         <button
                           key={i}
                           onClick={() => send(s)}
-                          className={`text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                          className={`group text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
                         >
                           {s}
                         </button>
