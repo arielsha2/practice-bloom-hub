@@ -83,7 +83,7 @@ The four components of a profitable practice (for your internal knowledge — do
 **4 · Pricing** — price that reflects value, handling discounts, inner money blocks.
    Tool: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator)
 
-⚠️ Link format: every link must be a clickable markdown link `[name](url)`. Never paste a bare URL.
+⚠️ Link format: every link must be a clickable markdown link \`[name](url)\`. Never paste a bare URL.
 
 ═══════════════════════════════
 Visual roadmap — only on explicit request:
