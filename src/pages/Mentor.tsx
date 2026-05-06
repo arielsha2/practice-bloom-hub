@@ -190,18 +190,18 @@ export default function Mentor() {
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
       <Header />
       <main className="flex-1 pt-16">
-        <section className="py-5 md:py-7 border-b border-mentor-border/50">
+        <section className="py-3 md:py-4 border-b border-mentor-border/50">
           <div className="container mx-auto px-4 text-center max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-4 py-1 mb-2">
-              <Sparkles className="w-4 h-4 text-mentor-accent" />
-              <span className="text-mentor-accent font-medium text-sm">
+            <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-3 py-1 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-mentor-accent" />
+              <span className="text-mentor-accent font-medium text-xs">
                 {isRTL ? "המנטור" : "The Mentor"}
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-serif font-medium text-foreground mb-1 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-serif font-medium text-foreground mb-1 tracking-tight">
               {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A Full Practice. A Calm Mind. Real Growth."}
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               {isRTL
                 ? "בן הזוג האסטרטגי שלכם — שותף שמחדד החלטות ועוזר להפוך מטפל מצוין לקליניקה משגשגת."
                 : "Your strategic partner — sharpening decisions and turning a great therapist into a thriving practice."}
@@ -209,9 +209,9 @@ export default function Mentor() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-4 md:py-6">
+        <section className="container mx-auto px-4 py-3 md:py-4">
           {/* Chat — full width, centered */}
-          <div className="max-w-4xl mx-auto bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[55vh] min-h-[420px] overflow-hidden">
+          <div className="max-w-4xl mx-auto bg-card border border-mentor-border/60 rounded-2xl shadow-sm flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
             <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-mentor-accent" />
