@@ -6,34 +6,66 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Send, Sparkles, Compass, Calculator, Mic, Users, Handshake, Check } from "lucide-react";
+import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const STAGES_HE = [
-  { icon: Compass, title: "מציאת הנישה", desc: "הגדירו את הקהל שאתם הכי טובים בלעזור לו." },
-  { icon: Calculator, title: "תמחור הקליניקה", desc: "קבעו מחיר שמשקף את הערך שלכם." },
-  { icon: Mic, title: "הצגה עצמית", desc: "נסחו מסר שמושך את המטופל הנכון." },
-  { icon: Users, title: "מציאת אנשי קשר להפניות", desc: "בנו רשת מקצועית שמזרימה פניות." },
-  { icon: Handshake, title: "גשר ההתקשרות", desc: "סגרו את הפער בין שיחת היכרות לטיפול." },
+const BENEFITS_HE = [
+  { icon: Target, title: "בהירות מקצועית", desc: "תדעו בדיוק מי המטופל שלכם וכיצד לדבר אליו." },
+  { icon: TrendingUp, title: "קליניקה מלאה", desc: "יותר פניות איכותיות שהופכות למטופלים קבועים." },
+  { icon: Heart, title: "ביטחון פנימי", desc: "להפסיק להתלבט על מחיר, ניסוח ועצם השיווק." },
+  { icon: Clock, title: "חיסכון בזמן", desc: "תשובות ממוקדות במקום שעות של ניסוי וטעייה." },
+  { icon: Users2, title: "רשת מקצועית", desc: "אנשי קשר ושותפויות שמזרימים אליכם פניות." },
 ];
 
-const STAGES_EN = [
-  { icon: Compass, title: "Define Your Niche", desc: "Identify the audience you serve best." },
-  { icon: Calculator, title: "Set Your Pricing", desc: "Price that reflects your real value." },
-  { icon: Mic, title: "Craft Your Self-Presentation", desc: "Speak in a way the right client hears." },
-  { icon: Users, title: "Find Referral Contacts", desc: "Build a network that sends inquiries." },
-  { icon: Handshake, title: "The Connection Bridge", desc: "Turn first calls into committed clients." },
+const BENEFITS_EN = [
+  { icon: Target, title: "Professional Clarity", desc: "Know exactly who your client is and how to speak to them." },
+  { icon: TrendingUp, title: "A Full Practice", desc: "More quality inquiries that convert into committed clients." },
+  { icon: Heart, title: "Inner Confidence", desc: "Stop second-guessing your pricing, copy, and marketing." },
+  { icon: Clock, title: "Save Time", desc: "Focused answers instead of hours of trial and error." },
+  { icon: Users2, title: "A Professional Network", desc: "Referral contacts and partnerships that send you clients." },
+];
+
+const OUTCOMES_HE = [
+  "יומן עמוס במטופלים שמתאימים לכם",
+  "מחיר שמשקף את הערך האמיתי שלכם",
+  "מסר שיווקי שמושך את האנשים הנכונים",
+  "פחות התלבטות, יותר פעולה",
+  "קליניקה שמתפרנסת בכבוד",
+];
+
+const OUTCOMES_EN = [
+  "A calendar full of clients who fit you",
+  "Pricing that reflects your real value",
+  "A marketing message that attracts the right people",
+  "Less second-guessing, more action",
+  "A practice that earns with dignity",
+];
+
+const STARTERS_HE = [
+  "אני רוצה למלא את הקליניקה",
+  "איך לתמחר את עצמי בלי להרגיש לא בנוח",
+  "המטופלים שמגיעים לא מתאימים לי",
+  "אני לא יודע איך להציג את עצמי",
+];
+
+const STARTERS_EN = [
+  "I want to fill my practice",
+  "How do I price myself without feeling awkward",
+  "The clients I get aren't the right fit",
+  "I don't know how to present myself",
 ];
 
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
-  const stages = language === "he" ? STAGES_HE : STAGES_EN;
+  const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
+  const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
+  const starters = language === "he" ? STARTERS_HE : STARTERS_EN;
+
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeStage, setActiveStage] = useState<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,12 +136,6 @@ export default function Mentor() {
     }
   };
 
-  const handleStageClick = (idx: number) => {
-    setActiveStage(idx);
-    const stage = stages[idx];
-    send(isRTL ? `אני רוצה להתמקד בשלב: ${stage.title}` : `I'd like to focus on: ${stage.title}`);
-  };
-
   const showWelcome = messages.length === 0;
 
   return (
@@ -125,12 +151,12 @@ export default function Mentor() {
               </span>
             </div>
             <h1 className="text-3xl md:text-5xl font-serif font-medium text-foreground mb-4 tracking-tight">
-              {isRTL ? "האדריכל לצמיחת הקליניקה שלך" : "Your Practice Growth Architect"}
+              {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A Full Practice. A Calm Mind. Real Growth."}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground">
               {isRTL
-                ? "ליווי אישי, אסטרטגי ורגיש — מהמטפלים, ובשבילם. שאלו, רפלקטו, וצמחו."
-                : "Personal, strategic, and emotionally attuned guidance — by therapists, for therapists."}
+                ? "המנטור הוא בן הזוג האסטרטגי שלכם — שותף שמחדד החלטות, מבהיר התלבטויות, ועוזר להפוך מטפל מצוין לקליניקה משגשגת."
+                : "The Mentor is your strategic partner — sharpening decisions, clearing dilemmas, and turning a great therapist into a thriving practice."}
             </p>
           </div>
         </section>
@@ -159,17 +185,17 @@ export default function Mentor() {
                     <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
                       <p className="text-foreground leading-relaxed">
                         {isRTL
-                          ? "ברוכים הבאים. באיזה שלב של הקליניקה נתמקד היום?"
-                          : "Welcome. Which stage of your practice are we focusing on today?"}
+                          ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
+                          : "Tell me what you'd like to change in your practice — and we'll start there."}
                       </p>
                       <div className="grid sm:grid-cols-2 gap-2 mt-4">
-                        {stages.map((s, i) => (
+                        {starters.map((s, i) => (
                           <button
                             key={i}
-                            onClick={() => handleStageClick(i)}
+                            onClick={() => send(s)}
                             className="text-start text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors"
                           >
-                            {i + 1}. {s.title}
+                            {s}
                           </button>
                         ))}
                       </div>
@@ -225,53 +251,46 @@ export default function Mentor() {
               </div>
             </div>
 
-            {/* Roadmap — 40% */}
-            <aside className="lg:col-span-2">
+            {/* Benefits & Outcomes — 40% */}
+            <aside className="lg:col-span-2 space-y-6">
               <div className="bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm">
                 <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
-                  {isRTL ? "מפת הדרך" : "Your Roadmap"}
+                  {isRTL ? "מה תקבלו" : "What You Gain"}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  {isRTL ? "5 שלבים לבניית קליניקה משגשגת" : "5 steps to a thriving practice"}
+                <p className="text-sm text-muted-foreground mb-5">
+                  {isRTL ? "התועלות שמטפלים מרגישים מהשיחה הראשונה" : "Benefits therapists feel from the first conversation"}
                 </p>
 
-                <ol className="relative space-y-4">
-                  {stages.map((s, i) => {
-                    const Icon = s.icon;
-                    const isActive = activeStage === i;
+                <ul className="space-y-3">
+                  {benefits.map((b, i) => {
+                    const Icon = b.icon;
                     return (
-                      <li key={i} className="relative">
-                        <button
-                          onClick={() => handleStageClick(i)}
-                          className={`w-full text-start flex gap-4 p-3 rounded-xl border transition-all ${
-                            isActive
-                              ? "border-mentor-accent bg-mentor-accent/10"
-                              : "border-mentor-border/50 hover:border-mentor-accent/40 hover:bg-mentor-surface"
-                          }`}
-                        >
-                          <div
-                            className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                              isActive
-                                ? "bg-mentor-accent text-mentor-accent-foreground"
-                                : "bg-mentor-surface text-mentor-accent"
-                            }`}
-                          >
-                            {isActive ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-xs font-semibold text-mentor-accent">
-                                {String(i + 1).padStart(2, "0")}
-                              </span>
-                              <h4 className="font-medium text-foreground">{s.title}</h4>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-0.5">{s.desc}</p>
-                          </div>
-                        </button>
+                      <li key={i} className="flex gap-3">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
+                          <Icon className="w-4 h-4 text-mentor-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-foreground">{b.title}</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+                        </div>
                       </li>
                     );
                   })}
-                </ol>
+                </ul>
+              </div>
+
+              <div className="bg-mentor-accent/5 border border-mentor-accent/20 rounded-2xl p-6">
+                <h3 className="text-lg font-serif font-semibold text-foreground mb-4">
+                  {isRTL ? "התוצאות שאליהן תגיעו" : "The Outcomes You'll Reach"}
+                </h3>
+                <ul className="space-y-2.5">
+                  {outcomes.map((o, i) => (
+                    <li key={i} className="flex gap-2 items-start">
+                      <CheckCircle2 className="w-4 h-4 text-mentor-accent flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground leading-relaxed">{o}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </aside>
           </div>
