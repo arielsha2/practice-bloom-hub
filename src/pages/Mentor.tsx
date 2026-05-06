@@ -231,7 +231,7 @@ export default function Mentor() {
                 <div className="space-y-4 max-w-2xl mx-auto">
                   {showWelcome && (
                     <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
-                      <p className="text-foreground leading-relaxed">
+                      <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
                         {isRTL
                           ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
                           : "Tell me what you'd like to change in your practice — and we'll start there."}
@@ -241,7 +241,7 @@ export default function Mentor() {
                           <button
                             key={i}
                             onClick={() => send(s)}
-                            className="text-start text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors"
+                            className={`text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors ${isRTL ? "text-right" : "text-left"}`}
                           >
                             {s}
                           </button>
