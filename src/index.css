@@ -81,6 +81,13 @@
     --sidebar-accent-foreground: 253 100% 97%;
     --sidebar-border: 253 40% 36%;
     --sidebar-ring: 255 72% 50%;
+
+    /* Mentor page — calm therapeutic palette (sage + soft beige) */
+    --mentor-bg: 80 25% 97%;
+    --mentor-surface: 80 20% 94%;
+    --mentor-border: 150 15% 82%;
+    --mentor-accent: 165 35% 38%;
+    --mentor-accent-foreground: 0 0% 100%;
   }
 
   .dark {
