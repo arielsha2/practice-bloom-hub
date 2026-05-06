@@ -105,7 +105,19 @@ export default function Mentor() {
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
   const starters = language === "he" ? STARTERS_HE : STARTERS_EN;
 
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const storageKey = `mentor-chat:${language}`;
+
+  const [messages, setMessages] = useState<Msg[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(`mentor-chat:${language}`);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -115,12 +127,30 @@ export default function Mentor() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Reset the conversation whenever the user switches language so the locked
-  // language (HE/RTL or EN/LTR) applies from the very first message.
+  // Persist messages to localStorage so the chat survives reloads / dialog close.
   useEffect(() => {
-    setMessages([]);
+    try {
+      if (messages.length === 0) {
+        localStorage.removeItem(storageKey);
+      } else {
+        localStorage.setItem(storageKey, JSON.stringify(messages));
+      }
+    } catch {
+      // ignore quota / privacy mode errors
+    }
+  }, [messages, storageKey]);
+
+  // When language switches, load that language's saved conversation (or empty).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setMessages(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setMessages([]);
+    }
     setInput("");
-  }, [language]);
+  }, [language, storageKey]);
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
