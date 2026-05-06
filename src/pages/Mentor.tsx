@@ -105,7 +105,19 @@ export default function Mentor() {
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
   const starters = language === "he" ? STARTERS_HE : STARTERS_EN;
 
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const storageKey = `mentor-chat:${language}`;
+
+  const [messages, setMessages] = useState<Msg[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(`mentor-chat:${language}`);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -115,12 +127,30 @@ export default function Mentor() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Reset the conversation whenever the user switches language so the locked
-  // language (HE/RTL or EN/LTR) applies from the very first message.
+  // Persist messages to localStorage so the chat survives reloads / dialog close.
   useEffect(() => {
-    setMessages([]);
+    try {
+      if (messages.length === 0) {
+        localStorage.removeItem(storageKey);
+      } else {
+        localStorage.setItem(storageKey, JSON.stringify(messages));
+      }
+    } catch {
+      // ignore quota / privacy mode errors
+    }
+  }, [messages, storageKey]);
+
+  // When language switches, load that language's saved conversation (or empty).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setMessages(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setMessages([]);
+    }
     setInput("");
-  }, [language]);
+  }, [language, storageKey]);
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -218,34 +248,51 @@ export default function Mentor() {
               <Sparkles className="w-6 h-6 text-mentor-accent" />
             </div>
             <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground mb-2">
-              {isRTL ? "מוכנים להתחיל שיחה עם המנטור?" : "Ready to start a conversation with the Mentor?"}
+              {messages.length > 0
+                ? (isRTL ? "יש לכם שיחה פתוחה עם המנטור" : "You have an active conversation with the Mentor")
+                : (isRTL ? "מוכנים להתחיל שיחה עם המנטור?" : "Ready to start a conversation with the Mentor?")}
             </h2>
             <p className="text-sm text-muted-foreground mb-5">
-              {isRTL
-                ? "בחרו נושא להתחלה מהירה או פתחו את הצ'אט וכתבו בעצמכם."
-                : "Pick a quick-start topic or open the chat and write your own."}
+              {messages.length > 0
+                ? (isRTL ? "המשיכו מאיפה שעצרתם, או התחילו שיחה חדשה." : "Pick up where you left off, or start a new conversation.")
+                : (isRTL ? "בחרו נושא להתחלה מהירה או פתחו את הצ'אט וכתבו בעצמכם." : "Pick a quick-start topic or open the chat and write your own.")}
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-2.5 mb-5">
-              {starters.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setChatOpen(true); send(s); }}
-                  className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+            {messages.length === 0 && (
+              <div className="grid sm:grid-cols-2 gap-2.5 mb-5">
+                {starters.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setChatOpen(true); send(s); }}
+                    className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            <Button
-              size="lg"
-              onClick={() => setChatOpen(true)}
-              className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2"
-            >
-              <MessageCircle className="w-5 h-5" />
-              {isRTL ? "פתחו את הצ'אט" : "Open the chat"}
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                size="lg"
+                onClick={() => setChatOpen(true)}
+                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {messages.length > 0
+                  ? (isRTL ? "המשיכו את השיחה" : "Continue the conversation")
+                  : (isRTL ? "פתחו את הצ'אט" : "Open the chat")}
+              </Button>
+              {messages.length > 0 && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => { setMessages([]); setInput(""); }}
+                >
+                  {isRTL ? "התחילו שיחה חדשה" : "Start a new conversation"}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Floating chat popup */}
