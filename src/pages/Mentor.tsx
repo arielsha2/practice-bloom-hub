@@ -121,7 +121,20 @@ export default function Mentor() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // Map of known AI tool URLs -> bot keys
+  const BOT_KEYS = ["connection-bridge", "niche-finder", "self-presentation", "contact-finder", "pricing-calculator", "strategy-planner", "content-creator"];
+
+  const extractBotKey = (href: string): string | null => {
+    try {
+      const u = new URL(href, window.location.origin);
+      const m = u.pathname.match(/\/ai-assistants\/([^\/?#]+)/);
+      if (m && BOT_KEYS.includes(m[1])) return m[1];
+    } catch {}
+    return null;
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
