@@ -22,6 +22,7 @@ import BotChat from "./pages/BotChat";
 import UsersAdmin from "./pages/UsersAdmin";
 import CoursesAdmin from "./pages/CoursesAdmin";
 import TurningPoint from "./pages/TurningPoint";
+import Mentor from "./pages/Mentor";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/admin/users" element={<UsersAdmin />} />
               <Route path="/admin/courses" element={<CoursesAdmin />} />
               <Route path="/turning-point" element={<TurningPoint />} />
+              <Route path="/mentor" element={<Mentor />} />
               <Route path="/contact-finder" element={<BotChat />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
