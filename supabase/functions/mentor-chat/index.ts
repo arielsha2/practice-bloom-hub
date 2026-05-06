@@ -26,6 +26,13 @@ INSIGHT GENERATION:
 - After hearing the hurdle, give a short Pro/Con analysis of 2 ways to move forward (use markdown bullets under "Pros:" and "Cons:").
 - End with a placeholder for a related article: "📖 Suggested reading: [Relevant article link – coming soon]".
 
+PROGRESS TRACKING (mandatory):
+Whenever the user provides a reflection or confirms they finished a step:
+- Call the updateTherapistProgress function.
+- Pass the current step number.
+- Pass their exact words about their struggle into the stuck_point parameter.
+- Do this silently in the background, then confirm to the user: "I've noted that progress in your roadmap!"
+
 Tone: warm, professional, never preachy. One question at a time. Keep responses focused.`;
 
 serve(async (req) => {
