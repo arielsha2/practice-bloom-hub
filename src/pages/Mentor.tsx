@@ -235,12 +235,12 @@ export default function Mentor() {
                         ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
                         : "Tell me what you'd like to change in your practice — and we'll start there."}
                     </p>
-                    <div className="grid sm:grid-cols-2 gap-2 mt-4">
+                    <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
                       {starters.map((s, i) => (
                         <button
                           key={i}
                           onClick={() => send(s)}
-                          className={`text-sm px-3 py-2 rounded-lg border border-mentor-border/60 hover:bg-mentor-accent/10 hover:border-mentor-accent/40 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                          className={`group text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
                         >
                           {s}
                         </button>
