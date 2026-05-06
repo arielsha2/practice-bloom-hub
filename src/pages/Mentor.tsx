@@ -211,97 +211,145 @@ export default function Mentor() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-6 md:py-8 -mt-4 md:-mt-6 relative z-10">
-          {/* Chat — floating pop-out card */}
-          <div className="max-w-4xl mx-auto bg-card border-2 border-mentor-accent/20 rounded-3xl shadow-2xl shadow-mentor-accent/10 ring-1 ring-mentor-border/40 flex flex-col h-[calc(100vh-260px)] min-h-[420px] overflow-hidden">
-            <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-mentor-accent" />
-              </div>
-              <div>
-                <h2 className="font-serif font-semibold text-foreground leading-tight">
-                  {isRTL ? "המנטור" : "The Mentor"}
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
-                </p>
-              </div>
+        <section className="container mx-auto px-4 py-6 md:py-8">
+          {/* CTA card — opens the floating chat popup */}
+          <div className="max-w-3xl mx-auto bg-card border border-mentor-border/60 rounded-2xl p-6 md:p-8 shadow-sm text-center">
+            <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
+              <Sparkles className="w-6 h-6 text-mentor-accent" />
             </div>
+            <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground mb-2">
+              {isRTL ? "מוכנים להתחיל שיחה עם המנטור?" : "Ready to start a conversation with the Mentor?"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              {isRTL
+                ? "בחרו נושא להתחלה מהירה או פתחו את הצ'אט וכתבו בעצמכם."
+                : "Pick a quick-start topic or open the chat and write your own."}
+            </p>
 
-            <ScrollArea className="flex-1 px-5 py-6">
-              <div className="space-y-4 max-w-3xl mx-auto">
-                {showWelcome && (
-                  <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
-                    <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
-                      {isRTL
-                        ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
-                        : "Tell me what you'd like to change in your practice — and we'll start there."}
-                    </p>
-                    <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
-                      {starters.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => send(s)}
-                          className={`group text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {messages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                        m.role === "user"
-                          ? "bg-mentor-accent text-mentor-accent-foreground"
-                          : "bg-mentor-surface border border-mentor-border/60 text-foreground"
-                      }`}
-                    >
-                      <div
-                        dir={isRTL ? "rtl" : "ltr"}
-                        className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
-                      >
-                        <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div ref={endRef} />
-              </div>
-            </ScrollArea>
-
-            <div className="border-t border-mentor-border/60 p-4 bg-mentor-surface">
-              <div className="flex gap-2 items-end max-w-3xl mx-auto">
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      send(input);
-                    }
-                  }}
-                  placeholder={isRTL ? "כתבו את שאלתכם…" : "Type your question…"}
-                  className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={() => send(input)}
-                  disabled={!input.trim() || isLoading}
-                  size="icon"
-                  className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+            <div className="grid sm:grid-cols-2 gap-2.5 mb-5">
+              {starters.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setChatOpen(true); send(s); }}
+                  className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
                 >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
+                  {s}
+                </button>
+              ))}
             </div>
+
+            <Button
+              size="lg"
+              onClick={() => setChatOpen(true)}
+              className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              {isRTL ? "פתחו את הצ'אט" : "Open the chat"}
+            </Button>
           </div>
+
+          {/* Floating chat popup */}
+          <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+            <DialogContent
+              dir={isRTL ? "rtl" : "ltr"}
+              className="max-w-3xl w-[95vw] p-0 gap-0 overflow-hidden border-2 border-mentor-accent/30 shadow-2xl rounded-2xl"
+            >
+              <DialogTitle className="sr-only">{isRTL ? "צ'אט עם המנטור" : "Chat with the Mentor"}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+              </DialogDescription>
+
+              <div className="flex flex-col h-[80vh] max-h-[680px] bg-card">
+                <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-mentor-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="font-serif font-semibold text-foreground leading-tight">
+                      {isRTL ? "המנטור" : "The Mentor"}
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+                    </p>
+                  </div>
+                </div>
+
+                <ScrollArea className="flex-1 px-5 py-6">
+                  <div className="space-y-4 max-w-3xl mx-auto">
+                    {showWelcome && (
+                      <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
+                        <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                          {isRTL
+                            ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
+                            : "Tell me what you'd like to change in your practice — and we'll start there."}
+                        </p>
+                        <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
+                          {starters.map((s, i) => (
+                            <button
+                              key={i}
+                              onClick={() => send(s)}
+                              className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {messages.map((m, i) => (
+                      <div
+                        key={i}
+                        className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                            m.role === "user"
+                              ? "bg-mentor-accent text-mentor-accent-foreground"
+                              : "bg-mentor-surface border border-mentor-border/60 text-foreground"
+                          }`}
+                        >
+                          <div
+                            dir={isRTL ? "rtl" : "ltr"}
+                            className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
+                          >
+                            <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={endRef} />
+                  </div>
+                </ScrollArea>
+
+                <div className="border-t border-mentor-border/60 p-4 bg-mentor-surface">
+                  <div className="flex gap-2 items-end max-w-3xl mx-auto">
+                    <Textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          send(input);
+                        }
+                      }}
+                      placeholder={isRTL ? "כתבו את שאלתכם…" : "Type your question…"}
+                      className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
+                      disabled={isLoading}
+                    />
+                    <Button
+                      onClick={() => send(input)}
+                      disabled={!input.trim() || isLoading}
+                      size="icon"
+                      className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Benefits & Outcomes — below chat, two columns */}
           <div className="max-w-5xl mx-auto mt-10 md:mt-14 grid md:grid-cols-2 gap-6">
