@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X } from "lucide-react";
+import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -121,7 +121,20 @@ export default function Mentor() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // Map of known AI tool URLs -> bot keys
+  const BOT_KEYS = ["connection-bridge", "niche-finder", "self-presentation", "contact-finder", "pricing-calculator", "strategy-planner", "content-creator"];
+
+  const extractBotKey = (href: string): string | null => {
+    try {
+      const u = new URL(href, window.location.origin);
+      const m = u.pathname.match(/\/ai-assistants\/([^\/?#]+)/);
+      if (m && BOT_KEYS.includes(m[1])) return m[1];
+    } catch {}
+    return null;
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -308,19 +321,42 @@ export default function Mentor() {
 
               <div className="flex flex-col h-[80vh] max-h-[680px] bg-card">
                 <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
+                  {activeBotKey && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setActiveBotKey(null)}
+                      className="gap-1.5 text-mentor-accent hover:bg-mentor-accent/10"
+                    >
+                      {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                      {isRTL ? "חזרה למנטור" : "Back to Mentor"}
+                    </Button>
+                  )}
                   <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-mentor-accent" />
                   </div>
                   <div className="flex-1">
                     <h2 className="font-serif font-semibold text-foreground leading-tight">
-                      {isRTL ? "המנטור" : "The Mentor"}
+                      {activeBotKey
+                        ? (isRTL ? "כלי מהמנטור" : "Mentor's Tool")
+                        : (isRTL ? "המנטור" : "The Mentor")}
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+                      {activeBotKey
+                        ? (isRTL ? "השיחה עם המנטור שמורה — תוכלו לחזור אליה בכל רגע" : "Your mentor conversation is saved — return any time")
+                        : (isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor")}
                     </p>
                   </div>
                 </div>
 
+                {activeBotKey ? (
+                  <iframe
+                    src={`/ai-assistants/${activeBotKey}`}
+                    className="flex-1 w-full border-0 bg-mentor-bg"
+                    title={isRTL ? "כלי AI" : "AI tool"}
+                  />
+                ) : (
+                <>
                 <ScrollArea className="flex-1 px-5 py-6">
                   <div className="space-y-4 max-w-3xl mx-auto">
                     {showWelcome && (
@@ -360,7 +396,35 @@ export default function Mentor() {
                             dir={isRTL ? "rtl" : "ltr"}
                             className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
                           >
-                            <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                a: ({ href, children, ...props }) => {
+                                  const botKey = href ? extractBotKey(href) : null;
+                                  if (botKey) {
+                                    return (
+                                      <a
+                                        {...props}
+                                        href={href}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setActiveBotKey(botKey);
+                                        }}
+                                        className="cursor-pointer underline"
+                                      >
+                                        {children}
+                                      </a>
+                                    );
+                                  }
+                                  return (
+                                    <a {...props} href={href} target="_blank" rel="noopener noreferrer">
+                                      {children}
+                                    </a>
+                                  );
+                                },
+                              }}
+                            >
+                              {m.content || "…"}
+                            </ReactMarkdown>
                           </div>
                         </div>
                       </div>
@@ -394,6 +458,8 @@ export default function Mentor() {
                     </Button>
                   </div>
                 </div>
+                </>
+                )}
               </div>
             </DialogContent>
           </Dialog>
