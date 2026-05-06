@@ -10,7 +10,6 @@ import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 /**
  * Upsert the current user's mentor journey progress.
