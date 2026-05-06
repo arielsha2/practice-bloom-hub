@@ -262,7 +262,10 @@ export default function Mentor() {
                             : "bg-mentor-surface border border-mentor-border/60 text-foreground"
                         }`}
                       >
-                        <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent">
+                        <div
+                          dir={isRTL ? "rtl" : "ltr"}
+                          className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
+                        >
                           <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
                         </div>
                       </div>
