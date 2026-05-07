@@ -1,0 +1,1 @@
+ALTER TABLE public.therapist_journeys ADD COLUMN IF NOT EXISTS completed_stages text[] NOT NULL DEFAULT '{}';

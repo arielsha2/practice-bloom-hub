@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface TherapistJourney {
   step_number: number;
   stuck_points: string[];
+  completed_stages: string[];
   reflection: Record<string, unknown>;
   updated_at: string | null;
 }
@@ -14,37 +15,40 @@ export function useTherapistJourney() {
   const [journey, setJourney] = useState<TherapistJourney | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!user) {
-        setJourney(null);
-        setLoading(false);
-        return;
-      }
-      const { data } = await supabase
-        .from("therapist_journeys")
-        .select("step_number, stuck_points, reflection, updated_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!active) return;
-      setJourney(
-        data
-          ? {
-              step_number: data.step_number ?? 1,
-              stuck_points: (data.stuck_points as string[] | null) ?? [],
-              reflection: (data.reflection as Record<string, unknown>) ?? {},
-              updated_at: data.updated_at ?? null,
-            }
-          : null
-      );
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setJourney(null);
       setLoading(false);
+      return;
     }
-    load();
-    return () => {
-      active = false;
-    };
+    const { data } = await supabase
+      .from("therapist_journeys")
+      .select("step_number, stuck_points, reflection, updated_at, completed_stages")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setJourney(
+      data
+        ? {
+            step_number: data.step_number ?? 1,
+            stuck_points: (data.stuck_points as string[] | null) ?? [],
+            completed_stages: ((data as any).completed_stages as string[] | null) ?? [],
+            reflection: (data.reflection as Record<string, unknown>) ?? {},
+            updated_at: data.updated_at ?? null,
+          }
+        : null
+    );
+    setLoading(false);
   }, [user]);
 
-  return { journey, loading };
+  useEffect(() => {
+    refresh();
+
+    if (!user) return;
+    // Listen for cross-component updates (e.g., after mentor-analyze writes).
+    const handler = () => refresh();
+    window.addEventListener("therapist-journey-updated", handler);
+    return () => window.removeEventListener("therapist-journey-updated", handler);
+  }, [user, refresh]);
+
+  return { journey, loading, refresh };
 }

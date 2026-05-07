@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.admin-insights]
 verify_jwt = false
+
+[functions.mentor-analyze]
+verify_jwt = false
