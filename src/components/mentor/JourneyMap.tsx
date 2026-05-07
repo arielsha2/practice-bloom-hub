@@ -184,19 +184,25 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 <div className={cn("flex gap-4 md:gap-5", isRTL && "flex-row")}>
                   {/* Node */}
                   <div className="relative z-10 flex-shrink-0">
+                    {status === "active" && (
+                      <>
+                        <span aria-hidden className="absolute inset-0 rounded-full bg-mentor-accent/30 animate-ping" />
+                        <span aria-hidden className="absolute -inset-1 rounded-full bg-mentor-accent/20 blur-md" />
+                      </>
+                    )}
                     <div
                       className={cn(
-                        "w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 shadow-md transition-all duration-500",
+                        "relative w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 shadow-md transition-all duration-500",
                         status === "completed" &&
-                          "bg-gradient-to-br from-mentor-accent to-mentor-accent/80 text-mentor-accent-foreground border-mentor-accent",
+                          "bg-gradient-to-br from-mentor-accent to-primary text-mentor-accent-foreground border-mentor-accent shadow-[0_4px_14px_hsl(var(--mentor-accent)/0.4)]",
                         status === "active" &&
-                          "bg-card text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/20",
+                          "bg-gradient-to-br from-card to-mentor-accent/10 text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/30 shadow-[0_0_24px_hsl(var(--mentor-accent)/0.5)]",
                         status === "upcoming" &&
-                          "bg-mentor-surface text-muted-foreground border-mentor-border"
+                          "bg-mentor-surface text-muted-foreground border-mentor-border/70 border-dashed"
                       )}
                     >
                       {status === "completed" ? (
-                        <Check className="w-5 h-5 md:w-7 md:h-7" />
+                        <Check className="w-5 h-5 md:w-7 md:h-7" strokeWidth={3} />
                       ) : (
                         <Icon className="w-5 h-5 md:w-7 md:h-7" />
                       )}
