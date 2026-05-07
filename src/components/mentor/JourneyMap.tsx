@@ -93,18 +93,25 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className={cn("relative", isRTL ? "text-right" : "text-left")}>
+      {/* Decorative background blobs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-mentor-accent/10 blur-3xl opacity-60" />
+        <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-primary/10 blur-3xl opacity-50" />
+        <div className="absolute top-1/3 left-0 w-64 h-64 rounded-full bg-accent/10 blur-3xl opacity-40" />
+      </div>
+
       {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-3 py-1 mb-3">
-          <Compass className="w-3.5 h-3.5 text-mentor-accent" />
-          <span className="text-mentor-accent font-medium text-xs">
+      <div className="relative mb-10 text-center">
+        <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-mentor-accent/40 rounded-full px-4 py-1.5 mb-4 shadow-sm">
+          <Compass className="w-4 h-4 text-mentor-accent" />
+          <span className="text-mentor-accent font-semibold text-xs tracking-wide uppercase">
             {isRTL ? "המסע שלכם" : "Your Journey"}
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground mb-2 tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-3 tracking-tight">
           {isRTL ? "מפת המסע האישית שלכם" : "Your Personal Journey Map"}
         </h2>
-        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+        <p className="text-base text-muted-foreground max-w-xl mx-auto">
           {hasStarted
             ? isRTL
               ? `אתם כבר בדרך — ${completedCount} מתוך ${STAGES.length} שלבים מאחוריכם.`
@@ -115,17 +122,17 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
         </p>
 
         {/* Progress bar */}
-        <div className="max-w-md mx-auto mt-5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{isRTL ? "ההתקדמות שלכם" : "Your progress"}</span>
-            <span className="font-semibold text-mentor-accent">{progressPct}%</span>
+        <div className="max-w-md mx-auto mt-6">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span className="font-medium">{isRTL ? "ההתקדמות שלכם" : "Your progress"}</span>
+            <span className="font-bold text-mentor-accent text-sm">{progressPct}%</span>
           </div>
-          <div className="h-2 bg-mentor-accent/10 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-mentor-accent/10 rounded-full overflow-hidden shadow-inner">
             <motion.div
-              className="h-full bg-gradient-to-r from-mentor-accent/70 to-mentor-accent rounded-full"
+              className="h-full bg-gradient-to-r from-mentor-accent via-primary to-mentor-accent rounded-full shadow-[0_0_12px_hsl(var(--mentor-accent)/0.6)]"
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
             />
           </div>
         </div>
