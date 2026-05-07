@@ -831,6 +831,7 @@ export type Database = {
       }
       therapist_journeys: {
         Row: {
+          completed_stages: string[]
           created_at: string
           id: string
           reflection: Json
@@ -840,6 +841,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completed_stages?: string[]
           created_at?: string
           id?: string
           reflection?: Json
@@ -849,6 +851,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completed_stages?: string[]
           created_at?: string
           id?: string
           reflection?: Json
