@@ -93,18 +93,25 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className={cn("relative", isRTL ? "text-right" : "text-left")}>
+      {/* Decorative background blobs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-mentor-accent/10 blur-3xl opacity-60" />
+        <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-primary/10 blur-3xl opacity-50" />
+        <div className="absolute top-1/3 left-0 w-64 h-64 rounded-full bg-accent/10 blur-3xl opacity-40" />
+      </div>
+
       {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-3 py-1 mb-3">
-          <Compass className="w-3.5 h-3.5 text-mentor-accent" />
-          <span className="text-mentor-accent font-medium text-xs">
+      <div className="relative mb-10 text-center">
+        <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-mentor-accent/40 rounded-full px-4 py-1.5 mb-4 shadow-sm">
+          <Compass className="w-4 h-4 text-mentor-accent" />
+          <span className="text-mentor-accent font-semibold text-xs tracking-wide uppercase">
             {isRTL ? "המסע שלכם" : "Your Journey"}
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground mb-2 tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-3 tracking-tight">
           {isRTL ? "מפת המסע האישית שלכם" : "Your Personal Journey Map"}
         </h2>
-        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+        <p className="text-base text-muted-foreground max-w-xl mx-auto">
           {hasStarted
             ? isRTL
               ? `אתם כבר בדרך — ${completedCount} מתוך ${STAGES.length} שלבים מאחוריכם.`
@@ -115,17 +122,17 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
         </p>
 
         {/* Progress bar */}
-        <div className="max-w-md mx-auto mt-5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{isRTL ? "ההתקדמות שלכם" : "Your progress"}</span>
-            <span className="font-semibold text-mentor-accent">{progressPct}%</span>
+        <div className="max-w-md mx-auto mt-6">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span className="font-medium">{isRTL ? "ההתקדמות שלכם" : "Your progress"}</span>
+            <span className="font-bold text-mentor-accent text-sm">{progressPct}%</span>
           </div>
-          <div className="h-2 bg-mentor-accent/10 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-mentor-accent/10 rounded-full overflow-hidden shadow-inner">
             <motion.div
-              className="h-full bg-gradient-to-r from-mentor-accent/70 to-mentor-accent rounded-full"
+              className="h-full bg-gradient-to-r from-mentor-accent via-primary to-mentor-accent rounded-full shadow-[0_0_12px_hsl(var(--mentor-accent)/0.6)]"
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
             />
           </div>
         </div>
@@ -133,13 +140,24 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
       {/* Vertical timeline */}
       <div className="relative max-w-2xl mx-auto">
-        {/* Spine line */}
+        {/* Spine line (background) */}
         <div
           className={cn(
-            "absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-mentor-accent/40 via-mentor-border to-mentor-border/40",
+            "absolute top-0 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-border/60 via-mentor-border/40 to-mentor-border/20",
             isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
           )}
           aria-hidden
+        />
+        {/* Spine line (progress fill) */}
+        <motion.div
+          aria-hidden
+          initial={{ height: 0 }}
+          animate={{ height: `${Math.min(100, (completedCount / STAGES.length) * 100 + (hasStarted ? 6 : 0))}%` }}
+          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.2 }}
+          className={cn(
+            "absolute top-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-accent via-primary to-mentor-accent shadow-[0_0_10px_hsl(var(--mentor-accent)/0.6)]",
+            isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
+          )}
         />
 
         <ol className="space-y-5 md:space-y-6">
@@ -166,19 +184,25 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 <div className={cn("flex gap-4 md:gap-5", isRTL && "flex-row")}>
                   {/* Node */}
                   <div className="relative z-10 flex-shrink-0">
+                    {status === "active" && (
+                      <>
+                        <span aria-hidden className="absolute inset-0 rounded-full bg-mentor-accent/30 animate-ping" />
+                        <span aria-hidden className="absolute -inset-1 rounded-full bg-mentor-accent/20 blur-md" />
+                      </>
+                    )}
                     <div
                       className={cn(
-                        "w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 shadow-md transition-all duration-500",
+                        "relative w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 shadow-md transition-all duration-500",
                         status === "completed" &&
-                          "bg-gradient-to-br from-mentor-accent to-mentor-accent/80 text-mentor-accent-foreground border-mentor-accent",
+                          "bg-gradient-to-br from-mentor-accent to-primary text-mentor-accent-foreground border-mentor-accent shadow-[0_4px_14px_hsl(var(--mentor-accent)/0.4)]",
                         status === "active" &&
-                          "bg-card text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/20",
+                          "bg-gradient-to-br from-card to-mentor-accent/10 text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/30 shadow-[0_0_24px_hsl(var(--mentor-accent)/0.5)]",
                         status === "upcoming" &&
-                          "bg-mentor-surface text-muted-foreground border-mentor-border"
+                          "bg-mentor-surface text-muted-foreground border-mentor-border/70 border-dashed"
                       )}
                     >
                       {status === "completed" ? (
-                        <Check className="w-5 h-5 md:w-7 md:h-7" />
+                        <Check className="w-5 h-5 md:w-7 md:h-7" strokeWidth={3} />
                       ) : (
                         <Icon className="w-5 h-5 md:w-7 md:h-7" />
                       )}

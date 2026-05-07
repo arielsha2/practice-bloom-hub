@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft } from "lucide-react";
+import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -300,7 +300,7 @@ export default function Mentor() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40">
+        <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
         </section>
 
@@ -397,6 +397,22 @@ export default function Mentor() {
                         : (isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor")}
                     </p>
                   </div>
+                  {!activeBotKey && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setChatOpen(false);
+                        setTimeout(() => {
+                          document.getElementById("journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 150);
+                      }}
+                      className="gap-1.5 border-mentor-accent/40 text-mentor-accent hover:bg-mentor-accent hover:text-mentor-accent-foreground"
+                    >
+                      <MapIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline">{isRTL ? "מפת המסע" : "Journey Map"}</span>
+                    </Button>
+                  )}
                 </div>
 
                 {activeBotKey ? (
