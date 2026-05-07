@@ -10,6 +10,10 @@ import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
+import { useNavigate } from "react-router-dom";
+
+const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
 
 /**
  * Upsert the current user's mentor journey progress.
