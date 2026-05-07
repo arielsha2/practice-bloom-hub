@@ -235,6 +235,52 @@ export default function Mentor() {
       toast.error(isRTL ? "שגיאת רשת" : "Network error");
     } finally {
       setIsLoading(false);
+      // Fire-and-forget: analyze the conversation and persist completed stages.
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (auth.user) {
+          const analyzeResp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                messages: [...messages, { role: "user", content: text.trim() }],
+              }),
+            }
+          );
+          if (analyzeResp.ok) {
+            const { completed, current, stuck_point } = await analyzeResp.json();
+            const stageMap: Record<string, number> = {
+              niche: 1, pricing: 2, "self-presentation": 3, network: 4, conversion: 5,
+            };
+            const stepNumber = stageMap[current] ?? 1;
+            const { data: existing } = await supabase
+              .from("therapist_journeys")
+              .select("stuck_points")
+              .eq("user_id", auth.user.id)
+              .maybeSingle();
+            const merged = [...((existing?.stuck_points as string[] | null) ?? [])];
+            if (stuck_point && stuck_point.trim() && !merged.includes(stuck_point)) {
+              merged.push(stuck_point);
+            }
+            await supabase.from("therapist_journeys").upsert(
+              {
+                user_id: auth.user.id,
+                step_number: stepNumber,
+                stuck_points: merged,
+                completed_stages: completed ?? [],
+                reflection: { current } as any,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+            window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
+          }
+        }
+      } catch (err) {
+        console.warn("mentor-analyze failed", err);
+      }
     }
   };
 
