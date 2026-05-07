@@ -172,7 +172,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                         status === "completed" &&
                           "bg-gradient-to-br from-mentor-accent to-mentor-accent/80 text-mentor-accent-foreground border-mentor-accent",
                         status === "active" &&
-                          "bg-card text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/20 animate-pulse-soft",
+                          "bg-card text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/20",
                         status === "upcoming" &&
                           "bg-mentor-surface text-muted-foreground border-mentor-border"
                       )}
