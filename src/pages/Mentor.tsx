@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate } from "react-router-dom";
+import { JourneyMap } from "@/components/mentor/JourneyMap";
 
 const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
 
