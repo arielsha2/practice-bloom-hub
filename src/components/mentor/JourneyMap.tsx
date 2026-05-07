@@ -140,13 +140,24 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
       {/* Vertical timeline */}
       <div className="relative max-w-2xl mx-auto">
-        {/* Spine line */}
+        {/* Spine line (background) */}
         <div
           className={cn(
-            "absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-mentor-accent/40 via-mentor-border to-mentor-border/40",
+            "absolute top-0 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-border/60 via-mentor-border/40 to-mentor-border/20",
             isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
           )}
           aria-hidden
+        />
+        {/* Spine line (progress fill) */}
+        <motion.div
+          aria-hidden
+          initial={{ height: 0 }}
+          animate={{ height: `${Math.min(100, (completedCount / STAGES.length) * 100 + (hasStarted ? 6 : 0))}%` }}
+          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.2 }}
+          className={cn(
+            "absolute top-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-accent via-primary to-mentor-accent shadow-[0_0_10px_hsl(var(--mentor-accent)/0.6)]",
+            isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
+          )}
         />
 
         <ol className="space-y-5 md:space-y-6">
