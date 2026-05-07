@@ -107,11 +107,7 @@ export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
-  const [showAccessDialog, setShowAccessDialog] = useState(false);
 
-  useEffect(() => {
-    if (!accessLoading && hasAccess === false) setShowAccessDialog(true);
-  }, [accessLoading, hasAccess]);
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
