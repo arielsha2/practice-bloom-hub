@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate } from "react-router-dom";
+import { JourneyMap } from "@/components/mentor/JourneyMap";
 
 const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
 
@@ -297,6 +298,10 @@ export default function Mentor() {
                 : "Your strategic partner — sharpening decisions and turning a great therapist into a thriving practice."}
             </p>
           </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40">
+          <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
