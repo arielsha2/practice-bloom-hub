@@ -397,6 +397,22 @@ export default function Mentor() {
                         : (isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor")}
                     </p>
                   </div>
+                  {!activeBotKey && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setChatOpen(false);
+                        setTimeout(() => {
+                          document.getElementById("journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 150);
+                      }}
+                      className="gap-1.5 border-mentor-accent/40 text-mentor-accent hover:bg-mentor-accent hover:text-mentor-accent-foreground"
+                    >
+                      <MapIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline">{isRTL ? "מפת המסע" : "Journey Map"}</span>
+                    </Button>
+                  )}
                 </div>
 
                 {activeBotKey ? (
