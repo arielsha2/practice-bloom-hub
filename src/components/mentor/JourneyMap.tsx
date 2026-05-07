@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Compass, Tag, User, Users, Sparkles, Trophy, AlertCircle, Circle } from "lucide-react";
+import { Compass, Tag, User, Users, Sparkles, Trophy, Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
@@ -21,8 +21,8 @@ const STAGES: Stage[] = [
     icon: Compass,
     titleHe: "מציאת הנישה",
     titleEn: "Finding Your Niche",
-    descHe: "לדעת בדיוק עם מי אתם רוצים לעבוד ומה הופך אתכם לבחירה הטבעית עבורם.",
-    descEn: "Know exactly who you want to work with and why you're the natural choice.",
+    descHe: "לדעת בדיוק עם מי אתם רוצים לעבוד.",
+    descEn: "Know exactly who you want to work with.",
     botKey: "niche-finder",
   },
   {
@@ -30,8 +30,8 @@ const STAGES: Stage[] = [
     icon: Tag,
     titleHe: "תמחור נכון",
     titleEn: "Right Pricing",
-    descHe: "מחיר ששיקף את הערך שלכם — בלי התלבטות, בלי התנצלות.",
-    descEn: "A price that reflects your real value — no hesitation, no apology.",
+    descHe: "מחיר ששיקף את הערך שלכם.",
+    descEn: "Pricing that reflects your value.",
     botKey: "pricing-calculator",
   },
   {
@@ -39,8 +39,8 @@ const STAGES: Stage[] = [
     icon: User,
     titleHe: "הצגה עצמית",
     titleEn: "Self-Presentation",
-    descHe: "מסר ברור שמושך את האנשים הנכונים מהמילה הראשונה.",
-    descEn: "A clear message that attracts the right people from the first word.",
+    descHe: "מסר ברור שמושך את הנכונים.",
+    descEn: "A message that attracts the right people.",
     botKey: "self-presentation",
   },
   {
@@ -48,8 +48,8 @@ const STAGES: Stage[] = [
     icon: Users,
     titleHe: "רשת מקצועית",
     titleEn: "Professional Network",
-    descHe: "אנשי קשר ושותפויות שמזרימים אליכם פניות איכותיות.",
-    descEn: "Contacts and partnerships that send you quality referrals.",
+    descHe: "שותפויות שמזרימות אליכם פניות.",
+    descEn: "Partnerships that send referrals.",
     botKey: "contact-finder",
   },
   {
@@ -57,11 +57,31 @@ const STAGES: Stage[] = [
     icon: Sparkles,
     titleHe: "שיחת היכרות מנצחת",
     titleEn: "Winning First Call",
-    descHe: "להפוך פנייה ראשונה למטופל קבוע — בביטחון ובלי לדחוף.",
-    descEn: "Turn a first inquiry into a committed client — confidently, without pushing.",
+    descHe: "להפוך פנייה ראשונה למטופל קבוע.",
+    descEn: "Turn first inquiry into a client.",
     botKey: "connection-bridge",
   },
 ];
+
+// Hand-tuned positions on a 1000x1400 viewBox — winding S-curve path.
+const POSITIONS = [
+  { x: 200, y: 180 },
+  { x: 760, y: 380 },
+  { x: 220, y: 600 },
+  { x: 780, y: 820 },
+  { x: 240, y: 1040 },
+];
+const FINISH = { x: 720, y: 1260 };
+
+// Smooth winding path through all stations + finish.
+const PATH_D = `
+  M ${POSITIONS[0].x} ${POSITIONS[0].y}
+  C 500 200, 600 260, ${POSITIONS[1].x} ${POSITIONS[1].y}
+  C 900 480, 350 480, ${POSITIONS[2].x} ${POSITIONS[2].y}
+  C 100 700, 600 720, ${POSITIONS[3].x} ${POSITIONS[3].y}
+  C 900 920, 350 920, ${POSITIONS[4].x} ${POSITIONS[4].y}
+  C 100 1140, 600 1160, ${FINISH.x} ${FINISH.y}
+`.trim();
 
 interface JourneyMapProps {
   onOpenBot?: (botKey: string) => void;
@@ -81,27 +101,20 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-2 w-full" />
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-2xl" />
-        ))}
+      <div className="space-y-4 max-w-4xl mx-auto">
+        <Skeleton className="h-10 w-64 mx-auto" />
+        <Skeleton className="h-[700px] w-full rounded-3xl" />
       </div>
     );
   }
 
-  return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={cn("relative", isRTL ? "text-right" : "text-left")}>
-      {/* Decorative background blobs */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-mentor-accent/10 blur-3xl opacity-60" />
-        <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-primary/10 blur-3xl opacity-50" />
-        <div className="absolute top-1/3 left-0 w-64 h-64 rounded-full bg-accent/10 blur-3xl opacity-40" />
-      </div>
+  // Active stage details for sidebar
+  const activeStage = STAGES.find((s) => s.number === currentStep && hasStarted);
 
+  return (
+    <div dir={isRTL ? "rtl" : "ltr"} className="relative">
       {/* Header */}
-      <div className="relative mb-10 text-center">
+      <div className="relative mb-8 text-center">
         <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-mentor-accent/40 rounded-full px-4 py-1.5 mb-4 shadow-sm">
           <Compass className="w-4 h-4 text-mentor-accent" />
           <span className="text-mentor-accent font-semibold text-xs tracking-wide uppercase">
@@ -114,17 +127,402 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
         <p className="text-base text-muted-foreground max-w-xl mx-auto">
           {hasStarted
             ? isRTL
-              ? `אתם כבר בדרך — ${completedCount} מתוך ${STAGES.length} שלבים מאחוריכם.`
-              : `You're on the way — ${completedCount} of ${STAGES.length} stages behind you.`
+              ? `אתם כבר בדרך — ${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם.`
+              : `You're on the way — ${completedCount} of ${STAGES.length} stations behind you.`
             : isRTL
-            ? "המסע מהתלבטות לקליניקה משגשגת — חמישה שלבים, צעד אחרי צעד."
-            : "From doubt to a thriving practice — five stages, step by step."}
+            ? "המסע מהתלבטות לקליניקה משגשגת — חמש תחנות, שביל אחד."
+            : "From doubt to a thriving practice — five stations, one path."}
         </p>
+      </div>
 
-        {/* Progress bar */}
-        <div className="max-w-md mx-auto mt-6">
+      {/* Map container */}
+      <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden border border-mentor-border/60 shadow-2xl bg-gradient-to-br from-mentor-surface via-card to-mentor-accent/5">
+        {/* Decorative texture */}
+        <div aria-hidden className="absolute inset-0 pointer-events-none opacity-40">
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-mentor-accent/20 blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute top-1/3 right-1/4 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        </div>
+
+        {/* Compass rose decoration top corner */}
+        <div
+          aria-hidden
+          className={cn(
+            "absolute top-4 opacity-20 text-mentor-accent",
+            isRTL ? "left-4" : "right-4"
+          )}
+        >
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="26" stroke="currentColor" strokeWidth="1" />
+            <circle cx="28" cy="28" r="18" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 3" />
+            <path d="M28 4 L31 28 L28 52 L25 28 Z" fill="currentColor" opacity="0.4" />
+            <path d="M4 28 L28 25 L52 28 L28 31 Z" fill="currentColor" opacity="0.25" />
+            <circle cx="28" cy="28" r="2" fill="currentColor" />
+          </svg>
+        </div>
+
+        {/* SVG MAP */}
+        <svg
+          viewBox="0 0 1000 1400"
+          className="relative w-full h-auto block"
+          preserveAspectRatio="xMidYMid meet"
+          style={isRTL ? { transform: "scaleX(-1)" } : undefined}
+        >
+          <defs>
+            {/* Gradients */}
+            <linearGradient id="pathGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--mentor-accent))" stopOpacity="1" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+            </linearGradient>
+            <radialGradient id="nodeGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="hsl(var(--mentor-accent))" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" />
+            </radialGradient>
+            <radialGradient id="finishGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="hsl(var(--accent))" />
+              <stop offset="100%" stopColor="hsl(var(--mentor-accent))" />
+            </radialGradient>
+            {/* Glow filter */}
+            <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="10" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Dotted topo background pattern */}
+            <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" fill="hsl(var(--mentor-accent))" opacity="0.18" />
+            </pattern>
+          </defs>
+
+          {/* Background dotted pattern */}
+          <rect width="1000" height="1400" fill="url(#dots)" />
+
+          {/* "Topographic" wavy decorative lines */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <path
+              key={`topo-${i}`}
+              d={`M 0 ${100 + i * 280} C 250 ${50 + i * 280}, 750 ${200 + i * 280}, 1000 ${120 + i * 280}`}
+              stroke="hsl(var(--mentor-accent))"
+              strokeOpacity="0.07"
+              strokeWidth="1.5"
+              fill="none"
+            />
+          ))}
+
+          {/* Background path (ghost / not yet walked) */}
+          <path
+            d={PATH_D}
+            stroke="hsl(var(--mentor-border))"
+            strokeWidth="14"
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray="2 14"
+            opacity="0.55"
+          />
+
+          {/* Foreground path: progress walked (animated dash reveal) */}
+          <motion.path
+            d={PATH_D}
+            stroke="url(#pathGradient)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            fill="none"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: hasStarted ? completedCount / STAGES.length + 0.06 : 0.02 }}
+            transition={{ duration: 1.6, ease: [0.4, 0, 0.2, 1] }}
+            style={{ filter: "url(#softGlow)" }}
+          />
+
+          {/* Stations */}
+          {STAGES.map((stage, idx) => {
+            const pos = POSITIONS[idx];
+            const isCompleted = stage.number < currentStep;
+            const isActive = stage.number === currentStep && hasStarted;
+            const isUpcoming = !isCompleted && !isActive;
+            const hasStuckHere = isActive && recentStuck.length > 0;
+
+            return (
+              <motion.g
+                key={stage.number}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + idx * 0.18, type: "spring", stiffness: 120 }}
+                style={{ cursor: stage.botKey && (isActive || isCompleted) ? "pointer" : "default" }}
+                onClick={() => {
+                  if (stage.botKey && onOpenBot && (isActive || isCompleted)) {
+                    onOpenBot(stage.botKey);
+                  }
+                }}
+              >
+                {/* Pulsing halo for active station */}
+                {isActive && (
+                  <>
+                    <motion.circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={70}
+                      fill="hsl(var(--mentor-accent))"
+                      opacity={0.18}
+                      animate={{ r: [60, 90, 60], opacity: [0.25, 0.05, 0.25] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <circle cx={pos.x} cy={pos.y} r={56} fill="hsl(var(--mentor-accent))" opacity="0.12" />
+                  </>
+                )}
+
+                {/* Outer ring */}
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={46}
+                  fill="hsl(var(--card))"
+                  stroke={
+                    isCompleted
+                      ? "hsl(var(--mentor-accent))"
+                      : isActive
+                      ? "hsl(var(--mentor-accent))"
+                      : "hsl(var(--mentor-border))"
+                  }
+                  strokeWidth={isActive ? 4 : 3}
+                  strokeDasharray={isUpcoming ? "5 4" : undefined}
+                />
+
+                {/* Inner filled disk */}
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={36}
+                  fill={
+                    isCompleted
+                      ? "url(#nodeGradient)"
+                      : isActive
+                      ? "hsl(var(--card))"
+                      : "hsl(var(--mentor-surface))"
+                  }
+                  filter={isActive || isCompleted ? "url(#softGlow)" : undefined}
+                />
+
+                {/* Station number badge */}
+                <g transform={`translate(${pos.x + 32}, ${pos.y - 32})`}>
+                  <circle
+                    r={14}
+                    fill={
+                      isCompleted || isActive
+                        ? "hsl(var(--mentor-accent))"
+                        : "hsl(var(--card))"
+                    }
+                    stroke={
+                      isCompleted || isActive
+                        ? "hsl(var(--card))"
+                        : "hsl(var(--mentor-border))"
+                    }
+                    strokeWidth={2}
+                  />
+                  <text
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize="14"
+                    fontWeight="800"
+                    fill={
+                      isCompleted || isActive
+                        ? "hsl(var(--mentor-accent-foreground))"
+                        : "hsl(var(--muted-foreground))"
+                    }
+                    style={isRTL ? { transform: "scaleX(-1)", transformOrigin: "center" } : undefined}
+                  >
+                    {stage.number}
+                  </text>
+                </g>
+
+                {/* Stuck warning marker */}
+                {hasStuckHere && (
+                  <g transform={`translate(${pos.x - 32}, ${pos.y - 32})`}>
+                    <circle r={13} fill="hsl(var(--destructive))" />
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize="16"
+                      fontWeight="900"
+                      fill="hsl(var(--destructive-foreground))"
+                      style={isRTL ? { transform: "scaleX(-1)", transformOrigin: "center" } : undefined}
+                    >
+                      !
+                    </text>
+                  </g>
+                )}
+
+                {/* Icon (rendered as foreignObject to use lucide) */}
+                <foreignObject x={pos.x - 18} y={pos.y - 18} width={36} height={36}>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: isRTL ? "scaleX(-1)" : undefined,
+                      color: isCompleted
+                        ? "hsl(var(--mentor-accent-foreground))"
+                        : isActive
+                        ? "hsl(var(--mentor-accent))"
+                        : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    {isCompleted ? (
+                      <Check size={28} strokeWidth={3} />
+                    ) : (
+                      <stage.icon size={26} />
+                    )}
+                  </div>
+                </foreignObject>
+
+                {/* Title label — placed alternating above/below to avoid path */}
+                <foreignObject
+                  x={pos.x - 130}
+                  y={idx % 2 === 0 ? pos.y + 56 : pos.y - 110}
+                  width={260}
+                  height={60}
+                >
+                  <div
+                    style={{
+                      transform: isRTL ? "scaleX(-1)" : undefined,
+                      direction: isRTL ? "rtl" : "ltr",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "Heebo, serif",
+                        fontWeight: 700,
+                        fontSize: 19,
+                        lineHeight: 1.2,
+                        color: isUpcoming
+                          ? "hsl(var(--muted-foreground))"
+                          : "hsl(var(--foreground))",
+                      }}
+                    >
+                      {isRTL ? stage.titleHe : stage.titleEn}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "hsl(var(--muted-foreground))",
+                        marginTop: 4,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {isRTL ? stage.descHe : stage.descEn}
+                    </div>
+                  </div>
+                </foreignObject>
+
+                {/* "You are here" floating tag */}
+                {isActive && (
+                  <foreignObject x={pos.x - 80} y={pos.y - 88} width={160} height={32}>
+                    <div
+                      style={{
+                        transform: isRTL ? "scaleX(-1)" : undefined,
+                        textAlign: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          background: "hsl(var(--mentor-accent))",
+                          color: "hsl(var(--mentor-accent-foreground))",
+                          padding: "4px 12px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          letterSpacing: 0.5,
+                          textTransform: "uppercase",
+                          boxShadow: "0 4px 14px hsl(var(--mentor-accent) / 0.45)",
+                        }}
+                      >
+                        {isRTL ? "כאן אתם עכשיו" : "You are here"}
+                      </span>
+                    </div>
+                  </foreignObject>
+                )}
+              </motion.g>
+            );
+          })}
+
+          {/* Finish flag */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 + STAGES.length * 0.18, type: "spring", stiffness: 120 }}
+          >
+            <circle
+              cx={FINISH.x}
+              cy={FINISH.y}
+              r={56}
+              fill="url(#finishGradient)"
+              filter="url(#strongGlow)"
+            />
+            <circle
+              cx={FINISH.x}
+              cy={FINISH.y}
+              r={56}
+              fill="none"
+              stroke="hsl(var(--card))"
+              strokeWidth={4}
+            />
+            <foreignObject x={FINISH.x - 24} y={FINISH.y - 24} width={48} height={48}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: isRTL ? "scaleX(-1)" : undefined,
+                  color: "hsl(var(--mentor-accent-foreground))",
+                }}
+              >
+                <Trophy size={36} strokeWidth={2.2} />
+              </div>
+            </foreignObject>
+            <foreignObject x={FINISH.x - 160} y={FINISH.y + 70} width={320} height={70}>
+              <div
+                style={{
+                  transform: isRTL ? "scaleX(-1)" : undefined,
+                  textAlign: "center",
+                  direction: isRTL ? "rtl" : "ltr",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "Heebo, serif",
+                    fontWeight: 700,
+                    fontSize: 20,
+                    color: "hsl(var(--foreground))",
+                  }}
+                >
+                  {isRTL ? "קליניקה משגשגת" : "A Thriving Practice"}
+                </div>
+                <div style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginTop: 4 }}>
+                  {isRTL ? "יומן מלא · מחיר הוגן · ראש שקט" : "Full calendar · Fair pricing · Peace of mind"}
+                </div>
+              </div>
+            </foreignObject>
+          </motion.g>
+        </svg>
+
+        {/* Progress + active station footer */}
+        <div className="relative px-5 md:px-8 py-5 border-t border-mentor-border/40 bg-card/60 backdrop-blur">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <span className="font-medium">{isRTL ? "ההתקדמות שלכם" : "Your progress"}</span>
+            <span className="font-medium">{isRTL ? "התקדמות במסע" : "Journey progress"}</span>
             <span className="font-bold text-mentor-accent text-sm">{progressPct}%</span>
           </div>
           <div className="h-2.5 bg-mentor-accent/10 rounded-full overflow-hidden shadow-inner">
@@ -135,198 +533,46 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
               transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
             />
           </div>
-        </div>
-      </div>
 
-      {/* Vertical timeline */}
-      <div className="relative max-w-2xl mx-auto">
-        {/* Spine line (background) */}
-        <div
-          className={cn(
-            "absolute top-0 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-border/60 via-mentor-border/40 to-mentor-border/20",
-            isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
-          )}
-          aria-hidden
-        />
-        {/* Spine line (progress fill) */}
-        <motion.div
-          aria-hidden
-          initial={{ height: 0 }}
-          animate={{ height: `${Math.min(100, (completedCount / STAGES.length) * 100 + (hasStarted ? 6 : 0))}%` }}
-          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.2 }}
-          className={cn(
-            "absolute top-0 w-[3px] rounded-full bg-gradient-to-b from-mentor-accent via-primary to-mentor-accent shadow-[0_0_10px_hsl(var(--mentor-accent)/0.6)]",
-            isRTL ? "right-6 md:right-8" : "left-6 md:left-8"
-          )}
-        />
-
-        <ol className="space-y-5 md:space-y-6">
-          {STAGES.map((stage, idx) => {
-            const Icon = stage.icon;
-            const isCompleted = stage.number < currentStep;
-            const isActive = stage.number === currentStep && hasStarted;
-            const isUpcoming = stage.number > currentStep || !hasStarted && stage.number > 1;
-            const status: "completed" | "active" | "upcoming" = isCompleted
-              ? "completed"
-              : isActive
-              ? "active"
-              : "upcoming";
-
-            return (
-              <motion.li
-                key={stage.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="relative"
-              >
-                <div className={cn("flex gap-4 md:gap-5", isRTL && "flex-row")}>
-                  {/* Node */}
-                  <div className="relative z-10 flex-shrink-0">
-                    {status === "active" && (
-                      <>
-                        <span aria-hidden className="absolute inset-0 rounded-full bg-mentor-accent/30 animate-ping" />
-                        <span aria-hidden className="absolute -inset-1 rounded-full bg-mentor-accent/20 blur-md" />
-                      </>
-                    )}
-                    <div
-                      className={cn(
-                        "relative w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 shadow-md transition-all duration-500",
-                        status === "completed" &&
-                          "bg-gradient-to-br from-mentor-accent to-primary text-mentor-accent-foreground border-mentor-accent shadow-[0_4px_14px_hsl(var(--mentor-accent)/0.4)]",
-                        status === "active" &&
-                          "bg-gradient-to-br from-card to-mentor-accent/10 text-mentor-accent border-mentor-accent ring-4 ring-mentor-accent/30 shadow-[0_0_24px_hsl(var(--mentor-accent)/0.5)]",
-                        status === "upcoming" &&
-                          "bg-mentor-surface text-muted-foreground border-mentor-border/70 border-dashed"
-                      )}
-                    >
-                      {status === "completed" ? (
-                        <Check className="w-5 h-5 md:w-7 md:h-7" strokeWidth={3} />
-                      ) : (
-                        <Icon className="w-5 h-5 md:w-7 md:h-7" />
-                      )}
-                    </div>
-                    {/* Step number badge */}
-                    <span
-                      className={cn(
-                        "absolute -top-1 text-[10px] md:text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow border",
-                        isRTL ? "-left-1" : "-right-1",
-                        status === "completed" && "bg-card text-mentor-accent border-mentor-accent",
-                        status === "active" && "bg-mentor-accent text-mentor-accent-foreground border-card",
-                        status === "upcoming" && "bg-card text-muted-foreground border-mentor-border"
-                      )}
-                    >
-                      {stage.number}
-                    </span>
-                  </div>
-
-                  {/* Content card */}
-                  <div
-                    className={cn(
-                      "flex-1 rounded-2xl p-4 md:p-5 border transition-all duration-300",
-                      status === "completed" &&
-                        "bg-mentor-accent/5 border-mentor-accent/30",
-                      status === "active" &&
-                        "bg-card border-mentor-accent/60 shadow-lg ring-1 ring-mentor-accent/20",
-                      status === "upcoming" &&
-                        "bg-mentor-surface/40 border-mentor-border/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <h3
-                        className={cn(
-                          "font-serif text-base md:text-lg font-semibold",
-                          status === "upcoming" ? "text-muted-foreground" : "text-foreground"
-                        )}
-                      >
-                        {isRTL ? stage.titleHe : stage.titleEn}
-                      </h3>
-                      {status === "active" && (
-                        <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider bg-mentor-accent text-mentor-accent-foreground px-2 py-0.5 rounded-full">
-                          {isRTL ? "כאן אתם עכשיו" : "You are here"}
-                        </span>
-                      )}
-                      {status === "completed" && (
-                        <span className="text-[10px] md:text-xs font-medium bg-mentor-accent/15 text-mentor-accent px-2 py-0.5 rounded-full">
-                          {isRTL ? "הושלם" : "Completed"}
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      className={cn(
-                        "text-sm leading-relaxed mb-3",
-                        status === "upcoming" ? "text-muted-foreground/80" : "text-muted-foreground"
-                      )}
-                    >
-                      {isRTL ? stage.descHe : stage.descEn}
-                    </p>
-
-                    {/* Stuck points only for active stage */}
-                    {status === "active" && recentStuck.length > 0 && (
-                      <div className="mt-3 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <AlertCircle className="w-3.5 h-3.5 text-destructive" />
-                          <span className="text-xs font-semibold text-destructive">
-                            {isRTL ? "נקודות לתשומת לב" : "Sticking points"}
-                          </span>
-                        </div>
-                        <ul className="space-y-1">
-                          {recentStuck.map((sp, i) => (
-                            <li key={i} className="text-xs text-foreground/80 flex gap-1.5">
-                              <Circle className="w-1.5 h-1.5 mt-1.5 fill-destructive text-destructive flex-shrink-0" />
-                              <span>{sp}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* CTA to open bot for active stage */}
-                    {status === "active" && stage.botKey && onOpenBot && (
-                      <button
-                        onClick={() => onOpenBot(stage.botKey!)}
-                        className="mt-3 inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-mentor-accent hover:underline"
-                      >
-                        {isRTL ? "המשיכו עם הכלי המתאים ←" : "→ Continue with the right tool"}
-                      </button>
-                    )}
-                  </div>
+          {activeStage && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-wider text-mentor-accent font-bold">
+                  {isRTL ? "התחנה הנוכחית" : "Current station"}
                 </div>
-              </motion.li>
-            );
-          })}
-
-          {/* Final outcome */}
-          <motion.li
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="relative"
-          >
-            <div className={cn("flex gap-4 md:gap-5")}>
-              <div className="relative z-10 flex-shrink-0">
-                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 border-mentor-accent bg-gradient-to-br from-mentor-accent via-mentor-accent to-primary text-mentor-accent-foreground shadow-xl">
-                  <Trophy className="w-6 h-6 md:w-8 md:h-8" />
+                <div className="font-serif text-lg font-semibold text-foreground">
+                  {isRTL ? activeStage.titleHe : activeStage.titleEn}
                 </div>
               </div>
-              <div className="flex-1 rounded-2xl p-5 md:p-6 border-2 border-mentor-accent/40 bg-gradient-to-br from-mentor-accent/10 via-card to-mentor-accent/5">
-                <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-mentor-accent">
-                  {isRTL ? "התוצאה" : "The Outcome"}
-                </span>
-                <h3 className="font-serif text-lg md:text-2xl font-semibold text-foreground mt-1 mb-2">
-                  {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A full practice. A calm mind. Real growth."}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {isRTL
-                    ? "יומן עמוס במטופלים שמתאימים לכם, מחיר שמשקף את הערך שלכם, ופרקטיקה שמתפרנסת בכבוד — בלי להתפשר על מי שאתם."
-                    : "A calendar full of clients who fit you, pricing that reflects your value, and a practice that earns with dignity — without compromising who you are."}
-                </p>
-              </div>
+              {activeStage.botKey && onOpenBot && (
+                <button
+                  onClick={() => onOpenBot(activeStage.botKey!)}
+                  className="text-sm font-semibold px-4 py-2 rounded-full bg-mentor-accent text-mentor-accent-foreground hover:bg-mentor-accent/90 transition-colors shadow"
+                >
+                  {isRTL ? "המשיכו עם הכלי המתאים ←" : "→ Continue with the right tool"}
+                </button>
+              )}
             </div>
-          </motion.li>
-        </ol>
+          )}
+
+          {recentStuck.length > 0 && (
+            <div className="mt-4 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+                <span className="text-xs font-semibold text-destructive">
+                  {isRTL ? "נקודות לתשומת לב במסע" : "Sticking points on the path"}
+                </span>
+              </div>
+              <ul className="space-y-1">
+                {recentStuck.map((sp, i) => (
+                  <li key={i} className="text-xs text-foreground/80">
+                    • {sp}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
