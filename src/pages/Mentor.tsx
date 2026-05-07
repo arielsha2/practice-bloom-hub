@@ -300,6 +300,10 @@ export default function Mentor() {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40">
+          <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
+        </section>
+
         <section className="container mx-auto px-4 py-6 md:py-8">
           {/* CTA card — opens the floating chat popup */}
           <div className="max-w-3xl mx-auto bg-card border border-mentor-border/60 rounded-2xl p-6 md:p-8 shadow-sm text-center">
