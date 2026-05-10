@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { SEOHead } from "@/components/SEOHead";
 
 interface SiteContent {
   fullName: string;
@@ -108,6 +109,19 @@ export default function PublicTherapistSite() {
 
   const c = site.content;
 
+  const seoDescRaw = (c.keyPhrase || c.about || "").replace(/\s+/g, " ").trim();
+  const seoDesc = seoDescRaw.length > 160 ? seoDescRaw.slice(0, 157) + "..." : seoDescRaw;
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: c.fullName,
+    jobTitle: c.title,
+    description: seoDesc,
+    url: `https://therapykeys.co.il/t/${site.slug}`,
+    image: c.avatarUrl,
+    address: { "@type": "PostalAddress", addressCountry: "IL" },
+  };
+
   return (
     <div
       dir="rtl"
@@ -118,6 +132,14 @@ export default function PublicTherapistSite() {
         minHeight: "100vh",
       }}
     >
+      <SEOHead
+        title={`${c.fullName} — ${c.title}`}
+        description={seoDesc || `${c.fullName} — ${c.title}. קביעת שיחת היכרות.`}
+        canonicalUrl={`/t/${site.slug}`}
+        ogImage={c.avatarUrl}
+        ogType="profile"
+        jsonLd={personLd}
+      />
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         {/* HERO */}
         <section style={{ padding: "48px 24px", textAlign: "center" }}>
