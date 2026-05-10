@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.mentor-analyze]
 verify_jwt = false
+
+[functions.website-submit-lead]
+verify_jwt = false
