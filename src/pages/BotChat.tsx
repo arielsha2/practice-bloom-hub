@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const botIcons: Record<string, React.ReactNode> = {
   'niche-finder': <Compass className="w-5 h-5 text-primary" />,
