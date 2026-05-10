@@ -23,14 +23,21 @@ interface Site {
   calendar_link: string | null;
 }
 
-const STYLES = {
-  bg: "#FAF8F5",
-  card: "#FFFFFF",
-  accent: "#6B5B8B",
-  cta: "#E8917A",
-  text: "#2D2D2D",
-  muted: "#6B6B6B",
+// Editorial "boutique therapist" palette (warm cream + deep charcoal + soft blush)
+const C = {
+  cream: "#F4EFE7",
+  creamSoft: "#EAE3D6",
+  blush: "#E9D9CC",
+  ink: "#2A2D2C",
+  inkSoft: "#3A3D3C",
+  text: "#26272A",
+  muted: "#6E6B66",
+  line: "#D9D2C5",
+  white: "#FFFFFF",
 };
+
+const FONT_HEAD = `"Playfair Display", "Cormorant Garamond", Georgia, "David Libre", serif`;
+const FONT_BODY = `"Assistant", "Heebo", system-ui, sans-serif`;
 
 export default function PublicTherapistSite() {
   const { slug } = useParams<{ slug: string }>();
@@ -38,12 +45,24 @@ export default function PublicTherapistSite() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Form state
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Inject Playfair Display once
+  useEffect(() => {
+    const id = "tk-public-fonts";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Assistant:wght@300;400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -60,7 +79,6 @@ export default function PublicTherapistSite() {
     })();
   }, [slug]);
 
-  // Update <title>
   useEffect(() => {
     if (site?.content?.fullName) {
       document.title = `${site.content.fullName} — ${site.content.title}`;
@@ -90,24 +108,34 @@ export default function PublicTherapistSite() {
 
   if (loading) {
     return (
-      <div dir="rtl" style={{ background: STYLES.bg }} className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: STYLES.accent }} />
+      <div dir="rtl" style={{ background: C.cream }} className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: C.ink }} />
       </div>
     );
   }
 
   if (notFound || !site) {
     return (
-      <div dir="rtl" style={{ background: STYLES.bg, color: STYLES.text, fontFamily: "Assistant, Heebo, sans-serif" }} className="min-h-screen flex items-center justify-center px-6 text-center">
+      <div
+        dir="rtl"
+        style={{ background: C.cream, color: C.text, fontFamily: FONT_BODY }}
+        className="min-h-screen flex items-center justify-center px-6 text-center"
+      >
         <div>
-          <h1 className="text-2xl font-semibold mb-2">הדף לא נמצא</h1>
-          <p style={{ color: STYLES.muted }}>הקישור שגוי או שהדף לא פורסם.</p>
+          <h1 style={{ fontFamily: FONT_HEAD }} className="text-3xl mb-2">הדף לא נמצא</h1>
+          <p style={{ color: C.muted }}>הקישור שגוי או שהדף לא פורסם.</p>
         </div>
       </div>
     );
   }
 
   const c = site.content;
+  const initials = (c.fullName || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0])
+    .join("");
 
   const seoDescRaw = (c.keyPhrase || c.about || "").replace(/\s+/g, " ").trim();
   const seoDesc = seoDescRaw.length > 160 ? seoDescRaw.slice(0, 157) + "..." : seoDescRaw;
@@ -122,14 +150,19 @@ export default function PublicTherapistSite() {
     address: { "@type": "PostalAddress", addressCountry: "IL" },
   };
 
+  const showCalendar = site.contact_method === "calendar" && !!site.calendar_link;
+  const ctaHref = showCalendar ? site.calendar_link! : "#contact";
+  const ctaTarget = showCalendar ? "_blank" : undefined;
+
   return (
     <div
       dir="rtl"
       style={{
-        background: STYLES.bg,
-        color: STYLES.text,
-        fontFamily: "Assistant, Heebo, sans-serif",
+        background: C.cream,
+        color: C.text,
+        fontFamily: FONT_BODY,
         minHeight: "100vh",
+        lineHeight: 1.6,
       }}
     >
       <SEOHead
@@ -140,136 +173,386 @@ export default function PublicTherapistSite() {
         ogType="profile"
         jsonLd={personLd}
       />
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
-        {/* HERO */}
-        <section style={{ padding: "48px 24px", textAlign: "center" }}>
-          {c.avatarUrl && (
+
+      {/* TOP BAR */}
+      <header
+        style={{
+          background: C.cream,
+          borderBottom: `1px solid ${C.line}`,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            padding: "20px 32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ fontFamily: FONT_HEAD, fontSize: 22, color: C.ink, letterSpacing: 0.5 }}>
+            {c.fullName}
+          </div>
+          <a
+            href={ctaHref}
+            target={ctaTarget}
+            rel={ctaTarget ? "noreferrer" : undefined}
+            style={{
+              display: "inline-block",
+              padding: "12px 24px",
+              border: `1px solid ${C.ink}`,
+              color: C.ink,
+              textDecoration: "none",
+              fontSize: 13,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              background: "transparent",
+            }}
+          >
+            קביעת פגישה
+          </a>
+        </div>
+      </header>
+
+      {/* HERO — split */}
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          minHeight: "70vh",
+          background: C.cream,
+        }}
+        className="tk-hero"
+      >
+        <div
+          style={{
+            background: C.creamSoft,
+            position: "relative",
+            minHeight: 480,
+            overflow: "hidden",
+          }}
+        >
+          {c.avatarUrl ? (
             <img
               src={c.avatarUrl}
               alt={c.fullName}
               style={{
-                width: 120, height: 120, borderRadius: "50%", objectFit: "cover",
-                margin: "0 auto 24px", display: "block",
-                border: `3px solid ${STYLES.card}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+                position: "absolute",
+                inset: 0,
               }}
             />
+          ) : (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: FONT_HEAD,
+                fontSize: 96,
+                color: C.ink,
+                background: `linear-gradient(135deg, ${C.blush}, ${C.creamSoft})`,
+              }}
+            >
+              {initials || "•"}
+            </div>
           )}
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 8px" }}>{c.fullName}</h1>
-          <p style={{ color: STYLES.muted, fontSize: 16, margin: "0 0 24px" }}>{c.title}</p>
-          <p style={{ fontSize: 18, lineHeight: 1.5, margin: "0 0 32px" }}>{c.keyPhrase}</p>
-          <a
-            href="#contact"
-            style={{
-              display: "inline-block",
-              background: STYLES.cta,
-              color: "#fff",
-              padding: "14px 32px",
-              borderRadius: 999,
-              textDecoration: "none",
-              fontWeight: 600,
-              fontSize: 16,
-            }}
-          >
-            דברו איתי ↓
-          </a>
-        </section>
+        </div>
 
-        {/* ABOUT */}
-        <section style={{ padding: "48px 24px" }}>
+        <div
+          style={{
+            background: C.ink,
+            color: C.cream,
+            padding: "80px 64px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+          className="tk-hero-right"
+        >
           <div
             style={{
-              background: STYLES.card,
-              borderRadius: 16,
-              padding: 32,
-              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+              fontSize: 12,
+              letterSpacing: 4,
+              textTransform: "uppercase",
+              opacity: 0.7,
+              marginBottom: 24,
+            }}
+          >
+            {c.title}
+          </div>
+          <h1
+            style={{
+              fontFamily: FONT_HEAD,
+              fontSize: "clamp(32px, 4vw, 52px)",
+              fontWeight: 500,
+              lineHeight: 1.15,
+              margin: 0,
+              color: C.cream,
+            }}
+          >
+            {c.keyPhrase}
+          </h1>
+          <div
+            style={{
+              width: 64,
+              height: 1,
+              background: C.cream,
+              opacity: 0.5,
+              margin: "32px 0",
+            }}
+          />
+          <p
+            style={{
               fontSize: 17,
-              lineHeight: 1.7,
+              lineHeight: 1.75,
+              color: C.cream,
+              opacity: 0.85,
+              maxWidth: 480,
+              margin: 0,
             }}
           >
             {c.about}
+          </p>
+          <div style={{ marginTop: 40 }}>
+            <a
+              href={ctaHref}
+              target={ctaTarget}
+              rel={ctaTarget ? "noreferrer" : undefined}
+              style={{
+                display: "inline-block",
+                padding: "16px 36px",
+                border: `1px solid ${C.cream}`,
+                color: C.cream,
+                textDecoration: "none",
+                fontSize: 13,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+              }}
+            >
+              {showCalendar ? "קבעו שיחת היכרות" : "השאירו פרטים"}
+            </a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* FOR YOU IF */}
-        <section style={{ padding: "48px 24px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 24, textAlign: "center" }}>
-            הדף הזה בשבילך אם...
-          </h2>
+      {/* SIGNATURE STRIP */}
+      <div
+        style={{
+          background: C.blush,
+          padding: "56px 32px",
+          textAlign: "center",
+          borderTop: `1px solid ${C.line}`,
+          borderBottom: `1px solid ${C.line}`,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: FONT_HEAD,
+            fontStyle: "italic",
+            fontSize: "clamp(20px, 2.4vw, 28px)",
+            color: C.ink,
+            maxWidth: 760,
+            margin: "0 auto",
+            lineHeight: 1.5,
+          }}
+        >
+          “המקום שבו את/ה נמצא/ת היום — הוא לא בהכרח המקום שבו את/ה צריך/ה להישאר.”
+        </div>
+      </div>
+
+      {/* FOR YOU IF */}
+      <section style={{ padding: "96px 32px", background: C.cream }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div
             style={{
-              background: "rgba(107, 91, 139, 0.06)",
-              borderRadius: 16,
-              padding: 28,
+              fontSize: 12,
+              letterSpacing: 4,
+              textTransform: "uppercase",
+              color: C.muted,
+              textAlign: "center",
+              marginBottom: 16,
             }}
           >
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {c.forYouIf.map((line, i) => (
-                <li
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 12,
-                    padding: "10px 0",
-                    fontSize: 16,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  <span style={{ color: STYLES.accent, fontWeight: 700, fontSize: 18, flexShrink: 0 }}>✓</span>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
+            למי זה מתאים
           </div>
-        </section>
-
-        {/* CONTACT */}
-        <section id="contact" style={{ padding: "48px 24px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 24, textAlign: "center" }}>
-            דברו איתי
+          <h2
+            style={{
+              fontFamily: FONT_HEAD,
+              fontSize: "clamp(28px, 3.4vw, 42px)",
+              fontWeight: 500,
+              textAlign: "center",
+              margin: 0,
+              color: C.ink,
+            }}
+          >
+            הדף הזה בשבילך אם...
           </h2>
 
-          {site.contact_method === "calendar" && site.calendar_link ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 24,
+              marginTop: 56,
+            }}
+          >
+            {c.forYouIf.map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  background: C.white,
+                  border: `1px solid ${C.line}`,
+                  padding: "36px 28px",
+                  textAlign: "center",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: FONT_HEAD,
+                    fontStyle: "italic",
+                    fontSize: 36,
+                    color: C.blush,
+                    lineHeight: 1,
+                    marginBottom: 16,
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div style={{ fontSize: 16, lineHeight: 1.7, color: C.text }}>{line}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT — full width quote-style */}
+      <section
+        style={{
+          background: C.creamSoft,
+          padding: "96px 32px",
+        }}
+      >
+        <div style={{ maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: 4,
+              textTransform: "uppercase",
+              color: C.muted,
+              marginBottom: 16,
+            }}
+          >
+            על הדרך שלי
+          </div>
+          <h2
+            style={{
+              fontFamily: FONT_HEAD,
+              fontSize: "clamp(28px, 3.4vw, 42px)",
+              fontWeight: 500,
+              color: C.ink,
+              margin: "0 0 32px",
+            }}
+          >
+            {c.fullName}
+          </h2>
+          <p
+            style={{
+              fontFamily: FONT_HEAD,
+              fontStyle: "italic",
+              fontSize: "clamp(18px, 2vw, 22px)",
+              lineHeight: 1.7,
+              color: C.inkSoft,
+              margin: 0,
+            }}
+          >
+            {c.about}
+          </p>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" style={{ padding: "96px 32px", background: C.cream }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: 4,
+              textTransform: "uppercase",
+              color: C.muted,
+              textAlign: "center",
+              marginBottom: 16,
+            }}
+          >
+            יצירת קשר
+          </div>
+          <h2
+            style={{
+              fontFamily: FONT_HEAD,
+              fontSize: "clamp(28px, 3.4vw, 42px)",
+              fontWeight: 500,
+              textAlign: "center",
+              margin: "0 0 16px",
+              color: C.ink,
+            }}
+          >
+            בואו נדבר
+          </h2>
+          <p style={{ textAlign: "center", color: C.muted, marginBottom: 48 }}>
+            שיחת היכרות קצרה, ללא התחייבות.
+          </p>
+
+          {showCalendar ? (
             <div style={{ textAlign: "center" }}>
               <a
-                href={site.calendar_link}
+                href={site.calendar_link!}
                 target="_blank"
                 rel="noreferrer"
                 style={{
                   display: "inline-block",
-                  background: STYLES.cta,
-                  color: "#fff",
-                  padding: "14px 32px",
-                  borderRadius: 999,
+                  background: C.ink,
+                  color: C.cream,
+                  padding: "18px 44px",
                   textDecoration: "none",
-                  fontWeight: 600,
+                  fontSize: 13,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
                 }}
               >
-                קבעו שיחה ביומן
+                קביעת פגישה ביומן
               </a>
             </div>
           ) : submitted ? (
             <div
               style={{
-                background: STYLES.card,
-                borderRadius: 16,
-                padding: 32,
+                background: C.white,
+                border: `1px solid ${C.line}`,
+                padding: 48,
                 textAlign: "center",
-                fontSize: 16,
+                fontFamily: FONT_HEAD,
+                fontSize: 22,
+                color: C.ink,
               }}
             >
-              תודה! הפנייה נשלחה ואני אחזור אליך בהקדם.
+              תודה. אחזור אליך בהקדם.
             </div>
           ) : (
             <form
               onSubmit={handleSubmit}
               style={{
-                background: STYLES.card,
-                borderRadius: 16,
-                padding: 28,
+                background: C.white,
+                border: `1px solid ${C.line}`,
+                padding: 40,
                 display: "flex",
                 flexDirection: "column",
-                gap: 14,
+                gap: 20,
               }}
             >
               <input
@@ -298,50 +581,101 @@ export default function PublicTherapistSite() {
                 type="submit"
                 disabled={submitting}
                 style={{
-                  background: STYLES.cta,
-                  color: "#fff",
+                  background: C.ink,
+                  color: C.cream,
                   border: "none",
-                  padding: "14px",
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  fontSize: 16,
+                  padding: "16px",
+                  fontSize: 13,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
                   cursor: submitting ? "not-allowed" : "pointer",
                   opacity: submitting ? 0.6 : 1,
                 }}
               >
-                {submitting ? "שולח..." : "שלחו"}
+                {submitting ? "שולח..." : "שליחה"}
               </button>
             </form>
           )}
 
-          <div style={{ marginTop: 24, textAlign: "center", fontSize: 15, color: STYLES.muted }}>
-            <div>
-              <a href={`tel:${c.phone}`} style={{ color: STYLES.accent, textDecoration: "none" }}>
+          <div
+            style={{
+              marginTop: 56,
+              display: "flex",
+              justifyContent: "center",
+              gap: 48,
+              flexWrap: "wrap",
+              fontSize: 14,
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  color: C.muted,
+                  marginBottom: 8,
+                }}
+              >
+                טלפון
+              </div>
+              <a href={`tel:${c.phone}`} style={{ color: C.ink, textDecoration: "none", fontSize: 16 }}>
                 {c.phone}
               </a>
             </div>
-            <div style={{ marginTop: 4 }}>
-              <a href={`mailto:${c.email}`} style={{ color: STYLES.accent, textDecoration: "none" }}>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  color: C.muted,
+                  marginBottom: 8,
+                }}
+              >
+                אימייל
+              </div>
+              <a href={`mailto:${c.email}`} style={{ color: C.ink, textDecoration: "none", fontSize: 16 }}>
                 {c.email}
               </a>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Footer */}
-        <footer style={{ padding: "24px", textAlign: "center", fontSize: 12, color: STYLES.muted }}>
+      {/* FOOTER */}
+      <footer
+        style={{
+          background: C.ink,
+          color: C.cream,
+          padding: "48px 32px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontFamily: FONT_HEAD, fontSize: 22, marginBottom: 8 }}>{c.fullName}</div>
+        <div style={{ fontSize: 12, letterSpacing: 3, textTransform: "uppercase", opacity: 0.6 }}>
           therapykeys.co.il
-        </footer>
-      </div>
+        </div>
+      </footer>
+
+      <style>{`
+        @media (max-width: 820px) {
+          .tk-hero { grid-template-columns: 1fr !important; }
+          .tk-hero > div:first-child { min-height: 360px !important; }
+          .tk-hero-right { padding: 56px 28px !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
 const inputStyle: React.CSSProperties = {
-  border: "1px solid #E5E1D8",
-  borderRadius: 10,
-  padding: "12px 14px",
+  border: `1px solid ${C.line}`,
+  borderRadius: 0,
+  padding: "14px 16px",
   fontSize: 15,
   outline: "none",
-  background: "#fff",
+  background: C.white,
+  fontFamily: FONT_BODY,
+  color: C.text,
 };
