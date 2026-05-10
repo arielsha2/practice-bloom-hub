@@ -13,6 +13,58 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
+import { useTherapistJourney } from "@/hooks/useTherapistJourney";
+
+function WebsiteBuilderCTA() {
+  const { journey } = useTherapistJourney();
+  const navigate = useNavigate();
+  const [site, setSite] = useState<{ slug: string; is_published: boolean } | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data } = await supabase
+        .from("therapist_websites")
+        .select("slug, is_published")
+        .eq("user_id", auth.user.id)
+        .maybeSingle();
+      if (data) setSite(data);
+    })();
+  }, [journey?.self_presentation_output]);
+
+  const unlocked = !!journey?.self_presentation_output;
+  if (!unlocked && !site) return null;
+
+  return (
+    <div dir="rtl" className="max-w-3xl mx-auto mt-6 bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm text-center">
+      <h3 className="text-lg font-serif font-semibold mb-2">הכרטיס הדיגיטלי שלך</h3>
+      {site?.is_published ? (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
+          <div className="flex items-center justify-center gap-2">
+            <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
+              /t/{site.slug}
+            </a>
+            <button
+              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
+              className="text-xs px-2 py-1 rounded border hover:bg-accent"
+            >
+              העתק
+            </button>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground mb-4">מוכן לבנות את הכרטיס הדיגיטלי שלך? דף נחיתה אישי שמביא אליך מטופלים.</p>
+          <Button onClick={() => navigate("/mentor/website-builder")} className="bg-mentor-accent text-mentor-accent-foreground">
+            התחל לבנות ←
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
 
 const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
 
@@ -348,6 +400,7 @@ export default function Mentor() {
 
         <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
+          <WebsiteBuilderCTA />
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
