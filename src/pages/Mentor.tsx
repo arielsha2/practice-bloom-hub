@@ -162,6 +162,8 @@ export default function Mentor() {
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
+  const journeyRef = useRef(journey);
+  useEffect(() => { journeyRef.current = journey; }, [journey]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
