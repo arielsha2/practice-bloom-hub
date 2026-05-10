@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
+import { SEOHead } from '@/components/SEOHead';
 import { CheckCircle, User, UserPlus, Mail, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -232,6 +233,12 @@ export default function Auth() {
 
   return (
     <div className={`min-h-screen flex flex-col bg-secondary ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <SEOHead
+        title="התחברות | TherapyKeys"
+        description="כניסה לאזור האישי בפלטפורמת TherapyKeys — קורסים, עוזרי AI וכלים לבניית קליניקה פרטית למטפלים."
+        canonicalUrl="/auth"
+        noindex
+      />
       <Header />
       
       <main className="flex-1 flex items-center justify-center pt-24 pb-12 px-4">

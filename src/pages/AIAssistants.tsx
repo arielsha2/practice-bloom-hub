@@ -31,6 +31,11 @@ const AIAssistants = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen flex flex-col">
+      <SEOHead
+        title="עוזרי AI למטפלים | TherapyKeys"
+        description='מגוון עוזרי בינה מלאכותית למטפלים: מציאת נישה, תכנון אסטרטגיה, יצירת תוכן, תמחור והצגה עצמית — שיטת "על שפת הקליניקה".'
+        canonicalUrl="/ai-assistants"
+      />
       <Header />
       <main className="flex-1 pt-16">
         <section className="py-24 bg-secondary relative overflow-hidden">
