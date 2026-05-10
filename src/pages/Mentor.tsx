@@ -237,10 +237,18 @@ export default function Mentor() {
     setIsLoading(true);
 
     try {
+      const journey_context = journey
+        ? {
+            niche_output: journey.niche_output,
+            self_presentation_output: journey.self_presentation_output,
+            completed_stages: journey.completed_stages,
+            tool_summaries: (journey.reflection as any)?.tool_summaries ?? null,
+          }
+        : null;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, language }),
+        body: JSON.stringify({ messages: next, language, journey_context }),
       });
 
       if (!resp.ok || !resp.body) {
