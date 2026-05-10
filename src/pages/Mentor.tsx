@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 
