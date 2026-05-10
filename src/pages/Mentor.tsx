@@ -187,6 +187,12 @@ export default function Mentor() {
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
+  const [pendingReturn, setPendingReturn] = useState<{
+    botKey: string;
+    toolName: string;
+    summary: string;
+    kickoff: string;
+  } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   // Map of known AI tool URLs -> bot keys
@@ -248,22 +254,63 @@ export default function Mentor() {
     };
     const toolName = BOT_NAMES_HE[from] ?? from;
 
-    // Refresh journey so we pick up the freshly-saved summary, then send a kickoff message.
     (async () => {
       await refreshJourney();
+      const j = journeyRef.current;
+
+      // Build a human-readable summary from whatever the extractor saved
+      let summary = "";
+      if (from === "niche-finder" && j?.niche_output) {
+        const n: any = j.niche_output;
+        const parts = [
+          n.ideal_client && (isRTL ? `מטופל אידיאלי: ${n.ideal_client}` : `Ideal client: ${n.ideal_client}`),
+          n.core_pain && (isRTL ? `הכאב המרכזי: ${n.core_pain}` : `Core pain: ${n.core_pain}`),
+          n.transformation && (isRTL ? `הטרנספורמציה: ${n.transformation}` : `Transformation: ${n.transformation}`),
+          n.handshake_version && (isRTL ? `ניסוח לחיצת יד: ${n.handshake_version}` : `Handshake: ${n.handshake_version}`),
+        ].filter(Boolean);
+        summary = parts.join("\n");
+      } else if (from === "self-presentation" && j?.self_presentation_output) {
+        const s: any = j.self_presentation_output;
+        const parts = [
+          s.story_version && (isRTL ? `הסיפור: ${s.story_version}` : `Story: ${s.story_version}`),
+          s.internal_pain && (isRTL ? `כאב פנימי: ${s.internal_pain}` : `Internal pain: ${s.internal_pain}`),
+          s.external_pain && (isRTL ? `כאב חיצוני: ${s.external_pain}` : `External pain: ${s.external_pain}`),
+          s.desire && (isRTL ? `הכמיהה: ${s.desire}` : `Desire: ${s.desire}`),
+          s.result && (isRTL ? `התוצאה: ${s.result}` : `Result: ${s.result}`),
+        ].filter(Boolean);
+        summary = parts.join("\n");
+      } else {
+        const ts = (j?.reflection as any)?.tool_summaries?.[from];
+        if (ts?.summary) summary = ts.summary;
+      }
+
+      if (!summary) {
+        summary = isRTL
+          ? "לא נשמר סיכום אוטומטי לכלי הזה. תוכלו לספר למנטור במילים שלכם."
+          : "No automatic summary was saved for this tool. You can tell the Mentor in your own words.";
+      }
+
       const kickoff = isRTL
-        ? `חזרתי עכשיו מהכלי ${toolName}. מה הצעד הבא לאור מה שעלה שם?`
-        : `I just came back from the ${toolName} tool. What's the next step based on what came up there?`;
-      // Clear the URL param before sending
+        ? `חזרתי עכשיו מהכלי ${toolName}. הנה הסיכום:\n\n${summary}\n\nמה הצעד הבא לאור מה שעלה שם?`
+        : `I just came back from the ${toolName} tool. Here's the summary:\n\n${summary}\n\nWhat's the next step based on what came up there?`;
+
+      setPendingReturn({ botKey: from, toolName, summary, kickoff });
+
+      // Clear the URL param
       const next = new URLSearchParams(searchParams);
       next.delete("from");
       setSearchParams(next, { replace: true });
-      setChatOpen(true);
-      // small delay so journey state propagates into send's closure on next render
-      setTimeout(() => { send(kickoff); }, 100);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  const confirmPendingReturn = () => {
+    if (!pendingReturn) return;
+    const kickoff = pendingReturn.kickoff;
+    setPendingReturn(null);
+    setChatOpen(true);
+    setTimeout(() => { send(kickoff); }, 100);
+  };
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -457,6 +504,58 @@ export default function Mentor() {
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
+          {/* Returned-from-tool confirmation card */}
+          {pendingReturn && (
+            <div
+              ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="max-w-3xl mx-auto mb-6 bg-mentor-accent/5 border-2 border-mentor-accent/40 rounded-2xl p-6 shadow-md"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="w-5 h-5 text-mentor-accent flex-shrink-0" />
+                <h3 className="text-base md:text-lg font-serif font-semibold text-foreground">
+                  {isRTL
+                    ? `סיימתם לעבוד עם ${pendingReturn.toolName}`
+                    : `You finished working with ${pendingReturn.toolName}`}
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                {isRTL
+                  ? "זה הסיכום שיועבר למנטור. בדקו אותו לפני שתמשיכו את השיחה."
+                  : "This is the summary that will be passed to the Mentor. Review it before continuing the conversation."}
+              </p>
+              <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-64 overflow-auto">
+                <pre className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                  {pendingReturn.summary}
+                </pre>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPendingReturn(null)}
+                >
+                  {isRTL ? "סגור" : "Dismiss"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}
+                >
+                  {isRTL ? "חזרה לכלי" : "Back to tool"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={confirmPendingReturn}
+                  className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {isRTL ? "המשיכו עם המנטור" : "Continue with the Mentor"}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* CTA card — opens the floating chat popup */}
           <div className="max-w-3xl mx-auto bg-card border border-mentor-border/60 rounded-2xl p-6 md:p-8 shadow-sm text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
