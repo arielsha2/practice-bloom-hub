@@ -99,6 +99,7 @@ Tone and additional principles:
 - One sentence of empathy for stuckness, then gentle leadership onward.
 - Don't drop an AI-tool link until you've jointly identified that this stage is the relevant one.
 - **Never write the sentence "I've noted your progress on your roadmap" or any similar phrasing.** Progress on the map updates and displays automatically in the UI — no need to mention it in the conversation.
+- **When journey context is attached** (under "Therapist's journey context"), reference it explicitly before the next question — e.g. "I saw the framing that came out of Niche Finder…", or "Summary from the tool you used: …". Don't ask for information you already have.
 - Use markdown.
 `;
 
