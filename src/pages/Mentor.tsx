@@ -274,12 +274,13 @@ export default function Mentor() {
     setIsLoading(true);
 
     try {
-      const journey_context = journey
+      const j = journeyRef.current;
+      const journey_context = j
         ? {
-            niche_output: journey.niche_output,
-            self_presentation_output: journey.self_presentation_output,
-            completed_stages: journey.completed_stages,
-            tool_summaries: (journey.reflection as any)?.tool_summaries ?? null,
+            niche_output: j.niche_output,
+            self_presentation_output: j.self_presentation_output,
+            completed_stages: j.completed_stages,
+            tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
           }
         : null;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
