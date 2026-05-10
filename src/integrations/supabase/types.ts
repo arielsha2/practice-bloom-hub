@@ -868,6 +868,36 @@ export type Database = {
         }
         Relationships: []
       }
+      therapist_leads: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          name: string
+          phone: string
+          slug: string
+          therapist_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          name: string
+          phone: string
+          slug: string
+          therapist_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string
+          slug?: string
+          therapist_user_id?: string
+        }
+        Relationships: []
+      }
       therapist_websites: {
         Row: {
           calendar_link: string | null
