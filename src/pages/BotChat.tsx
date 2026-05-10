@@ -48,10 +48,12 @@ const BotChat = () => {
   const botKey = paramBotKey || 'contact-finder';
   const { user, loading: authLoading } = useAuth();
   const { t, isRTL, language } = useLanguage();
+  const navigate = useNavigate();
   
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [returningToMentor, setReturningToMentor] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isStreamingRef = useRef(false);
   const [currentStage, setCurrentStage] = useState(1);
