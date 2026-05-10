@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Menu, Settings } from 'lucide-react';
+import { ArrowRight, Menu, Settings, Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 
@@ -9,6 +9,8 @@ interface ChatHeaderProps {
   botIcon: React.ReactNode;
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
+  onReturnToMentor?: () => void;
+  isReturningToMentor?: boolean;
 }
 
 export function ChatHeader({
@@ -16,6 +18,8 @@ export function ChatHeader({
   botIcon,
   onToggleSidebar,
   showMenuButton,
+  onReturnToMentor,
+  isReturningToMentor,
 }: ChatHeaderProps) {
   const { t, isRTL } = useLanguage();
   const { isAdmin } = useIsAdmin();
@@ -44,6 +48,23 @@ export function ChatHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {onReturnToMentor && (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={onReturnToMentor}
+            disabled={isReturningToMentor}
+            className="gap-1.5 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+          >
+            {isReturningToMentor ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {isRTL ? 'חזרה למנטור עם הסיכום' : 'Return to Mentor'}
+          </Button>
+        )}
+
         {isAdmin && (
           <Link to="/admin/bots">
             <Button variant="ghost" size="icon" className="text-muted-foreground">

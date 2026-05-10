@@ -50,6 +50,7 @@ const SYSTEM_PROMPT_HE = `אתה "המנטור" — מנטור מקצועי למ
 - אמפתיה לתקיעות במשפט אחד, ואז הובלה עדינה הלאה.
 - אל תשחרר קישור לכלי AI לפני שזיהיתם יחד שזה השלב הרלוונטי.
 - **אל תכתוב לעולם את המשפט "סימנתי לך את ההתקדמות במפת המסע" או כל ניסוח דומה.** ההתקדמות במפה מתעדכנת ומוצגת אוטומטית בממשק — אין צורך להזכיר זאת בשיחה.
+- **כשמצורף לך הקשר על תוצרי כלי שהמטפל השלים** (תחת "מידע מהמסע של המטפל"), התייחס אליו במפורש לפני השאלה הבאה — למשל "ראיתי את הניסוח שיצא לך ב-Niche Finder…", או "סיכום מהכלי שעבדת איתו: …". אל תבקש מידע שכבר קיבלת בו.
 - השתמש במרקדאון.
 `;
 
@@ -98,6 +99,7 @@ Tone and additional principles:
 - One sentence of empathy for stuckness, then gentle leadership onward.
 - Don't drop an AI-tool link until you've jointly identified that this stage is the relevant one.
 - **Never write the sentence "I've noted your progress on your roadmap" or any similar phrasing.** Progress on the map updates and displays automatically in the UI — no need to mention it in the conversation.
+- **When journey context is attached** (under "Therapist's journey context"), reference it explicitly before the next question — e.g. "I saw the framing that came out of Niche Finder…", or "Summary from the tool you used: …". Don't ask for information you already have.
 - Use markdown.
 `;
 
@@ -105,7 +107,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language } = await req.json();
+    const { messages, language, journey_context } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -114,7 +116,38 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_HE;
+    const baseSystemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_HE;
+
+    // Build journey context block
+    let journeyBlock = "";
+    if (journey_context && typeof journey_context === "object") {
+      const lines: string[] = [];
+      const niche = journey_context.niche_output;
+      const sp = journey_context.self_presentation_output;
+      const completed = journey_context.completed_stages;
+      const toolSummaries = journey_context.tool_summaries;
+
+      if (niche && typeof niche === "object" && Object.keys(niche).length > 0) {
+        lines.push(`Niche Finder output: ${JSON.stringify(niche)}`);
+      }
+      if (sp && typeof sp === "object" && Object.keys(sp).length > 0) {
+        lines.push(`Self Presentation output: ${JSON.stringify(sp)}`);
+      }
+      if (Array.isArray(completed) && completed.length > 0) {
+        lines.push(`Completed stages: ${completed.join(", ")}`);
+      }
+      if (toolSummaries && typeof toolSummaries === "object") {
+        for (const [k, v] of Object.entries(toolSummaries)) {
+          const summary = (v as any)?.summary;
+          if (summary) lines.push(`Tool "${k}" summary: ${summary}`);
+        }
+      }
+      if (lines.length > 0) {
+        journeyBlock = `\n\n═══════════════════════════════\nמידע מהמסע של המטפל / Therapist's journey context (use it, don't re-ask):\n═══════════════════════════════\n${lines.join("\n")}`;
+      }
+    }
+
+    const systemPrompt = baseSystemPrompt + journeyBlock;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

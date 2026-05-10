@@ -35,6 +35,14 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   },
 };
 
+// Generic prompt for any other bot — produces a short summary string
+const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למטפל פסיכותרפיסט.
+החזר JSON תקין בלבד בפורמט הבא:
+{
+  "summary": "סיכום קצר בעברית, 2-4 משפטים, של מה שהמטפל גילה / החליט / תרגל בכלי. דבר בגוף ראשון של המטפל ('הבנתי ש...', 'החלטתי ש...', 'תרגלתי...'). אם אין מסקנה ברורה — תאר במשפט מה נדון."
+}
+השתמש רק במה שאמר המטפל בפועל. אל תמציא.`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -62,12 +70,7 @@ Deno.serve(async (req) => {
 
     const { botKey, conversationId } = await req.json();
     const cfg = PROMPTS[botKey];
-    if (!cfg) {
-      return new Response(JSON.stringify({ error: "Unsupported bot" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const isGeneric = !cfg;
     if (!conversationId) {
       return new Response(JSON.stringify({ error: "conversationId required" }), {
         status: 400,
@@ -102,14 +105,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    const systemPrompt = isGeneric ? GENERIC_SUMMARY_SYSTEM : cfg!.system;
+
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: cfg.system },
-          { role: "user", content: `שיחה לניתוח:\n\n${transcript}` },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `שיחה לניתוח (כלי: ${botKey}):\n\n${transcript}` },
         ],
         response_format: { type: "json_object" },
       }),
@@ -136,19 +141,41 @@ Deno.serve(async (req) => {
     // Upsert into therapist_journeys
     const { data: existing } = await supabase
       .from("therapist_journeys")
-      .select("id")
+      .select("id, reflection")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (existing) {
-      await supabase
-        .from("therapist_journeys")
-        .update({ [cfg.column]: parsed, updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
+    if (isGeneric) {
+      // Save generic summary under reflection.tool_summaries[botKey]
+      const reflection = (existing?.reflection as Record<string, any>) ?? {};
+      const toolSummaries = (reflection.tool_summaries as Record<string, any>) ?? {};
+      toolSummaries[botKey] = {
+        summary: parsed.summary ?? "",
+        updated_at: new Date().toISOString(),
+      };
+      const newReflection = { ...reflection, tool_summaries: toolSummaries };
+
+      if (existing) {
+        await supabase
+          .from("therapist_journeys")
+          .update({ reflection: newReflection, updated_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+      } else {
+        await supabase
+          .from("therapist_journeys")
+          .insert({ user_id: user.id, reflection: newReflection });
+      }
     } else {
-      await supabase
-        .from("therapist_journeys")
-        .insert({ user_id: user.id, [cfg.column]: parsed });
+      if (existing) {
+        await supabase
+          .from("therapist_journeys")
+          .update({ [cfg!.column]: parsed, updated_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+      } else {
+        await supabase
+          .from("therapist_journeys")
+          .insert({ user_id: user.id, [cfg!.column]: parsed });
+      }
     }
 
     return new Response(JSON.stringify({ success: true, output: parsed }), {

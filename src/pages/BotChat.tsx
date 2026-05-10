@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Compass, Map, PenTool, Handshake, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,10 +48,12 @@ const BotChat = () => {
   const botKey = paramBotKey || 'contact-finder';
   const { user, loading: authLoading } = useAuth();
   const { t, isRTL, language } = useLanguage();
+  const navigate = useNavigate();
   
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [returningToMentor, setReturningToMentor] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isStreamingRef = useRef(false);
   const [currentStage, setCurrentStage] = useState(1);
@@ -225,6 +227,30 @@ const BotChat = () => {
   const showWelcome = messages.length === 0 && welcomeMessage;
   const showDifficultySelector = botKey === 'connection-bridge' && messages.length === 0 && !activeConversationId;
 
+  const handleReturnToMentor = async () => {
+    if (!user || !botKey) {
+      navigate('/mentor');
+      return;
+    }
+    setReturningToMentor(true);
+    try {
+      // If we have a conversation with at least one assistant reply, extract a summary
+      const hasContent = messages.filter((m) => m.role === 'assistant').length >= 1 && activeConversationId;
+      if (hasContent) {
+        try {
+          await supabase.functions.invoke('bot-extract-output', {
+            body: { botKey, conversationId: activeConversationId },
+          });
+        } catch (e) {
+          console.warn('extract failed, continuing to mentor', e);
+        }
+      }
+      navigate(`/mentor?from=${encodeURIComponent(botKey)}`);
+    } finally {
+      setReturningToMentor(false);
+    }
+  };
+
   const handleSend = (content: string) => {
     // Stop any playing TTS before sending new message
     window.dispatchEvent(new Event('stopAllTTS'));
@@ -262,6 +288,8 @@ const BotChat = () => {
           botIcon={botIcon}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton
+          onReturnToMentor={user ? handleReturnToMentor : undefined}
+          isReturningToMentor={returningToMentor}
         />
 
         {/* Connection Bridge Stepper */}

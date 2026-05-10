@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 
@@ -161,7 +161,10 @@ export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
-
+  const { journey, refresh: refreshJourney } = useTherapistJourney();
+  const journeyRef = useRef(journey);
+  useEffect(() => { journeyRef.current = journey; }, [journey]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
@@ -227,6 +230,41 @@ export default function Mentor() {
     setInput("");
   }, [language, storageKey]);
 
+  // Handle return from a bot tool: ?from=<botKey>
+  const handledFromRef = useRef(false);
+  useEffect(() => {
+    const from = searchParams.get("from");
+    if (!from || handledFromRef.current) return;
+    handledFromRef.current = true;
+
+    const BOT_NAMES_HE: Record<string, string> = {
+      "niche-finder": "Niche Finder",
+      "self-presentation": "Self Presentation",
+      "pricing-calculator": "Pricing Calculator",
+      "connection-bridge": "Connection Bridge",
+      "contact-finder": "Contact Finder",
+      "strategy-planner": "Strategy Planner",
+      "content-creator": "Content Creator",
+    };
+    const toolName = BOT_NAMES_HE[from] ?? from;
+
+    // Refresh journey so we pick up the freshly-saved summary, then send a kickoff message.
+    (async () => {
+      await refreshJourney();
+      const kickoff = isRTL
+        ? `חזרתי עכשיו מהכלי ${toolName}. מה הצעד הבא לאור מה שעלה שם?`
+        : `I just came back from the ${toolName} tool. What's the next step based on what came up there?`;
+      // Clear the URL param before sending
+      const next = new URLSearchParams(searchParams);
+      next.delete("from");
+      setSearchParams(next, { replace: true });
+      setChatOpen(true);
+      // small delay so journey state propagates into send's closure on next render
+      setTimeout(() => { send(kickoff); }, 100);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
@@ -236,10 +274,19 @@ export default function Mentor() {
     setIsLoading(true);
 
     try {
+      const j = journeyRef.current;
+      const journey_context = j
+        ? {
+            niche_output: j.niche_output,
+            self_presentation_output: j.self_presentation_output,
+            completed_stages: j.completed_stages,
+            tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
+          }
+        : null;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, language }),
+        body: JSON.stringify({ messages: next, language, journey_context }),
       });
 
       if (!resp.ok || !resp.body) {
