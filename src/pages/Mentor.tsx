@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { Header } from "@/components/landing/Header";
+import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -377,6 +378,11 @@ export default function Mentor() {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
+      <SEOHead
+        title='המנטור | ליווי AI אישי למטפלים — TherapyKeys'
+        description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
+        canonicalUrl="/mentor"
+      />
       <Header />
       <main className="flex-1 pt-16">
         <section className="py-3 md:py-4 border-b border-mentor-border/50">
