@@ -254,22 +254,63 @@ export default function Mentor() {
     };
     const toolName = BOT_NAMES_HE[from] ?? from;
 
-    // Refresh journey so we pick up the freshly-saved summary, then send a kickoff message.
     (async () => {
       await refreshJourney();
+      const j = journeyRef.current;
+
+      // Build a human-readable summary from whatever the extractor saved
+      let summary = "";
+      if (from === "niche-finder" && j?.niche_output) {
+        const n: any = j.niche_output;
+        const parts = [
+          n.ideal_client && (isRTL ? `מטופל אידיאלי: ${n.ideal_client}` : `Ideal client: ${n.ideal_client}`),
+          n.core_pain && (isRTL ? `הכאב המרכזי: ${n.core_pain}` : `Core pain: ${n.core_pain}`),
+          n.transformation && (isRTL ? `הטרנספורמציה: ${n.transformation}` : `Transformation: ${n.transformation}`),
+          n.handshake_version && (isRTL ? `ניסוח לחיצת יד: ${n.handshake_version}` : `Handshake: ${n.handshake_version}`),
+        ].filter(Boolean);
+        summary = parts.join("\n");
+      } else if (from === "self-presentation" && j?.self_presentation_output) {
+        const s: any = j.self_presentation_output;
+        const parts = [
+          s.story_version && (isRTL ? `הסיפור: ${s.story_version}` : `Story: ${s.story_version}`),
+          s.internal_pain && (isRTL ? `כאב פנימי: ${s.internal_pain}` : `Internal pain: ${s.internal_pain}`),
+          s.external_pain && (isRTL ? `כאב חיצוני: ${s.external_pain}` : `External pain: ${s.external_pain}`),
+          s.desire && (isRTL ? `הכמיהה: ${s.desire}` : `Desire: ${s.desire}`),
+          s.result && (isRTL ? `התוצאה: ${s.result}` : `Result: ${s.result}`),
+        ].filter(Boolean);
+        summary = parts.join("\n");
+      } else {
+        const ts = (j?.reflection as any)?.tool_summaries?.[from];
+        if (ts?.summary) summary = ts.summary;
+      }
+
+      if (!summary) {
+        summary = isRTL
+          ? "לא נשמר סיכום אוטומטי לכלי הזה. תוכלו לספר למנטור במילים שלכם."
+          : "No automatic summary was saved for this tool. You can tell the Mentor in your own words.";
+      }
+
       const kickoff = isRTL
-        ? `חזרתי עכשיו מהכלי ${toolName}. מה הצעד הבא לאור מה שעלה שם?`
-        : `I just came back from the ${toolName} tool. What's the next step based on what came up there?`;
-      // Clear the URL param before sending
+        ? `חזרתי עכשיו מהכלי ${toolName}. הנה הסיכום:\n\n${summary}\n\nמה הצעד הבא לאור מה שעלה שם?`
+        : `I just came back from the ${toolName} tool. Here's the summary:\n\n${summary}\n\nWhat's the next step based on what came up there?`;
+
+      setPendingReturn({ botKey: from, toolName, summary, kickoff });
+
+      // Clear the URL param
       const next = new URLSearchParams(searchParams);
       next.delete("from");
       setSearchParams(next, { replace: true });
-      setChatOpen(true);
-      // small delay so journey state propagates into send's closure on next render
-      setTimeout(() => { send(kickoff); }, 100);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  const confirmPendingReturn = () => {
+    if (!pendingReturn) return;
+    const kickoff = pendingReturn.kickoff;
+    setPendingReturn(null);
+    setChatOpen(true);
+    setTimeout(() => { send(kickoff); }, 100);
+  };
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
