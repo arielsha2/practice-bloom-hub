@@ -7,6 +7,8 @@ export interface TherapistJourney {
   stuck_points: string[];
   completed_stages: string[];
   reflection: Record<string, unknown>;
+  niche_output: Record<string, unknown> | null;
+  self_presentation_output: Record<string, unknown> | null;
   updated_at: string | null;
 }
 
@@ -23,7 +25,7 @@ export function useTherapistJourney() {
     }
     const { data } = await supabase
       .from("therapist_journeys")
-      .select("step_number, stuck_points, reflection, updated_at, completed_stages")
+      .select("step_number, stuck_points, reflection, updated_at, completed_stages, niche_output, self_presentation_output")
       .eq("user_id", user.id)
       .maybeSingle();
     setJourney(
@@ -33,6 +35,8 @@ export function useTherapistJourney() {
             stuck_points: (data.stuck_points as string[] | null) ?? [],
             completed_stages: ((data as any).completed_stages as string[] | null) ?? [],
             reflection: (data.reflection as Record<string, unknown>) ?? {},
+            niche_output: ((data as any).niche_output as Record<string, unknown> | null) ?? null,
+            self_presentation_output: ((data as any).self_presentation_output as Record<string, unknown> | null) ?? null,
             updated_at: data.updated_at ?? null,
           }
         : null
