@@ -504,6 +504,57 @@ export default function Mentor() {
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
+          {/* Returned-from-tool confirmation card */}
+          {pendingReturn && (
+            <div
+              dir={isRTL ? "rtl" : "ltr"}
+              className="max-w-3xl mx-auto mb-6 bg-mentor-accent/5 border-2 border-mentor-accent/40 rounded-2xl p-6 shadow-md"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="w-5 h-5 text-mentor-accent flex-shrink-0" />
+                <h3 className="text-base md:text-lg font-serif font-semibold text-foreground">
+                  {isRTL
+                    ? `סיימתם לעבוד עם ${pendingReturn.toolName}`
+                    : `You finished working with ${pendingReturn.toolName}`}
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                {isRTL
+                  ? "זה הסיכום שיועבר למנטור. בדקו אותו לפני שתמשיכו את השיחה."
+                  : "This is the summary that will be passed to the Mentor. Review it before continuing the conversation."}
+              </p>
+              <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-64 overflow-auto">
+                <pre className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                  {pendingReturn.summary}
+                </pre>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPendingReturn(null)}
+                >
+                  {isRTL ? "סגור" : "Dismiss"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}
+                >
+                  {isRTL ? "חזרה לכלי" : "Back to tool"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={confirmPendingReturn}
+                  className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {isRTL ? "המשיכו עם המנטור" : "Continue with the Mentor"}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* CTA card — opens the floating chat popup */}
           <div className="max-w-3xl mx-auto bg-card border border-mentor-border/60 rounded-2xl p-6 md:p-8 shadow-sm text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
