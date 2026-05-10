@@ -48,6 +48,23 @@ export function ChatHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {onReturnToMentor && (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={onReturnToMentor}
+            disabled={isReturningToMentor}
+            className="gap-1.5 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+          >
+            {isReturningToMentor ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {isRTL ? 'חזרה למנטור עם הסיכום' : 'Return to Mentor'}
+          </Button>
+        )}
+
         {isAdmin && (
           <Link to="/admin/bots">
             <Button variant="ghost" size="icon" className="text-muted-foreground">
