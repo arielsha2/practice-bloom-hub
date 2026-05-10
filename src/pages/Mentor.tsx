@@ -187,6 +187,12 @@ export default function Mentor() {
   const [isLoading, setIsLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
+  const [pendingReturn, setPendingReturn] = useState<{
+    botKey: string;
+    toolName: string;
+    summary: string;
+    kickoff: string;
+  } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   // Map of known AI tool URLs -> bot keys
