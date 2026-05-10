@@ -227,6 +227,30 @@ const BotChat = () => {
   const showWelcome = messages.length === 0 && welcomeMessage;
   const showDifficultySelector = botKey === 'connection-bridge' && messages.length === 0 && !activeConversationId;
 
+  const handleReturnToMentor = async () => {
+    if (!user || !botKey) {
+      navigate('/mentor');
+      return;
+    }
+    setReturningToMentor(true);
+    try {
+      // If we have a conversation with at least one assistant reply, extract a summary
+      const hasContent = messages.filter((m) => m.role === 'assistant').length >= 1 && activeConversationId;
+      if (hasContent) {
+        try {
+          await supabase.functions.invoke('bot-extract-output', {
+            body: { botKey, conversationId: activeConversationId },
+          });
+        } catch (e) {
+          console.warn('extract failed, continuing to mentor', e);
+        }
+      }
+      navigate(`/mentor?from=${encodeURIComponent(botKey)}`);
+    } finally {
+      setReturningToMentor(false);
+    }
+  };
+
   const handleSend = (content: string) => {
     // Stop any playing TTS before sending new message
     window.dispatchEvent(new Event('stopAllTTS'));
