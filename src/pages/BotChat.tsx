@@ -288,6 +288,8 @@ const BotChat = () => {
           botIcon={botIcon}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton
+          onReturnToMentor={user ? handleReturnToMentor : undefined}
+          isReturningToMentor={returningToMentor}
         />
 
         {/* Connection Bridge Stepper */}
