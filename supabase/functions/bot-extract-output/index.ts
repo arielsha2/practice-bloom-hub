@@ -35,6 +35,14 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   },
 };
 
+// Generic prompt for any other bot — produces a short summary string
+const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למטפל פסיכותרפיסט.
+החזר JSON תקין בלבד בפורמט הבא:
+{
+  "summary": "סיכום קצר בעברית, 2-4 משפטים, של מה שהמטפל גילה / החליט / תרגל בכלי. דבר בגוף ראשון של המטפל ('הבנתי ש...', 'החלטתי ש...', 'תרגלתי...'). אם אין מסקנה ברורה — תאר במשפט מה נדון."
+}
+השתמש רק במה שאמר המטפל בפועל. אל תמציא.`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
