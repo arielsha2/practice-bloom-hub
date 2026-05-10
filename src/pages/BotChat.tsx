@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const botIcons: Record<string, React.ReactNode> = {
   'niche-finder': <Compass className="w-5 h-5 text-primary" />,
@@ -320,11 +321,36 @@ const BotChat = () => {
               isLoading={chatLoading}
             />
             {user && (
-              <div className="flex justify-start">
+              <div className="flex justify-between items-center gap-2 flex-wrap">
                 <InsightButton
                   onClick={() => setInsightDialogOpen(true)}
                   disabled={chatLoading}
                 />
+                {(botKey === "niche-finder" || botKey === "self-presentation") &&
+                  activeConversationId &&
+                  messages.filter((m) => m.role === "assistant").length >= 3 && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={chatLoading}
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase.functions.invoke(
+                            "bot-extract-output",
+                            { body: { botKey, conversationId: activeConversationId } }
+                          );
+                          if (error) throw error;
+                          toast.success("הניסוח נשמר במסע שלך");
+                          window.dispatchEvent(new Event("therapist-journey-updated"));
+                        } catch (e) {
+                          console.error(e);
+                          toast.error("שמירה נכשלה");
+                        }
+                      }}
+                    >
+                      ✓ אשר ושמור את הניסוח
+                    </Button>
+                  )}
               </div>
             )}
           </div>
