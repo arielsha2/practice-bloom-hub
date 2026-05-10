@@ -507,6 +507,7 @@ export default function Mentor() {
           {/* Returned-from-tool confirmation card */}
           {pendingReturn && (
             <div
+              ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}
               dir={isRTL ? "rtl" : "ltr"}
               className="max-w-3xl mx-auto mb-6 bg-mentor-accent/5 border-2 border-mentor-accent/40 rounded-2xl p-6 shadow-md"
             >
