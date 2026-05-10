@@ -5,6 +5,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
+import { SEOHead } from '@/components/SEOHead';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryBadge } from '@/components/contents/CategoryBadge';
 import { AuthorFooter } from '@/components/contents/AuthorFooter';
@@ -152,8 +153,28 @@ export default function ContentDetail() {
     return null;
   }
 
+  const articleTitle = (isRTL ? (content as any).title_he : (content as any).title_en) || (content as any).title_he || (content as any).title_en || '';
+  const articleExcerpt = (isRTL ? (content as any).excerpt_he : (content as any).excerpt_en) || (content as any).excerpt_he || (content as any).excerpt_en || '';
+  const seoDesc = (articleExcerpt || articleTitle).toString().replace(/\s+/g, ' ').slice(0, 160);
+
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <SEOHead
+        title={`${articleTitle} | TherapyKeys`}
+        description={seoDesc || 'מאמר מקצועי למטפלים — TherapyKeys'}
+        canonicalUrl={`/contents/${(content as any).id}`}
+        ogImage={(content as any).featured_image_url || undefined}
+        ogType="article"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: articleTitle,
+          description: seoDesc,
+          image: (content as any).featured_image_url,
+          author: { "@type": "Person", name: 'ד"ר אריאל שפירא' },
+          publisher: { "@type": "Organization", name: "TherapyKeys" },
+        }}
+      />
       <Header />
       
       <main className="flex-1 pt-24 pb-16">

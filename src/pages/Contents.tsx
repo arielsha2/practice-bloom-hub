@@ -5,6 +5,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
+import { SEOHead } from '@/components/SEOHead';
 import { ContentCard } from '@/components/contents/ContentCard';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryFilter } from '@/components/contents/CategoryFilter';
@@ -142,6 +143,11 @@ export default function Contents() {
 
   return (
     <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <SEOHead
+        title="ספריית תכנים למטפלים | TherapyKeys"
+        description="מאמרים, סרטונים ומדריכים לבניית קליניקה פרטית מצליחה — תוכן מקצועי למטפלים ופסיכולוגים בישראל מאת ד״ר אריאל שפירא."
+        canonicalUrl="/contents"
+      />
       <Header />
       
       <main className="flex-1 pt-16">
