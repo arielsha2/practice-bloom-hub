@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Menu, Settings } from 'lucide-react';
+import { ArrowRight, Menu, Settings, Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 
@@ -9,6 +9,8 @@ interface ChatHeaderProps {
   botIcon: React.ReactNode;
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
+  onReturnToMentor?: () => void;
+  isReturningToMentor?: boolean;
 }
 
 export function ChatHeader({
@@ -16,6 +18,8 @@ export function ChatHeader({
   botIcon,
   onToggleSidebar,
   showMenuButton,
+  onReturnToMentor,
+  isReturningToMentor,
 }: ChatHeaderProps) {
   const { t, isRTL } = useLanguage();
   const { isAdmin } = useIsAdmin();
