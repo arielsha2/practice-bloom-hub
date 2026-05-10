@@ -228,6 +228,41 @@ export default function Mentor() {
     setInput("");
   }, [language, storageKey]);
 
+  // Handle return from a bot tool: ?from=<botKey>
+  const handledFromRef = useRef(false);
+  useEffect(() => {
+    const from = searchParams.get("from");
+    if (!from || handledFromRef.current) return;
+    handledFromRef.current = true;
+
+    const BOT_NAMES_HE: Record<string, string> = {
+      "niche-finder": "Niche Finder",
+      "self-presentation": "Self Presentation",
+      "pricing-calculator": "Pricing Calculator",
+      "connection-bridge": "Connection Bridge",
+      "contact-finder": "Contact Finder",
+      "strategy-planner": "Strategy Planner",
+      "content-creator": "Content Creator",
+    };
+    const toolName = BOT_NAMES_HE[from] ?? from;
+
+    // Refresh journey so we pick up the freshly-saved summary, then send a kickoff message.
+    (async () => {
+      await refreshJourney();
+      const kickoff = isRTL
+        ? `חזרתי עכשיו מהכלי ${toolName}. מה הצעד הבא לאור מה שעלה שם?`
+        : `I just came back from the ${toolName} tool. What's the next step based on what came up there?`;
+      // Clear the URL param before sending
+      const next = new URLSearchParams(searchParams);
+      next.delete("from");
+      setSearchParams(next, { replace: true });
+      setChatOpen(true);
+      // small delay so journey state propagates into send's closure on next render
+      setTimeout(() => { send(kickoff); }, 100);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
