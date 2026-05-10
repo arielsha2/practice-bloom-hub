@@ -834,7 +834,9 @@ export type Database = {
           completed_stages: string[]
           created_at: string
           id: string
+          niche_output: Json | null
           reflection: Json
+          self_presentation_output: Json | null
           step_number: number
           stuck_points: string[]
           updated_at: string
@@ -844,7 +846,9 @@ export type Database = {
           completed_stages?: string[]
           created_at?: string
           id?: string
+          niche_output?: Json | null
           reflection?: Json
+          self_presentation_output?: Json | null
           step_number?: number
           stuck_points?: string[]
           updated_at?: string
@@ -854,9 +858,47 @@ export type Database = {
           completed_stages?: string[]
           created_at?: string
           id?: string
+          niche_output?: Json | null
           reflection?: Json
+          self_presentation_output?: Json | null
           step_number?: number
           stuck_points?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      therapist_websites: {
+        Row: {
+          calendar_link: string | null
+          contact_method: string
+          content: Json
+          created_at: string
+          id: string
+          is_published: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_link?: string | null
+          contact_method?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_link?: string | null
+          contact_method?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug?: string
           updated_at?: string
           user_id?: string
         }
