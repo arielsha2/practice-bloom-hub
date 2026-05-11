@@ -27,6 +27,7 @@ import Mentor from "./pages/Mentor";
 import AdminInsights from "./pages/AdminInsights";
 import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
+import MentorAdmin from "./pages/MentorAdmin";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/t/:slug" element={<PublicTherapistSite />} />
               <Route path="/contact-finder" element={<BotChat />} />
               <Route path="/admin-insights" element={<AdminInsights />} />
+              <Route path="/admin/mentor" element={<MentorAdmin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
