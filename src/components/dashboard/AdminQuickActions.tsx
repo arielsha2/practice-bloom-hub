@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { GraduationCap, FolderOpen, FileText, Users, Calendar } from 'lucide-react';
+import { GraduationCap, FolderOpen, FileText, Users, Calendar, Sparkles } from 'lucide-react';
 
 export function AdminQuickActions() {
   const navigate = useNavigate();
@@ -42,6 +42,13 @@ export function AdminQuickActions() {
       description: isRTL ? 'מאמרים ומשאבים' : 'Articles and resources',
       icon: FileText,
       path: '/contents',
+    },
+    {
+      id: 'mentor',
+      title: isRTL ? 'ניהול המנטור' : 'Mentor Settings',
+      description: isRTL ? 'עדכן הנחיות ומודל' : 'Edit prompt & model',
+      icon: Sparkles,
+      path: '/admin/mentor',
     },
   ];
 

@@ -652,6 +652,72 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_ai_settings: {
+        Row: {
+          id: string
+          max_tokens: number
+          model: string
+          system_prompt_en: string
+          system_prompt_he: string
+          temperature: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt_en: string
+          system_prompt_he: string
+          temperature?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt_en?: string
+          system_prompt_he?: string
+          temperature?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      mentor_ai_settings_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          max_tokens: number
+          model: string
+          system_prompt_en: string
+          system_prompt_he: string
+          temperature: number
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          max_tokens: number
+          model: string
+          system_prompt_en: string
+          system_prompt_he: string
+          temperature: number
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          max_tokens?: number
+          model?: string
+          system_prompt_en?: string
+          system_prompt_he?: string
+          temperature?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
