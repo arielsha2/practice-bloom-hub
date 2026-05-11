@@ -125,7 +125,34 @@ serve(async (req) => {
       });
     }
 
-    const baseSystemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_HE;
+    // Load admin-editable settings (fallback to hardcoded prompts)
+    let dbPromptHe: string | null = null;
+    let dbPromptEn: string | null = null;
+    let modelToUse = "google/gemini-2.5-flash";
+    try {
+      const supaUrl = Deno.env.get("SUPABASE_URL");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (supaUrl && serviceKey) {
+        const sb = createClient(supaUrl, serviceKey);
+        const { data } = await sb
+          .from("mentor_ai_settings")
+          .select("system_prompt_he, system_prompt_en, model")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          dbPromptHe = data.system_prompt_he;
+          dbPromptEn = data.system_prompt_en;
+          if (data.model) modelToUse = data.model;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load mentor settings:", e);
+    }
+
+    const baseSystemPrompt = language === "en"
+      ? (dbPromptEn || SYSTEM_PROMPT_EN)
+      : (dbPromptHe || SYSTEM_PROMPT_HE);
 
     // Build journey context block
     let journeyBlock = "";
@@ -165,7 +192,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: modelToUse,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
       }),
