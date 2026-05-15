@@ -90,7 +90,11 @@ export function Hero() {
                 src={heroFoundersImg}
                 alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
                 className="w-full h-auto rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
+                width={1024}
+                height={1024}
                 loading="eager"
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
           </motion.div>
