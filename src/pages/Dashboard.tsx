@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { SEOHead } from '@/components/SEOHead';
 
 export default function Dashboard() {
   const { t, isRTL } = useLanguage();
