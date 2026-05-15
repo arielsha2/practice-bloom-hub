@@ -172,6 +172,12 @@ export default function StudentPortal() {
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+      <SEOHead
+        title={`${courseName ? courseName + ' | ' : ''}פורטל הסטודנטים | TherapyKeys`}
+        description={`הפורטל הלימודי של תוכנית "נקודת המפנה" — שיעורים, חומרים, מטלות ושאלות ותשובות.${courseName ? ' קורס: ' + courseName + '.' : ''}`}
+        canonicalUrl="/portal"
+        noindex
+      />
       <Header />
       
       {/* Progress Header - Udemy style dark header */}
