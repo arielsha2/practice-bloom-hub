@@ -37,6 +37,12 @@ export default function Dashboard() {
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <SEOHead
+        title='לוח הבקרה שלי | TherapyKeys'
+        description='לוח הבקרה האישי שלך ב-TherapyKeys — מעקב אחר ההתקדמות שלך בתוכנית הליווי, השיעורים הבאים, ושאלות פתוחות.'
+        canonicalUrl="/dashboard"
+        noindex
+      />
       <Header />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
