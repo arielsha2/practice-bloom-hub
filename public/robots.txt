@@ -8,4 +8,4 @@ Disallow: /admin-insights
 Disallow: /media-library
 Disallow: /mentor/website-builder
 
-Sitemap: https://therapykeys.co.il/sitemap.xml
+Sitemap: https://therapykeys.lovable.app/sitemap.xml
