@@ -275,6 +275,11 @@ const BotChat = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-secondary flex">
+      <SEOHead
+        title={`${botName} | עוזרי AI למטפלים | TherapyKeys`}
+        description={`${botName} — עוזר AI ייעודי למטפלים בשיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. שיחה ממוקדת לבניית קליניקה פרטית מצליחה.`}
+        canonicalUrl={`/ai-assistants/${botKey}`}
+      />
       {/* Desktop Sidebar - hidden for anonymous users */}
       {user && (
         <div className="hidden md:block w-72 flex-shrink-0">
