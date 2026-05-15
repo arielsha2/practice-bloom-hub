@@ -9,6 +9,7 @@ import { useUserEnrolledCourses } from '@/hooks/useUserEnrolledCourses';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { PortalAccessDenied } from '@/components/portal/PortalAccessDenied';
+import { SEOHead } from '@/components/SEOHead';
 import { CourseProgressHeader } from '@/components/portal/CourseProgressHeader';
 import { LessonListItem } from '@/components/portal/LessonListItem';
 import { QASection } from '@/components/portal/QASection';
