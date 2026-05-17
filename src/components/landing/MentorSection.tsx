@@ -31,9 +31,7 @@ export function MentorSection() {
           <div className="text-center max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-4 py-1.5 mb-5">
               <Sparkles className="w-4 h-4 text-mentor-accent" />
-              <span className="text-mentor-accent font-medium text-sm">
-                {isRTL ? "המנטור" : "The Mentor"}
-              </span>
+              <span className="text-mentor-accent font-medium text-sm">{isRTL ? "המנטור" : "The Mentor"}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-4 tracking-tight">
               {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A Full Practice. A Calm Mind. Real Growth."}
@@ -49,10 +47,7 @@ export function MentorSection() {
             {benefits.map((b, i) => {
               const Icon = b.icon;
               return (
-                <div
-                  key={i}
-                  className="flex gap-4 p-5 rounded-xl bg-mentor-surface border border-mentor-border/50"
-                >
+                <div key={i} className="flex gap-4 p-5 rounded-xl bg-mentor-surface border border-mentor-border/50">
                   <div className="flex-shrink-0 w-11 h-11 rounded-full bg-mentor-accent/15 flex items-center justify-center">
                     <Icon className="w-5 h-5 text-mentor-accent" />
                   </div>
@@ -67,14 +62,15 @@ export function MentorSection() {
 
           <div className="flex flex-col items-center gap-3 mt-10">
             <Link to="/mentor">
-              <Button size="lg" className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2 px-8">
+              <Button
+                size="lg"
+                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2 px-8"
+              >
                 {isRTL ? "התחילו עכשיו עם המנטור" : "Start now with The Mentor"}
                 <Arrow className="w-4 h-4" />
               </Button>
             </Link>
-            <p className="text-xs text-muted-foreground">
-              {isRTL ? "ללא תשלום · ללא הרשמה · תוצאות מהשיחה הראשונה" : "Free · No signup · Results from the first conversation"}
-            </p>
+            <p className="text-xs text-muted-foreground"></p>
           </div>
         </div>
       </div>
