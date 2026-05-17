@@ -16,16 +16,51 @@ interface Stage {
 }
 
 const STAGES: Stage[] = [
-  { key: "niche", icon: Compass, titleHe: "מציאת הנישה", titleEn: "Finding Your Niche",
-    descHe: "לדעת בדיוק עם מי לעבוד.", descEn: "Know who you work with.", botKey: "niche-finder" },
-  { key: "pricing", icon: Tag, titleHe: "תמחור נכון", titleEn: "Right Pricing",
-    descHe: "מחיר ששיקף ערך.", descEn: "Price that reflects value.", botKey: "pricing-calculator" },
-  { key: "self-presentation", icon: User, titleHe: "הצגה עצמית", titleEn: "Self-Presentation",
-    descHe: "מסר ברור ומדויק.", descEn: "Clear, sharp message.", botKey: "self-presentation" },
-  { key: "network", icon: Users, titleHe: "רשת מקצועית", titleEn: "Professional Network",
-    descHe: "שותפויות שמזרימות פניות.", descEn: "Partnerships that refer.", botKey: "contact-finder" },
-  { key: "conversion", icon: Sparkles, titleHe: "שיחת היכרות מנצחת", titleEn: "Winning First Call",
-    descHe: "להפוך פנייה למטופל.", descEn: "Turn inquiry into client.", botKey: "connection-bridge" },
+  {
+    key: "niche",
+    icon: Compass,
+    titleHe: "מציאת הנישה",
+    titleEn: "Finding Your Niche",
+    descHe: "לדעת בדיוק עם מי לעבוד.",
+    descEn: "Know who you work with.",
+    botKey: "niche-finder",
+  },
+  {
+    key: "pricing",
+    icon: Tag,
+    titleHe: "תמחור נכון",
+    titleEn: "Right Pricing",
+    descHe: "מחיר ששיקף ערך.",
+    descEn: "Price that reflects value.",
+    botKey: "pricing-calculator",
+  },
+  {
+    key: "self-presentation",
+    icon: User,
+    titleHe: "הצגה עצמית",
+    titleEn: "Self-Presentation",
+    descHe: "מסר ברור ומדויק.",
+    descEn: "Clear, sharp message.",
+    botKey: "self-presentation",
+  },
+  {
+    key: "network",
+    icon: Users,
+    titleHe: "רשת מקצועית",
+    titleEn: "Professional Network",
+    descHe: "שותפויות שמזרימות פניות.",
+    descEn: "Partnerships that refer.",
+    botKey: "contact-finder",
+  },
+  {
+    key: "conversion",
+    icon: Sparkles,
+    titleHe: "שיחת היכרות מנצחת",
+    titleEn: "Winning First Call",
+    descHe: "להפוך פנייה למטופל.",
+    descEn: "Turn inquiry into client.",
+    botKey: "connection-bridge",
+  },
 ];
 
 // Horizontal layout on a wide viewBox (1400 x 380) — fits without scroll.
@@ -65,7 +100,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
   const currentKey =
     explicitCurrent && STAGES.find((s) => s.key === explicitCurrent)
       ? explicitCurrent
-      : STAGES.find((s) => !completedKeys.has(s.key))?.key ?? null;
+      : (STAGES.find((s) => !completedKeys.has(s.key))?.key ?? null);
 
   const stuckPoints = journey?.stuck_points ?? [];
   const recentStuck = stuckPoints.slice(-3).reverse();
@@ -100,16 +135,16 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
           </span>
         </div>
         <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground mb-1 tracking-tight">
-          {isRTL ? "מפת המסע האישית שלכם" : "Your Personal Journey Map"}
+          {isRTL ? "מפת מסע אישי" : "Your Personal Journey Map"}
         </h2>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           {hasStarted
             ? isRTL
-              ? `${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם${activeStage ? " — אתם נמצאים כעת ב\"" + activeStage.titleHe + "\"" : ""}.`
+              ? `${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם${activeStage ? ' — אתם נמצאים כעת ב"' + activeStage.titleHe + '"' : ""}.`
               : `${completedCount} of ${STAGES.length} stations behind you${activeStage ? ` — currently at "${activeStage.titleEn}"` : ""}.`
             : isRTL
-            ? "המסע מהתלבטות לקליניקה משגשגת — חמש תחנות, שביל אחד."
-            : "From doubt to a thriving practice — five stations, one path."}
+              ? "המסע מהתלבטות לקליניקה משגשגת — חמש תחנות, שביל אחד."
+              : "From doubt to a thriving practice — five stations, one path."}
         </p>
       </div>
 
@@ -141,7 +176,10 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
             </radialGradient>
             <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
             <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
               <circle cx="2" cy="2" r="1" fill="hsl(var(--mentor-accent))" opacity="0.18" />
@@ -195,22 +233,31 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
               >
                 {isActive && (
                   <motion.circle
-                    cx={pos.x} cy={pos.y} r={48}
-                    fill="hsl(var(--mentor-accent))" opacity={0.18}
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={48}
+                    fill="hsl(var(--mentor-accent))"
+                    opacity={0.18}
                     animate={{ r: [42, 60, 42], opacity: [0.28, 0.05, 0.28] }}
                     transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                   />
                 )}
                 <circle
-                  cx={pos.x} cy={pos.y} r={32}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={32}
                   fill="hsl(var(--card))"
                   stroke={isCompleted || isActive ? "hsl(var(--mentor-accent))" : "hsl(var(--mentor-border))"}
                   strokeWidth={isActive ? 4 : 3}
                   strokeDasharray={isUpcoming ? "5 4" : undefined}
                 />
                 <circle
-                  cx={pos.x} cy={pos.y} r={24}
-                  fill={isCompleted ? "url(#nodeGradient)" : isActive ? "hsl(var(--card))" : "hsl(var(--mentor-surface))"}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={24}
+                  fill={
+                    isCompleted ? "url(#nodeGradient)" : isActive ? "hsl(var(--card))" : "hsl(var(--mentor-surface))"
+                  }
                   filter={isActive || isCompleted ? "url(#softGlow)" : undefined}
                 />
 
@@ -218,19 +265,32 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                   <g transform={`translate(${pos.x - 24}, ${pos.y - 24})`}>
                     <circle r={10} fill="hsl(var(--destructive))" />
                     <text
-                      textAnchor="middle" dominantBaseline="central"
-                      fontSize="13" fontWeight="900" fill="hsl(var(--destructive-foreground))"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize="13"
+                      fontWeight="900"
+                      fill="hsl(var(--destructive-foreground))"
                       style={isRTL ? { transform: "scaleX(-1)", transformOrigin: "center" } : undefined}
-                    >!</text>
+                    >
+                      !
+                    </text>
                   </g>
                 )}
 
                 <foreignObject x={pos.x - 14} y={pos.y - 14} width={28} height={28}>
                   <div
                     style={{
-                      width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                      width: 28,
+                      height: 28,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       transform: isRTL ? "scaleX(-1)" : undefined,
-                      color: isCompleted ? "hsl(var(--mentor-accent-foreground))" : isActive ? "hsl(var(--mentor-accent))" : "hsl(var(--muted-foreground))",
+                      color: isCompleted
+                        ? "hsl(var(--mentor-accent-foreground))"
+                        : isActive
+                          ? "hsl(var(--mentor-accent))"
+                          : "hsl(var(--muted-foreground))",
                     }}
                   >
                     {isCompleted ? <Check size={20} strokeWidth={3} /> : <stage.icon size={20} />}
@@ -238,22 +298,28 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 </foreignObject>
 
                 {/* Title — placed alternating above/below to clear path */}
-                <foreignObject
-                  x={pos.x - 90}
-                  y={idx % 2 === 0 ? pos.y + 42 : pos.y - 78}
-                  width={180}
-                  height={56}
-                >
-                  <div style={{ transform: isRTL ? "scaleX(-1)" : undefined, direction: isRTL ? "rtl" : "ltr", textAlign: "center" }}>
+                <foreignObject x={pos.x - 90} y={idx % 2 === 0 ? pos.y + 42 : pos.y - 78} width={180} height={56}>
+                  <div
+                    style={{
+                      transform: isRTL ? "scaleX(-1)" : undefined,
+                      direction: isRTL ? "rtl" : "ltr",
+                      textAlign: "center",
+                    }}
+                  >
                     <div
                       style={{
-                        fontFamily: "Heebo, serif", fontWeight: 700, fontSize: 15, lineHeight: 1.2,
+                        fontFamily: "Heebo, serif",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        lineHeight: 1.2,
                         color: isUpcoming ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))",
                       }}
                     >
                       {isRTL ? stage.titleHe : stage.titleEn}
                     </div>
-                    <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2, lineHeight: 1.25 }}>
+                    <div
+                      style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2, lineHeight: 1.25 }}
+                    >
                       {isRTL ? stage.descHe : stage.descEn}
                     </div>
                   </div>
@@ -265,10 +331,17 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                     <div style={{ transform: isRTL ? "scaleX(-1)" : undefined, textAlign: "center" }}>
                       <span
                         style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          background: "hsl(var(--mentor-accent))", color: "hsl(var(--mentor-accent-foreground))",
-                          padding: "3px 9px", borderRadius: 999, fontSize: 10, fontWeight: 800,
-                          letterSpacing: 0.4, textTransform: "uppercase",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "hsl(var(--mentor-accent))",
+                          color: "hsl(var(--mentor-accent-foreground))",
+                          padding: "3px 9px",
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 800,
+                          letterSpacing: 0.4,
+                          textTransform: "uppercase",
                           boxShadow: "0 4px 12px hsl(var(--mentor-accent) / 0.4)",
                         }}
                       >
@@ -292,16 +365,29 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
             <foreignObject x={FINISH.x - 16} y={FINISH.y - 16} width={32} height={32}>
               <div
                 style={{
-                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                  transform: isRTL ? "scaleX(-1)" : undefined, color: "hsl(var(--mentor-accent-foreground))",
+                  width: 32,
+                  height: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: isRTL ? "scaleX(-1)" : undefined,
+                  color: "hsl(var(--mentor-accent-foreground))",
                 }}
               >
                 <Trophy size={22} strokeWidth={2.2} />
               </div>
             </foreignObject>
             <foreignObject x={FINISH.x - 90} y={FINISH.y + 44} width={180} height={48}>
-              <div style={{ transform: isRTL ? "scaleX(-1)" : undefined, textAlign: "center", direction: isRTL ? "rtl" : "ltr" }}>
-                <div style={{ fontFamily: "Heebo, serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--foreground))" }}>
+              <div
+                style={{
+                  transform: isRTL ? "scaleX(-1)" : undefined,
+                  textAlign: "center",
+                  direction: isRTL ? "rtl" : "ltr",
+                }}
+              >
+                <div
+                  style={{ fontFamily: "Heebo, serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--foreground))" }}
+                >
                   {isRTL ? "קליניקה משגשגת" : "Thriving Practice"}
                 </div>
                 <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
@@ -359,7 +445,9 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
               </div>
               <ul className="space-y-0.5">
                 {recentStuck.map((sp, i) => (
-                  <li key={i} className="text-[11px] text-foreground/80">• {sp}</li>
+                  <li key={i} className="text-[11px] text-foreground/80">
+                    • {sp}
+                  </li>
                 ))}
               </ul>
             </div>
