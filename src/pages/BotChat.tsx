@@ -141,6 +141,25 @@ const BotChat = () => {
     }
   }, [messages, botKey]);
 
+  // Auto-advance to mentor when the bot signals completion via [ADVANCE] marker.
+  // The bot includes this when it concludes the therapist reached sufficient progress
+  // OR when the therapist explicitly asks to move on.
+  const autoAdvancedRef = useRef(false);
+  useEffect(() => {
+    if (autoAdvancedRef.current) return;
+    if (!user || !activeConversationId || returningToMentor) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant' || last.isStreaming) return;
+    if (!/\[ADVANCE\]/i.test(last.content)) return;
+    autoAdvancedRef.current = true;
+    const timer = setTimeout(() => {
+      toast.success(isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…');
+      handleReturnToMentor();
+    }, 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, user, activeConversationId, returningToMentor, isRTL]);
+
   // Helper to strip stage markers from content (including the ADVANCE completion marker)
   const stripStageMarker = (content: string) =>
     content.replace(/\[STAGE:\d\]\s*/g, '').replace(/\[ADVANCE\]\s*/gi, '');
