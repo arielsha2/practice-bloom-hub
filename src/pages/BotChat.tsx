@@ -279,6 +279,31 @@ const BotChat = () => {
         title={`${botName} | עוזרי AI למטפלים | TherapyKeys`}
         description={`${botName} — עוזר AI ייעודי למטפלים בשיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. שיחה ממוקדת לבניית קליניקה פרטית מצליחה.`}
         canonicalUrl={`/ai-assistants/${botKey}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: botName,
+          applicationCategory: "HealthApplication",
+          operatingSystem: "Web",
+          inLanguage: "he",
+          url: `https://therapykeys.co.il/ai-assistants/${botKey}`,
+          creator: {
+            "@type": "Person",
+            "@id": "https://therapykeys.co.il/#ariel-shapira",
+            name: 'ד"ר אריאל שפירא',
+          },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://therapykeys.co.il/#organization",
+            name: "TherapyKeys",
+          },
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "ILS",
+            availability: "https://schema.org/InStock",
+          },
+        }}
       />
       {/* Desktop Sidebar - hidden for anonymous users */}
       {user && (
