@@ -141,8 +141,9 @@ const BotChat = () => {
     }
   }, [messages, botKey]);
 
-  // Helper to strip stage markers from content
-  const stripStageMarker = (content: string) => content.replace(/\[STAGE:\d\]\s*/g, '');
+  // Helper to strip stage markers from content (including the ADVANCE completion marker)
+  const stripStageMarker = (content: string) =>
+    content.replace(/\[STAGE:\d\]\s*/g, '').replace(/\[ADVANCE\]\s*/gi, '');
 
   // Scroll to bottom on new messages
   useEffect(() => {
