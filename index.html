@@ -30,6 +30,149 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://therapykeys.co.il/og-image.jpg" />
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://therapykeys.co.il/#organization",
+      "name": "TherapyKeys",
+      "url": "https://therapykeys.co.il",
+      "logo": "https://therapykeys.co.il/og-image.jpg",
+      "description": "פלטפורמה לפיתוח מקצועי ועסקי של מטפלים ופסיכולוגים בישראל",
+      "founder": { "@id": "https://therapykeys.co.il/#ariel-shapira" },
+      "areaServed": { "@type": "Country", "name": "Israel" },
+      "inLanguage": "he"
+    }
+    </script>
+
+    <!-- JSON-LD: Person (Dr. Ariel Shapira) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": "https://therapykeys.co.il/#ariel-shapira",
+      "name": "ד\"ר אריאל שפירא",
+      "alternateName": "Dr. Ariel Shapira",
+      "jobTitle": "פסיכולוג קליני ומייסד TherapyKeys",
+      "url": "https://therapykeys.co.il",
+      "sameAs": ["https://il.linkedin.com/in/dr-ariel-shapira-phd-00703ba8"],
+      "alumniOf": {
+        "@type": "CollegeOrUniversity",
+        "name": "אוניברסיטת תל אביב",
+        "sameAs": "https://en.wikipedia.org/wiki/Tel_Aviv_University"
+      },
+      "knowsAbout": [
+        "Clean Language",
+        "SFBT — טיפול ממוקד פתרון",
+        "בניית קליניקה פרטית",
+        "שיווק למטפלים",
+        "פסיכולוגיה קלינית"
+      ],
+      "hasCredential": {
+        "@type": "EducationalOccupationalCredential",
+        "credentialCategory": "Doctoral Degree",
+        "name": "Doctor of Philosophy (Ph.D)",
+        "educationalLevel": "Ph.D",
+        "dateCreated": "2020-07-16",
+        "about": "The Effect of Emotional Content in Pictures on False Memory",
+        "recognizedBy": {
+          "@type": "CollegeOrUniversity",
+          "name": "אוניברסיטת תל אביב"
+        }
+      },
+      "worksFor": { "@id": "https://therapykeys.co.il/#organization" },
+      "address": { "@type": "PostalAddress", "addressCountry": "IL" }
+    }
+    </script>
+
+    <!-- JSON-LD: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://therapykeys.co.il/#website",
+      "name": "TherapyKeys",
+      "url": "https://therapykeys.co.il",
+      "inLanguage": "he",
+      "publisher": { "@id": "https://therapykeys.co.il/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://therapykeys.co.il/contents?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: Course (Turning Point) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "@id": "https://therapykeys.co.il/turning-point#course",
+      "name": "נקודת המפנה",
+      "description": "תוכנית ליווי של 3 חודשים למטפלים ופסיכולוגים לבניית קליניקה פרטית רווחית",
+      "url": "https://therapykeys.co.il/turning-point",
+      "inLanguage": "he",
+      "timeRequired": "P3M",
+      "educationalLevel": "מטפלים מוסמכים, פסיכולוגים, עובדים סוציאליים",
+      "provider": { "@id": "https://therapykeys.co.il/#organization" },
+      "instructor": { "@id": "https://therapykeys.co.il/#ariel-shapira" },
+      "hasCourseInstance": {
+        "@type": "CourseInstance",
+        "courseMode": "Blended",
+        "inLanguage": "he"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: HowTo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "כיצד בונים קליניקה פרטית רווחית",
+      "description": "תהליך לבניית קליניקה פרטית מצליחה לפי שיטת ד\"ר אריאל שפירא",
+      "inLanguage": "he",
+      "totalTime": "P3M",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "הגדרת זהות מקצועית",
+          "text": "הגדרת זהות מקצועית וייחודיות המטפל"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "בניית מצב פנימי",
+          "text": "בניית מצב פנימי נכון לפני כלים שיווקיים"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "תמחור ומודל הכנסות",
+          "text": "תימחור נכון ובניית מודל הכנסות"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "נראות ושיווק אותנטי",
+          "text": "בניית נראות ושיווק אותנטי"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 5,
+          "name": "מערכת הפניות",
+          "text": "יצירת מערכת הפניות ומטופלים קבועים"
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>

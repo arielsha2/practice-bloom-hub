@@ -1,87 +1,106 @@
-## הבעיה
 
-כשהמנטור שולח את המטפל לעבוד עם כלי (Niche Finder, Self Presentation, Pricing, Connection Bridge וכו'), שלוש בעיות:
+# שיפור GEO (Generative Engine Optimization)
 
-1. **אין דרך ברורה לחזור** — בעמוד הכלי אין כפתור "חזרה למנטור".
-2. **המנטור לא יודע שעבדת** — חוזרים לשיחה והמנטור ממשיך כאילו כלום לא קרה.
-3. **למנטור אין גישה לתוצאות** — צריך להעתיק/לתאר ידנית את מה שהכלי הפיק.
+מטרה: שמנועים גנרטיביים (ChatGPT, Perplexity, Claude, Google AI Overviews) יזהו את TherapyKeys כסמכות בתחום ליווי מטפלים, יצטטו נכון את ד"ר אריאל שפירא ויסכמו את התוכן באופן מדויק.
 
-## הפתרון בקצרה
+הביצוע נעשה בדיוק לפי הסדר שביקשת — תוכן ו-schema בלבד, ללא שינויי עיצוב.
 
-נחבר את הכלים והמנטור באמצעות שלושה שינויים מתואמים:
+## 1. תיקון קנונים לדומיין `therapykeys.co.il`
 
-1. **כפתור "חזרה למנטור"** בעמוד כל כלי (`/ai-assistants/:botKey`).
-2. **שמירה אוטומטית של תוצרי הכלי** ל-`therapist_journeys` כך שהמנטור יראה אותן.
-3. **טעינת ההקשר ב-mentor-chat** — בכל הודעה למנטור נצרף את תקציר תוצרי הכלים והכלים שהושלמו, וכשחוזרים מכלי תופיע הודעת פתיחה אוטומטית של המנטור שמתייחסת לעבודה.
+- `index.html`: `<link rel="canonical">` ו-`og:url` ו-`og:image` ו-`twitter:image` → כולם על `therapykeys.co.il` (כבר כך). אוודא עקביות.
+- `public/sitemap.xml` כבר משתמש ב-`therapykeys.co.il` — אוודא שכל ה-URLs נקיים.
+- `public/robots.txt`: `Sitemap:` → `https://therapykeys.co.il/sitemap.xml`.
+- `src/components/SEOHead.tsx`: ה-`SITE_URL` כבר `https://therapykeys.co.il` ✓.
 
----
+## 2. JSON-LD ב-`index.html`
 
-## פירוט
+אוסיף לתוך `<head>` חמישה בלוקי `<script type="application/ld+json">`:
 
-### 1. כפתור "חזרה למנטור" ב-BotChat
+1. **Organization** — TherapyKeys, founder ד"ר אריאל שפירא
+2. **Person** — ד"ר אריאל שפירא עם `hasCredential` (Ph.D, אוניברסיטת ת"א, 2020-07-16, נושא דוקטורט), `knowsAbout`, `alumniOf`
+3. **WebSite** — עם `potentialAction` של `SearchAction` המצביע על `/contents?q={search_term_string}`
+4. **Course** — "נקודת המפנה", `timeRequired: P3M`, `provider` עם reference ל-Organization
+5. **HowTo** — "כיצד בונים קליניקה פרטית רווחית" עם 5 השלבים המדויקים שציינת
 
-ב-`src/pages/BotChat.tsx`, בכותרת הצ'אט (`ChatHeader`) נוסיף כפתור משני שמופיע רק כשהמשתמש מחובר ויש לו לפחות הודעה אחת בשיחה:
+הערה טכנית: כל הציטוטים בעברית בתוך JSON-LD ייכתבו בתוך `<script>` רגיל (לא attribute), כך שאין צורך ב-escaping של מירכאות מעבר ל-JSON תקני.
 
-- טקסט: "שמור וחזור למנטור" (או "חזרה למנטור" אם אין מה לשמור).
-- בלחיצה: אם הבוט תומך בחילוץ (`niche-finder` / `self-presentation`) — מריץ את `bot-extract-output` קודם. אחר כך מנווט ל-`/mentor?from=<botKey>&conv=<conversationId>`.
-- עבור הבוטים האחרים (`pricing-calculator`, `connection-bridge`, `contact-finder`, `strategy-planner`, `content-creator`) — מנווט ישירות עם הפרמטרים, והשרת יחלץ סיכום קצר.
+ה-FAQPage schema נוסף בסעיף 3 דרך הקומפוננטה (לא ב-index.html), כדי שיהיה צמוד לתוכן הנראה.
 
-### 2. הרחבת `bot-extract-output` לסיכום גנרי
+## 3. רכיב FAQ נראה + FAQPage schema
 
-נוסיף ל-`supabase/functions/bot-extract-output/index.ts` ענף ברירת-מחדל: כל בוט שאינו `niche-finder` או `self-presentation` מקבל פרומפט שמחזיר סיכום קצר (3-5 משפטים בעברית) של מה שהמטפל גילה/החליט בכלי.
+- חדש: `src/components/landing/FAQ.tsx` — Accordion (משתמש ב-`@/components/ui/accordion` הקיים) עם 5 השאלות־תשובות המדויקות שסיפקת. כותרת סקציה: "שאלות שמטפלים שואלים".
+- בתוך הקומפוננטה: `<Helmet>` עם `<script type="application/ld+json">` של `FAQPage` כך ש-Q&A זהים בדיוק לטקסט הגלוי (קריטי לוואלידציה של Google).
+- שילוב ב-`src/pages/Index.tsx`: מוסיף `<FAQ />` בתוך `<main>` לפני `<CTABanner />` (כך שה-FAQ ממש מעל ה-CTA הסופי, לפני ה-footer — לפי הבקשה).
+- עיצוב: שימוש בטוקנים קיימים (Heebo, Lavender White bg, Deep Purple כותרות). ללא שינוי קומפוננטות אחרות.
 
-הסיכום יישמר תחת מפתח חדש בעמודת `reflection` (jsonb) של `therapist_journeys`, לדוגמה:
+## 4. שדרוג `SEOHead` (סעיף 6 בבקשה — מקודם בסדר הביצוע)
+
+`SEOHead` כבר תומך ב-`jsonLd?: object | object[]` ומרנדר מערך של בלוקי JSON-LD. **אין שינוי נדרש** — אאמת רק ואציין במפורש בפלט.
+
+## 5. Article schema דינמי ב-`ContentDetail.tsx`
+
+ה-Article schema כבר קיים בסיסי. אעשיר אותו:
+- `datePublished` מהשדה `published_at` מה-DB (כשמכוון לפרסום)
+- `inLanguage: "he"`
+- `wordCount` מחושב מהתוכן (strip של HTML, ספירת מילים)
+- `author` כ-Person מלא עם link ל-Organization
+- `publisher` כ-Organization עם `logo`
+- `mainEntityOfPage` עם ה-URL הקנוני
+
+**עבור 10 המאמרים שציינת עם תאריכים** — התאריכים כבר נשמרים ב-`published_at` בכל שורה ב-DB. ה-schema יקרא משם אוטומטית. **אם תאריכי הפרסום ב-DB אינם תואמים לרשימה שלך**, אצטרך אישור אם:
+  (א) לעדכן את ה-DB דרך migration, או
+  (ב) למפות hard-coded לפי כותרת בקובץ, או
+  (ג) להשאיר כפי שיש ב-DB. — **המתנה לאישור לפני שאגע ב-DB.**
+
+## 6. SoftwareApplication schema ב-`BotChat.tsx`
+
+לכל בוט, אוסיף JSON-LD דרך ה-`SEOHead jsonLd` prop:
+- `@type: "SoftwareApplication"`
+- `applicationCategory: "HealthApplication"`
+- `name: botName` (לפי שפת המשתמש)
+- `creator`: Person ד"ר אריאל שפירא
+- `inLanguage: "he"`
+- `offers: { @type: "Offer", price: "0", priceCurrency: "ILS" }`
+- `operatingSystem: "Web"`
+
+## 7. `public/llms-full.txt`
+
+קובץ חדש בנוסף ל-`llms.txt` הקיים, עם בדיוק המבנה והטקסט שסיפקת (פרופיל ד"ר שפירא, עקרונות מפתח, קהל יעד, FAQ, קישורים). הקיים `llms.txt` נשאר ככיווץ.
+
+## 8. עדכון `public/robots.txt`
+
+אוסיף בלוקים מפורשים מעל `User-agent: *` הקיים:
 ```
-reflection.tool_summaries["pricing-calculator"] = {
-  summary: "...",
-  updated_at: "..."
-}
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
 ```
-לא צריך מיגרציה — `reflection` כבר jsonb.
-
-### 3. הקשר משותף למנטור (mentor-chat)
-
-ב-`src/pages/Mentor.tsx`, פונקציית `send` כבר מצרפת `messages` ו-`language`. נוסיף שליפה של `therapist_journeys` (כבר נטען ב-`useTherapistJourney`) ונעביר ל-edge function שדה חדש `journey_context` המכיל:
-- `niche_output`
-- `self_presentation_output`
-- `completed_stages`
-- `reflection.tool_summaries`
-
-ב-`supabase/functions/mentor-chat/index.ts` נוסיף בלוק לפני ההודעות: אם `journey_context` לא ריק, נצרף הודעת `system` נוספת בעברית/אנגלית מהסגנון:
-> "מידע על המטפל מהכלים שהשלים עד כה: נישה — …; הצגה עצמית — …; סיכום מ-Pricing Calculator — …. השתמש בזה בתשובות ואל תבקש מידע שכבר ניתן."
-
-### 4. הודעת פתיחה אוטומטית בחזרה
-
-ב-`Mentor.tsx`, בכניסה לעמוד עם פרמטר `?from=<botKey>`:
-
-- ננקה את הפרמטר מה-URL.
-- נוסיף הודעת `user` שקופה ראשונה (או `assistant` פתיחה) באוטומט: `"חזרתי מ<שם הכלי>. הנה הסיכום: …"` — נשלח ישירות ל-mentor-chat כך שהמנטור עונה אליה. כך המנטור גם מתייחס לעבודה וגם משתמש בתוצאות.
-- אם השיחה כבר פתוחה, ההודעה נוספת בסופה במקום לאפס.
-
-### 5. עדכון system prompt של המנטור
-
-נוסיף שורה ב-`SYSTEM_PROMPT_HE`/`_EN` של mentor-chat:
-> "כשמגיע ממך מידע על תוצרי כלי שהמטפל השלים, התייחס אליו במפורש ('ראיתי את הניסוח שיצא לך ב-Niche Finder…') לפני שתשאל את השאלה הבאה."
+ה-`Disallow` הקיימים (`/portal`, `/dashboard` וכו') יישמרו תחת `User-agent: *`.
 
 ---
 
-## טכני (לקריאה אופציונלית)
+## קבצים שיושפעו
 
-**קבצים שיתעדכנו:**
-- `src/pages/BotChat.tsx` — כפתור חזרה + לוגיקת ניווט.
-- `src/components/bots/ChatHeader.tsx` — slot לכפתור.
-- `src/pages/Mentor.tsx` — קריאה ל-`useSearchParams`, הזרקת הודעת פתיחה, העברת `journey_context` ל-edge function.
-- `supabase/functions/mentor-chat/index.ts` — קבלת `journey_context`, הזרקה ל-system prompt + תוספת הוראה.
-- `supabase/functions/bot-extract-output/index.ts` — ענף סיכום גנרי + שמירה תחת `reflection.tool_summaries[botKey]`.
+```text
+edit    index.html                         # 5 בלוקי JSON-LD + ודא קנונים
+edit    public/sitemap.xml                 # ודא דומיין
+edit    public/robots.txt                  # בלוקי AI crawlers
+edit    src/pages/Index.tsx                # שילוב <FAQ /> לפני <CTABanner />
+edit    src/pages/ContentDetail.tsx        # Article schema מועשר
+edit    src/pages/BotChat.tsx              # SoftwareApplication schema
+new     src/components/landing/FAQ.tsx     # accordion + FAQPage schema
+new     public/llms-full.txt               # פרופיל מלא למנועי AI
+verify  src/components/SEOHead.tsx         # כבר תומך ב-jsonLd; ללא שינוי
+```
 
-**ללא שינויי סכמה** — `therapist_journeys.reflection` הוא כבר `jsonb`.
+## שאלה אחת לפני התחלה
 
-**RLS** — לא משתנה. כל הקריאות נעשות עם ה-JWT של המשתמש; ה-policies הקיימות (`auth.uid() = user_id`) מספיקות.
-
----
-
-## מה לא נכלל
-
-- לא משנים את העיצוב של דף הכלי או של המנטור מעבר לכפתור הקטן.
-- לא נוגעים בלוגיקה של ה-Journey Map.
-- לא בונים סיכום אוטומטי ל-`connection-bridge` תרגול קולי (הוא תרגול, לא כלי הפקה) — הסיכום הגנרי שם פשוט יציין "תרגל שיחה ראשונה".
+**תאריכי הפרסום של 10 המאמרים** — האם אתה רוצה שאוודא/אעדכן את `published_at` ב-DB לפי הרשימה שסיפקת (דורש migration), או רק להשתמש במה שכבר קיים ב-DB עבור ה-`Article` schema?

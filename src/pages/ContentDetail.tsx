@@ -157,12 +157,16 @@ export default function ContentDetail() {
   const articleExcerpt = (isRTL ? (content as any).excerpt_he : (content as any).excerpt_en) || (content as any).excerpt_he || (content as any).excerpt_en || '';
   const seoDesc = (articleExcerpt || articleTitle).toString().replace(/\s+/g, ' ').slice(0, 160);
 
+  const plainText = (content.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const wordCount = plainText ? plainText.split(' ').length : undefined;
+  const canonicalPath = `/contents/${(content as any).id}`;
+
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SEOHead
         title={`${articleTitle} | TherapyKeys`}
         description={seoDesc || 'מאמר מקצועי למטפלים — TherapyKeys'}
-        canonicalUrl={`/contents/${(content as any).id}`}
+        canonicalUrl={canonicalPath}
         ogImage={(content as any).featured_image_url || undefined}
         ogType="article"
         jsonLd={{
@@ -171,8 +175,28 @@ export default function ContentDetail() {
           headline: articleTitle,
           description: seoDesc,
           image: (content as any).featured_image_url,
-          author: { "@type": "Person", name: 'ד"ר אריאל שפירא' },
-          publisher: { "@type": "Organization", name: "TherapyKeys" },
+          inLanguage: "he",
+          ...(content.published_at ? { datePublished: content.published_at } : {}),
+          ...(wordCount ? { wordCount } : {}),
+          author: {
+            "@type": "Person",
+            "@id": "https://therapykeys.co.il/#ariel-shapira",
+            name: 'ד"ר אריאל שפירא',
+            url: "https://therapykeys.co.il",
+          },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://therapykeys.co.il/#organization",
+            name: "TherapyKeys",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://therapykeys.co.il/og-image.jpg",
+            },
+          },
+          mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": `https://therapykeys.co.il${canonicalPath}`,
+          },
         }}
       />
       <Header />
