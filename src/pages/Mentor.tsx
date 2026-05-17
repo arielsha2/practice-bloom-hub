@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
+import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 
 function WebsiteBuilderCTA() {
