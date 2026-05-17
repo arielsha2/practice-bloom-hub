@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
+import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 
 function WebsiteBuilderCTA() {
@@ -500,6 +501,7 @@ export default function Mentor() {
 
         <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
+          <FinalCelebration />
           <WebsiteBuilderCTA />
         </section>
 

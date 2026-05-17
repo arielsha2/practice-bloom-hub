@@ -138,44 +138,60 @@ Deno.serve(async (req) => {
       if (m) parsed = JSON.parse(m[0]);
     }
 
+    // Map bot key -> journey stage key, so completing a tool auto-advances the journey
+    const BOT_TO_STAGE: Record<string, string> = {
+      "niche-finder": "niche",
+      "pricing-calculator": "pricing",
+      "self-presentation": "self-presentation",
+      "contact-finder": "network",
+      "connection-bridge": "conversion",
+    };
+    const stageKey = BOT_TO_STAGE[botKey];
+    const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+
     // Upsert into therapist_journeys
     const { data: existing } = await supabase
       .from("therapist_journeys")
-      .select("id, reflection")
+      .select("id, reflection, completed_stages, step_number")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    const prevCompleted = ((existing as any)?.completed_stages as string[] | null) ?? [];
+    const completedSet = new Set(prevCompleted);
+    if (stageKey) completedSet.add(stageKey);
+    const newCompleted = STAGE_ORDER.filter((k) => completedSet.has(k));
+    const nextStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? "conversion";
+    const nextStepNumber = STAGE_ORDER.indexOf(nextStage) + 1;
+
+    const baseReflection = (existing?.reflection as Record<string, any>) ?? {};
+
+    let updatePayload: Record<string, any> = {
+      completed_stages: newCompleted,
+      step_number: nextStepNumber,
+      updated_at: new Date().toISOString(),
+    };
+
     if (isGeneric) {
-      // Save generic summary under reflection.tool_summaries[botKey]
-      const reflection = (existing?.reflection as Record<string, any>) ?? {};
-      const toolSummaries = (reflection.tool_summaries as Record<string, any>) ?? {};
+      const toolSummaries = (baseReflection.tool_summaries as Record<string, any>) ?? {};
       toolSummaries[botKey] = {
         summary: parsed.summary ?? "",
         updated_at: new Date().toISOString(),
       };
-      const newReflection = { ...reflection, tool_summaries: toolSummaries };
-
-      if (existing) {
-        await supabase
-          .from("therapist_journeys")
-          .update({ reflection: newReflection, updated_at: new Date().toISOString() })
-          .eq("user_id", user.id);
-      } else {
-        await supabase
-          .from("therapist_journeys")
-          .insert({ user_id: user.id, reflection: newReflection });
-      }
+      updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
     } else {
-      if (existing) {
-        await supabase
-          .from("therapist_journeys")
-          .update({ [cfg!.column]: parsed, updated_at: new Date().toISOString() })
-          .eq("user_id", user.id);
-      } else {
-        await supabase
-          .from("therapist_journeys")
-          .insert({ user_id: user.id, [cfg!.column]: parsed });
-      }
+      updatePayload[cfg!.column] = parsed;
+      updatePayload.reflection = { ...baseReflection, current: nextStage };
+    }
+
+    if (existing) {
+      await supabase
+        .from("therapist_journeys")
+        .update(updatePayload)
+        .eq("user_id", user.id);
+    } else {
+      await supabase
+        .from("therapist_journeys")
+        .insert({ user_id: user.id, ...updatePayload });
     }
 
     return new Response(JSON.stringify({ success: true, output: parsed }), {
