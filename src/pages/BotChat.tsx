@@ -356,7 +356,7 @@ const BotChat = () => {
                 <ChatMessage
                   key={msg.id}
                   role={msg.role}
-                  content={botKey === 'connection-bridge' ? stripStageMarker(msg.content) : msg.content}
+                  content={stripStageMarker(msg.content)}
                   isStreaming={msg.isStreaming}
                   enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
                   isLatestAssistant={isLatestAssistant}
