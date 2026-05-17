@@ -9,6 +9,7 @@ import { Testimonials } from '@/components/landing/Testimonials';
 import { CTABanner } from '@/components/landing/CTABanner';
 import { Footer } from '@/components/landing/Footer';
 import { MentorSection } from '@/components/landing/MentorSection';
+import { FAQ } from '@/components/landing/FAQ';
 
 const Index = () => {
   const { isRTL } = useLanguage();
@@ -69,6 +70,7 @@ const Index = () => {
         <Testimonials />
         <AboutFounders />
         <Benefits />
+        <FAQ />
         <CTABanner />
       </main>
       <Footer />
