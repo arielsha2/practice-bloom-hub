@@ -28,6 +28,7 @@ import AdminInsights from "./pages/AdminInsights";
 import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
 import MentorAdmin from "./pages/MentorAdmin";
+import ShivukKlinika from "./pages/ShivukKlinika";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -63,6 +64,8 @@ const App = () => (
               <Route path="/contact-finder" element={<BotChat />} />
               <Route path="/admin-insights" element={<AdminInsights />} />
               <Route path="/admin/mentor" element={<MentorAdmin />} />
+              <Route path="/שיווק-קליניקה-למטפלים" element={<ShivukKlinika />} />
+              <Route path="/shivuk-klinika-lamtapelim" element={<ShivukKlinika />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
