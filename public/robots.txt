@@ -1,3 +1,15 @@
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
 User-agent: *
 Allow: /
 Disallow: /portal
@@ -8,4 +20,4 @@ Disallow: /admin-insights
 Disallow: /media-library
 Disallow: /mentor/website-builder
 
-Sitemap: https://therapykeys.lovable.app/sitemap.xml
+Sitemap: https://therapykeys.co.il/sitemap.xml
