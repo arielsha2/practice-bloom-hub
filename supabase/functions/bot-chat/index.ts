@@ -90,6 +90,21 @@ serve(async (req) => {
 
     // Build system prompt and messages array
     let systemPrompt = botConfig.system_prompt || "You are a helpful assistant.";
+
+    // GLOBAL: hand-off protocol back to the Mentor.
+    // The bot must emit [ADVANCE] on its own line at the END of its reply when:
+    //   (a) it concludes the therapist reached sufficient progress in this tool, OR
+    //   (b) the therapist explicitly asks to move on / advance / return to the mentor.
+    // The client detects this marker, runs the summary extractor, and routes the
+    // therapist back to the Mentor with the summary attached.
+    systemPrompt += `
+
+---
+פרוטוקול סיום (חובה):
+כאשר אתה מזהה שהמטפל הגיע לנקודת התקדמות מספקת בכלי הזה, או שהמטפל מבקש במפורש להתקדם / לסיים / לחזור למנטור — סיים את התשובה האחרונה שלך במשפט סיכום קצר וחם, ואז הוסף בשורה נפרדת בלבד את הסמן: [ADVANCE]
+אל תשתמש בסמן הזה בשום מצב אחר. אל תזכיר את הסמן בטקסט הגלוי.
+---`;
+
     const messages: Message[] = [
       { role: "system", content: systemPrompt },
     ];
