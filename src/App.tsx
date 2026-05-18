@@ -29,6 +29,10 @@ import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
 import MentorAdmin from "./pages/MentorAdmin";
 import ShivukKlinika from "./pages/ShivukKlinika";
+import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
+import ShinuyPnimiShivuk from "./pages/ShinuyPnimiShivuk";
+import MetuplimRishonim from "./pages/MetuplimRishonim";
+import AlSfatHaklinika from "./pages/AlSfatHaklinika";
 const queryClient = new QueryClient();
 
 const App = () => (
