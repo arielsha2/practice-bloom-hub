@@ -148,7 +148,7 @@ export const AnswerPage = ({
         </p>
       )}
       {s.bullets && (
-        <ul className="list-disc pr-6 space-y-2 text-base md:text-lg text-muted-foreground">
+        <ul className={`list-disc ${pageDir === "rtl" ? "pr-6" : "pl-6"} space-y-2 text-base md:text-lg text-muted-foreground`}>
           {s.bullets.map((b, i) => (
             <li key={i}>{b}</li>
           ))}
