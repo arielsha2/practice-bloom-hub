@@ -79,6 +79,11 @@ const App = () => (
               <Route path="/shinuy-pnimi-shivuk" element={<ShinuyPnimiShivuk />} />
               <Route path="/matorpelim-rishonim" element={<MetuplimRishonim />} />
               <Route path="/al-sfat-haklinika" element={<AlSfatHaklinika />} />
+              <Route path="/en/therapists-who-hate-marketing" element={<TherapistsHateMarketing />} />
+              <Route path="/en/market-without-losing-soul" element={<MarketWithoutLosingSoul />} />
+              <Route path="/en/why-therapists-undercharge" element={<TherapistsUndercharge />} />
+              <Route path="/en/know-like-trust-for-therapists" element={<KnowLikeTrust />} />
+              <Route path="/en/first-private-practice-clients" element={<FirstClients />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
