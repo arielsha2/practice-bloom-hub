@@ -33,6 +33,11 @@ import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
 import ShinuyPnimiShivuk from "./pages/ShinuyPnimiShivuk";
 import MetuplimRishonim from "./pages/MetuplimRishonim";
 import AlSfatHaklinika from "./pages/AlSfatHaklinika";
+import TherapistsHateMarketing from "./pages/en/TherapistsHateMarketing";
+import MarketWithoutLosingSoul from "./pages/en/MarketWithoutLosingSoul";
+import TherapistsUndercharge from "./pages/en/TherapistsUndercharge";
+import KnowLikeTrust from "./pages/en/KnowLikeTrust";
+import FirstClients from "./pages/en/FirstClients";
 const queryClient = new QueryClient();
 
 const App = () => (
