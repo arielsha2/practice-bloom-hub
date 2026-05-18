@@ -7,7 +7,7 @@ const KnowLikeTrust = () => (
     title="Know-Like-Trust for Therapists | TherapyKeys"
     metaDescription='How does the classic "Know, Like, Trust" framework actually work in a therapy practice? Dr. Ariel Shapira & Eliana Shapira translate it into something therapists can use without compromise.'
     h1="Know-Like-Trust for Therapists"
-    intro='The "Know, Like, Trust" framework is the foundation of most relationship-based marketing — but the standard version was written for coaches, consultants, and creators, not therapists. For a private practice, each stage means something specific, and the stakes are higher: a prospective client isn\'t deciding whether to buy a product, they\'re deciding whether to be vulnerable in your room. Here\'s how each stage actually works for therapists, and what to do at each one.'
+    intro={`The "Know, Like, Trust" framework is the foundation of most relationship-based marketing — but the standard version was written for coaches, consultants, and creators, not therapists. For a private practice, each stage means something specific, and the stakes are higher: a prospective client isn't deciding whether to buy a product, they're deciding whether to be vulnerable in your room. Here's how each stage actually works for therapists, and what to do at each one.`}
     stepsHeading="The 3 stages, translated for therapy"
     howToName="How Know-Like-Trust works in a private therapy practice"
     howToDescription="The classic marketing framework rebuilt for the reality of clinical work"
