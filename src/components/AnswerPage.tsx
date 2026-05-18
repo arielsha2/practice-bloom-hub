@@ -44,7 +44,33 @@ export interface AnswerPageProps {
   ctaButtonHref?: string;
   howToName: string;
   howToDescription: string;
+  lang?: "he" | "en";
+  dir?: "rtl" | "ltr";
+  stepLabel?: string;
 }
+
+const DEFAULTS = {
+  he: {
+    ctaHeading: "איך TherapyKeys עוזר למטפלים",
+    ctaText: 'תוכנית "נקודת המפנה" של ד"ר אריאל ואליענה שפירא היא ליווי של 3 חודשים המשלב שינוי פנימי עם כלים שיווקיים אותנטיים.',
+    ctaButtonLabel: "לפרטים על תוכנית נקודת המפנה",
+    stepLabel: "שלב",
+    authors: [
+      { "@type": "Person" as const, name: 'ד"ר אריאל שפירא', url: "https://therapykeys.co.il" },
+      { "@type": "Person" as const, name: "אליענה שפירא" },
+    ],
+  },
+  en: {
+    ctaHeading: "How TherapyKeys helps therapists",
+    ctaText: 'The "Turning Point" program by Dr. Ariel Shapira & Eliana Shapira is a 3-month mentorship combining inner change with authentic marketing tools.',
+    ctaButtonLabel: "Learn about the Turning Point program",
+    stepLabel: "Step",
+    authors: [
+      { "@type": "Person" as const, name: "Dr. Ariel Shapira", url: "https://therapykeys.co.il" },
+      { "@type": "Person" as const, name: "Eliana Shapira" },
+    ],
+  },
+};
 
 export const AnswerPage = ({
   path,
@@ -58,13 +84,18 @@ export const AnswerPage = ({
   steps,
   faqsHeading,
   faqs,
-  ctaHeading = "איך TherapyKeys עוזר למטפלים",
-  ctaText = 'תוכנית "נקודת המפנה" של ד"ר אריאל ואליענה שפירא היא ליווי של 3 חודשים המשלב שינוי פנימי עם כלים שיווקיים אותנטיים.',
-  ctaButtonLabel = "לפרטים על תוכנית נקודת המפנה",
+  ctaHeading,
+  ctaText,
+  ctaButtonLabel,
   ctaButtonHref = "/turning-point",
   howToName,
   howToDescription,
+  lang = "he",
+  dir,
+  stepLabel,
 }: AnswerPageProps) => {
+  const d = DEFAULTS[lang];
+  const pageDir = dir ?? (lang === "he" ? "rtl" : "ltr");
   const canonical = `https://therapykeys.co.il${encodeURI(path)}`;
   const today = new Date().toISOString().split("T")[0];
 
@@ -72,10 +103,7 @@ export const AnswerPage = ({
     "@context": "https://schema.org",
     "@type": "Article",
     headline: h1,
-    author: [
-      { "@type": "Person", name: 'ד"ר אריאל שפירא', url: "https://therapykeys.co.il" },
-      { "@type": "Person", name: "אליענה שפירא" },
-    ],
+    author: d.authors,
     datePublished: today,
     dateModified: today,
     publisher: {
@@ -83,7 +111,7 @@ export const AnswerPage = ({
       name: "TherapyKeys",
       logo: { "@type": "ImageObject", url: "https://therapykeys.co.il/og-image.jpg" },
     },
-    inLanguage: "he",
+    inLanguage: lang,
     mainEntityOfPage: canonical,
   };
 
