@@ -60,8 +60,8 @@ export function TurningPointPricing() {
 
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">בתשלום אחד + הנחה</p>
-                    <p className="text-3xl font-bold text-primary">4,650 ₪</p>
-                    <p className="text-sm text-teal font-medium">חיסכון של 300 ₪</p>
+                    <p className="text-3xl font-bold text-primary">5750 ₪</p>
+                    <p className="text-sm text-teal font-medium">חיסכון של 250 ₪</p>
                   </div>
                 </div>
               </div>
@@ -90,7 +90,7 @@ export function TurningPointPricing() {
               {/* Schedule info */}
               <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
-                <span>מתחילים ביום חמישי 12.3.26 | ימי חמישי 11:00-13:00</span>
+                <span>מתחילים ביום שני 01.6.26 | ימי שני 20:00-21:30</span>
               </div>
             </div>
 
