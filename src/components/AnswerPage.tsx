@@ -158,7 +158,7 @@ export const AnswerPage = ({
   );
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background">
+    <div dir={pageDir} lang={lang} className="min-h-screen bg-background">
       <SEOHead
         title={title}
         description={metaDescription}
@@ -184,9 +184,9 @@ export const AnswerPage = ({
             </h2>
             <ol className="space-y-6">
               {steps.map((s, i) => (
-                <li key={i} className="border-r-4 border-primary pr-4">
+                <li key={i} className={`${pageDir === "rtl" ? "border-r-4 pr-4" : "border-l-4 pl-4"} border-primary`}>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2">
-                    שלב {i + 1}: {s.name}
+                    {stepLabel ?? d.stepLabel} {i + 1}: {s.name}
                   </h3>
                   <p className="text-base text-muted-foreground leading-relaxed">{s.text}</p>
                 </li>
@@ -207,7 +207,7 @@ export const AnswerPage = ({
                   value={`faq-${i}`}
                   className="bg-card border border-border rounded-lg px-5 shadow-sm"
                 >
-                  <AccordionTrigger className="text-right text-base md:text-lg font-semibold text-foreground hover:no-underline">
+                  <AccordionTrigger className={`${pageDir === "rtl" ? "text-right" : "text-left"} text-base md:text-lg font-semibold text-foreground hover:no-underline`}>
                     {f.q}
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed pt-2">
@@ -220,13 +220,13 @@ export const AnswerPage = ({
 
           <section className="bg-secondary rounded-2xl p-8 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              {ctaHeading}
+              {ctaHeading ?? d.ctaHeading}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-2xl mx-auto">
-              {ctaText}
+              {ctaText ?? d.ctaText}
             </p>
             <Button asChild variant="cta" size="xl">
-              <Link to={ctaButtonHref}>{ctaButtonLabel}</Link>
+              <Link to={ctaButtonHref}>{ctaButtonLabel ?? d.ctaButtonLabel}</Link>
             </Button>
           </section>
         </article>
