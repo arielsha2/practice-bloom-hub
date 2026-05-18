@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, Shield, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { PaymentOptionsDialog } from '../PaymentOptionsDialog';
-import { CountdownTimer } from './CountdownTimer';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, CheckCircle, Shield, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { PaymentOptionsDialog } from "../PaymentOptionsDialog";
+import { CountdownTimer } from "./CountdownTimer";
 
 export function TurningPointPricing() {
   const { user } = useAuth();
@@ -13,7 +13,7 @@ export function TurningPointPricing() {
   if (user) return null;
 
   // Countdown target: March 12, 2026 at midnight
-  const countdownTarget = new Date('2026-03-12T00:00:00+03:00');
+  const countdownTarget = new Date("2026-03-12T00:00:00+03:00");
 
   return (
     <>
@@ -25,13 +25,9 @@ export function TurningPointPricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl md:text-3xl font-display text-foreground mb-4">
-              ההשקעה בתוכנית
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-display text-foreground mb-4">ההשקעה בתוכנית</h2>
 
-            <p className="text-accent font-bold mb-6">
-              עכשיו במחיר מיוחד – המבצע מסתיים בקרוב!
-            </p>
+            <p className="text-accent font-bold mb-6">עכשיו במחיר מיוחד – המבצע מסתיים בקרוב!</p>
 
             {/* Countdown Timer */}
             <div className="mb-8">
@@ -56,18 +52,14 @@ export function TurningPointPricing() {
                 <div className="flex flex-col gap-3 items-center">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">בתשלומים</p>
-                    <p className="text-3xl font-bold text-foreground">
-                      10 × 495 ₪
-                    </p>
-                    <p className="text-lg text-muted-foreground">(4,950 ₪ סה״כ)</p>
+                    <p className="text-3xl font-bold text-foreground">10 × 575 ₪</p>
+                    <p className="text-lg text-muted-foreground">(5750 ₪ סה״כ)</p>
                   </div>
 
                   <div className="text-muted-foreground text-sm">או</div>
 
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      בתשלום אחד + הנחה
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">בתשלום אחד + הנחה</p>
                     <p className="text-3xl font-bold text-primary">4,650 ₪</p>
                     <p className="text-sm text-teal font-medium">חיסכון של 300 ₪</p>
                   </div>
@@ -77,11 +69,11 @@ export function TurningPointPricing() {
               {/* Includes */}
               <div className="space-y-2 mb-8 text-sm text-right max-w-sm mx-auto">
                 {[
-                  '12 מפגשים (6 למידה + 6 הטמעה)',
-                  'גישה פתוחה לתכנים לתמיד',
-                  'חוברות תרגול + תסריטים',
-                  'מדריך דיגיטלי במתנה (שווי 497 ₪)',
-                  'בוטים ייחודיים לעזרה בשיווק',
+                  "12 מפגשים (6 למידה + 6 הטמעה)",
+                  "גישה פתוחה לתכנים לתמיד",
+                  "חוברות תרגול + תסריטים",
+                  "מדריך דיגיטלי במתנה (שווי 497 ₪)",
+                  "בוטים ייחודיים לעזרה בשיווק",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-teal shrink-0" />
@@ -90,12 +82,7 @@ export function TurningPointPricing() {
                 ))}
               </div>
 
-              <Button
-                size="xl"
-                variant="cta"
-                className="w-full max-w-sm"
-                onClick={() => setShowPaymentDialog(true)}
-              >
+              <Button size="xl" variant="cta" className="w-full max-w-sm" onClick={() => setShowPaymentDialog(true)}>
                 אני רוצה להצטרף
                 <ArrowLeft className="w-5 h-5 ms-1" />
               </Button>
@@ -119,9 +106,8 @@ export function TurningPointPricing() {
               <div>
                 <h3 className="font-bold text-foreground mb-2">100% אחריות – בלי אותיות קטנות</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  אנחנו כל כך מאמינים בערך שטמון בקורס, שהחלטנו לקחת את כל הסיכון עלינו.
-                  יש לך אפשרות להצטרף ולהתנסות, ואם הרגשת שהקורס הוא לא מה שחיפשת – ניתן
-                  ליצור איתנו קשר עד לפני המפגש השני ולקבל החזר כספי מלא.
+                  אנחנו כל כך מאמינים בערך שטמון בקורס, שהחלטנו לקחת את כל הסיכון עלינו. יש לך אפשרות להצטרף ולהתנסות,
+                  ואם הרגשת שהקורס הוא לא מה שחיפשת – ניתן ליצור איתנו קשר עד לפני המפגש השני ולקבל החזר כספי מלא.
                 </p>
               </div>
             </motion.div>
