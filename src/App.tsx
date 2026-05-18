@@ -29,6 +29,10 @@ import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
 import MentorAdmin from "./pages/MentorAdmin";
 import ShivukKlinika from "./pages/ShivukKlinika";
+import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
+import ShinuyPnimiShivuk from "./pages/ShinuyPnimiShivuk";
+import MetuplimRishonim from "./pages/MetuplimRishonim";
+import AlSfatHaklinika from "./pages/AlSfatHaklinika";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -66,6 +70,10 @@ const App = () => (
               <Route path="/admin/mentor" element={<MentorAdmin />} />
               <Route path="/שיווק-קליניקה-למטפלים" element={<ShivukKlinika />} />
               <Route path="/shivuk-klinika-lamtapelim" element={<ShivukKlinika />} />
+              <Route path="/shivuk-lo-mitchabel" element={<ShivukLoMitchabel />} />
+              <Route path="/shinuy-pnimi-shivuk" element={<ShinuyPnimiShivuk />} />
+              <Route path="/matorpelim-rishonim" element={<MetuplimRishonim />} />
+              <Route path="/al-sfat-haklinika" element={<AlSfatHaklinika />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
