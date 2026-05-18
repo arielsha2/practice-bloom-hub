@@ -44,7 +44,33 @@ export interface AnswerPageProps {
   ctaButtonHref?: string;
   howToName: string;
   howToDescription: string;
+  lang?: "he" | "en";
+  dir?: "rtl" | "ltr";
+  stepLabel?: string;
 }
+
+const DEFAULTS = {
+  he: {
+    ctaHeading: "איך TherapyKeys עוזר למטפלים",
+    ctaText: 'תוכנית "נקודת המפנה" של ד"ר אריאל ואליענה שפירא היא ליווי של 3 חודשים המשלב שינוי פנימי עם כלים שיווקיים אותנטיים.',
+    ctaButtonLabel: "לפרטים על תוכנית נקודת המפנה",
+    stepLabel: "שלב",
+    authors: [
+      { "@type": "Person" as const, name: 'ד"ר אריאל שפירא', url: "https://therapykeys.co.il" },
+      { "@type": "Person" as const, name: "אליענה שפירא" },
+    ],
+  },
+  en: {
+    ctaHeading: "How TherapyKeys helps therapists",
+    ctaText: 'The "Turning Point" program by Dr. Ariel Shapira & Eliana Shapira is a 3-month mentorship combining inner change with authentic marketing tools.',
+    ctaButtonLabel: "Learn about the Turning Point program",
+    stepLabel: "Step",
+    authors: [
+      { "@type": "Person" as const, name: "Dr. Ariel Shapira", url: "https://therapykeys.co.il" },
+      { "@type": "Person" as const, name: "Eliana Shapira" },
+    ],
+  },
+};
 
 export const AnswerPage = ({
   path,
@@ -58,13 +84,18 @@ export const AnswerPage = ({
   steps,
   faqsHeading,
   faqs,
-  ctaHeading = "איך TherapyKeys עוזר למטפלים",
-  ctaText = 'תוכנית "נקודת המפנה" של ד"ר אריאל ואליענה שפירא היא ליווי של 3 חודשים המשלב שינוי פנימי עם כלים שיווקיים אותנטיים.',
-  ctaButtonLabel = "לפרטים על תוכנית נקודת המפנה",
+  ctaHeading,
+  ctaText,
+  ctaButtonLabel,
   ctaButtonHref = "/turning-point",
   howToName,
   howToDescription,
+  lang = "he",
+  dir,
+  stepLabel,
 }: AnswerPageProps) => {
+  const d = DEFAULTS[lang];
+  const pageDir = dir ?? (lang === "he" ? "rtl" : "ltr");
   const canonical = `https://therapykeys.co.il${encodeURI(path)}`;
   const today = new Date().toISOString().split("T")[0];
 
@@ -72,10 +103,7 @@ export const AnswerPage = ({
     "@context": "https://schema.org",
     "@type": "Article",
     headline: h1,
-    author: [
-      { "@type": "Person", name: 'ד"ר אריאל שפירא', url: "https://therapykeys.co.il" },
-      { "@type": "Person", name: "אליענה שפירא" },
-    ],
+    author: d.authors,
     datePublished: today,
     dateModified: today,
     publisher: {
@@ -83,7 +111,7 @@ export const AnswerPage = ({
       name: "TherapyKeys",
       logo: { "@type": "ImageObject", url: "https://therapykeys.co.il/og-image.jpg" },
     },
-    inLanguage: "he",
+    inLanguage: lang,
     mainEntityOfPage: canonical,
   };
 
@@ -92,7 +120,7 @@ export const AnswerPage = ({
     "@type": "HowTo",
     name: howToName,
     description: howToDescription,
-    inLanguage: "he",
+    inLanguage: lang,
     step: steps.map((s, i) => ({
       "@type": "HowToStep",
       position: i + 1,
@@ -120,7 +148,7 @@ export const AnswerPage = ({
         </p>
       )}
       {s.bullets && (
-        <ul className="list-disc pr-6 space-y-2 text-base md:text-lg text-muted-foreground">
+        <ul className={`list-disc ${pageDir === "rtl" ? "pr-6" : "pl-6"} space-y-2 text-base md:text-lg text-muted-foreground`}>
           {s.bullets.map((b, i) => (
             <li key={i}>{b}</li>
           ))}
@@ -130,7 +158,7 @@ export const AnswerPage = ({
   );
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background">
+    <div dir={pageDir} lang={lang} className="min-h-screen bg-background">
       <SEOHead
         title={title}
         description={metaDescription}
@@ -156,9 +184,9 @@ export const AnswerPage = ({
             </h2>
             <ol className="space-y-6">
               {steps.map((s, i) => (
-                <li key={i} className="border-r-4 border-primary pr-4">
+                <li key={i} className={`${pageDir === "rtl" ? "border-r-4 pr-4" : "border-l-4 pl-4"} border-primary`}>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2">
-                    שלב {i + 1}: {s.name}
+                    {stepLabel ?? d.stepLabel} {i + 1}: {s.name}
                   </h3>
                   <p className="text-base text-muted-foreground leading-relaxed">{s.text}</p>
                 </li>
@@ -179,7 +207,7 @@ export const AnswerPage = ({
                   value={`faq-${i}`}
                   className="bg-card border border-border rounded-lg px-5 shadow-sm"
                 >
-                  <AccordionTrigger className="text-right text-base md:text-lg font-semibold text-foreground hover:no-underline">
+                  <AccordionTrigger className={`${pageDir === "rtl" ? "text-right" : "text-left"} text-base md:text-lg font-semibold text-foreground hover:no-underline`}>
                     {f.q}
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed pt-2">
@@ -192,13 +220,13 @@ export const AnswerPage = ({
 
           <section className="bg-secondary rounded-2xl p-8 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              {ctaHeading}
+              {ctaHeading ?? d.ctaHeading}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-2xl mx-auto">
-              {ctaText}
+              {ctaText ?? d.ctaText}
             </p>
             <Button asChild variant="cta" size="xl">
-              <Link to={ctaButtonHref}>{ctaButtonLabel}</Link>
+              <Link to={ctaButtonHref}>{ctaButtonLabel ?? d.ctaButtonLabel}</Link>
             </Button>
           </section>
         </article>
