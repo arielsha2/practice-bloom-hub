@@ -120,7 +120,7 @@ export const AnswerPage = ({
     "@type": "HowTo",
     name: howToName,
     description: howToDescription,
-    inLanguage: "he",
+    inLanguage: lang,
     step: steps.map((s, i) => ({
       "@type": "HowToStep",
       position: i + 1,
