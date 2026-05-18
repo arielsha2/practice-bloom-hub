@@ -36,6 +36,26 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://therapykeys.co.il/shivuk-lo-mitchabel</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://therapykeys.co.il/shinuy-pnimi-shivuk</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://therapykeys.co.il/matorpelim-rishonim</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://therapykeys.co.il/al-sfat-haklinika</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://therapykeys.co.il/auth</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
