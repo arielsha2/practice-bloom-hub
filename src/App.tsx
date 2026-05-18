@@ -70,6 +70,10 @@ const App = () => (
               <Route path="/admin/mentor" element={<MentorAdmin />} />
               <Route path="/שיווק-קליניקה-למטפלים" element={<ShivukKlinika />} />
               <Route path="/shivuk-klinika-lamtapelim" element={<ShivukKlinika />} />
+              <Route path="/shivuk-lo-mitchabel" element={<ShivukLoMitchabel />} />
+              <Route path="/shinuy-pnimi-shivuk" element={<ShinuyPnimiShivuk />} />
+              <Route path="/matorpelim-rishonim" element={<MetuplimRishonim />} />
+              <Route path="/al-sfat-haklinika" element={<AlSfatHaklinika />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
