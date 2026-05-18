@@ -60,7 +60,7 @@ export function TurningPointPricing() {
 
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">בתשלום אחד + הנחה</p>
-                    <p className="text-3xl font-bold text-primary">5750 ₪</p>
+                    <p className="text-3xl font-bold text-primary">5550 ₪</p>
                     <p className="text-sm text-teal font-medium">חיסכון של 250 ₪</p>
                   </div>
                 </div>
