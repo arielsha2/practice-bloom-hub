@@ -45,7 +45,7 @@ const paymentOptions = [
     title: "תשלום אחד",
     subtitle: "תשלום חד-פעמי עם הנחה",
     price: "6200 ₪",
-    description: "חיסכון של 500 ₪",
+    description: "חיסכון של 500 נוספים₪",
     url: "https://meshulam.co.il/quick_payment?b=deaf4934c9000063786c3e30488b40f4",
     badge: "הנחה 500₪",
   },
