@@ -17,12 +17,12 @@ export function PortalAccessDenied() {
       <Header />
       <TurningPointHero />
       <TurningPointStory />
-      <TurningPointVideo />
       <TurningPointProgram />
       <TurningPointOutcomes />
       <TurningPointMeetings />
       <TurningPointPricing />
       <TurningPointTestimonials />
+      <TurningPointVideo />
       <TurningPointFounders />
       <TurningPointCTA />
       <Footer />
