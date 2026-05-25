@@ -20,7 +20,7 @@ export function TurningPointVideo() {
         playerVars: { rel: 0, modestbranding: 1 },
         events: {
           onReady: (event: any) => {
-            event.target.setPlaybackRate(1.25);
+            event.target.setPlaybackRate(1.2);
           },
         },
       });
