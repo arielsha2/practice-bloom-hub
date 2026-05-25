@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
-import { Trophy, Sparkles, Copy, Check } from "lucide-react";
+import { Trophy, Sparkles, Copy, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useLanguage } from "@/contexts/LanguageContext";
