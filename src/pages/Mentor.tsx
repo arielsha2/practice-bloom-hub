@@ -507,7 +507,7 @@ export default function Mentor() {
         description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
         canonicalUrl="/mentor"
       />
-      <Header />
+      <MentorTopBar />
       <main className="flex-1 pt-16">
         <section className="py-3 md:py-4 border-b border-mentor-border/50">
           <div className="container mx-auto px-4 text-center max-w-3xl">
