@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import {
   Video,
   Users,
@@ -9,48 +9,48 @@ import {
   Heart,
   Bot,
   Gift,
-} from 'lucide-react';
+} from "lucide-react";
 
 const programFeatures = [
   {
     icon: Video,
-    title: '6 מפגשי למידה מעשית',
-    desc: 'תוכן מקצועי ומעשי בשפה טיפולית',
+    title: "8 מפגשי למידה מעשית",
+    desc: "תוכן מקצועי ומעשי בשפה טיפולית",
   },
   {
     icon: Users,
-    title: '6 מפגשי הטמעה',
-    desc: 'לתרגול ומענה לשאלות',
+    title: "4 מפגשי הטמעה",
+    desc: "לתרגול ומענה לשאלות",
   },
   {
     icon: ClipboardCheck,
-    title: 'משימות תרגול שבועיות',
-    desc: 'ליישום שלב אחר שלב',
+    title: "משימות תרגול שבועיות",
+    desc: "ליישום שלב אחר שלב",
   },
   {
     icon: InfinityIcon,
-    title: 'גישה פתוחה ללא הגבלה',
-    desc: 'לתכני הקורס – לתמיד',
+    title: "גישה פתוחה ללא הגבלה",
+    desc: "לתכני הקורס – לתמיד",
   },
   {
     icon: FileText,
-    title: 'חוברות תרגול פרקטיות',
-    desc: 'שהכל יהיה ברור וישים',
+    title: "חוברות תרגול פרקטיות",
+    desc: "שהכל יהיה ברור וישים",
   },
   {
     icon: Heart,
-    title: 'קבוצה קטנה ואיכותית',
-    desc: 'יחס אישי והתקדמות מהירה',
+    title: "קבוצה קטנה ואיכותית",
+    desc: "יחס אישי והתקדמות מהירה",
   },
   {
     icon: Bot,
-    title: 'בוטים ייחודיים',
-    desc: 'לעזרה בשיווק הקליניקה',
+    title: "בוטים ייחודיים",
+    desc: "לעזרה בשיווק הקליניקה",
   },
   {
     icon: Gift,
-    title: 'בונוס: חוברת תסריטים',
-    desc: 'תסריטים מוכנים לשימוש מיידי',
+    title: "בונוס: חוברת תסריטים",
+    desc: "תסריטים מוכנים לשימוש מיידי",
   },
 ];
 
@@ -83,9 +83,7 @@ export function TurningPointProgram() {
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal/15 to-teal/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                     <Icon className="w-6 h-6 text-teal" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-1 text-sm">
-                    {feature.title}
-                  </h3>
+                  <h3 className="font-semibold text-foreground mb-1 text-sm">{feature.title}</h3>
                   <p className="text-xs text-muted-foreground">{feature.desc}</p>
                 </div>
               </motion.div>
@@ -103,12 +101,9 @@ export function TurningPointProgram() {
         >
           <div className="bg-accent/10 border border-accent/20 rounded-xl p-6 text-center">
             <Gift className="w-8 h-8 text-accent mx-auto mb-3" />
-            <h3 className="font-bold text-foreground mb-2">
-              בונוס מיוחד לנרשמים
-            </h3>
+            <h3 className="font-bold text-foreground mb-2">בונוס מיוחד לנרשמים</h3>
             <p className="text-sm text-muted-foreground">
-              מדריך דיגיטלי "נקודת המפנה" בשווי 497 ש"ח – במתנה! כלים פרקטיים לבניית קליניקה
-              מצליחה, נשלח מיד עם ההרשמה.
+              מדריך דיגיטלי "נקודת המפנה" בשווי 497 ש"ח – במתנה! כלים פרקטיים לבניית קליניקה מצליחה, נשלח מיד עם ההרשמה.
             </p>
           </div>
         </motion.div>
