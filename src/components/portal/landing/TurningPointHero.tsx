@@ -26,20 +26,6 @@ export function TurningPointHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Founders image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              className="mb-8"
-            >
-              <img
-                src={foundersImg}
-                alt="ד״ר אריאל ואליענה שפירא"
-                className="w-48 h-32 md:w-64 md:h-40 object-cover rounded-xl mx-auto shadow-lg border-2 border-primary-foreground/10"
-              />
-            </motion.div>
-
             {user && (
               <motion.div
                 initial={{ scale: 0 }}
@@ -53,9 +39,10 @@ export function TurningPointHero() {
               </motion.div>
             )}
 
-            <span className="inline-block text-accent font-medium text-sm mb-4 tracking-wider uppercase">
+            <span className="inline-block text-accent font-medium text-sm mb-6 tracking-[0.2em] uppercase border border-accent/30 rounded-full px-5 py-1.5">
               תוכנית "נקודת המפנה"
             </span>
+
 
             <h1 className="text-3xl md:text-5xl font-display text-primary-foreground mb-6 tracking-wide leading-tight">
               {user
