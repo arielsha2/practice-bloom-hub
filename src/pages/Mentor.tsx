@@ -674,8 +674,8 @@ export default function Mentor() {
                       <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
                         <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
                           {isRTL
-                            ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
-                            : "Tell me what you'd like to change in your practice — and we'll start there."}
+                            ? "היי 👋 ספרו לי מה מרגיש תקוע — ונתחיל בדיוק משם. אין תשובות נכונות, רק כנות."
+                            : "Hey 👋 tell me what feels stuck — and we'll start right there. No right answers, just honesty."}
                         </p>
                         <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
                           {starters.map((s, i) => (
