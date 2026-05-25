@@ -137,17 +137,17 @@ const OUTCOMES_EN = [
 ];
 
 const STARTERS_HE = [
-  "אני רוצה למלא את הקליניקה",
-  "איך לתמחר את עצמי בלי להרגיש לא בנוח",
-  "המטופלים שמגיעים לא מתאימים לי",
-  "אני לא יודע איך להציג את עצמי",
+  "הקליניקה שלי לא מתמלאת — מאיפה מתחילים?",
+  "קשה לי לדבר על כסף עם מטופלים",
+  "המטופלים שמגיעים אליי לא תמיד מתאימים",
+  "אני לא יודע/ת איך להסביר מה אני עושה",
 ];
 
 const STARTERS_EN = [
-  "I want to fill my practice",
-  "How do I price myself without feeling awkward",
-  "The clients I get aren't the right fit",
-  "I don't know how to present myself",
+  "My practice isn't filling up — where do I start?",
+  "It's hard for me to talk about money with clients",
+  "The clients reaching out aren't always the right fit",
+  "I don't know how to explain what I do",
 ];
 
 export default function Mentor() {
