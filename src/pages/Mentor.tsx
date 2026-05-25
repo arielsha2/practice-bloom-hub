@@ -558,12 +558,12 @@ export default function Mentor() {
             <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground mb-2">
               {messages.length > 0
                 ? (isRTL ? "יש לכם שיחה פתוחה עם המנטור" : "You have an active conversation with the Mentor")
-                : (isRTL ? "מוכנים להתחיל שיחה עם המנטור?" : "Ready to start a conversation with the Mentor?")}
+                : (isRTL ? "המנטור שלכם מחכה 🌱" : "Your mentor is waiting 🌱")}
             </h2>
             <p className="text-sm text-muted-foreground mb-5">
               {messages.length > 0
                 ? (isRTL ? "המשיכו מאיפה שעצרתם, או התחילו שיחה חדשה." : "Pick up where you left off, or start a new conversation.")
-                : (isRTL ? "בחרו נושא להתחלה מהירה או פתחו את הצ'אט וכתבו בעצמכם." : "Pick a quick-start topic or open the chat and write your own.")}
+                : (isRTL ? "בחרו נושא שמרגיש הכי דחוף — או פשוט כתבו מה על הלב." : "Pick whatever feels most pressing — or just write what's on your heart.")}
             </p>
 
             {messages.length === 0 && (
