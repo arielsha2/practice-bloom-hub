@@ -114,7 +114,7 @@ export function TurningPointValueCalculator() {
                 </p>
                 <p className="text-4xl font-bold text-primary">{formatILS(total)} ₪</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  שווי ההשקעה שלך בתוכנית
+                  תוספת הכנסה שלך מהמטופלים
                 </p>
               </div>
             </div>
