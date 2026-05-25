@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { Play } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Play } from "lucide-react";
 
 export function TurningPointVideo() {
   return (
@@ -13,16 +13,14 @@ export function TurningPointVideo() {
         >
           <div className="flex items-center justify-center gap-2 mb-6">
             <Play className="w-5 h-5 text-accent" />
-            <h2 className="text-xl md:text-2xl font-display text-foreground">
-              צפו בהדרכה המיוחדת שלנו
-            </h2>
+            <h2 className="text-xl md:text-2xl font-display text-foreground">נקודת המפנה של מטפלים</h2>
           </div>
 
           <div className="relative aspect-video rounded-2xl overflow-hidden shadow-elevated border border-border/50">
             <iframe
               className="w-full h-full"
-              src="https://www.youtube.com/embed/RsAslOaiDd8"
-              title="הדרכה – נקודת המפנה"
+              src="https://youtu.be/JIF15JF_XbQ"
+              title="נקודת המפנה"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               loading="lazy"
