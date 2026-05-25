@@ -34,36 +34,28 @@ function WebsiteBuilderCTA() {
     })();
   }, [journey?.self_presentation_output]);
 
-  const unlocked = !!journey?.self_presentation_output;
-  if (!unlocked && !site) return null;
+  // Only show this card once the user has actually published a site.
+  // Pre-publish CTA now lives inside <FinalCelebration />.
+  if (!site?.is_published) return null;
 
   return (
     <div dir="rtl" className="max-w-3xl mx-auto mt-6 bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm text-center">
       <h3 className="text-lg font-serif font-semibold mb-2">הכרטיס הדיגיטלי שלך</h3>
-      {site?.is_published ? (
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
-          <div className="flex items-center justify-center gap-2">
-            <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
-              /t/{site.slug}
-            </a>
-            <button
-              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
-              className="text-xs px-2 py-1 rounded border hover:bg-accent"
-            >
-              העתק
-            </button>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
+        <div className="flex items-center justify-center gap-2">
+          <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
+            /t/{site.slug}
+          </a>
+          <button
+            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
+            className="text-xs px-2 py-1 rounded border hover:bg-accent"
+          >
+            העתק
+          </button>
         </div>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground mb-4">מוכן לבנות את הכרטיס הדיגיטלי שלך? דף נחיתה אישי שמביא אליך מטופלים.</p>
-          <Button onClick={() => navigate("/mentor/website-builder")} className="bg-mentor-accent text-mentor-accent-foreground">
-            התחל לבנות ←
-          </Button>
-        </>
-      )}
+        <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+      </div>
     </div>
   );
 }
