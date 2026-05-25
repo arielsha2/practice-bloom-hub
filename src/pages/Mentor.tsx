@@ -611,7 +611,7 @@ export default function Mentor() {
             >
               <DialogTitle className="sr-only">{isRTL ? "צ'אט עם המנטור" : "Chat with the Mentor"}</DialogTitle>
               <DialogDescription className="sr-only">
-                {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+                {isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭"}
               </DialogDescription>
 
               <div className="flex flex-col h-[80vh] max-h-[680px] bg-card">
