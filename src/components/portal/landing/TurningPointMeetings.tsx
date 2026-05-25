@@ -150,7 +150,7 @@ export function TurningPointMeetings() {
         </div>
 
         {/* Bonuses */}
-        <div className="mt-20 max-w-5xl mx-auto">
+        <div className="mt-20 max-w-2xl mx-auto">
           <motion.div
             className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
@@ -166,62 +166,73 @@ export function TurningPointMeetings() {
             </h3>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                icon: BookOpen,
-                title: 'מדריך "נקודת המפנה"',
-                desc: "מדריך דיגיטלי מקיף שילווה אותך לאורך כל התוכנית",
-              },
-              {
-                icon: Bot,
-                title: '"המנטור" – אפליקציית AI למטפלים',
-                desc: "אפליקציית AI שתעזור לך לבנות קליניקה יציבה ומבוקשת, צעד אחרי צעד",
-              },
-              {
-                icon: ListChecks,
-                title: "משימות ותרגולים שבועיים",
-                desc: "משימות יישומיות בין מפגש למפגש להטמעה אמיתית של הכלים",
-              },
-              {
-                icon: MessageCircle,
-                title: "קבוצת ווצאפ סגורה",
-                desc: "מרחב קבוצתי להתייעצויות, שאלות ותמיכה הדדית",
-              },
-              {
-                icon: User,
-                title: "מפגש 1 על 1 עם אליענה",
-                desc: "שיחה אישית להתאמה ספציפית לקליניקה שלך",
-                badge: "מוגבל ל-4 הנרשמים הראשונים",
-              },
-            ].map((bonus, index) => {
-              const Icon = bonus.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className="relative bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/15 p-5 hover:shadow-card hover:border-primary/30 transition-all"
-                >
-                  {bonus.badge && (
-                    <div className="absolute -top-3 right-4 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                      {bonus.badge}
+          <div className="relative bg-card rounded-2xl border border-primary/15 shadow-card overflow-hidden">
+            {/* Decorative gold accent line */}
+            <div className="absolute top-0 right-0 left-0 h-0.5 bg-gradient-to-l from-transparent via-accent to-transparent" />
+
+            <ul className="divide-y divide-border/50">
+              {[
+                {
+                  icon: BookOpen,
+                  title: 'מדריך דיגיטלי "נקודת המפנה"',
+                  desc: 'מדריך מקיף לבניית קליניקה מצליחה – נשלח מיד עם ההרשמה',
+                  value: 'שווי 497 ש"ח',
+                },
+                {
+                  icon: Bot,
+                  title: '"המנטור" – אפליקציית AI למטפלים',
+                  desc: "אפליקציית AI שתלווה אותך לבנות קליניקה יציבה ומבוקשת, צעד אחרי צעד",
+                },
+                {
+                  icon: ListChecks,
+                  title: "משימות ותרגולים שבועיים",
+                  desc: "משימות יישומיות בין מפגש למפגש להטמעה אמיתית של הכלים",
+                },
+                {
+                  icon: MessageCircle,
+                  title: "קבוצת ווצאפ סגורה להתייעצויות",
+                  desc: "מרחב קבוצתי לשאלות, התייעצויות ותמיכה הדדית לאורך כל התוכנית",
+                },
+                {
+                  icon: User,
+                  title: "מפגש 1 על 1 עם אליענה",
+                  desc: "שיחה אישית להתאמה ספציפית לקליניקה שלך",
+                  badge: "מוגבל ל-4 הנרשמים הראשונים",
+                },
+              ].map((bonus, index) => {
+                const Icon = bonus.icon;
+                return (
+                  <motion.li
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.08 }}
+                    className="flex items-start gap-4 p-5 md:p-6 hover:bg-secondary/40 transition-colors"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shrink-0 shadow-sm">
+                      <Icon className="w-5 h-5 text-primary-foreground" />
                     </div>
-                  )}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-foreground text-sm mb-1">{bonus.title}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h4 className="font-bold text-foreground text-base">{bonus.title}</h4>
+                        {bonus.value && (
+                          <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                            {bonus.value}
+                          </span>
+                        )}
+                        {bonus.badge && (
+                          <span className="text-xs font-bold text-accent-foreground bg-accent px-2 py-0.5 rounded-full">
+                            {bonus.badge}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">{bonus.desc}</p>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.li>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </div>
