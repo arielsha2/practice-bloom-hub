@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
-import { Trophy, Sparkles, Copy, Check } from "lucide-react";
+import { Trophy, Sparkles, Copy, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -17,6 +18,7 @@ interface Section {
 export function FinalCelebration() {
   const { isRTL } = useLanguage();
   const { journey } = useTherapistJourney();
+  const navigate = useNavigate();
   const firedRef = useRef(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -175,6 +177,31 @@ export function FinalCelebration() {
               סיימת את כל התחנות. שוחח/י עם המנטור כדי לאסוף את הסיכומים שלך.
             </p>
           )}
+
+          {/* Digital business card CTA — the journey reward */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="relative mt-2 rounded-2xl p-[2px] bg-gradient-to-br from-mentor-accent via-primary to-mentor-accent shadow-xl"
+          >
+            <div className="rounded-2xl bg-gradient-to-br from-mentor-accent/10 via-card to-primary/10 p-6 md:p-7 text-center">
+              <h3 className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-2">
+                הכרטיס הדיגיטלי שלך מוכן לבנייה 🎉
+              </h3>
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5 leading-relaxed">
+                המנטור אסף את כל מה שצריך — הנישה, המחיר, הסיפור שלך. עכשיו נבנה מזה דף נחיתה שמביא אליך מטופלים.
+              </p>
+              <Button
+                size="lg"
+                onClick={() => navigate("/mentor/website-builder")}
+                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2 shadow-lg"
+              >
+                בנו את הדף שלי
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </div>
     </motion.div>

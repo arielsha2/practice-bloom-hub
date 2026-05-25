@@ -34,36 +34,28 @@ function WebsiteBuilderCTA() {
     })();
   }, [journey?.self_presentation_output]);
 
-  const unlocked = !!journey?.self_presentation_output;
-  if (!unlocked && !site) return null;
+  // Only show this card once the user has actually published a site.
+  // Pre-publish CTA now lives inside <FinalCelebration />.
+  if (!site?.is_published) return null;
 
   return (
     <div dir="rtl" className="max-w-3xl mx-auto mt-6 bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm text-center">
       <h3 className="text-lg font-serif font-semibold mb-2">הכרטיס הדיגיטלי שלך</h3>
-      {site?.is_published ? (
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
-          <div className="flex items-center justify-center gap-2">
-            <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
-              /t/{site.slug}
-            </a>
-            <button
-              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
-              className="text-xs px-2 py-1 rounded border hover:bg-accent"
-            >
-              העתק
-            </button>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
+        <div className="flex items-center justify-center gap-2">
+          <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
+            /t/{site.slug}
+          </a>
+          <button
+            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
+            className="text-xs px-2 py-1 rounded border hover:bg-accent"
+          >
+            העתק
+          </button>
         </div>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground mb-4">מוכן לבנות את הכרטיס הדיגיטלי שלך? דף נחיתה אישי שמביא אליך מטופלים.</p>
-          <Button onClick={() => navigate("/mentor/website-builder")} className="bg-mentor-accent text-mentor-accent-foreground">
-            התחל לבנות ←
-          </Button>
-        </>
-      )}
+        <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+      </div>
     </div>
   );
 }
@@ -145,17 +137,17 @@ const OUTCOMES_EN = [
 ];
 
 const STARTERS_HE = [
-  "אני רוצה למלא את הקליניקה",
-  "איך לתמחר את עצמי בלי להרגיש לא בנוח",
-  "המטופלים שמגיעים לא מתאימים לי",
-  "אני לא יודע איך להציג את עצמי",
+  "הקליניקה שלי לא מתמלאת — מאיפה מתחילים?",
+  "קשה לי לדבר על כסף עם מטופלים",
+  "המטופלים שמגיעים אליי לא תמיד מתאימים",
+  "אני לא יודע/ת איך להסביר מה אני עושה",
 ];
 
 const STARTERS_EN = [
-  "I want to fill my practice",
-  "How do I price myself without feeling awkward",
-  "The clients I get aren't the right fit",
-  "I don't know how to present myself",
+  "My practice isn't filling up — where do I start?",
+  "It's hard for me to talk about money with clients",
+  "The clients reaching out aren't always the right fit",
+  "I don't know how to explain what I do",
 ];
 
 export default function Mentor() {
@@ -566,12 +558,12 @@ export default function Mentor() {
             <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground mb-2">
               {messages.length > 0
                 ? (isRTL ? "יש לכם שיחה פתוחה עם המנטור" : "You have an active conversation with the Mentor")
-                : (isRTL ? "מוכנים להתחיל שיחה עם המנטור?" : "Ready to start a conversation with the Mentor?")}
+                : (isRTL ? "המנטור שלכם מחכה 🌱" : "Your mentor is waiting 🌱")}
             </h2>
             <p className="text-sm text-muted-foreground mb-5">
               {messages.length > 0
                 ? (isRTL ? "המשיכו מאיפה שעצרתם, או התחילו שיחה חדשה." : "Pick up where you left off, or start a new conversation.")
-                : (isRTL ? "בחרו נושא להתחלה מהירה או פתחו את הצ'אט וכתבו בעצמכם." : "Pick a quick-start topic or open the chat and write your own.")}
+                : (isRTL ? "בחרו נושא שמרגיש הכי דחוף — או פשוט כתבו מה על הלב." : "Pick whatever feels most pressing — or just write what's on your heart.")}
             </p>
 
             {messages.length === 0 && (
@@ -619,7 +611,7 @@ export default function Mentor() {
             >
               <DialogTitle className="sr-only">{isRTL ? "צ'אט עם המנטור" : "Chat with the Mentor"}</DialogTitle>
               <DialogDescription className="sr-only">
-                {isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor"}
+                {isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭"}
               </DialogDescription>
 
               <div className="flex flex-col h-[80vh] max-h-[680px] bg-card">
@@ -647,7 +639,7 @@ export default function Mentor() {
                     <p className="text-xs text-muted-foreground">
                       {activeBotKey
                         ? (isRTL ? "השיחה עם המנטור שמורה — תוכלו לחזור אליה בכל רגע" : "Your mentor conversation is saved — return any time")
-                        : (isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor")}
+                        : (isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭")}
                     </p>
                   </div>
                   {!activeBotKey && (
@@ -682,8 +674,8 @@ export default function Mentor() {
                       <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
                         <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
                           {isRTL
-                            ? "ספרו לי מה הייתם רוצים שישתנה בקליניקה שלכם — ונתחיל משם."
-                            : "Tell me what you'd like to change in your practice — and we'll start there."}
+                            ? "היי 👋 ספרו לי מה מרגיש תקוע — ונתחיל בדיוק משם. אין תשובות נכונות, רק כנות."
+                            : "Hey 👋 tell me what feels stuck — and we'll start right there. No right answers, just honesty."}
                         </p>
                         <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
                           {starters.map((s, i) => (

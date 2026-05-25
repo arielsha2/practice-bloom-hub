@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { Skeleton } from "@/components/ui/skeleton";
 
+
 interface Stage {
   key: string;
   icon: typeof Compass;
@@ -12,6 +13,8 @@ interface Stage {
   titleEn: string;
   descHe: string;
   descEn: string;
+  hintHe: string;
+  hintEn: string;
   botKey?: string;
 }
 
@@ -23,6 +26,8 @@ const STAGES: Stage[] = [
     titleEn: "Finding Your Niche",
     descHe: "לדעת בדיוק עם מי לעבוד.",
     descEn: "Know who you work with.",
+    hintHe: "תדעו בדיוק מי המטופל שאתם הכי טובים עבורו — ולמה הוא יבחר דווקא בכם",
+    hintEn: "Know exactly who you're best for — and why they'll choose you",
     botKey: "niche-finder",
   },
   {
@@ -32,6 +37,8 @@ const STAGES: Stage[] = [
     titleEn: "Right Pricing",
     descHe: "מחיר ששיקף ערך.",
     descEn: "Price that reflects value.",
+    hintHe: "תפסיקו להתנצל על המחיר ותתחילו לדבר עליו בביטחון",
+    hintEn: "Stop apologizing for your price and start owning it",
     botKey: "pricing-calculator",
   },
   {
@@ -41,6 +48,8 @@ const STAGES: Stage[] = [
     titleEn: "Self-Presentation",
     descHe: "מסר ברור ומדויק.",
     descEn: "Clear, sharp message.",
+    hintHe: "משפט אחד שמסביר מה אתם עושים — ואנשים אומרים 'זה בדיוק מה שאני צריך'",
+    hintEn: "One sentence that makes people say 'that's exactly what I need'",
     botKey: "self-presentation",
   },
   {
@@ -50,6 +59,8 @@ const STAGES: Stage[] = [
     titleEn: "Professional Network",
     descHe: "שותפויות שמזרימות פניות.",
     descEn: "Partnerships that refer.",
+    hintHe: "הרשימה של האנשים שישלחו אליכם מטופלים — ואיך לפנות אליהם",
+    hintEn: "The list of people who will send you clients — and how to reach them",
     botKey: "contact-finder",
   },
   {
@@ -59,6 +70,8 @@ const STAGES: Stage[] = [
     titleEn: "Winning First Call",
     descHe: "להפוך פנייה למטופל.",
     descEn: "Turn inquiry into client.",
+    hintHe: "לדעת בדיוק מה לומר בשיחת ההיכרות הראשונה כדי שהמטופל יגיד כן",
+    hintEn: "Know exactly what to say in the first call so the client says yes",
     botKey: "connection-bridge",
   },
 ];
@@ -226,11 +239,12 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 + idx * 0.12, type: "spring", stiffness: 130 }}
-                style={{ cursor: stage.botKey && (isActive || isCompleted) ? "pointer" : "default" }}
+                style={{ cursor: isUpcoming ? "help" : stage.botKey && (isActive || isCompleted) ? "pointer" : "default" }}
                 onClick={() => {
                   if (stage.botKey && onOpenBot && (isActive || isCompleted)) onOpenBot(stage.botKey);
                 }}
               >
+                {isUpcoming && <title>{isRTL ? stage.hintHe : stage.hintEn}</title>}
                 {isActive && (
                   <motion.circle
                     cx={pos.x}
