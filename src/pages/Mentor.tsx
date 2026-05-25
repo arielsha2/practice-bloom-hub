@@ -639,7 +639,7 @@ export default function Mentor() {
                     <p className="text-xs text-muted-foreground">
                       {activeBotKey
                         ? (isRTL ? "השיחה עם המנטור שמורה — תוכלו לחזור אליה בכל רגע" : "Your mentor conversation is saved — return any time")
-                        : (isRTL ? "ליווי אסטרטגי לקליניקה" : "Strategic practice mentor")}
+                        : (isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭")}
                     </p>
                   </div>
                   {!activeBotKey && (
