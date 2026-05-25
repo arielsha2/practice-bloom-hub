@@ -1,8 +1,45 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { Header } from "@/components/landing/Header";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
+
+function MentorTopBar() {
+  const { isRTL } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-primary shadow-card" dir={isRTL ? "rtl" : "ltr"}>
+      <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-xl font-bold text-primary-foreground tracking-tight">Turning Point</span>
+        </Link>
+        <div>
+          {user ? (
+            <Button variant="header-ghost" size="sm" onClick={handleSignOut} className="font-medium">
+              <LogOut className="w-4 h-4 me-1" />
+              {isRTL ? "התנתקות" : "Log out"}
+            </Button>
+          ) : (
+            <Link to="/auth">
+              <Button variant="header-ghost" size="sm" className="font-medium">
+                <LogIn className="w-4 h-4 me-1" />
+                {isRTL ? "התחברות" : "Log in"}
+              </Button>
+            </Link>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
+}
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
