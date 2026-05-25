@@ -54,13 +54,13 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
       viewport={{ once: true }}
       dir="ltr"
     >
-      <TimeUnit value={timeLeft.seconds} label="שניות" />
-      <div className="flex items-center text-2xl text-muted-foreground font-bold pb-6">:</div>
-      <TimeUnit value={timeLeft.minutes} label="דקות" />
+      <TimeUnit value={timeLeft.days} label="ימים" />
       <div className="flex items-center text-2xl text-muted-foreground font-bold pb-6">:</div>
       <TimeUnit value={timeLeft.hours} label="שעות" />
       <div className="flex items-center text-2xl text-muted-foreground font-bold pb-6">:</div>
-      <TimeUnit value={timeLeft.days} label="ימים" />
+      <TimeUnit value={timeLeft.minutes} label="דקות" />
+      <div className="flex items-center text-2xl text-muted-foreground font-bold pb-6">:</div>
+      <TimeUnit value={timeLeft.seconds} label="שניות" />
     </motion.div>
   );
 }
