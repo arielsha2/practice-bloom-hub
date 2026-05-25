@@ -16,6 +16,7 @@ export function PortalAccessDenied() {
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       <Header />
+      <TurningPointVideo />
       <TurningPointHero />
       <TurningPointStory />
       <TurningPointProgram />
@@ -24,7 +25,6 @@ export function PortalAccessDenied() {
       <TurningPointMeetings />
       <TurningPointPricing />
       <TurningPointTestimonials />
-      <TurningPointVideo />
       <TurningPointFounders />
       <TurningPointCTA />
       <Footer />
