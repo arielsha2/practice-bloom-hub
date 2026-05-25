@@ -1,23 +1,22 @@
-## Goal
+## הערכה כללית
 
-Update model, max_tokens, and temperature for the existing AI agents. No prompts, knowledge base, or UI changes.
+ההמלצות של Claude טובות ומיושרות עם הטון של המרחב (חם, ישיר, לא שיווקי). אבצע את כל שלושת השינויים, עם תיקון אחד: ב-`WebsiteBuilderCTA` אסיר רק את מצב "התחל לבנות" (לפני פרסום) — מצב הקישור החי (כשהדף כבר פורסם) יישאר, כדי שלא יאבדו גישה מהירה ל-URL הציבורי שלהם.
 
-## Changes
+---
 
-**`mentor_ai_settings`** (1 row):
-- model → `google/gemini-2.5-pro`, max_tokens → `6000`, temperature → `0.5`
+## שינוי 1 — JourneyMap: רמזי hover לשלבים עתידיים
 
-**`bot_configurations`** (5 rows by `bot_key`):
-| bot_key | model | max_tokens | temperature |
-|---|---|---|---|
-| niche-finder | google/gemini-2.5-flash | 1500 | 0.5 |
-| pricing-calculator | google/gemini-2.5-flash | 1500 | 0.5 |
-| contact-finder | google/gemini-2.5-flash | 1500 | 0.5 |
-| self-presentation | google/gemini-2.5-flash | 1500 | 0.5 |
-| connection-bridge | google/gemini-2.5-flash | 2000 | 0.6 |
+קובץ: `src/components/mentor/JourneyMap.tsx`
 
-Skipped per user: Content Creation and Strategy Planning (no matching bots exist in the project).
+- הוספת שדות `hintHe` ו-`hintEn` לכל שלב במערך `STAGES` עם הטקסטים שצוינו.
+- עטיפת node של שלב *upcoming* בלבד (לא completed, לא active) ב-`Tooltip` מ-`@/components/ui/tooltip`.
+- הצגת הרמז בהתאם לשפה (`isRTL` → עברית, אחרת אנגלית).
+- שלבים פעילים/שהושלמו נשארים כפי שהם.
 
-## Implementation
+## שינוי 2 — כרטיס דיגיטלי כפרס סיום
 
-Single Supabase migration with two `UPDATE` statements (one per table). All other columns — `system_prompt`, `welcome_message_*`, `name_*`, `icon`, etc. — are left untouched.
+**א. `src/components/mentor/FinalCelebration.tsx`** — אחרי לולאת ה-sections (לפני סגירת הכרטיס החיצוני), הוספת כרטיס CTA בולט:
+
+- מסגרת גרדיאנט (`mentor-accent → primary`), רקע מובחן.
+- כותרת: "הכרטיס הדיגיטלי שלך מוכן לבנייה 🎉"
+- כותרת משנה: "המנטור אסף את כל מה שצריך — הנישה, המחיר, הסיפור שלך. עכשיו נבנה מזה דף נחיתה שמביא אליך מטופ
