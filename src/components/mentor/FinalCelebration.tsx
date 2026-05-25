@@ -18,6 +18,7 @@ interface Section {
 export function FinalCelebration() {
   const { isRTL } = useLanguage();
   const { journey } = useTherapistJourney();
+  const navigate = useNavigate();
   const firedRef = useRef(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
