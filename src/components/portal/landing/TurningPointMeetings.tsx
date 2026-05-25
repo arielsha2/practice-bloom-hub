@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet } from "lucide-react";
+import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet, Gift, BookOpen, Bot, ListChecks, MessageCircle, User } from "lucide-react";
 import meeting1Img from "@/assets/turning-point/meeting1.jpg";
 import meeting2Img from "@/assets/turning-point/meeting2.jpg";
 import meeting3Img from "@/assets/turning-point/meeting3.jpg";
@@ -147,6 +147,82 @@ export function TurningPointMeetings() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* Bonuses */}
+        <div className="mt-20 max-w-5xl mx-auto">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-medium mb-3">
+              <Gift className="w-4 h-4" />
+              בונוסים שמקבלים בתוכנית
+            </div>
+            <h3 className="text-xl md:text-2xl font-display text-foreground">
+              ומעבר ל-12 המפגשים – מקבלים גם:
+            </h3>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                icon: BookOpen,
+                title: 'מדריך "נקודת המפנה"',
+                desc: "מדריך דיגיטלי מקיף שילווה אותך לאורך כל התוכנית",
+              },
+              {
+                icon: Bot,
+                title: '"המנטור" – אפליקציית AI למטפלים',
+                desc: "אפליקציית AI שתעזור לך לבנות קליניקה יציבה ומבוקשת, צעד אחרי צעד",
+              },
+              {
+                icon: ListChecks,
+                title: "משימות ותרגולים שבועיים",
+                desc: "משימות יישומיות בין מפגש למפגש להטמעה אמיתית של הכלים",
+              },
+              {
+                icon: MessageCircle,
+                title: "קבוצת ווצאפ סגורה",
+                desc: "מרחב קבוצתי להתייעצויות, שאלות ותמיכה הדדית",
+              },
+              {
+                icon: User,
+                title: "מפגש 1 על 1 עם אליענה",
+                desc: "שיחה אישית להתאמה ספציפית לקליניקה שלך",
+                badge: "מוגבל ל-4 הנרשמים הראשונים",
+              },
+            ].map((bonus, index) => {
+              const Icon = bonus.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  className="relative bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/15 p-5 hover:shadow-card hover:border-primary/30 transition-all"
+                >
+                  {bonus.badge && (
+                    <div className="absolute -top-3 right-4 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                      {bonus.badge}
+                    </div>
+                  )}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground text-sm mb-1">{bonus.title}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{bonus.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
