@@ -739,6 +739,30 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_settings: {
+        Row: {
+          countdown_target: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          countdown_target?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          countdown_target?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       qa_ai_settings: {
         Row: {
           id: string
