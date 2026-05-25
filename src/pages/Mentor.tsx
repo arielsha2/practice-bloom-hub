@@ -1,13 +1,50 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { Header } from "@/components/landing/Header";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
+
+function MentorTopBar() {
+  const { isRTL } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-primary shadow-card" dir={isRTL ? "rtl" : "ltr"}>
+      <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-xl font-bold text-primary-foreground tracking-tight">Turning Point</span>
+        </Link>
+        <div>
+          {user ? (
+            <Button variant="header-ghost" size="sm" onClick={handleSignOut} className="font-medium">
+              <LogOut className="w-4 h-4 me-1" />
+              {isRTL ? "התנתקות" : "Log out"}
+            </Button>
+          ) : (
+            <Link to="/auth">
+              <Button variant="header-ghost" size="sm" className="font-medium">
+                <LogIn className="w-4 h-4 me-1" />
+                {isRTL ? "התחברות" : "Log in"}
+              </Button>
+            </Link>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
+}
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft, Map as MapIcon } from "lucide-react";
+import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft, Map as MapIcon, LogIn, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -430,7 +467,7 @@ export default function Mentor() {
   if (!accessLoading && hasAccess === false) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
-        <Header />
+        <MentorTopBar />
         <main className="flex-1 pt-16 flex items-center justify-center px-4">
           <div className="max-w-lg w-full bg-card border-2 border-mentor-accent/30 rounded-2xl p-8 shadow-xl text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
@@ -470,7 +507,7 @@ export default function Mentor() {
         description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
         canonicalUrl="/mentor"
       />
-      <Header />
+      <MentorTopBar />
       <main className="flex-1 pt-16">
         <section className="py-3 md:py-4 border-b border-mentor-border/50">
           <div className="container mx-auto px-4 text-center max-w-3xl">
@@ -494,7 +531,7 @@ export default function Mentor() {
         <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
           <FinalCelebration />
-          <WebsiteBuilderCTA />
+          
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
@@ -819,6 +856,9 @@ export default function Mentor() {
           </div>
         </section>
       </main>
+      <div className="container mx-auto px-4 pb-8">
+        <WebsiteBuilderCTA />
+      </div>
       <Footer />
     </div>
   );
