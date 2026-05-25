@@ -27,7 +27,7 @@ export function TurningPointPricing() {
           >
             <h2 className="text-2xl md:text-3xl font-display text-foreground mb-4">ההשקעה בתוכנית</h2>
 
-            <p className="text-accent font-bold mb-6">עכשיו במחיר מיוחד – המבצע מסתיים בקרוב!</p>
+            <p className="text-accent font-bold mb-6"> עכשיו בהנחה של 750 שקלים עד רביעי בחצות !</p>
 
             {/* Countdown Timer */}
             <div className="mb-8">
