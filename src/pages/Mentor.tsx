@@ -531,7 +531,7 @@ export default function Mentor() {
         <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
           <FinalCelebration />
-          <WebsiteBuilderCTA />
+          
         </section>
 
         <section className="container mx-auto px-4 py-6 md:py-8">
