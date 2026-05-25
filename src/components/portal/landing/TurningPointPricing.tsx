@@ -90,7 +90,7 @@ export function TurningPointPricing() {
               {/* Schedule info */}
               <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
-                <span>מתחילים ביום שני 01.6.26 | ימי שני 20:00-21:30</span>
+                <span>מתחילים ביום שני 08.6.26 | ימי שני 19:30-21:30</span>
               </div>
             </div>
 
