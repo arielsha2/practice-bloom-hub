@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet } from "lucide-react";
+import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet, Gift, BookOpen, Bot, ListChecks, MessageCircle, User } from "lucide-react";
 import meeting1Img from "@/assets/turning-point/meeting1.jpg";
 import meeting2Img from "@/assets/turning-point/meeting2.jpg";
 import meeting3Img from "@/assets/turning-point/meeting3.jpg";
