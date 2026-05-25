@@ -8,7 +8,6 @@ import {
   FileText,
   Heart,
   Bot,
-  Gift,
 } from "lucide-react";
 
 const programFeatures = [
