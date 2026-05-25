@@ -239,11 +239,12 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 + idx * 0.12, type: "spring", stiffness: 130 }}
-                style={{ cursor: stage.botKey && (isActive || isCompleted) ? "pointer" : "default" }}
+                style={{ cursor: isUpcoming ? "help" : stage.botKey && (isActive || isCompleted) ? "pointer" : "default" }}
                 onClick={() => {
                   if (stage.botKey && onOpenBot && (isActive || isCompleted)) onOpenBot(stage.botKey);
                 }}
               >
+                {isUpcoming && <title>{isRTL ? stage.hintHe : stage.hintEn}</title>}
                 {isActive && (
                   <motion.circle
                     cx={pos.x}
