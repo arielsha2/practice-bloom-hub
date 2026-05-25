@@ -48,7 +48,7 @@ export function TurningPointVideo() {
   }, []);
 
   return (
-    <section className="py-12 md:py-16 bg-primary/5">
+    <section className="pt-20 md:pt-28 pb-12 md:pb-16 bg-primary/5">
       <div className="container mx-auto px-4">
         <motion.div
           className="max-w-3xl mx-auto text-center"
