@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { PaymentOptionsDialog } from '../PaymentOptionsDialog';
-import foundersImg from '@/assets/founders/founders.jpg';
+
 
 export function TurningPointHero() {
   const { user } = useAuth();
