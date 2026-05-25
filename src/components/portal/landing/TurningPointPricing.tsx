@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PaymentOptionsDialog } from "../PaymentOptionsDialog";
 import { CountdownTimer } from "./CountdownTimer";
+import { usePromoCountdown } from "@/hooks/usePromoCountdown";
 
 export function TurningPointPricing() {
   const { user } = useAuth();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const { target: countdownTarget } = usePromoCountdown();
 
   if (user) return null;
-
-  // Countdown target: March 12, 2026 at midnight
-  const countdownTarget = new Date("2026-03-12T00:00:00+03:00");
 
   return (
     <>
@@ -30,9 +29,11 @@ export function TurningPointPricing() {
             <p className="text-accent font-bold mb-6"> עכשיו בהנחה של 750 שקלים עד רביעי בחצות !</p>
 
             {/* Countdown Timer */}
-            <div className="mb-8">
-              <CountdownTimer targetDate={countdownTarget} />
-            </div>
+            {countdownTarget && (
+              <div className="mb-8">
+                <CountdownTimer targetDate={countdownTarget} />
+              </div>
+            )}
 
             <div className="bg-card rounded-2xl border-2 border-primary/20 p-8 md:p-10 shadow-card relative overflow-hidden">
               {/* Decorative corner */}

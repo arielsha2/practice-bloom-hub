@@ -23,6 +23,7 @@ import { Header } from '@/components/landing/Header';
 import { AdminLessonForm } from '@/components/portal/admin/AdminLessonForm';
 import { AdminQAList } from '@/components/portal/admin/AdminQAList';
 import { QASettingsCard } from '@/components/portal/admin/QASettingsCard';
+import { PromoCountdownCard } from '@/components/portal/admin/PromoCountdownCard';
 import { SortableLessonCard } from '@/components/portal/admin/SortableLessonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -373,6 +374,9 @@ export default function PortalAdmin() {
               )}
             </CardContent>
           </Card>
+
+          {/* Promo Countdown */}
+          <PromoCountdownCard />
 
           {/* QA AI Settings */}
           <QASettingsCard />
