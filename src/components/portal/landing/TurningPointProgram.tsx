@@ -90,23 +90,6 @@ export function TurningPointProgram() {
             );
           })}
         </div>
-
-        {/* Special bonus callout */}
-        <motion.div
-          className="mt-10 max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="bg-accent/10 border border-accent/20 rounded-xl p-6 text-center">
-            <Gift className="w-8 h-8 text-accent mx-auto mb-3" />
-            <h3 className="font-bold text-foreground mb-2">בונוס מיוחד לנרשמים</h3>
-            <p className="text-sm text-muted-foreground">
-              מדריך דיגיטלי "נקודת המפנה" בשווי 497 ש"ח – במתנה! כלים פרקטיים לבניית קליניקה מצליחה, נשלח מיד עם ההרשמה.
-            </p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
