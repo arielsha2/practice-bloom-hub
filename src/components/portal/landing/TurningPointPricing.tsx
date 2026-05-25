@@ -40,7 +40,7 @@ export function TurningPointPricing() {
 
               {/* Original price */}
               <p className="text-muted-foreground mb-2">
-                מחיר מלא: <span className="line-through">6,500 ₪</span>
+                מחיר מלא: <span className="line-through">7,500 ₪</span>
               </p>
 
               {/* Special offer */}
