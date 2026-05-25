@@ -467,7 +467,7 @@ export default function Mentor() {
   if (!accessLoading && hasAccess === false) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
-        <Header />
+        <MentorTopBar />
         <main className="flex-1 pt-16 flex items-center justify-center px-4">
           <div className="max-w-lg w-full bg-card border-2 border-mentor-accent/30 rounded-2xl p-8 shadow-xl text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
