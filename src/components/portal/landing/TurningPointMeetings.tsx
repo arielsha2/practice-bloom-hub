@@ -1,77 +1,77 @@
-import { motion } from 'framer-motion';
-import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet } from 'lucide-react';
-import meeting1Img from '@/assets/turning-point/meeting1.jpg';
-import meeting2Img from '@/assets/turning-point/meeting2.jpg';
-import meeting3Img from '@/assets/turning-point/meeting3.jpg';
-import meeting4Img from '@/assets/turning-point/meeting4.jpg';
-import meeting5Img from '@/assets/turning-point/meeting5.jpg';
-import meeting6Img from '@/assets/turning-point/meeting6.png';
+import { motion } from "framer-motion";
+import { Target, Sparkles, Megaphone, Handshake, MessageSquare, Wallet } from "lucide-react";
+import meeting1Img from "@/assets/turning-point/meeting1.jpg";
+import meeting2Img from "@/assets/turning-point/meeting2.jpg";
+import meeting3Img from "@/assets/turning-point/meeting3.jpg";
+import meeting4Img from "@/assets/turning-point/meeting4.jpg";
+import meeting5Img from "@/assets/turning-point/meeting5.jpg";
+import meeting6Img from "@/assets/turning-point/meeting6.png";
 
 const meetings = [
   {
     num: 1,
     icon: Target,
-    title: 'מחזון למציאות',
+    title: "מחזון למציאות",
     image: meeting1Img,
     points: [
-      'חיבור לשאיפות המקצועיות והכלכליות הגדולות שלך',
-      'תרגום השאיפות האישיות למפת דרכים מעשית',
-      'ביסוס ביטחון מקצועי ותודעה גבוהה של מטפל עצמאי',
+      "חיבור לשאיפות המקצועיות והכלכליות הגדולות שלך",
+      "תרגום השאיפות האישיות למפת דרכים מעשית",
+      "ביסוס ביטחון מקצועי ותודעה גבוהה של מטפל עצמאי",
     ],
   },
   {
     num: 2,
     icon: Sparkles,
-    title: 'הסיבה שיבחרו דווקא בך!',
+    title: "הסיבה שיבחרו דווקא בך!",
     image: meeting2Img,
     points: [
-      'חיבור לערך הייחודי שיש לך לתת',
-      'זיהוי המטופל האידיאלי שהכי טוב לך לעבוד איתו',
-      'איך להסביר מה אנחנו עושים באופן שמעורר עניין וסקרנות',
+      "חיבור לערך הייחודי שיש לך לתת",
+      "זיהוי המטופל האידיאלי שהכי טוב לך לעבוד איתו",
+      "איך להסביר מה אנחנו עושים באופן שמעורר עניין וסקרנות",
     ],
   },
   {
     num: 3,
     icon: Megaphone,
-    title: 'מאיפה מביאים מטופלים?',
+    title: "מאיפה מביאים מטופלים?",
     image: meeting3Img,
     points: [
-      'איפה מוצאים את המטופלים המתאימים ועוזרים להם לגלות אותנו',
-      'יצירת מסרים עוצמתיים ואותנטיים שגורמים לך לבלוט',
-      'לשדר את הערך שלנו גם אם שיווק מרתיע אותך',
+      "איפה מוצאים את המטופלים המתאימים ועוזרים להם לגלות אותנו",
+      "יצירת מסרים עוצמתיים ואותנטיים שגורמים לך לבלוט",
+      "לשדר את הערך שלנו גם אם שיווק מרתיע אותך",
     ],
   },
   {
     num: 4,
     icon: Handshake,
-    title: 'יוצרים זרם של הפניות מתאימות',
+    title: "יוצרים זרם של הפניות מתאימות",
     image: meeting4Img,
     points: [
-      'קשרים איכותיים עם אנשי מפתח לקבלת הפניות',
-      'משדרים מקצועיות ומבססים אמון בכל פנייה',
-      'תסריטים לפנייה משכנעת לאנשי קשר וקולגות',
+      "קשרים איכותיים עם אנשי מפתח לקבלת הפניות",
+      "משדרים מקצועיות ומבססים אמון בכל פנייה",
+      "תסריטים לפנייה משכנעת לאנשי קשר וקולגות",
     ],
   },
   {
     num: 5,
     icon: MessageSquare,
-    title: 'איך הופכים מתעניין למטופל',
+    title: "איך הופכים מתעניין למטופל",
     image: meeting5Img,
     points: [
-      'טכניקות לניהול שיחה ראשונה באופן אפקטיבי ונינוח',
-      'מבנה מתוזמן של שיחה ראשונה שמובילה להחלטה',
-      'צ\'ק ליסט לקראת ניהול השיחה',
+      "טכניקות לניהול שיחה ראשונה באופן אפקטיבי ונינוח",
+      "מבנה מתוזמן של שיחה ראשונה שמובילה להחלטה",
+      "צ'ק ליסט לקראת ניהול השיחה",
     ],
   },
   {
     num: 6,
     icon: Wallet,
-    title: 'תמחור רווחי ורגיש',
+    title: "תמחור רווחי ורגיש",
     image: meeting6Img,
     points: [
-      'תמחור שהוא גם רווחי וגם ערכי ומתחשב',
-      'התגברות על מחסומים רגשיים סביב כסף',
-      'התמודדות מקצועית עם התנגדויות למחיר',
+      "תמחור שהוא גם רווחי וגם ערכי ומתחשב",
+      "התגברות על מחסומים רגשיים סביב כסף",
+      "התמודדות מקצועית עם התנגדויות למחיר",
     ],
   },
 ];
@@ -95,7 +95,7 @@ export function TurningPointMeetings() {
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
         >
-          6 מפגשים שייקחו אותך צעד אחר צעד לקליניקה משגשגת
+          12 מפגשים שייקחו אותך צעד אחר צעד לקליניקה משגשגת
         </motion.p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -129,19 +129,14 @@ export function TurningPointMeetings() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Icon className="w-5 h-5 text-teal" />
-                        <h3 className="font-bold text-foreground text-sm">
-                          {meeting.title}
-                        </h3>
+                        <h3 className="font-bold text-foreground text-sm">{meeting.title}</h3>
                       </div>
                     </div>
 
                     {/* Points */}
                     <ul className="space-y-2">
                       {meeting.points.map((point, i) => (
-                        <li
-                          key={i}
-                          className="text-sm text-muted-foreground flex items-start gap-2"
-                        >
+                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
                           {point}
                         </li>
