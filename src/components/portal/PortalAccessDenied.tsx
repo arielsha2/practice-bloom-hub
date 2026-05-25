@@ -5,6 +5,7 @@ import { TurningPointStory } from './landing/TurningPointStory';
 import { TurningPointVideo } from './landing/TurningPointVideo';
 import { TurningPointProgram } from './landing/TurningPointProgram';
 import { TurningPointOutcomes } from './landing/TurningPointOutcomes';
+import { TurningPointValueCalculator } from './landing/TurningPointValueCalculator';
 import { TurningPointMeetings } from './landing/TurningPointMeetings';
 import { TurningPointPricing } from './landing/TurningPointPricing';
 import { TurningPointTestimonials } from './landing/TurningPointTestimonials';
@@ -19,6 +20,7 @@ export function PortalAccessDenied() {
       <TurningPointStory />
       <TurningPointProgram />
       <TurningPointOutcomes />
+      <TurningPointValueCalculator />
       <TurningPointMeetings />
       <TurningPointPricing />
       <TurningPointTestimonials />
