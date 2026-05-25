@@ -20,7 +20,7 @@ export function TurningPointVideo() {
             <iframe
               className="w-full h-full"
               src="https://youtu.be/mBnteRCiyH8"
-              title="נקודת המפנה"
+              title="איך ליצור קליניקה יציבה ורווחית - הקלטת ההדרכה"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               loading="lazy"
