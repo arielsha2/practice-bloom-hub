@@ -19,7 +19,7 @@ export function TurningPointVideo() {
           <div className="relative aspect-video rounded-2xl overflow-hidden shadow-elevated border border-border/50">
             <iframe
               className="w-full h-full"
-              src="https://youtu.be/JIF15JF_XbQ"
+              src="https://www.youtube.com/embed/JIF15JF_XbQ"
               title="נקודת המפנה"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

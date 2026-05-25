@@ -1,25 +1,18 @@
-## שינוי 1 — העברת הכרטיס הדיגיטלי לתחתית הדף
+## הבעיה
+ב-`src/components/portal/landing/TurningPointVideo.tsx` ה-iframe מצביע על `https://youtu.be/JIF15JF_XbQ` — זה לינק שיתוף ולא URL להטמעה. YouTube חוסם הטמעה של דפי הצפייה הרגילים (`X-Frame-Options: SAMEORIGIN`), ולכן ה-iframe מציג ריבוע אפור ריק עם אייקון קובץ שבור.
 
-קובץ: `src/pages/Mentor.tsx`
+## התיקון
+שינוי יחיד בקובץ `src/components/portal/landing/TurningPointVideo.tsx`:
 
-- להסיר את `<WebsiteBuilderCTA />` ממיקומו הנוכחי (שורה ~497, בין מפת המסע ל-CTA של הצ'אט).
-- להוסיף אותו מחדש בתחתית הדף, אחרי סקציית Benefits & Outcomes ולפני `<Footer />` (לפני שורה ~822).
-- הקומפוננטה ממילא מחזירה `null` אם אין אתר מפורסם, אז משתמשים שעדיין לא פרסמו לא יראו כלום בתחתית — והדף יישאר נקי.
+החלפת ה-`src` של ה-iframe מ:
+```
+https://youtu.be/JIF15JF_XbQ
+```
+ל:
+```
+https://www.youtube.com/embed/JIF15JF_XbQ
+```
 
-## שינוי 2 — סרגל עליון מינימלי ייעודי לדף המנטור
+זהו פורמט ה-embed הרשמי של YouTube שמותר להטמעה ב-iframes ויציג את הסרטון כראוי.
 
-קובץ: `src/pages/Mentor.tsx`
-
-- להסיר את `<Header />` משני המקומות שבהם הוא מופיע (paywall בשורה ~433 והדף הראשי בשורה ~473) ולהסיר את ה-import.
-- ליצור קומפוננטה מקומית קטנה בתוך הקובץ, `MentorTopBar`, שמרנדרת סרגל עליון `fixed` בסגנון תואם (רקע `bg-primary`, גובה `h-16`, אותו z-index כמו ה-Header המקורי):
-  - בצד אחד: לוגו/שם "Turning Point" כקישור ל-`/` (אותו עיצוב כמו ב-Header).
-  - בצד השני: כפתור התנתקות אם המשתמש מחובר (משתמש ב-`useAuth().signOut`), או קישור התחברות אם לא. בלי תפריט ניווט, בלי החלפת שפה, בלי קישורים לעמודים אחרים.
-- להחליף את שני המופעים של `<Header />` ב-`<MentorTopBar />`.
-- לוודא שה-padding העליון של תוכן הדף נשאר תואם (כמו עם Header המקורי שגם הוא `h-16 fixed`).
-
-### פרטים טכניים
-
-- ה-import של `Header` יוסר; יתווסף `import { Link } from "react-router-dom"` (אם לא קיים) ו-`useAuth` מ-`@/contexts/AuthContext`.
-- `MentorTopBar` תוגדר כפונקציה מקומית בקובץ — לא קומפוננטה חדשה תחת `src/components/` — כי היא ייעודית בלעדית לעמוד הזה.
-- כיוון התצוגה (RTL/LTR) ימשיך לעבוד דרך `useLanguage`.
-- כל שאר התוכן, הצ'אט, ו-`<Footer />` נשארים כפי שהם — לא משנים את המידע התחתון של האתר, רק את הסרגל העליון.
+לא נדרשים שינויים נוספים — שאר ה-attributes (`allow`, `allowFullScreen`, `loading="lazy"`) כבר מוגדרים נכון.
