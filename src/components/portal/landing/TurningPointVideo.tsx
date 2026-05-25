@@ -19,7 +19,7 @@ export function TurningPointVideo() {
           <div className="relative aspect-video rounded-2xl overflow-hidden shadow-elevated border border-border/50">
             <iframe
               className="w-full h-full"
-              src="https://youtu.be/mBnteRCiyH8"
+              src="https://www.youtube.com/embed/mBnteRCiyH8"
               title="איך ליצור קליניקה יציבה ורווחית - הקלטת ההדרכה"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
