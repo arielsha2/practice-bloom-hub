@@ -13,7 +13,7 @@ export function TurningPointVideo() {
         >
           <div className="flex items-center justify-center gap-2 mb-6">
             <Play className="w-5 h-5 text-accent" />
-            <h2 className="text-xl md:text-2xl font-display text-foreground">נקודת המפנה של מטפלים</h2>
+            <h2 className="text-xl md:text-2xl font-display text-foreground">איך ליצור קליניקה יציבה ורווחית - הקלטת ההדרכה</h2>
           </div>
 
           <div className="relative aspect-video rounded-2xl overflow-hidden shadow-elevated border border-border/50">
