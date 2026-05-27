@@ -16,7 +16,7 @@ export function TurningPointVideo() {
     const createPlayer = () => {
       if (!window.YT || !window.YT.Player) return;
       playerRef.current = new window.YT.Player("yt-player", {
-        videoId: "mBnteRCiyH8",
+        videoId: "JIF15JF_XbQ",
         playerVars: { rel: 0, modestbranding: 1 },
         events: {
           onReady: (event: any) => {
@@ -29,9 +29,7 @@ export function TurningPointVideo() {
     if (window.YT && window.YT.Player) {
       createPlayer();
     } else {
-      const existing = document.querySelector(
-        'script[src="https://www.youtube.com/iframe_api"]'
-      );
+      const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
       if (!existing) {
         const tag = document.createElement("script");
         tag.src = "https://www.youtube.com/iframe_api";
@@ -58,7 +56,9 @@ export function TurningPointVideo() {
         >
           <div className="flex items-center justify-center gap-2 mb-6">
             <Play className="w-5 h-5 text-accent" />
-            <h2 className="text-xl md:text-2xl font-display text-foreground">איך ליצור קליניקה יציבה ורווחית - הקלטת ההדרכה</h2>
+            <h2 className="text-xl md:text-2xl font-display text-foreground">
+              איך ליצור קליניקה יציבה ורווחית - הקלטת ההדרכה
+            </h2>
           </div>
 
           <div
@@ -73,10 +73,7 @@ export function TurningPointVideo() {
               borderRadius: "12px",
             }}
           >
-            <div
-              id="yt-player"
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-            />
+            <div id="yt-player" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
           </div>
 
           <p className="text-sm text-muted-foreground mt-4">
