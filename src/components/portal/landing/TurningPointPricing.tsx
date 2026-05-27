@@ -53,15 +53,15 @@ export function TurningPointPricing() {
                 <div className="flex flex-col gap-3 items-center">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">בתשלומים</p>
-                    <p className="text-3xl font-bold text-foreground">10 × 675 ₪</p>
-                    <p className="text-lg text-muted-foreground">(6750 ₪ סה״כ)</p>
+                    <p className="text-3xl font-bold text-foreground">10 × 695 ₪</p>
+                    <p className="text-lg text-muted-foreground">(6950 ₪ סה״כ)</p>
                   </div>
 
                   <div className="text-muted-foreground text-sm">או</div>
 
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">בתשלום אחד + הנחה</p>
-                    <p className="text-3xl font-bold text-primary">6250 ₪</p>
+                    <p className="text-3xl font-bold text-primary">6450 ₪</p>
                     <p className="text-sm text-teal font-medium">חיסכון של 500 ש"ח נוספים</p>
                   </div>
                 </div>
