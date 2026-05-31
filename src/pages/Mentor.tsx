@@ -6,12 +6,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Send,
@@ -100,22 +95,35 @@ function WebsiteBuilderCTA() {
   if (!site?.is_published) return null;
 
   return (
-    <div dir="rtl" className="max-w-3xl mx-auto mt-6 bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm text-center">
+    <div
+      dir="rtl"
+      className="max-w-3xl mx-auto mt-6 bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm text-center"
+    >
       <h3 className="text-lg font-serif font-semibold mb-2">הכרטיס הדיגיטלי שלך</h3>
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">הדף שלך חי בכתובת:</p>
         <div className="flex items-center justify-center gap-2">
-          <a href={`/t/${site.slug}`} target="_blank" rel="noreferrer" className="text-mentor-accent font-semibold hover:underline">
+          <a
+            href={`/t/${site.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-mentor-accent font-semibold hover:underline"
+          >
             /t/{site.slug}
           </a>
           <button
-            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`); toast.success("הקישור הועתק"); }}
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/t/${site.slug}`);
+              toast.success("הקישור הועתק");
+            }}
             className="text-xs px-2 py-1 rounded border hover:bg-accent"
           >
             העתק
           </button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>ערוך את הדף</Button>
+        <Button variant="outline" size="sm" onClick={() => navigate("/mentor/website-builder")}>
+          ערוך את הדף
+        </Button>
       </div>
     </div>
   );
@@ -127,7 +135,7 @@ const ELIANA_AVATAR = "/images/eliana-avatar.png";
 export async function updateTherapistProgress(
   step_number: number,
   stuck_point: string,
-  reflection: Record<string, unknown>
+  reflection: Record<string, unknown>,
 ) {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -152,7 +160,7 @@ export async function updateTherapistProgress(
         reflection: reflection as any,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "user_id" },
     )
     .select()
     .single();
@@ -227,11 +235,7 @@ const STAGE_DEFS_EN = [
   { key: "conversion", label: "Conversion Call", botKey: "connection-bridge", Icon: Sparkles },
 ];
 
-function JourneyRail({
-  onOpenBot,
-}: {
-  onOpenBot: (botKey: string) => void;
-}) {
+function JourneyRail({ onOpenBot }: { onOpenBot: (botKey: string) => void }) {
   const { isRTL } = useLanguage();
   const { journey } = useTherapistJourney();
   const stages = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
@@ -241,9 +245,7 @@ function JourneyRail({
   return (
     <div className="bg-card border border-mentor-border/60 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-serif font-semibold text-foreground">
-          {isRTL ? "המסע שלך" : "Your Journey"}
-        </h3>
+        <h3 className="text-sm font-serif font-semibold text-foreground">{isRTL ? "המסע שלך" : "Your Journey"}</h3>
         <ResetMentorButton />
       </div>
 
@@ -263,8 +265,8 @@ function JourneyRail({
                   isDone
                     ? "bg-mentor-accent/10 hover:bg-mentor-accent/20 cursor-pointer"
                     : isActive
-                    ? "bg-mentor-accent/15 border border-mentor-accent/40 cursor-pointer"
-                    : "opacity-50 cursor-default"
+                      ? "bg-mentor-accent/15 border border-mentor-accent/40 cursor-pointer"
+                      : "opacity-50 cursor-default"
                 }`}
               >
                 <span
@@ -272,18 +274,14 @@ function JourneyRail({
                     isDone
                       ? "bg-mentor-accent text-mentor-accent-foreground"
                       : isActive
-                      ? "bg-mentor-accent/20 text-mentor-accent"
-                      : "bg-muted text-muted-foreground"
+                        ? "bg-mentor-accent/20 text-mentor-accent"
+                        : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
                 </span>
-                <span className="flex-1 text-xs font-medium text-foreground truncate">
-                  {s.label}
-                </span>
-                {isActive && (
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-                )}
+                <span className="flex-1 text-xs font-medium text-foreground truncate">{s.label}</span>
+                {isActive && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />}
               </button>
             </li>
           );
@@ -366,7 +364,10 @@ function SidebarAccordions({
 function useTypewriter(text: string, enabled: boolean, charsPerTick = 2, intervalMs = 18) {
   const [n, setN] = useState(enabled ? 0 : text.length);
   useEffect(() => {
-    if (!enabled) { setN(text.length); return; }
+    if (!enabled) {
+      setN(text.length);
+      return;
+    }
     if (n >= text.length) return;
     const id = setTimeout(() => setN((v) => Math.min(text.length, v + charsPerTick)), intervalMs);
     return () => clearTimeout(id);
@@ -396,7 +397,10 @@ function AssistantMarkdown({
               <a
                 {...props}
                 href={href}
-                onClick={(e) => { e.preventDefault(); onBotLink(botKey); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onBotLink(botKey);
+                }}
                 className="cursor-pointer underline"
               >
                 {children}
@@ -416,7 +420,6 @@ function AssistantMarkdown({
   );
 }
 
-
 // ============================================================
 // Main Mentor page
 // ============================================================
@@ -426,7 +429,9 @@ export default function Mentor() {
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
   const journeyRef = useRef(journey);
-  useEffect(() => { journeyRef.current = journey; }, [journey]);
+  useEffect(() => {
+    journeyRef.current = journey;
+  }, [journey]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
@@ -458,7 +463,15 @@ export default function Mentor() {
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
-  const BOT_KEYS = ["connection-bridge", "niche-finder", "self-presentation", "contact-finder", "pricing-calculator", "strategy-planner", "content-creator"];
+  const BOT_KEYS = [
+    "connection-bridge",
+    "niche-finder",
+    "self-presentation",
+    "contact-finder",
+    "pricing-calculator",
+    "strategy-planner",
+    "content-creator",
+  ];
 
   const extractBotKey = (href: string): string | null => {
     try {
@@ -529,7 +542,8 @@ export default function Mentor() {
           n.ideal_client && (isRTL ? `מטופל אידיאלי: ${n.ideal_client}` : `Ideal client: ${n.ideal_client}`),
           n.core_pain && (isRTL ? `הכאב המרכזי: ${n.core_pain}` : `Core pain: ${n.core_pain}`),
           n.transformation && (isRTL ? `הטרנספורמציה: ${n.transformation}` : `Transformation: ${n.transformation}`),
-          n.handshake_version && (isRTL ? `ניסוח לחיצת יד: ${n.handshake_version}` : `Handshake: ${n.handshake_version}`),
+          n.handshake_version &&
+            (isRTL ? `ניסוח לחיצת יד: ${n.handshake_version}` : `Handshake: ${n.handshake_version}`),
         ].filter(Boolean);
         summary = parts.join("\n");
       } else if (from === "self-presentation" && j?.self_presentation_output) {
@@ -570,7 +584,9 @@ export default function Mentor() {
     if (!pendingReturn) return;
     const kickoff = pendingReturn.kickoff;
     setPendingReturn(null);
-    setTimeout(() => { send(kickoff); }, 50);
+    setTimeout(() => {
+      send(kickoff);
+    }, 50);
   };
 
   const send = async (text: string) => {
@@ -598,7 +614,8 @@ export default function Mentor() {
       });
 
       if (!resp.ok || !resp.body) {
-        if (resp.status === 429) toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
+        if (resp.status === 429)
+          toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
         else if (resp.status === 402) toast.error(isRTL ? "נגמרו הקרדיטים, פנו למנהל" : "Credits exhausted");
         else toast.error(isRTL ? "שגיאה בשליחה" : "Send failed");
         setIsLoading(false);
@@ -628,9 +645,7 @@ export default function Mentor() {
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               assistant += delta;
-              setMessages((prev) =>
-                prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m))
-              );
+              setMessages((prev) => prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m)));
             }
           } catch {
             buffer = line + "\n" + buffer;
@@ -646,20 +661,27 @@ export default function Mentor() {
       try {
         const { data: auth } = await supabase.auth.getUser();
         if (auth.user) {
-          const analyzeResp = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                messages: [...messages, { role: "user", content: text.trim() }],
-              }),
-            }
-          );
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          const analyzeResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token ?? ""}`,
+            },
+            body: JSON.stringify({
+              messages: [...messages, { role: "user", content: text.trim() }],
+            }),
+          });
           if (analyzeResp.ok) {
             const { completed, current, stuck_point } = await analyzeResp.json();
             const stageMap: Record<string, number> = {
-              niche: 1, pricing: 2, "self-presentation": 3, network: 4, conversion: 5,
+              niche: 1,
+              pricing: 2,
+              "self-presentation": 3,
+              network: 4,
+              conversion: 5,
             };
             const stepNumber = stageMap[current] ?? 1;
             const { data: existing } = await supabase
@@ -680,7 +702,7 @@ export default function Mentor() {
                 reflection: { current } as any,
                 updated_at: new Date().toISOString(),
               },
-              { onConflict: "user_id" }
+              { onConflict: "user_id" },
             );
             window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
           }
@@ -740,7 +762,7 @@ export default function Mentor() {
       className="min-h-screen flex flex-col bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]"
     >
       <SEOHead
-        title='המנטור | ליווי AI אישי למטפלים — TherapyKeys'
+        title="המנטור | ליווי AI אישי למטפלים — TherapyKeys"
         description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
         canonicalUrl="/mentor"
       />
@@ -759,10 +781,14 @@ export default function Mentor() {
         {/* Main grid: sidebar + chat */}
         <section className="container mx-auto px-4 pb-10">
           <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-5 lg:gap-6 items-start max-w-6xl mx-auto">
-
             {/* Sidebar (desktop only) */}
             <aside className="hidden lg:flex flex-col gap-4 sticky top-20">
-              <JourneyRail onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+              <JourneyRail
+                onOpenBot={(botKey) => {
+                  setActiveBotKey(botKey);
+                  chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              />
               <SidebarAccordions benefits={benefits} outcomes={outcomes} />
             </aside>
 
@@ -789,7 +815,9 @@ export default function Mentor() {
                       : "This summary will be passed to Eliana. Review it before continuing."}
                   </p>
                   <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-56 overflow-auto">
-                    <pre className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                    <pre
+                      className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                    >
                       {pendingReturn.summary}
                     </pre>
                   </div>
@@ -797,7 +825,11 @@ export default function Mentor() {
                     <Button variant="outline" size="sm" onClick={() => setPendingReturn(null)}>
                       {isRTL ? "סגירה" : "Dismiss"}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}
+                    >
                       {isRTL ? "חזרה לכלי" : "Back to tool"}
                     </Button>
                     <Button
@@ -833,24 +865,22 @@ export default function Mentor() {
                   )}
 
                   <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
-                    <img
-                      src={ELIANA_AVATAR}
-                      alt="Eliana"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <h2 className="font-serif font-semibold text-foreground leading-tight">
-                      {activeBotKey
-                        ? (isRTL ? "כלי מהמסע" : "Journey Tool")
-                        : (isRTL ? "אליענה" : "Eliana")}
+                      {activeBotKey ? (isRTL ? "כלי מהמסע" : "Journey Tool") : isRTL ? "אליענה" : "Eliana"}
                     </h2>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       {activeBotKey
-                        ? (isRTL ? "השיחה עם אליענה נשמרת — אפשר לחזור בכל רגע" : "Your conversation with Eliana is saved — return any time")
-                        : (isRTL ? "מקשיבה ✦" : "Listening ✦")}
+                        ? isRTL
+                          ? "השיחה עם אליענה נשמרת — אפשר לחזור בכל רגע"
+                          : "Your conversation with Eliana is saved — return any time"
+                        : isRTL
+                          ? "מקשיבה ✦"
+                          : "Listening ✦"}
                     </p>
                   </div>
 
@@ -881,11 +911,7 @@ export default function Mentor() {
                         {showWelcome && (
                           <div className="flex gap-2.5 animate-fade-in">
                             <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden border border-mentor-accent/30">
-                              <img
-                                src={ELIANA_AVATAR}
-                                alt="Eliana"
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
@@ -915,7 +941,10 @@ export default function Mentor() {
                         {(() => {
                           let lastAssistantIdx = -1;
                           for (let j = messages.length - 1; j >= 0; j--) {
-                            if (messages[j].role === "assistant") { lastAssistantIdx = j; break; }
+                            if (messages[j].role === "assistant") {
+                              lastAssistantIdx = j;
+                              break;
+                            }
                           }
                           return messages.map((m, i) => {
                             const isUser = m.role === "user";
@@ -927,11 +956,7 @@ export default function Mentor() {
                               >
                                 {!isUser && (
                                   <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                                    <img
-                                      src={ELIANA_AVATAR}
-                                      alt="Eliana"
-                                      className="w-full h-full object-cover"
-                                    />
+                                    <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
                                   </div>
                                 )}
                                 <div
@@ -966,11 +991,7 @@ export default function Mentor() {
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                           <div className="flex gap-2.5 animate-fade-in">
                             <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                              <img
-                                src={ELIANA_AVATAR}
-                                alt="Eliana"
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
                             </div>
                             <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3 flex items-center gap-1">
                               {[0, 1, 2].map((i) => (
@@ -983,7 +1004,6 @@ export default function Mentor() {
                             </div>
                           </div>
                         )}
-
                       </div>
                     </div>
 
@@ -1006,7 +1026,10 @@ export default function Mentor() {
                         {messages.length > 0 && (
                           <Button
                             variant="ghost"
-                            onClick={() => { setMessages([]); setInput(""); }}
+                            onClick={() => {
+                              setMessages([]);
+                              setInput("");
+                            }}
                             className="flex-shrink-0 text-muted-foreground text-xs h-[48px] px-3"
                           >
                             {isRTL ? "חדש" : "New"}
@@ -1028,7 +1051,12 @@ export default function Mentor() {
 
               {/* Mobile accordions */}
               <div className="lg:hidden mt-5 space-y-4">
-                <JourneyRail onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+                <JourneyRail
+                  onOpenBot={(botKey) => {
+                    setActiveBotKey(botKey);
+                    chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                />
                 <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
               </div>
             </div>
@@ -1045,12 +1073,15 @@ export default function Mentor() {
               {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {isRTL
-                ? "כל השלבים, הכלים והקצב שלך — במבט אחד."
-                : "All the stages, tools, and your pace — at a glance."}
+              {isRTL ? "כל השלבים, הכלים והקצב שלך — במבט אחד." : "All the stages, tools, and your pace — at a glance."}
             </p>
           </div>
-          <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+          <JourneyMap
+            onOpenBot={(botKey) => {
+              setActiveBotKey(botKey);
+              chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
           <FinalCelebration />
         </section>
       </main>
