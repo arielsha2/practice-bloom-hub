@@ -187,7 +187,7 @@ export function UsersTable({
               <TableHead>{isRTL ? 'תפקיד' : 'Role'}</TableHead>
               <TableHead>{isRTL ? 'מחזורים' : 'Cohorts'}</TableHead>
               <TableHead>{isRTL ? 'קורסים' : 'Courses'}</TableHead>
-              <TableHead>{isRTL ? 'גישה למנטור' : 'Mentor Access'}</TableHead>
+              
               <TableHead>{isRTL ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
               <TableHead>{isRTL ? 'פעולות' : 'Actions'}</TableHead>
             </TableRow>
