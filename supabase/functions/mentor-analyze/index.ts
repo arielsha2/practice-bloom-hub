@@ -29,14 +29,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    const { messages, user_id } = body as {
+      messages: Array<{ role: string; content: string }>;
+      user_id?: string;
+    };
+    console.log("mentor-analyze called, user_id:", user_id);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "missing key" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Compress conversation to text
-    const convo = (messages as Array<{ role: string; content: string }>)
+    const convo = messages
       .map((m) => `${m.role === "user" ? "מטפל" : "מנטור"}: ${m.content}`)
       .join("\n");
 
@@ -77,6 +83,44 @@ serve(async (req) => {
       : (STAGE_KEYS.find((k) => !completed.includes(k)) ?? "niche");
     const stuck_point = typeof parsed.stuck_point === "string" ? parsed.stuck_point.trim() : "";
 
+    // Trigger mentor-score in the background (non-blocking)
+    if (user_id) {
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+      const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      console.log("triggering mentor-score for user:", user_id);
+
+      const scoreTask = (async () => {
+        try {
+          if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+            console.error("mentor-score: missing SUPABASE_URL or SERVICE_ROLE_KEY");
+            return;
+          }
+          const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SERVICE_ROLE_KEY}`,
+              "apikey": SERVICE_ROLE_KEY,
+            },
+            body: JSON.stringify({ user_id, messages, completed, current, stuck_point }),
+          });
+          const txt = await scoreResp.text();
+          console.log("mentor-score response", scoreResp.status, txt.slice(0, 300));
+        } catch (e) {
+          console.error("mentor-score trigger error:", e);
+        }
+      })();
+
+      // Keep the runtime alive until the background task completes
+      // @ts-ignore - EdgeRuntime is provided by Supabase
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(scoreTask);
+      }
+    } else {
+      console.warn("mentor-analyze: no user_id provided, skipping mentor-score");
+    }
+
     return new Response(JSON.stringify({ completed, current, stuck_point }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -87,3 +131,4 @@ serve(async (req) => {
     });
   }
 });
+
