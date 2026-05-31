@@ -96,6 +96,7 @@ export function AddUserDialog({
       courseKey: selectedCourse,
       cohortId: selectedCohort || null,
       pendingRole,
+      pendingMentor,
       notes: notes.trim() || null,
     });
   };
@@ -106,6 +107,7 @@ export function AddUserDialog({
     setSelectedCohort('');
     setSelectedCourse('');
     setPendingRole('course_member');
+    setPendingMentor(false);
     setNotes('');
   };
 
