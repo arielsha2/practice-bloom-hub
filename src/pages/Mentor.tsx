@@ -831,14 +831,20 @@ export default function Mentor() {
                             </div>
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
-                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                <p
+                                  dir={isRTL ? "rtl" : "ltr"}
+                                  className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}
+                                >
                                   {isRTL
                                     ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
                                     : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
                                 </p>
                               </div>
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
-                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                <p
+                                  dir={isRTL ? "rtl" : "ltr"}
+                                  className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}
+                                >
                                   {isRTL
                                     ? "אז איזה יופי שהגעת. לפני שנתחיל אשמח לשמוע עלייך קצת ולהכיר אותך — מה התחום המקצועי שלך, מאיפה בארץ ומה קורה עם הקליניקה שלך עכשיו?"
                                     : "So glad you're here. Before we begin, I'd love to get to know you a little — what's your professional field, where in the country are you, and what's happening with your practice right now?"}
@@ -948,7 +954,7 @@ export default function Mentor() {
                               send(input);
                             }
                           }}
-                          placeholder={isRTL ? "מה על הלב כרגע?" : "What's on your mind?"}
+                          placeholder={isRTL ? "התשובה שלך תופיע פה" : "Your reply appears here"}
                           className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
                           disabled={isLoading}
                         />
