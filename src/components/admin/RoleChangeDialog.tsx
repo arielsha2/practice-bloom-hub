@@ -8,7 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, User, UserX, AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Shield, User, UserX, AlertTriangle, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 interface UserProfile {
@@ -24,6 +26,8 @@ interface RoleChangeDialogProps {
   currentRole: 'admin' | 'student' | 'none';
   onChangeRole: (newRole: 'admin' | 'course_member' | null, currentRole: 'admin' | 'course_member' | null) => void;
   isChanging: boolean;
+  hasMentorAccess: boolean;
+  onToggleMentor: (enable: boolean) => void;
 }
 
 export function RoleChangeDialog({
@@ -33,6 +37,8 @@ export function RoleChangeDialog({
   currentRole,
   onChangeRole,
   isChanging,
+  hasMentorAccess,
+  onToggleMentor,
 }: RoleChangeDialogProps) {
   const { isRTL } = useLanguage();
   const [confirmAdmin, setConfirmAdmin] = useState(false);
@@ -170,6 +176,35 @@ export function RoleChangeDialog({
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {!confirmAdmin && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              {isRTL ? 'הרשאות נוספות' : 'Additional permissions'}
+            </p>
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30">
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${hasMentorAccess ? 'bg-primary/10' : 'bg-muted'}`}>
+                  <Sparkles className={`w-5 h-5 ${hasMentorAccess ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <Label htmlFor="mentor-switch" className="font-medium cursor-pointer">
+                    {isRTL ? 'גישה למנטור' : 'Mentor access'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isRTL ? 'מאפשר למשתמש להשתמש בכלי המנטור AI' : 'Allows the user to use the AI mentor tool'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="mentor-switch"
+                checked={hasMentorAccess}
+                onCheckedChange={onToggleMentor}
+                disabled={isChanging}
+              />
+            </div>
           </div>
         )}
       </DialogContent>
