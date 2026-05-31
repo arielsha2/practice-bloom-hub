@@ -4,6 +4,46 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Send,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Heart,
+  Clock,
+  Users2,
+  CheckCircle2,
+  MessageCircle,
+  ArrowRight,
+  ArrowLeft,
+  Map as MapIcon,
+  LogIn,
+  LogOut,
+  Compass,
+  Tag,
+  User as UserIcon,
+  Users,
+  Trophy,
+  Check,
+} from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { JourneyMap } from "@/components/mentor/JourneyMap";
+import { FinalCelebration } from "@/components/mentor/FinalCelebration";
+import { useTherapistJourney } from "@/hooks/useTherapistJourney";
+import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -40,20 +80,6 @@ function MentorTopBar() {
     </header>
   );
 }
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Send, Sparkles, Target, TrendingUp, Heart, Clock, Users2, CheckCircle2, MessageCircle, X, ArrowRight, ArrowLeft, Map as MapIcon, LogIn, LogOut } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { JourneyMap } from "@/components/mentor/JourneyMap";
-import { FinalCelebration } from "@/components/mentor/FinalCelebration";
-import { useTherapistJourney } from "@/hooks/useTherapistJourney";
-import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
 function WebsiteBuilderCTA() {
   const { journey } = useTherapistJourney();
@@ -72,8 +98,6 @@ function WebsiteBuilderCTA() {
     })();
   }, [journey?.self_presentation_output]);
 
-  // Only show this card once the user has actually published a site.
-  // Pre-publish CTA now lives inside <FinalCelebration />.
   if (!site?.is_published) return null;
 
   return (
@@ -99,11 +123,8 @@ function WebsiteBuilderCTA() {
 }
 
 const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
+const ELIANA_AVATAR = "/images/eliana-avatar.png";
 
-/**
- * Upsert the current user's mentor journey progress.
- * Appends `stuck_point` to the existing array (no overwrite) and updates step + reflection.
- */
 export async function updateTherapistProgress(
   step_number: number,
   stuck_point: string,
@@ -159,8 +180,8 @@ const BENEFITS_EN = [
 ];
 
 const OUTCOMES_HE = [
-  "יומן עמוס במטופלים שמתאימים לכם",
-  "מחיר שמשקף את הערך האמיתי שלכם",
+  "יומן עמוס במטופלים שמתאימים לך",
+  "מחיר שמשקף את הערך האמיתי שלך",
   "מסר שיווקי שמושך את האנשים הנכונים",
   "פחות התלבטות, יותר פעולה",
   "קליניקה שמתפרנסת בכבוד",
@@ -188,6 +209,163 @@ const STARTERS_EN = [
   "I don't know how to explain what I do",
 ];
 
+// ============================================================
+// JourneyRail — compact vertical stage list for the sidebar
+// ============================================================
+const STAGE_DEFS_HE = [
+  { key: "niche", label: "מציאת נישה", botKey: "niche-finder", Icon: Compass },
+  { key: "pricing", label: "תמחור", botKey: "pricing-calculator", Icon: Tag },
+  { key: "self-presentation", label: "הצגה עצמית", botKey: "self-presentation", Icon: UserIcon },
+  { key: "network", label: "רשת קשרים", botKey: "contact-finder", Icon: Users },
+  { key: "conversion", label: "שיחת המרה", botKey: "connection-bridge", Icon: Sparkles },
+];
+
+const STAGE_DEFS_EN = [
+  { key: "niche", label: "Find Your Niche", botKey: "niche-finder", Icon: Compass },
+  { key: "pricing", label: "Pricing", botKey: "pricing-calculator", Icon: Tag },
+  { key: "self-presentation", label: "Self Presentation", botKey: "self-presentation", Icon: UserIcon },
+  { key: "network", label: "Network", botKey: "contact-finder", Icon: Users },
+  { key: "conversion", label: "Conversion Call", botKey: "connection-bridge", Icon: Sparkles },
+];
+
+function JourneyRail({
+  onOpenBot,
+}: {
+  onOpenBot: (botKey: string) => void;
+}) {
+  const { isRTL } = useLanguage();
+  const { journey } = useTherapistJourney();
+  const stages = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
+  const completed = new Set(journey?.completed_stages ?? []);
+  const currentKey = (journey?.reflection as any)?.current as string | undefined;
+
+  return (
+    <div className="bg-card border border-mentor-border/60 rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-serif font-semibold text-foreground">
+          {isRTL ? "המסע שלך" : "Your Journey"}
+        </h3>
+        <ResetMentorButton />
+      </div>
+
+      <ol className="space-y-1.5">
+        {stages.map((s) => {
+          const isDone = completed.has(s.key);
+          const isActive = currentKey === s.key;
+          const isClickable = isDone || isActive;
+          const Icon = s.Icon;
+
+          return (
+            <li key={s.key}>
+              <button
+                onClick={() => isClickable && onOpenBot(s.botKey)}
+                disabled={!isClickable}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all text-start ${
+                  isDone
+                    ? "bg-mentor-accent/10 hover:bg-mentor-accent/20 cursor-pointer"
+                    : isActive
+                    ? "bg-mentor-accent/15 border border-mentor-accent/40 cursor-pointer"
+                    : "opacity-50 cursor-default"
+                }`}
+              >
+                <span
+                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${
+                    isDone
+                      ? "bg-mentor-accent text-mentor-accent-foreground"
+                      : isActive
+                      ? "bg-mentor-accent/20 text-mentor-accent"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
+                </span>
+                <span className="flex-1 text-xs font-medium text-foreground truncate">
+                  {s.label}
+                </span>
+                {isActive && (
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+
+        <li className="pt-2 mt-2 border-t border-mentor-border/40">
+          <div className="flex items-center gap-2.5 px-2.5 py-2">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent to-mentor-accent/70 text-mentor-accent-foreground flex items-center justify-center">
+              <Trophy className="w-3.5 h-3.5" />
+            </span>
+            <span className="flex-1 text-xs font-semibold text-foreground">
+              {isRTL ? "קליניקה משגשגת" : "Thriving Practice"}
+            </span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+// ============================================================
+// SidebarAccordions — "What you gain" + "Where you'll get"
+// ============================================================
+function SidebarAccordions({
+  benefits,
+  outcomes,
+  compact = true,
+}: {
+  benefits: typeof BENEFITS_HE;
+  outcomes: string[];
+  compact?: boolean;
+}) {
+  const { isRTL } = useLanguage();
+  return (
+    <Accordion type="multiple" className="bg-card border border-mentor-border/60 rounded-2xl px-4 shadow-sm">
+      <AccordionItem value="benefits" className="border-b border-mentor-border/40 last:border-0">
+        <AccordionTrigger className={`${compact ? "text-sm" : "text-base"} font-serif text-foreground`}>
+          {isRTL ? "מה תקבל מהמסע" : "What You Gain"}
+        </AccordionTrigger>
+        <AccordionContent>
+          <ul className="space-y-2.5 pt-1">
+            {benefits.map((b, i) => {
+              const Icon = b.icon;
+              return (
+                <li key={i} className="flex gap-2.5">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-mentor-accent/15 flex items-center justify-center mt-0.5">
+                    <Icon className="w-3.5 h-3.5 text-mentor-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-semibold text-foreground">{b.title}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="outcomes" className="border-0">
+        <AccordionTrigger className={`${compact ? "text-sm" : "text-base"} font-serif text-foreground`}>
+          {isRTL ? "לאן המסע מוביל" : "Where You'll Get"}
+        </AccordionTrigger>
+        <AccordionContent>
+          <ul className="space-y-2 pt-1">
+            {outcomes.map((o, i) => (
+              <li key={i} className="flex gap-2 items-start">
+                <CheckCircle2 className="w-4 h-4 text-mentor-accent flex-shrink-0 mt-0.5" />
+                <span className="text-xs text-foreground leading-relaxed">{o}</span>
+              </li>
+            ))}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+
+// ============================================================
+// Main Mentor page
+// ============================================================
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
@@ -216,7 +394,6 @@ export default function Mentor() {
   });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const [pendingReturn, setPendingReturn] = useState<{
     botKey: string;
@@ -225,8 +402,8 @@ export default function Mentor() {
     kickoff: string;
   } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const chatCardRef = useRef<HTMLDivElement>(null);
 
-  // Map of known AI tool URLs -> bot keys
   const BOT_KEYS = ["connection-bridge", "niche-finder", "self-presentation", "contact-finder", "pricing-calculator", "strategy-planner", "content-creator"];
 
   const extractBotKey = (href: string): string | null => {
@@ -240,9 +417,8 @@ export default function Mentor() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  // Persist messages to localStorage so the chat survives reloads / dialog close.
   useEffect(() => {
     try {
       if (messages.length === 0) {
@@ -251,11 +427,10 @@ export default function Mentor() {
         localStorage.setItem(storageKey, JSON.stringify(messages));
       }
     } catch {
-      // ignore quota / privacy mode errors
+      // ignore
     }
   }, [messages, storageKey]);
 
-  // When language switches, load that language's saved conversation (or empty).
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -289,7 +464,6 @@ export default function Mentor() {
       await refreshJourney();
       const j = journeyRef.current;
 
-      // Build a human-readable summary from whatever the extractor saved
       let summary = "";
       if (from === "niche-finder" && j?.niche_output) {
         const n: any = j.niche_output;
@@ -317,8 +491,8 @@ export default function Mentor() {
 
       if (!summary) {
         summary = isRTL
-          ? "לא נשמר סיכום אוטומטי לכלי הזה. תוכלו לספר למנטור במילים שלכם."
-          : "No automatic summary was saved for this tool. You can tell the Mentor in your own words.";
+          ? "לא נשמר סיכום אוטומטי לכלי הזה. אפשר לספר לאליענה במילים שלך."
+          : "No automatic summary was saved for this tool. You can tell Eliana in your own words.";
       }
 
       const kickoff = isRTL
@@ -327,7 +501,6 @@ export default function Mentor() {
 
       setPendingReturn({ botKey: from, toolName, summary, kickoff });
 
-      // Clear the URL param
       const next = new URLSearchParams(searchParams);
       next.delete("from");
       setSearchParams(next, { replace: true });
@@ -339,8 +512,7 @@ export default function Mentor() {
     if (!pendingReturn) return;
     const kickoff = pendingReturn.kickoff;
     setPendingReturn(null);
-    setChatOpen(true);
-    setTimeout(() => { send(kickoff); }, 100);
+    setTimeout(() => { send(kickoff); }, 50);
   };
 
   const send = async (text: string) => {
@@ -413,7 +585,6 @@ export default function Mentor() {
       toast.error(isRTL ? "שגיאת רשת" : "Network error");
     } finally {
       setIsLoading(false);
-      // Fire-and-forget: analyze the conversation and persist completed stages.
       try {
         const { data: auth } = await supabase.auth.getUser();
         if (auth.user) {
@@ -464,7 +635,11 @@ export default function Mentor() {
 
   const showWelcome = messages.length === 0;
 
-  // Access gate: render a paywall dialog for users without mentor access.
+  const scrollToFullMap = () => {
+    document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Paywall
   if (!accessLoading && hasAccess === false) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
@@ -502,160 +677,90 @@ export default function Mentor() {
   }
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen flex flex-col bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]"
+    >
       <SEOHead
         title='המנטור | ליווי AI אישי למטפלים — TherapyKeys'
         description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
         canonicalUrl="/mentor"
       />
       <MentorTopBar />
+
       <main className="flex-1 pt-16">
-        <section className="py-3 md:py-4 border-b border-mentor-border/50">
-          <div className="container mx-auto px-4 text-center max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-mentor-accent/10 border border-mentor-accent/30 rounded-full px-3 py-1 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-mentor-accent" />
-              <span className="text-mentor-accent font-medium text-xs">
-                {isRTL ? "המנטור" : "The Mentor"}
-              </span>
-            </div>
-            <h1 className="text-xl md:text-2xl font-serif font-medium text-foreground mb-1 tracking-tight">
-              {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A Full Practice. A Calm Mind. Real Growth."}
-            </h1>
-            <p className="text-xs md:text-sm text-muted-foreground">
-              {isRTL
-                ? "בן הזוג האסטרטגי שלכם — שותף שמחדד החלטות ועוזר להפוך מטפל מצוין לקליניקה משגשגת."
-                : "Your strategic partner — sharpening decisions and turning a great therapist into a thriving practice."}
-            </p>
-          </div>
+        {/* Soft intro */}
+        <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
+          <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
+            {isRTL
+              ? "אליענה כאן. אשמח לשמוע מה על הלב — ונתחיל בדיוק משם."
+              : "Eliana is here. Share what's on your mind — and we'll start right there."}
+          </p>
         </section>
 
-        <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
-          <div className="max-w-5xl mx-auto mb-4 flex justify-end">
-            <ResetMentorButton />
-          </div>
-          <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
-          <FinalCelebration />
-          
-        </section>
+        {/* Main grid: sidebar + chat */}
+        <section className="container mx-auto px-4 pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-5 lg:gap-6 items-start max-w-6xl mx-auto">
 
-        <section className="container mx-auto px-4 py-6 md:py-8">
-          {/* Returned-from-tool confirmation card */}
-          {pendingReturn && (
-            <div
-              ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}
-              dir={isRTL ? "rtl" : "ltr"}
-              className="max-w-3xl mx-auto mb-6 bg-mentor-accent/5 border-2 border-mentor-accent/40 rounded-2xl p-6 shadow-md"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-5 h-5 text-mentor-accent flex-shrink-0" />
-                <h3 className="text-base md:text-lg font-serif font-semibold text-foreground">
-                  {isRTL
-                    ? `סיימתם לעבוד עם ${pendingReturn.toolName}`
-                    : `You finished working with ${pendingReturn.toolName}`}
-                </h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                {isRTL
-                  ? "זה הסיכום שיועבר למנטור. בדקו אותו לפני שתמשיכו את השיחה."
-                  : "This is the summary that will be passed to the Mentor. Review it before continuing the conversation."}
-              </p>
-              <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-64 overflow-auto">
-                <pre className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
-                  {pendingReturn.summary}
-                </pre>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPendingReturn(null)}
-                >
-                  {isRTL ? "סגור" : "Dismiss"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}
-                >
-                  {isRTL ? "חזרה לכלי" : "Back to tool"}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={confirmPendingReturn}
-                  className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-1.5"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  {isRTL ? "המשיכו עם המנטור" : "Continue with the Mentor"}
-                </Button>
-              </div>
-            </div>
-          )}
+            {/* Sidebar (desktop only) */}
+            <aside className="hidden lg:flex flex-col gap-4 sticky top-20">
+              <JourneyRail onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+              <SidebarAccordions benefits={benefits} outcomes={outcomes} />
+            </aside>
 
-          {/* CTA card — opens the floating chat popup */}
-          <div className="max-w-3xl mx-auto bg-card border border-mentor-border/60 rounded-2xl p-6 md:p-8 shadow-sm text-center">
-            <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
-              <Sparkles className="w-6 h-6 text-mentor-accent" />
-            </div>
-            <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground mb-2">
-              {messages.length > 0
-                ? (isRTL ? "יש לכם שיחה פתוחה עם המנטור" : "You have an active conversation with the Mentor")
-                : (isRTL ? "המנטור שלכם מחכה 🌱" : "Your mentor is waiting 🌱")}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-5">
-              {messages.length > 0
-                ? (isRTL ? "המשיכו מאיפה שעצרתם, או התחילו שיחה חדשה." : "Pick up where you left off, or start a new conversation.")
-                : (isRTL ? "בחרו נושא שמרגיש הכי דחוף — או פשוט כתבו מה על הלב." : "Pick whatever feels most pressing — or just write what's on your heart.")}
-            </p>
-
-            {messages.length === 0 && (
-              <div className="grid sm:grid-cols-2 gap-2.5 mb-5">
-                {starters.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setChatOpen(true); send(s); }}
-                    className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <Button
-                size="lg"
-                onClick={() => setChatOpen(true)}
-                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {messages.length > 0
-                  ? (isRTL ? "המשיכו את השיחה" : "Continue the conversation")
-                  : (isRTL ? "פתחו את הצ'אט" : "Open the chat")}
-              </Button>
-              {messages.length > 0 && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => { setMessages([]); setInput(""); }}
+            {/* Chat column */}
+            <div className="min-w-0">
+              {/* Pending return card */}
+              {pendingReturn && (
+                <div
+                  ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                  dir={isRTL ? "rtl" : "ltr"}
+                  className="mb-4 bg-mentor-accent/5 border-2 border-mentor-accent/40 rounded-2xl p-5 shadow-md"
                 >
-                  {isRTL ? "התחילו שיחה חדשה" : "Start a new conversation"}
-                </Button>
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 className="w-5 h-5 text-mentor-accent flex-shrink-0" />
+                    <h3 className="text-base md:text-lg font-serif font-semibold text-foreground">
+                      {isRTL
+                        ? `סיימת לעבוד עם ${pendingReturn.toolName}`
+                        : `You finished working with ${pendingReturn.toolName}`}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {isRTL
+                      ? "זה הסיכום שיועבר לאליענה. אפשר לעיין בו לפני שממשיכים."
+                      : "This summary will be passed to Eliana. Review it before continuing."}
+                  </p>
+                  <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-56 overflow-auto">
+                    <pre className={`whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                      {pendingReturn.summary}
+                    </pre>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setPendingReturn(null)}>
+                      {isRTL ? "סגירה" : "Dismiss"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/ai-assistants/${pendingReturn.botKey}`)}>
+                      {isRTL ? "חזרה לכלי" : "Back to tool"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={confirmPendingReturn}
+                      className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-1.5"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      {isRTL ? "המשך את השיחה עם אליענה" : "Continue with Eliana"}
+                    </Button>
+                  </div>
+                </div>
               )}
-            </div>
-          </div>
 
-          {/* Floating chat popup */}
-          <Dialog open={chatOpen} onOpenChange={setChatOpen}>
-            <DialogContent
-              dir={isRTL ? "rtl" : "ltr"}
-              className="max-w-3xl w-[95vw] p-0 gap-0 overflow-hidden border-2 border-mentor-accent/30 shadow-2xl rounded-2xl"
-            >
-              <DialogTitle className="sr-only">{isRTL ? "צ'אט עם המנטור" : "Chat with the Mentor"}</DialogTitle>
-              <DialogDescription className="sr-only">
-                {isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭"}
-              </DialogDescription>
-
-              <div className="flex flex-col h-[80vh] max-h-[680px] bg-card">
+              {/* Chat card */}
+              <div
+                ref={chatCardRef}
+                className="bg-card border border-mentor-border/60 rounded-3xl shadow-xl overflow-hidden flex flex-col"
+                style={{ height: "clamp(520px, 72vh, 720px)" }}
+              >
+                {/* Header */}
                 <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
                   {activeBotKey && (
                     <Button
@@ -665,42 +770,48 @@ export default function Mentor() {
                       className="gap-1.5 text-mentor-accent hover:bg-mentor-accent/10"
                     >
                       {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-                      {isRTL ? "חזרה למנטור" : "Back to Mentor"}
+                      {isRTL ? "חזרה לאליענה" : "Back to Eliana"}
                     </Button>
                   )}
-                  <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-mentor-accent" />
+
+                  <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
+                    <img
+                      src={ELIANA_AVATAR}
+                      alt="Eliana"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                    <Sparkles className="w-5 h-5 text-mentor-accent absolute" />
                   </div>
-                  <div className="flex-1">
+
+                  <div className="flex-1 min-w-0">
                     <h2 className="font-serif font-semibold text-foreground leading-tight">
                       {activeBotKey
-                        ? (isRTL ? "כלי מהמנטור" : "Mentor's Tool")
-                        : (isRTL ? "המנטור" : "The Mentor")}
+                        ? (isRTL ? "כלי מהמסע" : "Journey Tool")
+                        : (isRTL ? "אליענה" : "Eliana")}
                     </h2>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       {activeBotKey
-                        ? (isRTL ? "השיחה עם המנטור שמורה — תוכלו לחזור אליה בכל רגע" : "Your mentor conversation is saved — return any time")
-                        : (isRTL ? "כאן לעזור לכם לחשוב בבהירות 🧭" : "Here to help you think clearly 🧭")}
+                        ? (isRTL ? "השיחה עם אליענה נשמרת — אפשר לחזור בכל רגע" : "Your conversation with Eliana is saved — return any time")
+                        : (isRTL ? "מקשיבה ✦" : "Listening ✦")}
                     </p>
                   </div>
+
                   {!activeBotKey && (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setChatOpen(false);
-                        setTimeout(() => {
-                          document.getElementById("journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }, 150);
-                      }}
+                      onClick={scrollToFullMap}
                       className="gap-1.5 border-mentor-accent/40 text-mentor-accent hover:bg-mentor-accent hover:text-mentor-accent-foreground"
                     >
                       <MapIcon className="w-4 h-4" />
-                      <span className="hidden sm:inline">{isRTL ? "מפת המסע" : "Journey Map"}</span>
+                      <span className="hidden sm:inline">{isRTL ? "מפה מלאה" : "Full Map"}</span>
                     </Button>
                   )}
                 </div>
 
+                {/* Body */}
                 {activeBotKey ? (
                   <iframe
                     src={`/ai-assistants/${activeBotKey}`}
@@ -708,158 +819,203 @@ export default function Mentor() {
                     title={isRTL ? "כלי AI" : "AI tool"}
                   />
                 ) : (
-                <>
-                <ScrollArea className="flex-1 px-5 py-6">
-                  <div className="space-y-4 max-w-3xl mx-auto">
-                    {showWelcome && (
-                      <div className="bg-mentor-surface border border-mentor-border/60 rounded-xl p-5">
-                        <p className={`text-foreground leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
-                          {isRTL
-                            ? "היי 👋 ספרו לי מה מרגיש תקוע — ונתחיל בדיוק משם. אין תשובות נכונות, רק כנות."
-                            : "Hey 👋 tell me what feels stuck — and we'll start right there. No right answers, just honesty."}
-                        </p>
-                        <div className="grid sm:grid-cols-2 gap-2.5 mt-4">
-                          {starters.map((s, i) => (
-                            <button
-                              key={i}
-                              onClick={() => send(s)}
-                              className={`text-sm font-medium px-4 py-3 rounded-xl bg-mentor-accent/10 border-2 border-mentor-accent/40 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
-                            >
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {messages.map((m, i) => (
-                      <div
-                        key={i}
-                        className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                            m.role === "user"
-                              ? "bg-mentor-accent text-mentor-accent-foreground"
-                              : "bg-mentor-surface border border-mentor-border/60 text-foreground"
-                          }`}
-                        >
-                          <div
-                            dir={isRTL ? "rtl" : "ltr"}
-                            className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 prose-a:text-mentor-accent ${isRTL ? "text-right" : "text-left"}`}
-                          >
-                            <ReactMarkdown
-                              components={{
-                                a: ({ href, children, ...props }) => {
-                                  const botKey = href ? extractBotKey(href) : null;
-                                  if (botKey) {
-                                    return (
-                                      <a
-                                        {...props}
-                                        href={href}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          setActiveBotKey(botKey);
-                                        }}
-                                        className="cursor-pointer underline"
-                                      >
-                                        {children}
-                                      </a>
-                                    );
-                                  }
-                                  return (
-                                    <a {...props} href={href} target="_blank" rel="noopener noreferrer">
-                                      {children}
-                                    </a>
-                                  );
-                                },
-                              }}
-                            >
-                              {m.content || "…"}
-                            </ReactMarkdown>
+                  <>
+                    <ScrollArea className="flex-1 px-4 md:px-5 py-5">
+                      <div className="space-y-4 max-w-3xl mx-auto">
+                        {showWelcome && (
+                          <div className="flex gap-2.5 animate-fade-in">
+                            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative">
+                              <img
+                                src={ELIANA_AVATAR}
+                                alt="Eliana"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                              <Sparkles className="w-4 h-4 text-mentor-accent absolute" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
+                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                  {isRTL
+                                    ? "בוקר טוב ✨ איזה יופי שהגעת. אשמח לשמוע קצת עליך — מה התחום שלך, ואיפה הקליניקה שלך נמצאת עכשיו?"
+                                    : "Good morning ✨ So glad you're here. I'd love to hear a little about you — what's your specialty, and where are you with your practice right now?"}
+                                </p>
+                              </div>
+                              <div className="grid sm:grid-cols-2 gap-2 mt-3">
+                                {starters.map((s, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => send(s)}
+                                    className={`text-xs md:text-sm font-medium px-3 py-2.5 rounded-xl bg-mentor-accent/10 border border-mentor-accent/30 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={endRef} />
-                  </div>
-                </ScrollArea>
+                        )}
 
-                <div className="border-t border-mentor-border/60 p-4 bg-mentor-surface">
-                  <div className="flex gap-2 items-end max-w-3xl mx-auto">
-                    <Textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          send(input);
-                        }
-                      }}
-                      placeholder={isRTL ? "כתבו את שאלתכם…" : "Type your question…"}
-                      className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      onClick={() => send(input)}
-                      disabled={!input.trim() || isLoading}
-                      size="icon"
-                      className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                </>
+                        {messages.map((m, i) => {
+                          const isUser = m.role === "user";
+                          return (
+                            <div
+                              key={i}
+                              className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
+                            >
+                              {!isUser && (
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                                  <img
+                                    src={ELIANA_AVATAR}
+                                    alt="Eliana"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                  />
+                                  <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
+                                </div>
+                              )}
+                              <div
+                                className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
+                                  isUser
+                                    ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
+                                    : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
+                                }`}
+                              >
+                                <div
+                                  dir={isRTL ? "rtl" : "ltr"}
+                                  className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
+                                >
+                                  <ReactMarkdown
+                                    components={{
+                                      a: ({ href, children, ...props }) => {
+                                        const botKey = href ? extractBotKey(href) : null;
+                                        if (botKey) {
+                                          return (
+                                            <a
+                                              {...props}
+                                              href={href}
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                setActiveBotKey(botKey);
+                                              }}
+                                              className="cursor-pointer underline"
+                                            >
+                                              {children}
+                                            </a>
+                                          );
+                                        }
+                                        return (
+                                          <a {...props} href={href} target="_blank" rel="noopener noreferrer">
+                                            {children}
+                                          </a>
+                                        );
+                                      },
+                                    }}
+                                  >
+                                    {m.content || "…"}
+                                  </ReactMarkdown>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Typing indicator */}
+                        {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+                          <div className="flex gap-2.5 animate-fade-in">
+                            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                              <img
+                                src={ELIANA_AVATAR}
+                                alt="Eliana"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                              <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
+                            </div>
+                            <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3 flex items-center gap-1">
+                              {[0, 1, 2].map((i) => (
+                                <span
+                                  key={i}
+                                  className="w-1.5 h-1.5 rounded-full bg-mentor-accent/60 animate-bounce"
+                                  style={{ animationDelay: `${i * 120}ms` }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div ref={endRef} />
+                      </div>
+                    </ScrollArea>
+
+                    {/* Composer */}
+                    <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
+                      <div className="flex gap-2 items-end max-w-3xl mx-auto">
+                        <Textarea
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              send(input);
+                            }
+                          }}
+                          placeholder={isRTL ? "מה על הלב כרגע?" : "What's on your mind?"}
+                          className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
+                          disabled={isLoading}
+                        />
+                        {messages.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => { setMessages([]); setInput(""); }}
+                            className="flex-shrink-0 text-muted-foreground text-xs h-[48px] px-3"
+                          >
+                            {isRTL ? "חדש" : "New"}
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => send(input)}
+                          disabled={!input.trim() || isLoading}
+                          size="icon"
+                          className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
-            </DialogContent>
-          </Dialog>
 
-          {/* Benefits & Outcomes — below chat, two columns */}
-          <div className="max-w-5xl mx-auto mt-10 md:mt-14 grid md:grid-cols-2 gap-6">
-            <div className="bg-card border border-mentor-border/60 rounded-2xl p-6 shadow-sm">
-              <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
-                {isRTL ? "מה תקבלו" : "What You Gain"}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-5">
-                {isRTL ? "התועלות שמטפלים מרגישים מהשיחה הראשונה" : "Benefits therapists feel from the first conversation"}
-              </p>
-
-              <ul className="space-y-3">
-                {benefits.map((b, i) => {
-                  const Icon = b.icon;
-                  return (
-                    <li key={i} className="flex gap-3">
-                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-mentor-accent" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-foreground">{b.title}</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            <div className="bg-mentor-accent/5 border border-mentor-accent/20 rounded-2xl p-6">
-              <h3 className="text-lg font-serif font-semibold text-foreground mb-4">
-                {isRTL ? "התוצאות שאליהן תגיעו" : "The Outcomes You'll Reach"}
-              </h3>
-              <ul className="space-y-2.5">
-                {outcomes.map((o, i) => (
-                  <li key={i} className="flex gap-2 items-start">
-                    <CheckCircle2 className="w-4 h-4 text-mentor-accent flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-foreground leading-relaxed">{o}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* Mobile accordions */}
+              <div className="lg:hidden mt-5 space-y-4">
+                <JourneyRail onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+                <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
+              </div>
             </div>
           </div>
         </section>
+
+        {/* Full Journey Map below the fold */}
+        <section
+          id="full-journey-map"
+          className="container mx-auto px-4 py-10 md:py-14 border-t border-mentor-border/40 scroll-mt-20"
+        >
+          <div className="max-w-5xl mx-auto mb-4 text-center">
+            <h2 className="text-xl md:text-2xl font-serif font-semibold text-foreground">
+              {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isRTL
+                ? "כל השלבים, הכלים והקצב שלך — במבט אחד."
+                : "All the stages, tools, and your pace — at a glance."}
+            </p>
+          </div>
+          <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
+          <FinalCelebration />
+        </section>
       </main>
+
       <div className="container mx-auto px-4 pb-8">
         <WebsiteBuilderCTA />
       </div>
