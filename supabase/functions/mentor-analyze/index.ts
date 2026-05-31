@@ -91,18 +91,21 @@ serve(async (req) => {
 
       const scoreTask = (async () => {
         try {
-          if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-            console.error("mentor-score: missing SUPABASE_URL or SERVICE_ROLE_KEY");
+          if (!SUPABASE_URL) {
+            console.error("mentor-score: missing SUPABASE_URL");
             return;
           }
           const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${SERVICE_ROLE_KEY}`,
-              "apikey": SERVICE_ROLE_KEY,
             },
-            body: JSON.stringify({ user_id, messages, completed, current, stuck_point }),
+            body: JSON.stringify({
+              user_id,
+              messages,
+              journey_context: { completed_stages: completed, current },
+              trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
+            }),
           });
           const txt = await scoreResp.text();
           console.log("mentor-score response", scoreResp.status, txt.slice(0, 300));

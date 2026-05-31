@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.website-submit-lead]
 verify_jwt = false
+
+[functions.mentor-score]
+verify_jwt = false
