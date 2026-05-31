@@ -42,7 +42,7 @@ interface Cohort {
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'user' | 'course_member';
+  role: 'admin' | 'user' | 'course_member' | 'mentor';
 }
 
 export function useUsersManagement() {
@@ -346,6 +346,44 @@ export function useUsersManagement() {
     return 'none';
   };
 
+  // Check if user has mentor access
+  const hasMentorAccess = (userId: string): boolean => {
+    return userRoles.some(r => r.user_id === userId && r.role === 'mentor');
+  };
+
+  // Toggle mentor access
+  const toggleMentorAccess = useMutation({
+    mutationFn: async ({ userId, enable }: { userId: string; enable: boolean }) => {
+      if (enable) {
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: 'mentor' });
+        if (error && !error.message.includes('duplicate')) throw error;
+      } else {
+        const { error } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId)
+          .eq('role', 'mentor');
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      toast({
+        title: isRTL ? 'הצלחה' : 'Success',
+        description: isRTL ? 'הרשאת המנטור עודכנה' : 'Mentor access updated',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Get cohorts for a user based on their enrollments
   const getUserCohorts = (userId: string): Cohort[] => {
     const userEnrollments = enrollments.filter(e => e.user_id === userId && e.cohort_id);
@@ -378,5 +416,7 @@ export function useUsersManagement() {
     getUserRole,
     getUserCohorts,
     getCohortName,
+    hasMentorAccess,
+    toggleMentorAccess,
   };
 }

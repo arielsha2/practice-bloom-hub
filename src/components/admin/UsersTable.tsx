@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, X, Search, Shield } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { UserPlus, X, Search, Shield, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface UserProfile {
@@ -61,6 +62,8 @@ interface UsersTableProps {
   cohorts: Cohort[];
   getUserRole: (userId: string) => 'admin' | 'student' | 'none';
   getUserCohorts: (userId: string) => Cohort[];
+  hasMentorAccess: (userId: string) => boolean;
+  onToggleMentor: (userId: string, enable: boolean) => void;
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
@@ -73,6 +76,8 @@ export function UsersTable({
   cohorts,
   getUserRole,
   getUserCohorts,
+  hasMentorAccess,
+  onToggleMentor,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
@@ -184,6 +189,7 @@ export function UsersTable({
               <TableHead>{isRTL ? 'תפקיד' : 'Role'}</TableHead>
               <TableHead>{isRTL ? 'מחזורים' : 'Cohorts'}</TableHead>
               <TableHead>{isRTL ? 'קורסים' : 'Courses'}</TableHead>
+              <TableHead>{isRTL ? 'גישה למנטור' : 'Mentor Access'}</TableHead>
               <TableHead>{isRTL ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
               <TableHead>{isRTL ? 'פעולות' : 'Actions'}</TableHead>
             </TableRow>
@@ -191,7 +197,7 @@ export function UsersTable({
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {isRTL ? 'לא נמצאו משתמשים' : 'No users found'}
                 </TableCell>
               </TableRow>
@@ -252,6 +258,18 @@ export function UsersTable({
                               </button>
                             </Badge>
                           ))
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={hasMentorAccess(user.id)}
+                          onCheckedChange={(checked) => onToggleMentor(user.id, checked)}
+                          aria-label={isRTL ? 'הרשאת מנטור' : 'Mentor access'}
+                        />
+                        {hasMentorAccess(user.id) && (
+                          <Sparkles className="w-3.5 h-3.5 text-primary" />
                         )}
                       </div>
                     </TableCell>
