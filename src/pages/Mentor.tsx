@@ -693,8 +693,8 @@ export default function Mentor() {
         <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
           <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
             {isRTL
-              ? "אליענה כאן. אשמח לשמוע מה על הלב — ונתחיל בדיוק משם."
-              : "Eliana is here. Share what's on your mind — and we'll start right there."}
+              ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
+              : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
           </p>
         </section>
 
@@ -774,14 +774,12 @@ export default function Mentor() {
                     </Button>
                   )}
 
-                  <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
                     <img
                       src={ELIANA_AVATAR}
                       alt="Eliana"
                       className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
-                    <Sparkles className="w-5 h-5 text-mentor-accent absolute" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -824,33 +822,27 @@ export default function Mentor() {
                       <div className="space-y-4 max-w-3xl mx-auto">
                         {showWelcome && (
                           <div className="flex gap-2.5 animate-fade-in">
-                            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative">
+                            <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden border border-mentor-accent/30">
                               <img
                                 src={ELIANA_AVATAR}
                                 alt="Eliana"
                                 className="w-full h-full object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
-                              <Sparkles className="w-4 h-4 text-mentor-accent absolute" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 space-y-2">
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
                                 <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
                                   {isRTL
-                                    ? "בוקר טוב ✨ איזה יופי שהגעת. אשמח לשמוע קצת עליך — מה התחום שלך, ואיפה הקליניקה שלך נמצאת עכשיו?"
-                                    : "Good morning ✨ So glad you're here. I'd love to hear a little about you — what's your specialty, and where are you with your practice right now?"}
+                                    ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
+                                    : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
                                 </p>
                               </div>
-                              <div className="grid sm:grid-cols-2 gap-2 mt-3">
-                                {starters.map((s, i) => (
-                                  <button
-                                    key={i}
-                                    onClick={() => send(s)}
-                                    className={`text-xs md:text-sm font-medium px-3 py-2.5 rounded-xl bg-mentor-accent/10 border border-mentor-accent/30 text-foreground hover:bg-mentor-accent hover:text-mentor-accent-foreground hover:border-mentor-accent hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
-                                  >
-                                    {s}
-                                  </button>
-                                ))}
+                              <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
+                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                  {isRTL
+                                    ? "אז איזה יופי שהגעת. לפני שנתחיל אשמח לשמוע עלייך קצת ולהכיר אותך — מה התחום המקצועי שלך, מאיפה בארץ ומה קורה עם הקליניקה שלך עכשיו?"
+                                    : "So glad you're here. Before we begin, I'd love to get to know you a little — what's your professional field, where in the country are you, and what's happening with your practice right now?"}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -864,14 +856,12 @@ export default function Mentor() {
                               className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
                             >
                               {!isUser && (
-                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
                                   <img
                                     src={ELIANA_AVATAR}
                                     alt="Eliana"
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                   />
-                                  <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
                                 </div>
                               )}
                               <div
@@ -923,14 +913,12 @@ export default function Mentor() {
                         {/* Typing indicator */}
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                           <div className="flex gap-2.5 animate-fade-in">
-                            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                            <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
                               <img
                                 src={ELIANA_AVATAR}
                                 alt="Eliana"
                                 className="w-full h-full object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
-                              <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
                             </div>
                             <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3 flex items-center gap-1">
                               {[0, 1, 2].map((i) => (
