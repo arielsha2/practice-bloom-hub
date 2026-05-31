@@ -46,9 +46,9 @@ interface AddUserDialogProps {
   onAddUser: (data: {
     email: string;
     fullName: string | null;
-    courseKey: string;
+    courseKey: string | null;
     cohortId: string | null;
-    pendingRole: 'admin' | 'course_member';
+    pendingRole: 'admin' | 'course_member' | null;
     pendingMentor: boolean;
     notes: string | null;
   }) => void;
@@ -69,7 +69,7 @@ export function AddUserDialog({
   const [fullName, setFullName] = useState('');
   const [selectedCohort, setSelectedCohort] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [pendingRole, setPendingRole] = useState<'admin' | 'course_member'>('course_member');
+  const [accessType, setAccessType] = useState<'course_member' | 'admin' | 'mentor_only'>('course_member');
   const [pendingMentor, setPendingMentor] = useState(false);
   const [notes, setNotes] = useState('');
 
@@ -85,18 +85,19 @@ export function AddUserDialog({
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const canSubmit = email.trim() && isValidEmail(email) && selectedCourse;
+  const isMentorOnly = accessType === 'mentor_only';
+  const canSubmit = email.trim() && isValidEmail(email) && (isMentorOnly || selectedCourse);
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    
+
     onAddUser({
       email: email.trim().toLowerCase(),
       fullName: fullName.trim() || null,
-      courseKey: selectedCourse,
-      cohortId: selectedCohort || null,
-      pendingRole,
-      pendingMentor,
+      courseKey: isMentorOnly ? null : selectedCourse,
+      cohortId: isMentorOnly ? null : (selectedCohort || null),
+      pendingRole: isMentorOnly ? null : (accessType as 'admin' | 'course_member'),
+      pendingMentor: isMentorOnly ? true : pendingMentor,
       notes: notes.trim() || null,
     });
   };
@@ -106,7 +107,7 @@ export function AddUserDialog({
     setFullName('');
     setSelectedCohort('');
     setSelectedCourse('');
-    setPendingRole('course_member');
+    setAccessType('course_member');
     setPendingMentor(false);
     setNotes('');
   };
@@ -169,47 +170,6 @@ export function AddUserDialog({
             />
           </div>
 
-          {/* Cohort */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              {isRTL ? 'מחזור' : 'Cohort'}
-            </Label>
-            <Select value={selectedCohort} onValueChange={setSelectedCohort}>
-              <SelectTrigger>
-                <SelectValue placeholder={isRTL ? 'בחר מחזור...' : 'Select cohort...'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{isRTL ? 'ללא מחזור' : 'No cohort'}</SelectItem>
-                {activeCohorts.map((cohort) => (
-                  <SelectItem key={cohort.id} value={cohort.id}>
-                    {isRTL ? cohort.name_he : cohort.name_en}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Course */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              {isRTL ? 'קורס *' : 'Course *'}
-            </Label>
-            <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-              <SelectTrigger>
-                <SelectValue placeholder={isRTL ? 'בחר קורס...' : 'Select course...'} />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCourses.map((course) => (
-                  <SelectItem key={course.id} value={course.course_key}>
-                    {isRTL ? course.name_he : course.name_en}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Role */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
@@ -217,9 +177,9 @@ export function AddUserDialog({
               {isRTL ? 'הרשאה' : 'Permission'}
             </Label>
             <RadioGroup
-              value={pendingRole}
-              onValueChange={(value) => setPendingRole(value as 'admin' | 'course_member')}
-              className="flex gap-6"
+              value={accessType}
+              onValueChange={(value) => setAccessType(value as 'admin' | 'course_member' | 'mentor_only')}
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2 space-x-reverse">
                 <RadioGroupItem value="course_member" id="student" />
@@ -233,29 +193,88 @@ export function AddUserDialog({
                   {isRTL ? 'מנהל' : 'Admin'}
                 </Label>
               </div>
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <RadioGroupItem value="mentor_only" id="mentor_only" />
+                <Label htmlFor="mentor_only" className="cursor-pointer flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  {isRTL ? 'מנטור בלבד' : 'Mentor only'}
+                </Label>
+              </div>
             </RadioGroup>
+            {isMentorOnly && (
+              <p className="text-xs text-muted-foreground">
+                {isRTL
+                  ? 'המשתמש יקבל גישה לכלי המנטור AI בלבד, ללא רישום לקורס.'
+                  : 'User will get access to the AI mentor tool only, without course enrollment.'}
+              </p>
+            )}
           </div>
 
-          {/* Mentor access */}
-          <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-            <Checkbox
-              id="pending-mentor"
-              checked={pendingMentor}
-              onCheckedChange={(checked) => setPendingMentor(checked === true)}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <Label htmlFor="pending-mentor" className="flex items-center gap-1.5 cursor-pointer font-medium">
-                <Sparkles className="w-4 h-4 text-primary" />
-                {isRTL ? 'גם גישה למנטור' : 'Also grant mentor access'}
-              </Label>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {isRTL
-                  ? 'מאפשר למשתמש להשתמש בכלי המנטור AI בנוסף לתפקיד שנבחר'
-                  : 'Allows the user to use the AI mentor tool in addition to the selected role'}
-              </p>
-            </div>
-          </div>
+          {!isMentorOnly && (
+            <>
+              {/* Cohort */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {isRTL ? 'מחזור' : 'Cohort'}
+                </Label>
+                <Select value={selectedCohort} onValueChange={setSelectedCohort}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isRTL ? 'בחר מחזור...' : 'Select cohort...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{isRTL ? 'ללא מחזור' : 'No cohort'}</SelectItem>
+                    {activeCohorts.map((cohort) => (
+                      <SelectItem key={cohort.id} value={cohort.id}>
+                        {isRTL ? cohort.name_he : cohort.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Course */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  {isRTL ? 'קורס *' : 'Course *'}
+                </Label>
+                <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isRTL ? 'בחר קורס...' : 'Select course...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCourses.map((course) => (
+                      <SelectItem key={course.id} value={course.course_key}>
+                        {isRTL ? course.name_he : course.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Mentor access */}
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+                <Checkbox
+                  id="pending-mentor"
+                  checked={pendingMentor}
+                  onCheckedChange={(checked) => setPendingMentor(checked === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="pending-mentor" className="flex items-center gap-1.5 cursor-pointer font-medium">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    {isRTL ? 'גם גישה למנטור' : 'Also grant mentor access'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {isRTL
+                      ? 'מאפשר למשתמש להשתמש בכלי המנטור AI בנוסף לתפקיד שנבחר'
+                      : 'Allows the user to use the AI mentor tool in addition to the selected role'}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">
