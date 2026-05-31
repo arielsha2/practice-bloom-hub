@@ -416,5 +416,7 @@ export function useUsersManagement() {
     getUserRole,
     getUserCohorts,
     getCohortName,
+    hasMentorAccess,
+    toggleMentorAccess,
   };
 }
