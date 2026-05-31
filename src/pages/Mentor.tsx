@@ -764,7 +764,7 @@ export default function Mentor() {
             </aside>
 
             {/* Chat column */}
-            <div className="min-w-0">
+            <div className="min-w-0 lg:sticky lg:top-20 lg:self-start">
               {/* Pending return card */}
               {pendingReturn && (
                 <div
