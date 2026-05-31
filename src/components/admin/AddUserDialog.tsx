@@ -49,6 +49,7 @@ interface AddUserDialogProps {
     courseKey: string;
     cohortId: string | null;
     pendingRole: 'admin' | 'course_member';
+    pendingMentor: boolean;
     notes: string | null;
   }) => void;
   isAdding: boolean;
