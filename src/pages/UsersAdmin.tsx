@@ -196,6 +196,8 @@ export default function UsersAdmin() {
                 cohorts={cohorts}
                 getUserRole={getUserRole}
                 getUserCohorts={getUserCohorts}
+                hasMentorAccess={hasMentorAccess}
+                onToggleMentor={(userId, enable) => toggleMentorAccess.mutate({ userId, enable })}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
