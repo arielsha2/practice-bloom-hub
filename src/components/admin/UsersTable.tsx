@@ -262,6 +262,18 @@ export function UsersTable({
                       </div>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={hasMentorAccess(user.id)}
+                          onCheckedChange={(checked) => onToggleMentor(user.id, checked)}
+                          aria-label={isRTL ? 'הרשאת מנטור' : 'Mentor access'}
+                        />
+                        {hasMentorAccess(user.id) && (
+                          <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       {user.created_at
                         ? format(new Date(user.created_at), 'dd/MM/yyyy')
                         : '-'}
