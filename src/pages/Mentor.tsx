@@ -363,6 +363,18 @@ function SidebarAccordions({
   );
 }
 
+// Typewriter: gradually reveal `text` when `enabled`. When disabled or when text shrinks/changes message, snap to full.
+function useTypewriter(text: string, enabled: boolean, charsPerTick = 2, intervalMs = 18) {
+  const [n, setN] = useState(enabled ? 0 : text.length);
+  useEffect(() => {
+    if (!enabled) { setN(text.length); return; }
+    if (n >= text.length) return;
+    const id = setTimeout(() => setN((v) => Math.min(text.length, v + charsPerTick)), intervalMs);
+    return () => clearTimeout(id);
+  }, [text, n, enabled, charsPerTick, intervalMs]);
+  return enabled ? text.slice(0, n) : text;
+}
+
 // ============================================================
 // Main Mentor page
 // ============================================================
