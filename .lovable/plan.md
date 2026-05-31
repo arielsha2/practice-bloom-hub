@@ -1,48 +1,39 @@
 
-## המטרה
+שכתוב מלא של `src/pages/Mentor.tsx` לפי המפרט שלך. הצ'אט הופך ללב העמוד — תמיד פתוח, ממורכז, עם אווטר אליענה, וכל היתר תומך סביבו.
 
-לאפשר לאדמין להתנסות במנטור כמטפל חדש — להתחיל את המסע מאפס בכל פעם, בלי זיכרון קודם.
+## שינויים
 
-## הפתרון
+**`src/pages/Mentor.tsx`** — שכתוב מלא:
+- הסרה מוחלטת של `Dialog` ו-state `chatOpen`. הצ'אט inline, תמיד גלוי.
+- רקע: `bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]`.
+- שורת פתיח רכה ממורכזת: "אליענה כאן. אשמח לשמוע מה על הלב — ונתחיל בדיוק משם." / EN מקביל.
+- Grid דסקטופ: סיידבר `lg:w-56` משמאל/ימין (לפי `dir`) + פאנל צ'אט `flex-1`. מובייל: סטאק אנכי, צ'אט קודם.
+- **JourneyRail** — רכיב מקומי חדש בתוך הקובץ, קומפקטי אנכי, 5 שלבים (`niche/pricing/self-presentation/network/conversion`) עם אייקונים (Compass/Tag/User/Users/Sparkles), וי על הושלמו, נקודה פועמת על הפעיל, opacity-50 על עתידיים. לחיצה על הושלם/פעיל → `setActiveBotKey(botKey)`. שורת Trophy בתחתית. `ResetMentorButton` בראש הכרטיס.
+- **כרטיס צ'אט** — `rounded-3xl`, `shadow-xl`, גובה `clamp(520px,72vh,720px)`, כותרת עם אווטר אליענה (`/images/eliana-avatar.png` + `onError`), שם "אליענה" + "מקשיבה ✦", כפתור "מפה מלאה" שגולל ל-`#full-journey-map`.
+- **הודעת פתיחה מגדרית-נייטרלית**: "בוקר טוב ✨ איזה יופי שהגעת. אשמח לשמוע קצת עליך — מה התחום שלך, ואיפה הקליניקה שלך נמצאת עכשיו?" עם אווטר לידה.
+- **STARTERS_HE** נשאר (כבר נייטרלי יחסית), פרט לעדכון אם נדרש.
+- **בועות**: assistant עם אווטר w-7 ו-`rounded-ss-none`; user עם `rounded-ee-none` ב-`bg-mentor-accent`.
+- **Typing indicator** — שלוש נקודות bounce ליד אווטר אליענה, מוצג בזמן `isLoading`.
+- **כפתור "חדש"** בשורת הקלט כשיש הודעות → מנקה `messages` ו-`input`.
+- **Pending return card** מעל הצ'אט עם הניסוח החדש ("סיימת לעבוד עם...", "ממשיכים", "המשך את השיחה עם אליענה").
+- **אקורדיונים** "מה תקבל מהמסע" / "לאן המסע מוביל" — בתוך הסיידבר בדסקטופ, ומתחת לצ'אט במובייל (`lg:hidden`). הסרת ה-section הנפרד של Benefits/Outcomes.
+- **Full JourneyMap** מתחת לפולד ב-`id="full-journey-map"` (משתמש ברכיב הקיים).
+- `WebsiteBuilderCTA`, Paywall, `MentorTopBar`, `Footer`, לוגיקת `send()`/`mentor-analyze`/localStorage/RTL — ללא שינוי.
 
-הוספת כפתור **"איפוס המסע והתחלה מחדש"** במצב אדמין בלבד, שמוחק את כל הנתונים האישיים שנצברו על המשתמש הנוכחי במנטור, ומחזיר את החוויה למצב התחלתי.
+**`public/images/eliana-avatar.png`** — נכין placeholder עם `onError` שמסתיר אם חסר. אם יש לך קובץ אמיתי להעלות, אעדכן ברגע שתשלח/י (או אשתמש בדמות placeholder יצירתית עד אז).
 
-### מה הכפתור ימחק (עבור user_id של האדמין הנוכחי)
+## ניסוח עברי
 
-1. **`therapist_journeys`** — שורת המסע (שלבים, נקודות תקיעה, רפלקציות, פלטי נישה והצגה עצמית)
-2. **`bot_user_memory`** — כל הזיכרון ארוך-הטווח של הבוטים על המשתמש
-3. **`bot_conversations` + `bot_messages`** — היסטוריית שיחות הצ׳אט (המסרים יימחקו דרך מחיקת השיחות)
+כל הטקסטים בעברית נכתבים בלי ציווי ובלי לשון רבים: שאלות והצהרות עם "שלך/אליך/לך" שזהים לשני המגדרים. כותרות אקורדיון: "מה תקבל מהמסע" / "לאן המסע מוביל". (אם תעדיף ניסוח אחר לחלוטין נייטרלי — אפשר להחליף ל"מה המסע נותן" / "לאן המסע מוביל".)
 
-### איפה הכפתור יופיע
+## פירוט טכני
 
-- בעמוד **`/mentor`** (המנטור עצמו) — כפתור קטן בפינה, גלוי רק כש-`useIsAdmin()` מחזיר true
-- וגם בעמוד **`/admin/mentor`** (MentorAdmin) — כסקציה ייעודית "בדיקת חוויית מטפל חדש" עם הסבר וכפתור
+- אין שינוי ב-DB, RLS, edge functions, hooks.
+- `dir={isRTL ? "rtl" : "ltr"}` בלבד לכיוון; ללא `order` ידני (לפי זיכרון הפרויקט).
+- שימוש בטוקנים סמנטיים בלבד: `mentor-accent`, `mentor-surface`, `mentor-border`, `mentor-bg`.
+- אייקונים מ-`lucide-react` (Compass, Tag, User, Users, Sparkles, Trophy, MessageCircle, Map, CheckCircle2, Send).
+- אווטר: `<img>` רגיל עם `onError` להסתרה — לא נופל אם הקובץ חסר.
 
-### הגנות
+## שאלה אחת לפני שמיישמים
 
-- **דיאלוג אישור** ("אתה עומד למחוק את כל ההתקדמות שלך במנטור — להמשיך?")
-- **רק אדמין** יכול ללחוץ (בדיקת `has_role` גם ב-client וגם ב-RLS)
-- מחיקה מתבצעת רק על `user_id = auth.uid()` — בלתי אפשרי למחוק נתונים של מטפל אחר
-- אחרי המחיקה: רענון אוטומטי של ה-state והפניה לתחילת המסע
-
-### מבנה טכני
-
-```text
-- hook חדש: useResetMentorJourney() — מבצע 3 מחיקות במקביל ומשגר אירוע 'therapist-journey-updated'
-- קומפוננטה: ResetMentorButton.tsx — כפתור + AlertDialog לאישור
-- שילוב ב-Mentor.tsx (גלוי לאדמין בלבד) וב-MentorAdmin.tsx
-- לא נדרשת מיגרציית DB — ה-RLS הקיים (auth.uid() = user_id) כבר מאפשר למשתמש למחוק את הנתונים של עצמו, וטבלת bot_user_memory ו-bot_conversations יש להן policy "Users can manage own ..."
-```
-
-### בדיקה אם יש בעיית הרשאות
-
-- `therapist_journeys`: policy "Users manage own journey" עם `auth.uid() = user_id` — ✅ מאפשר DELETE
-- `bot_user_memory`: policy "Users can manage own memory" — ✅ מאפשר DELETE
-- `bot_conversations`: policy "Users can manage own conversations" — ✅ מאפשר DELETE
-- `bot_messages`: policy ALL דרך `bot_conversations` — ✅ יימחקו בקסקייד דרך מחיקת השיחות (אם אין FK cascade, נמחק ידנית קודם את ההודעות)
-
-**הערה:** אין FK declared בטבלאות, אז המחיקה תתבצע בסדר: messages → conversations → memory → journey.
-
-## שאלה אחת לפני יישום
-
-האם הכפתור צריך למחוק גם את **`user_lesson_progress`** ו-**`user_lesson_notes`** (התקדמות בשיעורי הקורס + הערות אישיות), או רק את החלקים שקשורים למנטור והבוטים? לדעתי לא צריך — הקורס זה משהו אחר מהמנטור — אבל כדאי לאשר.
+יש לך כבר קובץ אווטר של אליענה להעלות? אם כן — צרף/י, ואשתמש בו. אחרת אפעיל את ה-`onError` fallback כך שהממשק עובד גם בלי תמונה, ותוכל/י להעלות אחר כך.
