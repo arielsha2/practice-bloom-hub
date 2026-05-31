@@ -76,7 +76,6 @@ export function UsersTable({
   getUserRole,
   getUserCohorts,
   hasMentorAccess,
-  onToggleMentor,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
