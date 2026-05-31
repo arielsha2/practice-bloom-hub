@@ -42,7 +42,7 @@ interface Cohort {
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'admin' | 'user' | 'course_member';
+  role: 'admin' | 'user' | 'course_member' | 'mentor';
 }
 
 export function useUsersManagement() {
