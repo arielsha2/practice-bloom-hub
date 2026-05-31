@@ -41,6 +41,8 @@ export default function UsersAdmin() {
     getPendingEnrollments,
     getUserRole,
     getUserCohorts,
+    hasMentorAccess,
+    toggleMentorAccess,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
