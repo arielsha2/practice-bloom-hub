@@ -209,7 +209,17 @@ export function UsersTable({
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.email || '-'}</TableCell>
                     <TableCell>{user.display_name || (isRTL ? 'ללא שם' : 'No name')}</TableCell>
-                    <TableCell>{getRoleBadge(role)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {getRoleBadge(role)}
+                        {hasMentorAccess(user.id) && (
+                          <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                            <Sparkles className="w-3 h-3" />
+                            {isRTL ? 'מנטור' : 'Mentor'}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {userCohorts.length === 0 ? (
