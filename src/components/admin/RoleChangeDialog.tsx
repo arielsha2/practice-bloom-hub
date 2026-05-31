@@ -178,8 +178,6 @@ export function RoleChangeDialog({
             })}
           </div>
         )}
-          </div>
-        )}
 
         {!confirmAdmin && (
           <div className="mt-4 pt-4 border-t">
