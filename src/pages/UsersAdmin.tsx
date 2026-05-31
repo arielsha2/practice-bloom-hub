@@ -235,6 +235,10 @@ export default function UsersAdmin() {
         currentRole={selectedUserRole}
         onChangeRole={handleRoleChange}
         isChanging={changeRole.isPending}
+        hasMentorAccess={selectedUser ? hasMentorAccess(selectedUser.id) : false}
+        onToggleMentor={(enable) => {
+          if (selectedUser) toggleMentorAccess.mutate({ userId: selectedUser.id, enable });
+        }}
       />
 
       <AddUserDialog
