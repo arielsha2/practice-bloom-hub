@@ -664,16 +664,20 @@ export default function Mentor() {
           const {
             data: { session },
           } = await supabase.auth.getSession();
-          const analyzeResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token ?? ""}`,
-            },
-            body: JSON.stringify({
-              messages: [...messages, { role: "user", content: text.trim() }],
-            }),
-          });
+          const analyzeResp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token ?? ""}`,
+              },
+              body: JSON.stringify({
+                user_id: auth.user.id,
+                messages: [...messages, { role: "user", content: text.trim() }],
+              }),
+            }
+          );
           if (analyzeResp.ok) {
             const { completed, current, stuck_point } = await analyzeResp.json();
             const stageMap: Record<string, number> = {

@@ -922,13 +922,44 @@ export type Database = {
           },
         ]
       }
+      therapist_checkins: {
+        Row: {
+          answer_numeric: number | null
+          answer_value: string | null
+          created_at: string | null
+          id: string
+          question_key: string
+          user_id: string | null
+        }
+        Insert: {
+          answer_numeric?: number | null
+          answer_value?: string | null
+          created_at?: string | null
+          id?: string
+          question_key: string
+          user_id?: string | null
+        }
+        Update: {
+          answer_numeric?: number | null
+          answer_value?: string | null
+          created_at?: string | null
+          id?: string
+          question_key?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       therapist_journeys: {
         Row: {
           completed_stages: string[]
           created_at: string
+          health_score: number | null
           id: string
           niche_output: Json | null
           reflection: Json
+          score_breakdown: Json | null
+          score_history: Json | null
+          score_updated_at: string | null
           self_presentation_output: Json | null
           step_number: number
           stuck_points: string[]
@@ -938,9 +969,13 @@ export type Database = {
         Insert: {
           completed_stages?: string[]
           created_at?: string
+          health_score?: number | null
           id?: string
           niche_output?: Json | null
           reflection?: Json
+          score_breakdown?: Json | null
+          score_history?: Json | null
+          score_updated_at?: string | null
           self_presentation_output?: Json | null
           step_number?: number
           stuck_points?: string[]
@@ -950,9 +985,13 @@ export type Database = {
         Update: {
           completed_stages?: string[]
           created_at?: string
+          health_score?: number | null
           id?: string
           niche_output?: Json | null
           reflection?: Json
+          score_breakdown?: Json | null
+          score_history?: Json | null
+          score_updated_at?: string | null
           self_presentation_output?: Json | null
           step_number?: number
           stuck_points?: string[]
@@ -988,6 +1027,33 @@ export type Database = {
           phone?: string
           slug?: string
           therapist_user_id?: string
+        }
+        Relationships: []
+      }
+      therapist_score_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          score_delta: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          score_delta?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          score_delta?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
