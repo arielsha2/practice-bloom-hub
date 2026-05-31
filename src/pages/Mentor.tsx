@@ -6,7 +6,6 @@ import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Accordion,
   AccordionContent,
@@ -456,8 +455,8 @@ export default function Mentor() {
     summary: string;
     kickoff: string;
   } | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
   const chatCardRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
 
   const BOT_KEYS = ["connection-bridge", "niche-finder", "self-presentation", "contact-finder", "pricing-calculator", "strategy-planner", "content-creator"];
 
@@ -471,7 +470,11 @@ export default function Mentor() {
   };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    const viewport = messagesViewportRef.current;
+    if (!viewport) return;
+    requestAnimationFrame(() => {
+      viewport.scrollTop = viewport.scrollHeight;
+    });
   }, [messages, isLoading]);
 
   useEffect(() => {
@@ -873,7 +876,7 @@ export default function Mentor() {
                   />
                 ) : (
                   <>
-                    <ScrollArea className="flex-1 px-4 md:px-5 py-5">
+                    <div ref={messagesViewportRef} className="flex-1 px-4 md:px-5 py-5 overflow-y-auto">
                       <div className="space-y-4 max-w-3xl mx-auto">
                         {showWelcome && (
                           <div className="flex gap-2.5 animate-fade-in">
@@ -981,9 +984,8 @@ export default function Mentor() {
                           </div>
                         )}
 
-                        <div ref={endRef} />
                       </div>
-                    </ScrollArea>
+                    </div>
 
                     {/* Composer */}
                     <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
