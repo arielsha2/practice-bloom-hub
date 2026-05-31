@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, History, Save, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
+import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
 interface Settings {
   id?: string;
@@ -135,6 +136,19 @@ export default function MentorAdmin() {
           </div>
           <Button variant="outline" onClick={() => navigate("/dashboard")}>חזרה</Button>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>בדיקת חוויית מטפל חדש</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              איפוס מלא של המסע שלך במנטור (שלבים, פלטים, זיכרון בוטים והיסטוריית שיחות), כדי
+              להתחיל מאפס ולחוות את המנטור כמטפל חדש לחלוטין.
+            </p>
+            <ResetMentorButton variant="card" />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
