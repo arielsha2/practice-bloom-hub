@@ -363,6 +363,61 @@ function SidebarAccordions({
   );
 }
 
+// Typewriter: gradually reveal `text` when `enabled`. When disabled or once caught up, shows full.
+function useTypewriter(text: string, enabled: boolean, charsPerTick = 2, intervalMs = 18) {
+  const [n, setN] = useState(enabled ? 0 : text.length);
+  useEffect(() => {
+    if (!enabled) { setN(text.length); return; }
+    if (n >= text.length) return;
+    const id = setTimeout(() => setN((v) => Math.min(text.length, v + charsPerTick)), intervalMs);
+    return () => clearTimeout(id);
+  }, [text, n, enabled, charsPerTick, intervalMs]);
+  return enabled ? text.slice(0, n) : text;
+}
+
+function AssistantMarkdown({
+  content,
+  animate,
+  onBotLink,
+  extractBotKey,
+}: {
+  content: string;
+  animate: boolean;
+  onBotLink: (botKey: string) => void;
+  extractBotKey: (href: string) => string | null;
+}) {
+  const display = useTypewriter(content || "", animate);
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ href, children, ...props }) => {
+          const botKey = href ? extractBotKey(href) : null;
+          if (botKey) {
+            return (
+              <a
+                {...props}
+                href={href}
+                onClick={(e) => { e.preventDefault(); onBotLink(botKey); }}
+                className="cursor-pointer underline"
+              >
+                {children}
+              </a>
+            );
+          }
+          return (
+            <a {...props} href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          );
+        },
+      }}
+    >
+      {display || "…"}
+    </ReactMarkdown>
+  );
+}
+
+
 // ============================================================
 // Main Mentor page
 // ============================================================
@@ -831,14 +886,20 @@ export default function Mentor() {
                             </div>
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
-                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                <p
+                                  dir={isRTL ? "rtl" : "ltr"}
+                                  className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}
+                                >
                                   {isRTL
                                     ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
                                     : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
                                 </p>
                               </div>
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
-                                <p className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}>
+                                <p
+                                  dir={isRTL ? "rtl" : "ltr"}
+                                  className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}
+                                >
                                   {isRTL
                                     ? "אז איזה יופי שהגעת. לפני שנתחיל אשמח לשמוע עלייך קצת ולהכיר אותך — מה התחום המקצועי שלך, מאיפה בארץ ומה קורה עם הקליניקה שלך עכשיו?"
                                     : "So glad you're here. Before we begin, I'd love to get to know you a little — what's your professional field, where in the country are you, and what's happening with your practice right now?"}
@@ -848,67 +909,55 @@ export default function Mentor() {
                           </div>
                         )}
 
-                        {messages.map((m, i) => {
-                          const isUser = m.role === "user";
-                          return (
-                            <div
-                              key={i}
-                              className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
-                            >
-                              {!isUser && (
-                                <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                                  <img
-                                    src={ELIANA_AVATAR}
-                                    alt="Eliana"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              )}
+                        {(() => {
+                          let lastAssistantIdx = -1;
+                          for (let j = messages.length - 1; j >= 0; j--) {
+                            if (messages[j].role === "assistant") { lastAssistantIdx = j; break; }
+                          }
+                          return messages.map((m, i) => {
+                            const isUser = m.role === "user";
+                            const animate = !isUser && i === lastAssistantIdx;
+                            return (
                               <div
-                                className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
-                                  isUser
-                                    ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
-                                    : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
-                                }`}
+                                key={i}
+                                className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
                               >
+                                {!isUser && (
+                                  <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
+                                    <img
+                                      src={ELIANA_AVATAR}
+                                      alt="Eliana"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
                                 <div
-                                  dir={isRTL ? "rtl" : "ltr"}
-                                  className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
+                                  className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
+                                    isUser
+                                      ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
+                                      : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
+                                  }`}
                                 >
-                                  <ReactMarkdown
-                                    components={{
-                                      a: ({ href, children, ...props }) => {
-                                        const botKey = href ? extractBotKey(href) : null;
-                                        if (botKey) {
-                                          return (
-                                            <a
-                                              {...props}
-                                              href={href}
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                setActiveBotKey(botKey);
-                                              }}
-                                              className="cursor-pointer underline"
-                                            >
-                                              {children}
-                                            </a>
-                                          );
-                                        }
-                                        return (
-                                          <a {...props} href={href} target="_blank" rel="noopener noreferrer">
-                                            {children}
-                                          </a>
-                                        );
-                                      },
-                                    }}
+                                  <div
+                                    dir={isRTL ? "rtl" : "ltr"}
+                                    className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
                                   >
-                                    {m.content || "…"}
-                                  </ReactMarkdown>
+                                    {isUser ? (
+                                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                                    ) : (
+                                      <AssistantMarkdown
+                                        content={m.content}
+                                        animate={animate}
+                                        onBotLink={(botKey) => setActiveBotKey(botKey)}
+                                        extractBotKey={extractBotKey}
+                                      />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
 
                         {/* Typing indicator */}
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
@@ -948,7 +997,7 @@ export default function Mentor() {
                               send(input);
                             }
                           }}
-                          placeholder={isRTL ? "מה על הלב כרגע?" : "What's on your mind?"}
+                          placeholder={isRTL ? "התשובה שלך תופיע פה" : "Your reply appears here"}
                           className="min-h-[48px] max-h-[140px] resize-none bg-card border-mentor-border/60"
                           disabled={isLoading}
                         />
