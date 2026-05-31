@@ -24,6 +24,7 @@ const ANALYSIS_PROMPT = `אתה מנתח שיחה בין מנטור עסקי ל�
 {"completed":["niche","pricing"],"current":"self-presentation","stuck_point":"לא בטוח איך להציג את עצמו באתר"}`;
 
 const STAGE_KEYS = ["niche", "pricing", "self-presentation", "network", "conversion"];
+const PROJECT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdHFtaHp6eGJmdm9rYml3c21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NjI5ODIsImV4cCI6MjA4MjIzODk4Mn0.lVF-CCkqp0VlTjCmXbVKhYIjBrp9y7_hWacMHk7AxCE";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -92,6 +93,7 @@ serve(async (req) => {
         ["SUPABASE_ANON_KEY", Deno.env.get("SUPABASE_ANON_KEY")],
         ["SUPABASE_PUBLISHABLE_KEY", Deno.env.get("SUPABASE_PUBLISHABLE_KEY")],
         ["SUPABASE_SERVICE_ROLE_KEY", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")],
+        ["PROJECT_ANON_KEY", PROJECT_ANON_KEY],
       ];
       const picked = candidates.find(([, v]) => !!v && v.split(".").length === 3);
       const tokenName = picked?.[0] ?? "none";
