@@ -70,6 +70,7 @@ export function AddUserDialog({
   const [selectedCohort, setSelectedCohort] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [pendingRole, setPendingRole] = useState<'admin' | 'course_member'>('course_member');
+  const [pendingMentor, setPendingMentor] = useState(false);
   const [notes, setNotes] = useState('');
 
   // Filter courses by selected cohort
