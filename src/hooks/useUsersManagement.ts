@@ -20,6 +20,7 @@ interface Enrollment {
   activated_at: string | null;
   full_name: string | null;
   pending_role: string | null;
+  pending_mentor?: boolean | null;
   notes: string | null;
 }
 
