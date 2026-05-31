@@ -83,18 +83,16 @@ serve(async (req) => {
       : (STAGE_KEYS.find((k) => !completed.includes(k)) ?? "niche");
     const stuck_point = typeof parsed.stuck_point === "string" ? parsed.stuck_point.trim() : "";
 
-    // Trigger mentor-score in the background (non-blocking)
+    // Trigger mentor-score synchronously (waitUntil was getting EarlyDrop'd)
     if (user_id) {
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
       const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
       console.log("triggering mentor-score for user:", user_id);
 
-      const scoreTask = (async () => {
-        try {
-          if (!SUPABASE_URL) {
-            console.error("mentor-score: missing SUPABASE_URL");
-            return;
-          }
+      try {
+        if (!SUPABASE_URL) {
+          console.error("mentor-score: missing SUPABASE_URL");
+        } else {
           const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
             method: "POST",
             headers: {
@@ -110,16 +108,9 @@ serve(async (req) => {
           });
           const txt = await scoreResp.text();
           console.log("mentor-score response", scoreResp.status, txt.slice(0, 300));
-        } catch (e) {
-          console.error("mentor-score trigger error:", e);
         }
-      })();
-
-      // Keep the runtime alive until the background task completes
-      // @ts-ignore - EdgeRuntime is provided by Supabase
-      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
-        // @ts-ignore
-        EdgeRuntime.waitUntil(scoreTask);
+      } catch (e) {
+        console.error("mentor-score trigger error:", e);
       }
     } else {
       console.warn("mentor-analyze: no user_id provided, skipping mentor-score");
