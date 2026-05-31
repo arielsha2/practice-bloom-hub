@@ -8,7 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, User, UserX, AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Shield, User, UserX, AlertTriangle, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 interface UserProfile {
@@ -24,6 +26,8 @@ interface RoleChangeDialogProps {
   currentRole: 'admin' | 'student' | 'none';
   onChangeRole: (newRole: 'admin' | 'course_member' | null, currentRole: 'admin' | 'course_member' | null) => void;
   isChanging: boolean;
+  hasMentorAccess: boolean;
+  onToggleMentor: (enable: boolean) => void;
 }
 
 export function RoleChangeDialog({
