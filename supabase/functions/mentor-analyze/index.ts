@@ -86,9 +86,8 @@ serve(async (req) => {
     // Trigger mentor-score synchronously (waitUntil was getting EarlyDrop'd)
     if (user_id) {
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-      // Pick a JWT-formatted key. New Supabase projects expose `sb_publishable_...`
-      // tokens in PUBLISHABLE_KEY which are NOT JWTs and will be rejected with
-      // UNAUTHORIZED_INVALID_JWT_FORMAT. The legacy ANON_KEY is a real JWT.
+      // Pick a JWT-formatted key when available. If none exists in this Edge
+      // runtime, call mentor-score without auth headers because verify_jwt=false.
       const candidates: Array<[string, string | undefined]> = [
         ["SUPABASE_ANON_KEY", Deno.env.get("SUPABASE_ANON_KEY")],
         ["SUPABASE_PUBLISHABLE_KEY", Deno.env.get("SUPABASE_PUBLISHABLE_KEY")],
@@ -107,16 +106,20 @@ serve(async (req) => {
       try {
         if (!SUPABASE_URL) {
           console.error("mentor-score: missing SUPABASE_URL");
-        } else if (!token) {
-          console.error("mentor-score: no JWT-format key available in env (checked ANON/PUBLISHABLE/SERVICE_ROLE)");
         } else {
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
+            headers.apikey = token;
+          } else {
+            console.warn("mentor-score: no JWT-format key in env; invoking without auth headers");
+          }
+
           const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "apikey": token,
-            },
+            headers,
             body: JSON.stringify({
               user_id,
               messages,
