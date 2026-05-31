@@ -63,7 +63,6 @@ interface UsersTableProps {
   getUserRole: (userId: string) => 'admin' | 'student' | 'none';
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
-  onToggleMentor: (userId: string, enable: boolean) => void;
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
