@@ -69,7 +69,7 @@ export function AddUserDialog({
   const [fullName, setFullName] = useState('');
   const [selectedCohort, setSelectedCohort] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [pendingRole, setPendingRole] = useState<'admin' | 'course_member'>('course_member');
+  const [accessType, setAccessType] = useState<'course_member' | 'admin' | 'mentor_only'>('course_member');
   const [pendingMentor, setPendingMentor] = useState(false);
   const [notes, setNotes] = useState('');
 
