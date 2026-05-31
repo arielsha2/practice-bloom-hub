@@ -46,9 +46,9 @@ interface AddUserDialogProps {
   onAddUser: (data: {
     email: string;
     fullName: string | null;
-    courseKey: string;
+    courseKey: string | null;
     cohortId: string | null;
-    pendingRole: 'admin' | 'course_member';
+    pendingRole: 'admin' | 'course_member' | null;
     pendingMentor: boolean;
     notes: string | null;
   }) => void;

@@ -873,7 +873,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           cohort_id: string | null
-          course_key: string
+          course_key: string | null
           created_at: string | null
           email: string
           enrolled_at: string | null
@@ -887,7 +887,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           cohort_id?: string | null
-          course_key?: string
+          course_key?: string | null
           created_at?: string | null
           email: string
           enrolled_at?: string | null
@@ -901,7 +901,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           cohort_id?: string | null
-          course_key?: string
+          course_key?: string | null
           created_at?: string | null
           email?: string
           enrolled_at?: string | null
