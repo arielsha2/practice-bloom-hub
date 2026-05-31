@@ -256,18 +256,20 @@ export function useUsersManagement() {
     }: {
       email: string;
       fullName: string | null;
-      courseKey: string;
+      courseKey: string | null;
       cohortId: string | null;
-      pendingRole: 'admin' | 'course_member';
+      pendingRole: 'admin' | 'course_member' | null;
       pendingMentor: boolean;
       notes: string | null;
     }) => {
-      // Check for existing enrollment with same email and course
-      const existing = enrollments.find(
-        e => e.email.toLowerCase() === email.toLowerCase() && e.course_key === courseKey
-      );
-      if (existing) {
-        throw new Error(isRTL ? 'משתמש כבר קיים בקורס זה' : 'User already exists in this course');
+      // Check for existing enrollment with same email and course (skip for mentor-only)
+      if (courseKey) {
+        const existing = enrollments.find(
+          e => e.email.toLowerCase() === email.toLowerCase() && e.course_key === courseKey
+        );
+        if (existing) {
+          throw new Error(isRTL ? 'משתמש כבר קיים בקורס זה' : 'User already exists in this course');
+        }
       }
 
       const { error } = await supabase
