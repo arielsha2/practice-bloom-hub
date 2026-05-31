@@ -37,6 +37,8 @@ export function RoleChangeDialog({
   currentRole,
   onChangeRole,
   isChanging,
+  hasMentorAccess,
+  onToggleMentor,
 }: RoleChangeDialogProps) {
   const { isRTL } = useLanguage();
   const [confirmAdmin, setConfirmAdmin] = useState(false);
