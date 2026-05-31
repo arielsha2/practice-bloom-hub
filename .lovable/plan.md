@@ -1,24 +1,12 @@
-## מטרה
-לאפשר ניהול הרשאת מנטור מתוך דיאלוג "תפקיד" של כל משתמש, ולסמן בטבלה משתמשים שיש להם גישה למנטור — בלי עמודה נפרדת שגורמת לגלילה אופקית.
+## Plan
 
-## שינויים
+1. **Update `supabase/config.toml`** — add `[functions.mentor-score] verify_jwt = false` (the project uses a single config.toml; per project rules we do not create per-function config files).
 
-### 1. `src/components/admin/RoleChangeDialog.tsx`
-- להוסיף props חדשים: `hasMentorAccess: boolean` ו-`onToggleMentor: (enable: boolean) => void`.
-- מתחת לבחירת התפקיד הראשי (admin/student/none), להוסיף קטע מופרד "הרשאות נוספות" עם:
-  - מתג (Switch) "גישה למנטור" + תיאור קצר: "מאפשר למשתמש להשתמש בכלי המנטור AI".
-- המתג עצמאי לחלוטין מהבחירה הראשית — שינוי שלו נשמר מיד (אופטימיסטית) דרך `onToggleMentor`, ללא תלות בלחיצה על "שמור".
+2. **Edit `supabase/functions/mentor-analyze/index.ts`** — replace the `mentor-score` fetch call:
+   - Remove `Authorization` and `apikey` headers
+   - Change body shape to: `{ user_id, messages, journey_context: { completed_stages: completed, current }, trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected" }`
+   - Keep `EdgeRuntime.waitUntil` wrapping and `.catch` error logging
 
-### 2. `src/components/admin/UsersTable.tsx`
-- להסיר את העמודה הנפרדת "גישה למנטור" שהוספנו, ולחזור ל-7 עמודות.
-- בעמודת "תפקיד" — כשלמשתמש יש הרשאת מנטור, להוסיף Badge קטן "מנטור" (סגנון outline עם אייקון Sparkles) ליד התג של התפקיד הראשי.
-- להסיר את ה-props `onToggleMentor` מהקומפוננטה (כבר לא נחוץ ברמת הטבלה), להשאיר רק `hasMentorAccess` לצורך הצגת ה-Badge.
+3. **Deploy** both `mentor-analyze` and `mentor-score`.
 
-### 3. `src/pages/UsersAdmin.tsx`
-- להעביר ל-`RoleChangeDialog` את `hasMentorAccess(selectedUser.id)` ופונקציה שמפעילה `toggleMentorAccess.mutate({ userId, enable })`.
-- ב-`UsersTable` להשאיר רק את `hasMentorAccess` (להסיר `onToggleMentor`).
-
-## תוצאה למשתמש
-- לחיצה על "תפקיד" ליד משתמש פותחת דיאלוג שבו רואים גם את התפקיד הראשי וגם מתג עצמאי להרשאת המנטור.
-- בטבלה עצמה — כשמשתמש הוא מנטור, מופיע ליד התפקיד שלו תג "מנטור" קטן, כך שאפשר לזהות זאת במבט אחד.
-- אין יותר עמודה שמוסיפה גלילה אופקית.
+Note: you asked to create `supabase/functions/mentor-score/config.toml`, but this project's convention (and Supabase's) is a single `supabase/config.toml`. I'll put the `verify_jwt = false` block there instead — same effect. Let me know if you'd prefer otherwise.
