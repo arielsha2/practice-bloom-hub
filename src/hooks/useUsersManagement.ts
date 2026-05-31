@@ -20,6 +20,7 @@ interface Enrollment {
   activated_at: string | null;
   full_name: string | null;
   pending_role: string | null;
+  pending_mentor?: boolean | null;
   notes: string | null;
 }
 
@@ -250,6 +251,7 @@ export function useUsersManagement() {
       courseKey,
       cohortId,
       pendingRole,
+      pendingMentor,
       notes,
     }: {
       email: string;
@@ -257,6 +259,7 @@ export function useUsersManagement() {
       courseKey: string;
       cohortId: string | null;
       pendingRole: 'admin' | 'course_member';
+      pendingMentor: boolean;
       notes: string | null;
     }) => {
       // Check for existing enrollment with same email and course
@@ -275,6 +278,7 @@ export function useUsersManagement() {
           course_key: courseKey,
           cohort_id: cohortId,
           pending_role: pendingRole,
+          pending_mentor: pendingMentor,
           notes: notes,
           // user_id stays null - will be filled when user signs up
         });

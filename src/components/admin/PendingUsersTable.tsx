@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Trash2, Shield } from 'lucide-react';
+import { Clock, Trash2, Shield, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PendingEnrollment {
@@ -19,6 +19,7 @@ interface PendingEnrollment {
   course_key: string;
   cohort_id: string | null;
   pending_role: string | null;
+  pending_mentor?: boolean | null;
   notes: string | null;
   enrolled_at: string | null;
 }
@@ -125,7 +126,17 @@ export function PendingUsersTable({
                     </span>
                   )}
                 </TableCell>
-                <TableCell>{getRoleBadge(enrollment.pending_role)}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {getRoleBadge(enrollment.pending_role)}
+                    {enrollment.pending_mentor && (
+                      <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                        <Sparkles className="w-3 h-3" />
+                        {isRTL ? 'מנטור' : 'Mentor'}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline">
                     {getCohortName(enrollment.cohort_id)}

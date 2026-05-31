@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Mail, User, Calendar, BookOpen, Shield, FileText, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Mail, User, Calendar, BookOpen, Shield, FileText, Loader2, Sparkles } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -48,6 +49,7 @@ interface AddUserDialogProps {
     courseKey: string;
     cohortId: string | null;
     pendingRole: 'admin' | 'course_member';
+    pendingMentor: boolean;
     notes: string | null;
   }) => void;
   isAdding: boolean;
@@ -68,6 +70,7 @@ export function AddUserDialog({
   const [selectedCohort, setSelectedCohort] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [pendingRole, setPendingRole] = useState<'admin' | 'course_member'>('course_member');
+  const [pendingMentor, setPendingMentor] = useState(false);
   const [notes, setNotes] = useState('');
 
   // Filter courses by selected cohort
@@ -93,6 +96,7 @@ export function AddUserDialog({
       courseKey: selectedCourse,
       cohortId: selectedCohort || null,
       pendingRole,
+      pendingMentor,
       notes: notes.trim() || null,
     });
   };
@@ -103,6 +107,7 @@ export function AddUserDialog({
     setSelectedCohort('');
     setSelectedCourse('');
     setPendingRole('course_member');
+    setPendingMentor(false);
     setNotes('');
   };
 
@@ -229,6 +234,27 @@ export function AddUserDialog({
                 </Label>
               </div>
             </RadioGroup>
+          </div>
+
+          {/* Mentor access */}
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+            <Checkbox
+              id="pending-mentor"
+              checked={pendingMentor}
+              onCheckedChange={(checked) => setPendingMentor(checked === true)}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label htmlFor="pending-mentor" className="flex items-center gap-1.5 cursor-pointer font-medium">
+                <Sparkles className="w-4 h-4 text-primary" />
+                {isRTL ? 'גם גישה למנטור' : 'Also grant mentor access'}
+              </Label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {isRTL
+                  ? 'מאפשר למשתמש להשתמש בכלי המנטור AI בנוסף לתפקיד שנבחר'
+                  : 'Allows the user to use the AI mentor tool in addition to the selected role'}
+              </p>
+            </div>
           </div>
 
           {/* Notes */}
