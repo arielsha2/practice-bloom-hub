@@ -363,7 +363,7 @@ function SidebarAccordions({
   );
 }
 
-// Typewriter: gradually reveal `text` when `enabled`. When disabled or when text shrinks/changes message, snap to full.
+// Typewriter: gradually reveal `text` when `enabled`. When disabled or once caught up, shows full.
 function useTypewriter(text: string, enabled: boolean, charsPerTick = 2, intervalMs = 18) {
   const [n, setN] = useState(enabled ? 0 : text.length);
   useEffect(() => {
@@ -374,6 +374,49 @@ function useTypewriter(text: string, enabled: boolean, charsPerTick = 2, interva
   }, [text, n, enabled, charsPerTick, intervalMs]);
   return enabled ? text.slice(0, n) : text;
 }
+
+function AssistantMarkdown({
+  content,
+  animate,
+  onBotLink,
+  extractBotKey,
+}: {
+  content: string;
+  animate: boolean;
+  onBotLink: (botKey: string) => void;
+  extractBotKey: (href: string) => string | null;
+}) {
+  const display = useTypewriter(content || "", animate);
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ href, children, ...props }) => {
+          const botKey = href ? extractBotKey(href) : null;
+          if (botKey) {
+            return (
+              <a
+                {...props}
+                href={href}
+                onClick={(e) => { e.preventDefault(); onBotLink(botKey); }}
+                className="cursor-pointer underline"
+              >
+                {children}
+              </a>
+            );
+          }
+          return (
+            <a {...props} href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          );
+        },
+      }}
+    >
+      {display || "…"}
+    </ReactMarkdown>
+  );
+}
+
 
 // ============================================================
 // Main Mentor page
