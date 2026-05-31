@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { UserPlus, X, Search, Shield, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
