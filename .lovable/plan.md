@@ -1,12 +1,28 @@
 ## Plan
 
-1. **Update `supabase/config.toml`** — add `[functions.mentor-score] verify_jwt = false` (the project uses a single config.toml; per project rules we do not create per-function config files).
+הבעיה החדשה כבר יותר ממוקדת: `mentor-analyze` כן מריץ את `mentor-score`, אבל שולח לו `Authorization: Bearer ...` עם ערך שה־Edge Runtime רואה כ־JWT לא תקין.
 
-2. **Edit `supabase/functions/mentor-analyze/index.ts`** — replace the `mentor-score` fetch call:
-   - Remove `Authorization` and `apikey` headers
-   - Change body shape to: `{ user_id, messages, journey_context: { completed_stages: completed, current }, trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected" }`
-   - Keep `EdgeRuntime.waitUntil` wrapping and `.catch` error logging
+### מה אתקן
 
-3. **Deploy** both `mentor-analyze` and `mentor-score`.
+1. **לתקן את הקריאה ל־mentor-score בתוך `mentor-analyze`**
+   - להשתמש ב־`SUPABASE_ANON_KEY` כטוקן Bearer.
+   - להוסיף fallback בטוח ל־`SUPABASE_PUBLISHABLE_KEY`, כי בפרויקט הזה קיימים שני שמות סוד אפשריים.
+   - אם אין אף מפתח, להדפיס לוג ברור ולא לשלוח `Bearer ""` או ערך לא תקין.
 
-Note: you asked to create `supabase/functions/mentor-score/config.toml`, but this project's convention (and Supabase's) is a single `supabase/config.toml`. I'll put the `verify_jwt = false` block there instead — same effect. Let me know if you'd prefer otherwise.
+2. **להסיר קונפיג מטעה של פונקציה שלא קיימת בקוד**
+   - ב־`supabase/config.toml` יש `[functions.mentor-score] verify_jwt = false`, אבל בתיקיית `supabase/functions` אין פונקציית `mentor-score` מקומית.
+   - אשאיר את הפתרון בקריאה עצמה, כי `mentor-score` כנראה קיימת בצד Supabase/Production אבל לא בקוד המקומי.
+
+3. **להוסיף לוג אבחוני בטוח**
+   - לא להדפיס את המפתח עצמו.
+   - כן להדפיס איזה secret נבחר ואורך הטוקן, כדי לוודא שהוא לא ריק/לא malformed.
+
+### תוצאה צפויה
+
+במקום:
+
+```text
+mentor-score response 401 {"code":"UNAUTHORIZED_INVALID_JWT_FORMAT","message":"Invalid JWT"}
+```
+
+הלוג הבא אמור להראות ש־`mentor-score` קיבל Bearer token תקין, ואז או להחזיר הצלחה או שגיאה עניינית מתוך `mentor-score` עצמה.
