@@ -236,6 +236,27 @@ export function AddUserDialog({
             </RadioGroup>
           </div>
 
+          {/* Mentor access */}
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
+            <Checkbox
+              id="pending-mentor"
+              checked={pendingMentor}
+              onCheckedChange={(checked) => setPendingMentor(checked === true)}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label htmlFor="pending-mentor" className="flex items-center gap-1.5 cursor-pointer font-medium">
+                <Sparkles className="w-4 h-4 text-primary" />
+                {isRTL ? 'גם גישה למנטור' : 'Also grant mentor access'}
+              </Label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {isRTL
+                  ? 'מאפשר למשתמש להשתמש בכלי המנטור AI בנוסף לתפקיד שנבחר'
+                  : 'Allows the user to use the AI mentor tool in addition to the selected role'}
+              </p>
+            </div>
+          </div>
+
           {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes" className="flex items-center gap-2">
