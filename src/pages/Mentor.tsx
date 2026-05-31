@@ -53,6 +53,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
+import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
 function WebsiteBuilderCTA() {
   const { journey } = useTherapistJourney();
@@ -529,6 +530,9 @@ export default function Mentor() {
         </section>
 
         <section id="journey-map" className="container mx-auto px-4 py-8 md:py-12 border-b border-mentor-border/40 scroll-mt-20">
+          <div className="max-w-5xl mx-auto mb-4 flex justify-end">
+            <ResetMentorButton />
+          </div>
           <JourneyMap onOpenBot={(botKey) => { setActiveBotKey(botKey); setChatOpen(true); }} />
           <FinalCelebration />
           
