@@ -866,67 +866,55 @@ export default function Mentor() {
                           </div>
                         )}
 
-                        {messages.map((m, i) => {
-                          const isUser = m.role === "user";
-                          return (
-                            <div
-                              key={i}
-                              className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
-                            >
-                              {!isUser && (
-                                <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                                  <img
-                                    src={ELIANA_AVATAR}
-                                    alt="Eliana"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              )}
+                        {(() => {
+                          let lastAssistantIdx = -1;
+                          for (let j = messages.length - 1; j >= 0; j--) {
+                            if (messages[j].role === "assistant") { lastAssistantIdx = j; break; }
+                          }
+                          return messages.map((m, i) => {
+                            const isUser = m.role === "user";
+                            const animate = !isUser && i === lastAssistantIdx;
+                            return (
                               <div
-                                className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
-                                  isUser
-                                    ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
-                                    : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
-                                }`}
+                                key={i}
+                                className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
                               >
+                                {!isUser && (
+                                  <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
+                                    <img
+                                      src={ELIANA_AVATAR}
+                                      alt="Eliana"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
                                 <div
-                                  dir={isRTL ? "rtl" : "ltr"}
-                                  className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
+                                  className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
+                                    isUser
+                                      ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
+                                      : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
+                                  }`}
                                 >
-                                  <ReactMarkdown
-                                    components={{
-                                      a: ({ href, children, ...props }) => {
-                                        const botKey = href ? extractBotKey(href) : null;
-                                        if (botKey) {
-                                          return (
-                                            <a
-                                              {...props}
-                                              href={href}
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                setActiveBotKey(botKey);
-                                              }}
-                                              className="cursor-pointer underline"
-                                            >
-                                              {children}
-                                            </a>
-                                          );
-                                        }
-                                        return (
-                                          <a {...props} href={href} target="_blank" rel="noopener noreferrer">
-                                            {children}
-                                          </a>
-                                        );
-                                      },
-                                    }}
+                                  <div
+                                    dir={isRTL ? "rtl" : "ltr"}
+                                    className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
                                   >
-                                    {m.content || "…"}
-                                  </ReactMarkdown>
+                                    {isUser ? (
+                                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                                    ) : (
+                                      <AssistantMarkdown
+                                        content={m.content}
+                                        animate={animate}
+                                        onBotLink={(botKey) => setActiveBotKey(botKey)}
+                                        extractBotKey={extractBotKey}
+                                      />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
 
                         {/* Typing indicator */}
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
