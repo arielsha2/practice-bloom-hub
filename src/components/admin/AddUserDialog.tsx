@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Mail, User, Calendar, BookOpen, Shield, FileText, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Mail, User, Calendar, BookOpen, Shield, FileText, Loader2, Sparkles } from 'lucide-react';
 
 interface Course {
   id: string;
