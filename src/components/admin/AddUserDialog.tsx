@@ -85,18 +85,19 @@ export function AddUserDialog({
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const canSubmit = email.trim() && isValidEmail(email) && selectedCourse;
+  const isMentorOnly = accessType === 'mentor_only';
+  const canSubmit = email.trim() && isValidEmail(email) && (isMentorOnly || selectedCourse);
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    
+
     onAddUser({
       email: email.trim().toLowerCase(),
       fullName: fullName.trim() || null,
-      courseKey: selectedCourse,
-      cohortId: selectedCohort || null,
-      pendingRole,
-      pendingMentor,
+      courseKey: isMentorOnly ? null : selectedCourse,
+      cohortId: isMentorOnly ? null : (selectedCohort || null),
+      pendingRole: isMentorOnly ? null : (accessType as 'admin' | 'course_member'),
+      pendingMentor: isMentorOnly ? true : pendingMentor,
       notes: notes.trim() || null,
     });
   };
@@ -106,7 +107,7 @@ export function AddUserDialog({
     setFullName('');
     setSelectedCohort('');
     setSelectedCourse('');
-    setPendingRole('course_member');
+    setAccessType('course_member');
     setPendingMentor(false);
     setNotes('');
   };
