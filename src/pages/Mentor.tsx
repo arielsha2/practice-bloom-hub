@@ -774,14 +774,12 @@ export default function Mentor() {
                     </Button>
                   )}
 
-                  <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
                     <img
                       src={ELIANA_AVATAR}
                       alt="Eliana"
                       className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
-                    <Sparkles className="w-5 h-5 text-mentor-accent absolute" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -858,14 +856,12 @@ export default function Mentor() {
                               className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
                             >
                               {!isUser && (
-                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
                                   <img
                                     src={ELIANA_AVATAR}
                                     alt="Eliana"
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                   />
-                                  <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
                                 </div>
                               )}
                               <div
@@ -917,14 +913,12 @@ export default function Mentor() {
                         {/* Typing indicator */}
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                           <div className="flex gap-2.5 animate-fade-in">
-                            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-mentor-accent/30 to-mentor-accent/10 flex items-center justify-center overflow-hidden border border-mentor-accent/30 relative mt-1">
+                            <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
                               <img
                                 src={ELIANA_AVATAR}
                                 alt="Eliana"
                                 className="w-full h-full object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
-                              <Sparkles className="w-3.5 h-3.5 text-mentor-accent absolute" />
                             </div>
                             <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3 flex items-center gap-1">
                               {[0, 1, 2].map((i) => (
