@@ -126,7 +126,17 @@ export function PendingUsersTable({
                     </span>
                   )}
                 </TableCell>
-                <TableCell>{getRoleBadge(enrollment.pending_role)}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {getRoleBadge(enrollment.pending_role)}
+                    {enrollment.pending_mentor && (
+                      <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                        <Sparkles className="w-3 h-3" />
+                        {isRTL ? 'מנטור' : 'Mentor'}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline">
                     {getCohortName(enrollment.cohort_id)}
