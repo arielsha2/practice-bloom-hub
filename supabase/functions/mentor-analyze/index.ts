@@ -86,18 +86,36 @@ serve(async (req) => {
     // Trigger mentor-score synchronously (waitUntil was getting EarlyDrop'd)
     if (user_id) {
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-      const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-      console.log("triggering mentor-score for user:", user_id);
+      // Pick a JWT-formatted key. New Supabase projects expose `sb_publishable_...`
+      // tokens in PUBLISHABLE_KEY which are NOT JWTs and will be rejected with
+      // UNAUTHORIZED_INVALID_JWT_FORMAT. The legacy ANON_KEY is a real JWT.
+      const candidates: Array<[string, string | undefined]> = [
+        ["SUPABASE_ANON_KEY", Deno.env.get("SUPABASE_ANON_KEY")],
+        ["SUPABASE_PUBLISHABLE_KEY", Deno.env.get("SUPABASE_PUBLISHABLE_KEY")],
+        ["SUPABASE_SERVICE_ROLE_KEY", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")],
+      ];
+      const picked = candidates.find(([, v]) => !!v && v.split(".").length === 3);
+      const tokenName = picked?.[0] ?? "none";
+      const token = picked?.[1] ?? "";
+      console.log(
+        "triggering mentor-score for user:",
+        user_id,
+        "using:", tokenName,
+        "token_len:", token.length,
+      );
 
       try {
         if (!SUPABASE_URL) {
           console.error("mentor-score: missing SUPABASE_URL");
+        } else if (!token) {
+          console.error("mentor-score: no JWT-format key available in env (checked ANON/PUBLISHABLE/SERVICE_ROLE)");
         } else {
           const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${ANON_KEY ?? ""}`,
+              "Authorization": `Bearer ${token}`,
+              "apikey": token,
             },
             body: JSON.stringify({
               user_id,
