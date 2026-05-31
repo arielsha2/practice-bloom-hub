@@ -121,6 +121,7 @@ export default function UsersAdmin() {
     courseKey: string;
     cohortId: string | null;
     pendingRole: 'admin' | 'course_member';
+    pendingMentor: boolean;
     notes: string | null;
   }) => {
     addPendingUser.mutate(data, {
