@@ -951,6 +951,9 @@ export type Database = {
       }
       therapist_journeys: {
         Row: {
+          checkin_due: boolean | null
+          checkin_question: string | null
+          checkin_stage: string | null
           completed_stages: string[]
           created_at: string
           health_score: number | null
@@ -967,6 +970,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          checkin_due?: boolean | null
+          checkin_question?: string | null
+          checkin_stage?: string | null
           completed_stages?: string[]
           created_at?: string
           health_score?: number | null
@@ -983,6 +989,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          checkin_due?: boolean | null
+          checkin_question?: string | null
+          checkin_stage?: string | null
           completed_stages?: string[]
           created_at?: string
           health_score?: number | null
