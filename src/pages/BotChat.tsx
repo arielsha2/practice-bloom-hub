@@ -50,6 +50,9 @@ const BotChat = () => {
   const { user, loading: authLoading } = useAuth();
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isKickoff = searchParams.get('kickoff') === '1';
+  const isEmbedded = searchParams.get('from') === 'mentor' || isKickoff;
   
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
