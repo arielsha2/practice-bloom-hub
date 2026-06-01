@@ -655,7 +655,41 @@ export default function Mentor() {
           } catch {
             buffer = line + "\n" + buffer;
             break;
-          }
+      }
+
+      // Handoff detection: if the assistant emitted [HANDOFF:bot-key] (or a single
+      // trailing bot link), auto-open that bot in the iframe after a short delay.
+      const detectHandoff = (text: string): string | null => {
+        if (!text) return null;
+        const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
+        if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
+        // Fallback: a markdown bot link standing alone in the last non-empty line.
+        const lines = text.trim().split(/\n+/).filter((l) => l.trim().length > 0);
+        const lastLine = lines[lines.length - 1] || "";
+        const linkMatch = lastLine.match(/^\[[^\]]+\]\(([^)]+)\)\s*$/);
+        if (linkMatch) {
+          const bk = extractBotKey(linkMatch[1]);
+          if (bk) return bk;
+        }
+        return null;
+      };
+      const handoffKey = detectHandoff(assistant);
+      if (handoffKey) {
+        const botLabel: Record<string, string> = {
+          "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
+          "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
+          "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
+          "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
+          "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
+        };
+        toast.message(
+          isRTL ? `עוברים לכלי: ${botLabel[handoffKey] ?? handoffKey}…` : `Switching to: ${botLabel[handoffKey] ?? handoffKey}…`,
+        );
+        setTimeout(() => {
+          setActiveBotKey(handoffKey);
+          chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 1200);
+      }
         }
       }
     } catch (e) {
