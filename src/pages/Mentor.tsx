@@ -386,7 +386,9 @@ function AssistantMarkdown({
   onBotLink: (botKey: string) => void;
   extractBotKey: (href: string) => string | null;
 }) {
-  const display = useTypewriter(content || "", animate);
+  // Strip [HANDOFF:bot-key] marker — it's a protocol signal, not visible text
+  const cleaned = (content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
+  const display = useTypewriter(cleaned, animate);
   return (
     <ReactMarkdown
       components={{
