@@ -710,24 +710,44 @@ export default function Mentor() {
             );
             window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
 
-            // Call mentor-score directly from client
+            // Call mentor-score from client and persist score directly via RLS
             if (auth.user) {
-              fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-score`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${session?.access_token ?? ""}`,
-                  },
-                  body: JSON.stringify({
-                    user_id: auth.user.id,
-                    messages: [...messages, { role: "user", content: text.trim() }],
-                    journey_context: { completed_stages: completed, current },
-                    trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
-                  }),
+              try {
+                const scoreResp = await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-score`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${session?.access_token ?? ""}`,
+                    },
+                    body: JSON.stringify({
+                      user_id: auth.user.id,
+                      messages: [...messages, { role: "user", content: text.trim() }],
+                      journey_context: { completed_stages: completed, current },
+                      trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
+                    }),
+                  }
+                );
+
+                if (scoreResp.ok) {
+                  const scoreData = await scoreResp.json();
+                  if (scoreData.health_score !== undefined) {
+                    await supabase
+                      .from("therapist_journeys")
+                      .update({
+                        health_score: scoreData.health_score,
+                        score_breakdown: scoreData.breakdown,
+                        score_updated_at: new Date().toISOString(),
+                        score_history: scoreData.score_history ?? [],
+                      })
+                      .eq("user_id", auth.user.id);
+                    window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
+                  }
                 }
-              ).catch((e) => console.warn("mentor-score client call failed", e));
+              } catch (e) {
+                console.warn("mentor-score client call failed", e);
+              }
             }
           }
         }
