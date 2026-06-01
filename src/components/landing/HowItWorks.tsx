@@ -18,7 +18,7 @@ export function HowItWorks() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section id="how-it-works" className="py-24 bg-background relative overflow-hidden">
+    <section id="how-it-works" className="pt-8 md:pt-12 pb-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
