@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, History, Save, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
+import { TherapistHealthScores } from "@/components/mentor/TherapistHealthScores";
 
 interface Settings {
   id?: string;
