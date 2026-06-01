@@ -320,7 +320,10 @@ const BotChat = () => {
   );
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-secondary flex">
+    <div
+      dir={isRTL ? 'rtl' : 'ltr'}
+      className={`min-h-screen bg-secondary flex ${isEmbedded ? 'font-body' : ''}`}
+    >
       <SEOHead
         title={`${botName} | עוזרי AI למטפלים | TherapyKeys`}
         description={`${botName} — עוזר AI ייעודי למטפלים בשיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. שיחה ממוקדת לבניית קליניקה פרטית מצליחה.`}
