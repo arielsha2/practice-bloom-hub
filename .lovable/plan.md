@@ -1,28 +1,48 @@
-## Plan
+## הבעיה
 
-הבעיה החדשה כבר יותר ממוקדת: `mentor-analyze` כן מריץ את `mentor-score`, אבל שולח לו `Authorization: Bearer ...` עם ערך שה־Edge Runtime רואה כ־JWT לא תקין.
+כשאליענה (Mentor) אומרת "אני מעבירה אותך לבוט הנישה", המעבר היום קורה **רק אם המשתמש לוחץ על הקישור המרקדאוני** ב־`/ai-assistants/<botKey>`. אם המשתמש פשוט כותב "היי" — `mentor-chat` נקרא שוב והתשובה חוזרת מאליענה. בנוסף, גם כשהמעבר מתבצע, הבוט שותק עד שהמשתמש כותב, וה־UI של הבוט נראה כמעט זהה לזה של אליענה, כך שלא ברור שמדובר בדמות אחרת.
 
-### מה אתקן
+## הפתרון — 3 שינויים
 
-1. **לתקן את הקריאה ל־mentor-score בתוך `mentor-analyze`**
-   - להשתמש ב־`SUPABASE_ANON_KEY` כטוקן Bearer.
-   - להוסיף fallback בטוח ל־`SUPABASE_PUBLISHABLE_KEY`, כי בפרויקט הזה קיימים שני שמות סוד אפשריים.
-   - אם אין אף מפתח, להדפיס לוג ברור ולא לשלוח `Bearer ""` או ערך לא תקין.
+### 1. מעבר אוטומטי לבוט בסיום הודעת אליענה
+ב־`src/pages/Mentor.tsx`, מיד בסיום הסטרים של תשובת אליענה:
+- לסרוק את ה־`assistant` האחרון באמצעות `extractBotKey` (כבר קיים) על כל קישורי המרקדאון.
+- אם נמצא קישור ל־bot מוכר **ובאותה הודעה יש "סיגנל העברה"** (אחת מהמילים: "מעבירה אותך", "נמשיך עם", "transferring you", "let's continue with", או כל קישור יחיד שעומד בפני עצמו בסוף ההודעה), להפעיל אוטומטית `setActiveBotKey(botKey)` עם השהיה קלה (~800ms) כדי לאפשר למשתמש לקרוא את ההודעה.
+- להציג טוסט עדין: "עוברים לבוט הנישה…".
+- הקישור הקיים נשאר לחיץ כגיבוי.
 
-2. **להסיר קונפיג מטעה של פונקציה שלא קיימת בקוד**
-   - ב־`supabase/config.toml` יש `[functions.mentor-score] verify_jwt = false`, אבל בתיקיית `supabase/functions` אין פונקציית `mentor-score` מקומית.
-   - אשאיר את הפתרון בקריאה עצמה, כי `mentor-score` כנראה קיימת בצד Supabase/Production אבל לא בקוד המקומי.
+לחיזוק הוודאות — לעדכן את ה־system prompt של `mentor-chat` כך שכשהיא מחליטה להעביר, היא תסיים את התשובה בקישור הבוט יחידי בשורה אחרונה (פורמט יציב לזיהוי).
 
-3. **להוסיף לוג אבחוני בטוח**
-   - לא להדפיס את המפתח עצמו.
-   - כן להדפיס איזה secret נבחר ואורך הטוקן, כדי לוודא שהוא לא ריק/לא malformed.
+### 2. הבוט יוזם את ההודעה הראשונה
+- ב־Mentor.tsx ה־iframe ייטען עם פרמטר: `/ai-assistants/<botKey>?kickoff=1&from=mentor`.
+- ב־`src/pages/BotChat.tsx`, על mount, אם קיים `kickoff=1` ואין שיחה פעילה/אין הודעות:
+  - לשלוח אוטומטית הודעת user "סמויה" (לא מוצגת בטרנסקריפט) כמו: "המנטור אליענה הפנתה אותי אליך. תציג/י את עצמך בקצרה ושאל/י את השאלה הראשונה." 
+  - הבוט יענה תשובה גלויה ראשונה כפתיחה.
+  - מימוש: דגל `hideNextUserMessage` ב־`useBotChat` שמדלג על הוספת הודעת המשתמש ל־`messages` המקומיים, אבל שולח אותה לאדג'.
+- אם המשתמש כבר היה בבוט ויש לו היסטוריה — לא לפתוח kickoff חדש.
 
-### תוצאה צפויה
+### 3. UI מובחן לבוט (פונט וצבע ראש שונים)
+כדי שהמשתמש יזהה ויזואלית שזה דמות אחרת:
+- ב־`src/index.css` להוסיף `--font-bot: 'JetBrains Mono', 'Heebo', monospace` (או חלופה — `Assistant`/`Rubik` — דמות אחרת מ־Heebo של המנטור).
+- ב־`tailwind.config.ts` למפות `font-bot`.
+- ב־`BotChat.tsx` / `ChatHeader.tsx` / `ChatMessage.tsx` — לעטוף את כל הצ'אט (כשמוצג ב־iframe מהמנטור, או תמיד לעקביות) ב־`className="font-bot"`.
+- להוסיף פס עליון צבעוני שונה (`bg-accent` במקום `bg-primary`/`mentor-surface`) + תווית "כלי AI: Niche Finder" מודגשת.
+- לעדכן את הכותרת ב־Mentor.tsx ל־"עברת לכלי: שם הבוט" עם אייקון הבוט במקום אווטאר אליענה, כשהבוט פעיל.
 
-במקום:
+## קבצים שיתעדכנו
 
 ```text
-mentor-score response 401 {"code":"UNAUTHORIZED_INVALID_JWT_FORMAT","message":"Invalid JWT"}
+src/pages/Mentor.tsx              — handoff detection בסוף סטרים + kickoff param + header שונה כשהבוט פעיל
+src/pages/BotChat.tsx             — קריאת kickoff param + שליחת kickoff סמוי + class font-bot
+src/hooks/useBotChat.ts           — אופציית hideNextUserMessage
+src/components/bots/ChatHeader.tsx — וריאנט "tool" עם רקע אקסנט ופונט שונה
+src/index.css                      — --font-bot
+tailwind.config.ts                — font-bot
+supabase/functions/mentor-chat/index.ts — חיזוק ה־system prompt לפורמט handoff
 ```
 
-הלוג הבא אמור להראות ש־`mentor-score` קיבל Bearer token תקין, ואז או להחזיר הצלחה או שגיאה עניינית מתוך `mentor-score` עצמה.
+## נקודות לאישור
+
+1. **טריגר ההעברה האוטומטית** — שילוב של ביטויי מפתח + קישור-בודד-בסוף נשמע סביר, או שעדיף שאליענה תפלוט תג מוסכם כמו `[HANDOFF:niche-finder]` בשורה נפרדת (ודאי, גם נקי וגם בטוח)? ברירת המחדל שלי בתוכנית: שניהם, אבל המעבר יקרה רק כשיש את התג או את הקישור-הבודד-בסוף.
+2. **הודעת ה־kickoff הסמויה** — האם זה בסדר שהיא לא תוצג בטרנסקריפט? (חוויית משתמש נקייה יותר, אבל "מסתירה" אינטראקציה.)
+3. **פונט הבוט** — נשמע לך טוב להבחנה דרך טיפוגרפיה (Assistant/Rubik), או שעדיף להבליט בעיקר באמצעות צבע ראש/אווטאר?
