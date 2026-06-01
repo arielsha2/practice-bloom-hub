@@ -10,6 +10,10 @@ export interface TherapistJourney {
   niche_output: Record<string, unknown> | null;
   self_presentation_output: Record<string, unknown> | null;
   updated_at: string | null;
+  health_score: number;
+  checkin_due: boolean;
+  checkin_question: string;
+  checkin_stage: string;
 }
 
 export function useTherapistJourney() {
