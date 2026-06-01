@@ -26,15 +26,15 @@ interface ProfileRow {
 const ALL_STAGES = ["niche", "self_presentation", "connection_bridge", "contact_finder", "pricing"];
 
 function scoreColor(score: number) {
-  if (score <= 40) return "bg-destructive text-destructive-foreground";
-  if (score <= 70) return "bg-amber-500 text-white";
-  return "bg-success text-success-foreground";
+  if (score <= 40) return "bg-amber-400/90 text-amber-950";
+  if (score <= 70) return "bg-teal text-white";
+  return "bg-primary text-primary-foreground";
 }
 
 function scoreRingColor(score: number) {
-  if (score <= 40) return "text-destructive";
-  if (score <= 70) return "text-amber-600";
-  return "text-success";
+  if (score <= 40) return "text-amber-500";
+  if (score <= 70) return "text-teal";
+  return "text-primary";
 }
 
 function getTrend(history: any, current: number) {
@@ -115,7 +115,7 @@ export function TherapistHealthScores() {
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">ציון בריאות ממוצע</p>
+              <p className="text-sm text-muted-foreground">ציון התקדמות ממוצע</p>
               <p className={cn("text-3xl font-bold mt-1", scoreRingColor(avg))}>{avg}</p>
               <p className="text-xs text-muted-foreground mt-1">על פני {total} מטפלים</p>
             </div>
@@ -133,17 +133,20 @@ export function TherapistHealthScores() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
+          <CardContent className="p-6 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <p className="text-sm text-muted-foreground">צוואר הבקבוק</p>
-              <p className="text-xl font-bold mt-1 truncate" title={bottleneck?.[0] || "—"}>
+              <p
+                className="text-lg font-bold mt-1 line-clamp-2 break-words"
+                title={bottleneck?.[0] || "—"}
+              >
                 {bottleneck?.[0] || "—"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {bottleneck ? `מופיע אצל ${bottleneck[1]} מטפלים` : "אין נתונים"}
               </p>
             </div>
-            <AlertTriangle className="w-10 h-10 text-amber-500" />
+            <AlertTriangle className="w-10 h-10 text-amber-500 shrink-0" />
           </CardContent>
         </Card>
       </div>
@@ -151,7 +154,7 @@ export function TherapistHealthScores() {
       {/* Therapist list */}
       <Card>
         <CardHeader>
-          <CardTitle>ציוני בריאות לפי מטפל ({total})</CardTitle>
+          <CardTitle>ציוני התקדמות לפי מטפל ({total})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {rows.length === 0 && (
