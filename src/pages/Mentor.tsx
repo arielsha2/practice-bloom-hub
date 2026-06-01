@@ -605,6 +605,9 @@ export default function Mentor() {
             self_presentation_output: j.self_presentation_output,
             completed_stages: j.completed_stages,
             tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
+            checkin_due: (j as any).checkin_due ?? false,
+            checkin_question: (j as any).checkin_question ?? "",
+            checkin_stage: (j as any).checkin_stage ?? "",
           }
         : null;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
