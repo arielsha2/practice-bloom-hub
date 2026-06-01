@@ -933,34 +933,65 @@ export default function Mentor() {
                 className="bg-card border border-mentor-border/60 rounded-3xl shadow-xl overflow-hidden flex flex-col"
                 style={{ height: "clamp(520px, 72vh, 720px)" }}
               >
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-mentor-border/60 bg-mentor-surface flex items-center gap-3">
+                {/* Header — visually distinct when a tool/bot is active */}
+                <div
+                  className={`px-5 py-4 border-b flex items-center gap-3 transition-colors ${
+                    activeBotKey
+                      ? "border-accent/40 bg-accent/15 font-body"
+                      : "border-mentor-border/60 bg-mentor-surface"
+                  }`}
+                >
                   {activeBotKey && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => setActiveBotKey(null)}
-                      className="gap-1.5 text-mentor-accent hover:bg-mentor-accent/10"
+                      className="gap-1.5 text-accent-foreground hover:bg-accent/30"
                     >
                       {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
                       {isRTL ? "חזרה לאליענה" : "Back to Eliana"}
                     </Button>
                   )}
 
-                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-mentor-accent/30 flex-shrink-0">
-                    <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                  <div
+                    className={`w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center ${
+                      activeBotKey
+                        ? "bg-accent text-accent-foreground border-2 border-accent/50"
+                        : "overflow-hidden border-2 border-mentor-accent/30"
+                    }`}
+                  >
+                    {activeBotKey ? (
+                      <Sparkles className="w-5 h-5" />
+                    ) : (
+                      <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-serif font-semibold text-foreground leading-tight">
-                      {activeBotKey ? (isRTL ? "כלי מהמסע" : "Journey Tool") : isRTL ? "אליענה" : "Eliana"}
+                    <h2
+                      className={`font-semibold leading-tight ${
+                        activeBotKey ? "font-body text-foreground" : "font-serif text-foreground"
+                      }`}
+                    >
+                      {activeBotKey
+                        ? (isRTL ? "כלי AI: " : "AI Tool: ") +
+                          ({
+                            "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
+                            "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
+                            "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
+                            "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
+                            "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
+                          }[activeBotKey] ?? activeBotKey)
+                        : isRTL
+                          ? "אליענה"
+                          : "Eliana"}
                     </h2>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       {activeBotKey
                         ? isRTL
-                          ? "השיחה עם אליענה נשמרת — אפשר לחזור בכל רגע"
-                          : "Your conversation with Eliana is saved — return any time"
+                          ? "את/ה מדבר/ת עם בוט אחר — השיחה עם אליענה נשמרת"
+                          : "You're now talking to a different assistant — your chat with Eliana is saved"
                         : isRTL
                           ? "מקשיבה ✦"
                           : "Listening ✦"}
@@ -983,7 +1014,7 @@ export default function Mentor() {
                 {/* Body */}
                 {activeBotKey ? (
                   <iframe
-                    src={`/ai-assistants/${activeBotKey}`}
+                    src={`/ai-assistants/${activeBotKey}?kickoff=1&from=mentor`}
                     className="flex-1 w-full border-0 bg-mentor-bg"
                     title={isRTL ? "כלי AI" : "AI tool"}
                   />
