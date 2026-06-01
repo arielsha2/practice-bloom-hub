@@ -1,5 +1,8 @@
-import { CheckCircle2, Circle, Play } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, Circle, Play, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
