@@ -23,7 +23,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (content: string, messagePrefix?: string) => {
+  const sendMessage = useCallback(async (content: string, messagePrefix?: string, options?: { hideUserMessage?: boolean }) => {
     if (!content.trim() || isLoading) return;
 
     setError(null);
@@ -32,13 +32,15 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
     // Store new conversation ID locally, only notify after streaming ends
     let pendingConversationId: string | null = null;
 
-    // Add user message immediately
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: content.trim(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    // Add user message immediately (unless hidden — e.g., a silent kickoff prompt)
+    if (!options?.hideUserMessage) {
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: content.trim(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+    }
 
     // Add placeholder for assistant response
     const assistantId = `assistant-${Date.now()}`;

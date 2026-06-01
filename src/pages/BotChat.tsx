@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Navigate, useNavigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Compass, Map, PenTool, Handshake, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +50,9 @@ const BotChat = () => {
   const { user, loading: authLoading } = useAuth();
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isKickoff = searchParams.get('kickoff') === '1';
+  const isEmbedded = searchParams.get('from') === 'mentor' || isKickoff;
   
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
@@ -160,9 +163,32 @@ const BotChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, user, activeConversationId, returningToMentor, isRTL]);
 
-  // Helper to strip stage markers from content (including the ADVANCE completion marker)
+  // Helper to strip stage markers from content (including the ADVANCE completion marker
+  // and the silent KICKOFF marker we prepend to the first auto-greeting prompt).
   const stripStageMarker = (content: string) =>
-    content.replace(/\[STAGE:\d\]\s*/g, '').replace(/\[ADVANCE\]\s*/gi, '');
+    content
+      .replace(/\[STAGE:\d\]\s*/g, '')
+      .replace(/\[ADVANCE\]\s*/gi, '')
+      .replace(/^\[KICKOFF\]\s*/i, '');
+
+  // Auto-kickoff: when opened from mentor with ?kickoff=1 and no existing
+  // conversation/messages, send a silent prompt so the bot greets first.
+  const kickoffSentRef = useRef(false);
+  useEffect(() => {
+    if (!isKickoff || kickoffSentRef.current) return;
+    if (authLoading || botLoading) return;
+    if (!user && !isPublicBot(botKey)) return;
+    if (activeConversationId) return;
+    if (messages.length > 0 || chatLoading) return;
+    // Don't kickoff connection-bridge until a difficulty is picked
+    if (botKey === 'connection-bridge') return;
+    kickoffSentRef.current = true;
+    const kickoffPrompt = isRTL
+      ? '[KICKOFF] המנטור אליענה הפנתה אותי אליך עכשיו. תציג/י את עצמך בקצרה במשפט אחד (מי את/ה ובמה הכלי הזה עוזר), ואז שאל/י אותי את השאלה הראשונה שלך כדי להתחיל. אל תזכיר/י את ההודעה הזו.'
+      : "[KICKOFF] The mentor Eliana just sent me over to you. Please introduce yourself briefly in one sentence (who you are and what this tool helps with), then ask me your first question to get started. Don't reference this message.";
+    sendMessage(kickoffPrompt, undefined, { hideUserMessage: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isKickoff, authLoading, botLoading, user, activeConversationId, messages.length, chatLoading, botKey, isRTL]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -294,7 +320,10 @@ const BotChat = () => {
   );
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-secondary flex">
+    <div
+      dir={isRTL ? 'rtl' : 'ltr'}
+      className={`min-h-screen bg-secondary flex ${isEmbedded ? 'font-body' : ''}`}
+    >
       <SEOHead
         title={`${botName} | עוזרי AI למטפלים | TherapyKeys`}
         description={`${botName} — עוזר AI ייעודי למטפלים בשיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. שיחה ממוקדת לבניית קליניקה פרטית מצליחה.`}
@@ -367,21 +396,23 @@ const BotChat = () => {
               />
             )}
 
-            {/* Chat messages */}
-            {messages.map((msg, index) => {
-              const isLatestAssistant = msg.role === 'assistant' && 
-                index === messages.map(m => m.role).lastIndexOf('assistant');
-              return (
-                <ChatMessage
-                  key={msg.id}
-                  role={msg.role}
-                  content={stripStageMarker(msg.content)}
-                  isStreaming={msg.isStreaming}
-                  enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
-                  isLatestAssistant={isLatestAssistant}
-                />
-              );
-            })}
+            {/* Chat messages — hide silent kickoff prompts from the transcript */}
+            {messages
+              .filter((msg) => !(msg.role === 'user' && /^\[KICKOFF\]/i.test(msg.content)))
+              .map((msg, index, arr) => {
+                const isLatestAssistant = msg.role === 'assistant' &&
+                  index === arr.map(m => m.role).lastIndexOf('assistant');
+                return (
+                  <ChatMessage
+                    key={msg.id}
+                    role={msg.role}
+                    content={stripStageMarker(msg.content)}
+                    isStreaming={msg.isStreaming}
+                    enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
+                    isLatestAssistant={isLatestAssistant}
+                  />
+                );
+              })}
 
             {/* Typing indicator */}
             {chatLoading && messages[messages.length - 1]?.role === 'user' && (
