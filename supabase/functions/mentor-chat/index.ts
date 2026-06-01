@@ -135,6 +135,7 @@ serve(async (req) => {
 
   try {
     const { messages, language, journey_context } = await req.json();
+    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
