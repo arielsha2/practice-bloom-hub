@@ -163,9 +163,32 @@ const BotChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, user, activeConversationId, returningToMentor, isRTL]);
 
-  // Helper to strip stage markers from content (including the ADVANCE completion marker)
+  // Helper to strip stage markers from content (including the ADVANCE completion marker
+  // and the silent KICKOFF marker we prepend to the first auto-greeting prompt).
   const stripStageMarker = (content: string) =>
-    content.replace(/\[STAGE:\d\]\s*/g, '').replace(/\[ADVANCE\]\s*/gi, '');
+    content
+      .replace(/\[STAGE:\d\]\s*/g, '')
+      .replace(/\[ADVANCE\]\s*/gi, '')
+      .replace(/^\[KICKOFF\]\s*/i, '');
+
+  // Auto-kickoff: when opened from mentor with ?kickoff=1 and no existing
+  // conversation/messages, send a silent prompt so the bot greets first.
+  const kickoffSentRef = useRef(false);
+  useEffect(() => {
+    if (!isKickoff || kickoffSentRef.current) return;
+    if (authLoading || botLoading) return;
+    if (!user && !isPublicBot(botKey)) return;
+    if (activeConversationId) return;
+    if (messages.length > 0 || chatLoading) return;
+    // Don't kickoff connection-bridge until a difficulty is picked
+    if (botKey === 'connection-bridge') return;
+    kickoffSentRef.current = true;
+    const kickoffPrompt = isRTL
+      ? '[KICKOFF] המנטור אליענה הפנתה אותי אליך עכשיו. תציג/י את עצמך בקצרה במשפט אחד (מי את/ה ובמה הכלי הזה עוזר), ואז שאל/י אותי את השאלה הראשונה שלך כדי להתחיל. אל תזכיר/י את ההודעה הזו.'
+      : "[KICKOFF] The mentor Eliana just sent me over to you. Please introduce yourself briefly in one sentence (who you are and what this tool helps with), then ask me your first question to get started. Don't reference this message.";
+    sendMessage(kickoffPrompt, undefined, { hideUserMessage: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isKickoff, authLoading, botLoading, user, activeConversationId, messages.length, chatLoading, botKey, isRTL]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
