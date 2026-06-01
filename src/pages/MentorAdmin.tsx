@@ -138,6 +138,10 @@ export default function MentorAdmin() {
           <Button variant="outline" onClick={() => navigate("/dashboard")}>חזרה</Button>
         </div>
 
+        <TherapistHealthScores />
+
+
+
         <Card>
           <CardHeader>
             <CardTitle>בדיקת חוויית מטפל חדש</CardTitle>
