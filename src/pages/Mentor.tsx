@@ -1201,7 +1201,7 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
-        <WebsiteBuilderCTA />
+        {/* <WebsiteBuilderCTA /> hidden — replaced by coming-soon teaser in FinalCelebration */}
       </div>
       <Footer />
     </div>
