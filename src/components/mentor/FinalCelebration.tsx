@@ -178,28 +178,29 @@ export function FinalCelebration() {
             </p>
           )}
 
-          {/* Digital business card CTA — the journey reward */}
+          {/* Coming soon — personalized website builder teaser */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             className="relative mt-2 rounded-2xl p-[2px] bg-gradient-to-br from-mentor-accent via-primary to-mentor-accent shadow-xl"
           >
-            <div className="rounded-2xl bg-gradient-to-br from-mentor-accent/10 via-card to-primary/10 p-6 md:p-7 text-center">
-              <h3 className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-2">
-                הכרטיס הדיגיטלי שלך מוכן לבנייה 🎉
+            <div className="rounded-2xl bg-gradient-to-br from-mentor-accent/10 via-card to-primary/10 p-6 md:p-8 text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-mentor-accent/15 text-mentor-accent text-xs font-semibold mb-3">
+                <Sparkles className="w-3.5 h-3.5" />
+                בקרוב — פיצ׳ר חדש
+              </div>
+              <h3 className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-3">
+                האתר האישי שלך — נבנה עבורך אוטומטית ✨
               </h3>
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5 leading-relaxed">
-                המנטור אסף את כל מה שצריך — הנישה, המחיר, הסיפור שלך. עכשיו נבנה מזה דף נחיתה שמביא אליך מטופלים.
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                בקרוב נשיק כלי חדש שייקח את כל מה שבנית במסע עם המנטור — הנישה שלך,
+                הסיפור האישי, התמחור ושפת הפנייה — וייצור עבורך דף נחיתה מותאם אישית
+                שמדבר בדיוק אל המטופלים הנכונים ומזמין אותם לפנות אליך.
               </p>
-              <Button
-                size="lg"
-                onClick={() => navigate("/mentor/website-builder")}
-                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-2 shadow-lg"
-              >
-                בנו את הדף שלי
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
+              <p className="text-xs md:text-sm text-mentor-accent font-medium mt-4">
+                שמור את הסיכומים למעלה — הם יהפכו לבסיס לאתר שלך.
+              </p>
             </div>
           </motion.div>
         </div>
