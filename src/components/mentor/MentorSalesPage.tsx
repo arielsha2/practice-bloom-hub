@@ -481,7 +481,7 @@ export function MentorSalesPage() {
             </span>
           </div>
           <p className="text-base md:text-lg text-foreground font-medium mb-8">
-            תשלום חד פעמי · כולל מע״מ · למייסדי גרסת הבטא
+            תשלום חד פעמי · כולל מע״מ · למייסדים - המצטרפים בגרסת הבטא
           </p>
 
           <ul className="text-right max-w-md mx-auto space-y-3 mb-10">
