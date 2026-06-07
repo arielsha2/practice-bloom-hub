@@ -45,7 +45,7 @@ export function Hero() {
           {/* Text Content - Right side */}
           <div className={`flex flex-col ${isRTL ? "text-right lg:order-1" : "lg:order-2"}`}>
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-display tracking-tight text-foreground mb-6 leading-[1.15]"
+              className="text-5xl md:text-6xl lg:text-7xl font-display tracking-tight text-background mb-6 leading-[1.15]"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
@@ -53,12 +53,13 @@ export function Hero() {
             </motion.h1>
 
             <motion.p
-              className="text-lg md:text-xl text-foreground/70 mb-10 max-w-xl leading-relaxed"
+              className="text-lg md:text-xl text-background/75 mb-10 max-w-xl leading-relaxed"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
             >
               {t("hero.subtitle")}
             </motion.p>
+
 
             <motion.div
               {...fadeUp}
