@@ -297,7 +297,9 @@ export function MentorSalesPage() {
             <HeartHandshake className="w-6 h-6" />
           </span>
           <div className="space-y-5 text-foreground leading-relaxed text-lg">
-            <p className="text-muted-foreground">לא מרצה. לא קורס. לא עוד תוכן לצרוך.</p>
+            <p className="text-muted-foreground">
+              לא ידע שנשאר על המדף. לא תוכן שצורכים ושוכחים. לא תיאוריות - אלא ליווי מעשי.
+            </p>
             <p>
               מישהו שיושב איתך, שואל את השאלות הנכונות, ומוביל אותך לתשובה שכבר קיימת בתוכך. לגרסה שלך שיודעת למלא את
               הקליניקה בביטחון ובאותנטיות.
