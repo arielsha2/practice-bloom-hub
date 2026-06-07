@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -486,6 +486,95 @@ export default function Mentor() {
     return null;
   };
 
+  // Display labels for the five user-facing tools.
+  const BOT_LABELS: Record<string, string> = {
+    "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
+    "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
+    "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
+    "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
+    "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
+  };
+
+  // Formal names/aliases used to detect tool mentions. Intentionally avoids
+  // bare casual words like "נישה" or "מחיר" so a sentence like
+  // "דיברנו על נישה אתמול" does NOT match.
+  const BOT_ALIASES: Record<string, RegExp[]> = {
+    "niche-finder": [/Niche\s*Finder/i, /מציאת\s*נישה/],
+    "pricing-calculator": [/Pricing\s*Calculator/i, /\bPricing\b/i, /תמחור/],
+    "self-presentation": [/Self[-\s]*Presentation/i, /הצגה\s*עצמית/],
+    "contact-finder": [/Contact\s*Finder/i, /רשת\s*קשרים/],
+    "connection-bridge": [/Connection\s*Bridge/i, /שיחת\s*המרה/, /שיחת\s*היכרות/],
+  };
+
+  // Transition phrases — mentor signalling an actual handoff (not a casual mention).
+  const HANDOFF_PHRASES = [
+    // Hebrew
+    /אני\s*מעביר[הת]?\s*אות[ךכ]/,
+    /אעביר\s*אות[ךכ]/,
+    /שולח[ת]?\s*אות[ךכ]/,
+    /נעבור\s*עכשיו\s*ל/,
+    /תעביר\s*אות[יו]/,
+    // English
+    /sending\s+you\s+to/i,
+    /transferring\s+you\s+to/i,
+    /let'?s\s+move\s+to/i,
+    /i'?m\s+sending\s+you/i,
+  ];
+
+  // Return last N sentences of a text (split on Hebrew/Latin sentence terminators + newlines).
+  const lastSentences = (text: string, n: number): string => {
+    const parts = (text || "")
+      .replace(/\[HANDOFF:[a-z-]+\]/gi, "")
+      .split(/(?<=[.!?。…])\s+|\n+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    return parts.slice(-n).join(" ");
+  };
+
+  // Find which bot is mentioned in the given text (formal aliases only).
+  const findMentionedBot = (text: string): string | null => {
+    for (const bk of BOT_KEYS) {
+      const aliases = BOT_ALIASES[bk];
+      if (!aliases) continue;
+      if (aliases.some((re) => re.test(text))) return bk;
+    }
+    return null;
+  };
+
+  // Three-tier handoff detection:
+  //   1. Exact tag [HANDOFF:bot-key]
+  //   2. Bare bot URL anywhere in the text (markdown or plain)
+  //   3. A transition phrase AND a tool name, both within the last 3 sentences
+  const detectHandoff = (text: string): string | null => {
+    if (!text) return null;
+
+    // 1. Exact tag.
+    const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
+    if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
+
+    // 2. Any bot URL (markdown link OR bare URL) anywhere in the message.
+    const urlRegex = /https?:\/\/[^\s)>\]]+\/ai-assistants\/[a-z-]+[^\s)>\]]*/gi;
+    const urlMatches = text.match(urlRegex);
+    if (urlMatches) {
+      for (const url of urlMatches) {
+        const bk = extractBotKey(url);
+        if (bk) return bk;
+      }
+    }
+
+    // 3. Transition phrase + tool name, both in last 3 sentences.
+    const tail = lastSentences(text, 3);
+    if (tail) {
+      const hasPhrase = HANDOFF_PHRASES.some((re) => re.test(tail));
+      if (hasPhrase) {
+        const mentioned = findMentionedBot(tail);
+        if (mentioned) return mentioned;
+      }
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     const viewport = messagesViewportRef.current;
     if (!viewport) return;
@@ -516,6 +605,23 @@ export default function Mentor() {
     }
     setInput("");
   }, [language, storageKey]);
+
+  // Suggested bot for the fallback banner: last assistant message mentions
+  // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
+  // Suppressed while a bot is already open, while the next response is loading,
+  // and while a pending-return dialog is showing.
+  const suggestedBotKey = useMemo<string | null>(() => {
+    if (activeBotKey || isLoading) return null;
+    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+    if (!lastAssistant?.content) return null;
+    // If a real handoff was already detected we don't need a fallback banner.
+    if (detectHandoff(lastAssistant.content)) return null;
+    const tail = lastSentences(lastAssistant.content, 3);
+    return findMentionedBot(tail);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, activeBotKey, isLoading]);
+
+
 
   // Handle return from a bot tool: ?from=<botKey>
   const handledFromRef = useRef(false);
@@ -657,42 +763,22 @@ export default function Mentor() {
           } catch {
             buffer = line + "\n" + buffer;
             break;
+          }
+        }
       }
 
-      // Handoff detection: if the assistant emitted [HANDOFF:bot-key] (or a single
-      // trailing bot link), auto-open that bot in the iframe after a short delay.
-      const detectHandoff = (text: string): string | null => {
-        if (!text) return null;
-        const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
-        if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
-        // Fallback: a markdown bot link standing alone in the last non-empty line.
-        const lines = text.trim().split(/\n+/).filter((l) => l.trim().length > 0);
-        const lastLine = lines[lines.length - 1] || "";
-        const linkMatch = lastLine.match(/^\[[^\]]+\]\(([^)]+)\)\s*$/);
-        if (linkMatch) {
-          const bk = extractBotKey(linkMatch[1]);
-          if (bk) return bk;
-        }
-        return null;
-      };
+      // Handoff detection — run ONCE after the full stream completes.
       const handoffKey = detectHandoff(assistant);
       if (handoffKey) {
-        const botLabel: Record<string, string> = {
-          "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
-          "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
-          "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
-          "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
-          "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
-        };
         toast.message(
-          isRTL ? `עוברים לכלי: ${botLabel[handoffKey] ?? handoffKey}…` : `Switching to: ${botLabel[handoffKey] ?? handoffKey}…`,
+          isRTL
+            ? `עוברים לכלי: ${BOT_LABELS[handoffKey] ?? handoffKey}…`
+            : `Switching to: ${BOT_LABELS[handoffKey] ?? handoffKey}…`,
         );
         setTimeout(() => {
           setActiveBotKey(handoffKey);
           chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 1200);
-      }
-        }
       }
     } catch (e) {
       console.error(e);
@@ -1098,6 +1184,29 @@ export default function Mentor() {
                         )}
                       </div>
                     </div>
+
+                    {/* Handoff fallback banner — shows when mentor named a tool but auto-handoff didn't trigger */}
+                    {suggestedBotKey && (
+                      <div className="border-t border-mentor-border/60 px-3 md:px-4 py-2.5 bg-mentor-accent/5">
+                        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+                          <p className="text-xs md:text-sm text-foreground/80 flex-1 min-w-0">
+                            {isRTL
+                              ? `נראה שהמנטור רוצה להעביר אותך ל${BOT_LABELS[suggestedBotKey] ?? suggestedBotKey}`
+                              : `It looks like the mentor wants to send you to ${BOT_LABELS[suggestedBotKey] ?? suggestedBotKey}`}
+                          </p>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setActiveBotKey(suggestedBotKey);
+                              chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground text-xs h-8 px-3 flex-shrink-0"
+                          >
+                            {isRTL ? "פתח את הכלי" : "Open the tool"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Composer */}
                     <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
