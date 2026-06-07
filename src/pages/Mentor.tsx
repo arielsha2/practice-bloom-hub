@@ -36,6 +36,7 @@ import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { FinalCelebration } from "@/components/mentor/FinalCelebration";
+import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
@@ -833,6 +834,9 @@ export default function Mentor() {
               </Button>
             </div>
           </div>
+          <div className="mt-8 w-full max-w-lg">
+            <WebsiteComingSoonCard variant="paywall" />
+          </div>
         </main>
         <Footer />
       </div>
@@ -1201,7 +1205,7 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
-        {/* <WebsiteBuilderCTA /> hidden — replaced by coming-soon teaser in FinalCelebration */}
+        <WebsiteComingSoonCard />
       </div>
       <Footer />
     </div>
