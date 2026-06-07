@@ -222,7 +222,6 @@ export function MentorSalesPage() {
         </div>
       </section>
 
-
       {/* ============ PROBLEM — CREAM ============ */}
       <Band tone="cream">
         <motion.div {...fadeUp} className="max-w-3xl mx-auto text-center">
@@ -275,11 +274,7 @@ export function MentorSalesPage() {
               key={i}
               className={`reveal stagger-${Math.min(i, 4)} flex items-center gap-6 py-5 px-6 md:px-8 border border-background/15 bg-background/[0.06] rounded-tr-2xl rounded-tl-none rounded-br-none rounded-bl-none min-h-[72px]`}
             >
-              <span
-                className="flex-1 text-background/90 leading-relaxed text-right"
-              >
-                {p}
-              </span>
+              <span className="flex-1 text-background/90 leading-relaxed text-right">{p}</span>
               <span
                 className="shrink-0 font-display text-xs tnum tracking-wider"
                 style={{ color: "hsl(var(--terracotta))" }}
@@ -496,11 +491,10 @@ export function MentorSalesPage() {
           {...fadeUp}
           className="reveal shimmer-once card-asym max-w-2xl mx-auto bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
         >
-          <Eyebrow>מה ההשקעה שלך</Eyebrow>
+          ההשקעה שלך
           <p className="text-sm text-muted-foreground mb-2">
             מחיר קבוע בהמשך: <span className="line-through opacity-70 tnum">₪1,800</span>
           </p>
-
           <div className="inline-flex items-baseline gap-2 mb-3">
             <span className="font-display text-6xl md:text-7xl tnum" style={{ color: "hsl(var(--accent))" }}>
               ₪750
@@ -509,7 +503,6 @@ export function MentorSalesPage() {
           <p className="text-base md:text-lg text-foreground font-medium mb-8">
             תשלום חד פעמי · כולל מע״מ · למייסדים - המצטרפים בגרסת הבטא
           </p>
-
           <ul className="text-right max-w-md mx-auto space-y-3 mb-10">
             {["גישה מלאה לתמיד", "כולל כל השיפורים העתידיים", "פחות משני מפגשי סופרוויז׳ן", "שלך לתמיד"].map((b, i) => (
               <li key={i} className="flex items-center gap-3 text-foreground">
@@ -520,11 +513,9 @@ export function MentorSalesPage() {
               </li>
             ))}
           </ul>
-
           <Button variant="cta" size="xl" onClick={openPayment} className="w-full sm:w-auto">
             אני רוצה להיות אחד מ־20
           </Button>
-
           <p className="text-xs text-muted-foreground mt-5 tracking-wide">תשלום מאובטח דרך משולם</p>
         </motion.div>
       </Band>
