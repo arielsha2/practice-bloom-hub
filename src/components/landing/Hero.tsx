@@ -23,22 +23,22 @@ export function Hero() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: 'hsl(35, 40%, 96%)' }}>
-      {/* Subtle grain/noise texture overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.035] mix-blend-multiply"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '256px 256px',
-        }}
-      />
-
-      {/* Subtle warm glow, very understated */}
+    <section
+      id="home"
+      className="band band-charcoal band-grain min-h-screen flex items-center justify-center relative overflow-hidden"
+    >
+      {/* Subtle warm glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
-        <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px]" />
+        <div
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[150px]"
+          style={{ background: "hsl(var(--accent) / 0.18)" }}
+        />
+        <div
+          className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full blur-[150px]"
+          style={{ background: "hsl(var(--primary) / 0.4)" }}
+        />
       </div>
+
 
       <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
