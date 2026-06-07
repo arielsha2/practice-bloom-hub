@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useRevealOnScroll } from "@/hooks/useReveal";
-import mentorJourneyMap from "@/assets/mentor-journey-map.png";
+import { JourneyMap } from "@/components/mentor/JourneyMap";
 import {
   Sparkles,
   Check,
@@ -151,23 +151,17 @@ export function MentorSalesPage() {
 
       {/* ============ HERO — CHARCOAL ============ */}
       <Band tone="charcoal" className="!py-0">
-        <div className="text-center pt-16 md:pt-20 pb-20 md:pb-28">
-          {/* Journey map illustration */}
+        <div className="text-center pt-6 md:pt-8 pb-20 md:pb-28">
+          {/* Live personal journey map */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="max-w-4xl mx-auto mb-10 md:mb-14 px-2"
-            aria-hidden="true"
+            className="max-w-5xl mx-auto mb-6 md:mb-8"
           >
-            <img
-              src={mentorJourneyMap}
-              alt=""
-              className="w-full h-auto select-none pointer-events-none"
-              loading="eager"
-              decoding="async"
-            />
+            <JourneyMap />
           </motion.div>
+
 
           <motion.div
             initial={{ opacity: 0, y: 12 }}
