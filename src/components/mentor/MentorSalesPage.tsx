@@ -523,20 +523,20 @@ export function MentorSalesPage() {
           </div>
         </motion.div>
 
-        {/* PRICING CARD */}
+        {/* PRICING CARD — asymmetric corners + single shimmer sweep on entry */}
         <motion.div
           {...fadeUp}
-          className="max-w-2xl mx-auto rounded-3xl bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
+          className="reveal shimmer-once card-asym max-w-2xl mx-auto bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
         >
           <Eyebrow>מה ההשקעה שלך</Eyebrow>
           <p className="text-sm text-muted-foreground mb-2">
             מחיר קבוע בהמשך:{" "}
-            <span className="line-through opacity-70">₪1,800</span>
+            <span className="line-through opacity-70 tnum">₪1,800</span>
           </p>
 
           <div className="inline-flex items-baseline gap-2 mb-3">
             <span
-              className="font-display text-6xl md:text-7xl"
+              className="font-display text-6xl md:text-7xl tnum"
               style={{ color: "hsl(var(--accent))" }}
             >
               ₪750
