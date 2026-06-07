@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Heebo', 'sans-serif'],
-        serif: ['Heebo', 'sans-serif'],
-        display: ['Heebo', 'sans-serif'],
+        sans: ['Assistant', 'sans-serif'],
+        serif: ['Miriam Libre', 'sans-serif'],
+        display: ['Miriam Libre', 'sans-serif'],
         body: ['Assistant', 'sans-serif'],
       },
       fontWeight: {

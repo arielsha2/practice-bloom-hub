@@ -2,138 +2,138 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Miriam+Libre:wght@400;700&family=Assistant:wght@300;400;500;600;700;800&display=swap');
 
-/* Design System for Therapist Marketing Landing Page
-   Hybrid palette: Wine/Bordeaux + Muted Gold + Teal accents */
+/* Design System — Warm Boutique Palette
+   Cream bg + Burgundy anchor + Terracotta CTA + Mauve support
+   #faf7f2 cream | #4b0b24 burgundy | #1e1a18 charcoal
+   #c07a59 terracotta | #9b6070 mauve | #9e5a38 deep terracotta */
 
 @layer base {
   :root {
-    /* Purple Therapist Theme - Lavender background */
-    --background: 253 100% 97%;
-    --foreground: 299 100% 18%;
+    /* Warm cream background */
+    --background: 38 44% 96%;
+    --foreground: 15 11% 11%;
 
-    /* Card surfaces */
-    --card: 260 60% 99%;
-    --card-foreground: 299 100% 18%;
+    /* Card surfaces — slightly lighter than bg */
+    --card: 38 44% 98%;
+    --card-foreground: 15 11% 11%;
 
-    --popover: 260 60% 99%;
-    --popover-foreground: 299 100% 18%;
+    --popover: 38 44% 98%;
+    --popover-foreground: 15 11% 11%;
 
-    /* Primary: Deep Purple */
-    --primary: 299 100% 18%;
-    --primary-foreground: 253 100% 97%;
+    /* Primary: Deep Burgundy (brand anchor) */
+    --primary: 337 74% 17%;
+    --primary-foreground: 38 44% 96%;
 
-    /* Secondary: Light Lavender */
-    --secondary: 260 40% 94%;
-    --secondary-foreground: 299 80% 22%;
+    /* Secondary: Soft warm cream tint */
+    --secondary: 35 30% 92%;
+    --secondary-foreground: 337 74% 17%;
 
-    /* Muted: Soft Lavender Gray */
-    --muted: 260 20% 92%;
-    --muted-foreground: 299 35% 28%;
+    /* Muted: Warm beige */
+    --muted: 35 22% 90%;
+    --muted-foreground: 15 11% 35%;
 
-    /* Accent: Coral CTA */
-    --accent: 5 100% 69%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Deep Terracotta (CTA / action color) */
+    --accent: 20 48% 42%;
+    --accent-foreground: 38 44% 96%;
 
-    /* Success: Sage Green */
-    --success: 115 10% 51%;
-    --success-foreground: 0 0% 100%;
+    /* Success: muted terracotta-sage (no new colors — reuses terracotta) */
+    --success: 19 45% 55%;
+    --success-foreground: 38 44% 96%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 337 74% 17%;
+    --destructive-foreground: 38 44% 96%;
 
-    --border: 260 30% 90%;
-    --input: 260 30% 90%;
-    --ring: 255 72% 50%;
+    --border: 35 22% 86%;
+    --input: 35 22% 86%;
+    --ring: 20 48% 42%;
 
     --radius: 0.5rem;
 
-    /* Hero warm beige */
-    --hero-bg: 35 40% 96%;
+    /* Hero warm background — same family as bg */
+    --hero-bg: 38 44% 96%;
 
-    /* Custom tokens */
-    --sand: 253 100% 97%;
-    --forest: 299 100% 18%;
-    --sage: 115 10% 51%;
-    --terracotta: 5 100% 69%;
-    
-    /* Teal → now maps to bright purple accent */
-    --teal: 255 72% 50%;
-    --teal-light: 255 60% 60%;
-    
-    /* Legacy tokens for compatibility */
-    --gold: 5 100% 69%;
-    --gold-dark: 5 100% 60%;
-    --charcoal: 299 100% 18%;
+    /* Custom palette tokens */
+    --sand: 38 44% 96%;            /* cream */
+    --forest: 337 74% 17%;         /* burgundy */
+    --sage: 344 24% 49%;           /* mauve (supporting only) */
+    --terracotta: 19 45% 55%;      /* warmth accent */
 
-    /* Shadows - soft purple */
-    --shadow-soft: 0 2px 12px -2px hsl(299 100% 18% / 0.08);
-    --shadow-card: 0 4px 24px -4px hsl(299 100% 18% / 0.12);
-    --shadow-elevated: 0 12px 40px -8px hsl(299 100% 18% / 0.15);
+    /* Legacy/alias tokens mapped to new palette (no new hues) */
+    --teal: 337 74% 17%;           /* → burgundy */
+    --teal-light: 344 24% 49%;     /* → mauve */
+    --gold: 20 48% 42%;            /* → deep terracotta */
+    --gold-dark: 20 48% 35%;       /* darker terracotta */
+    --charcoal: 15 11% 11%;
 
-    /* Sidebar - Deep purple theme */
-    --sidebar-background: 253 52% 31%;
-    --sidebar-foreground: 253 100% 97%;
-    --sidebar-primary: 5 100% 69%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 253 45% 38%;
-    --sidebar-accent-foreground: 253 100% 97%;
-    --sidebar-border: 253 40% 36%;
-    --sidebar-ring: 255 72% 50%;
+    /* Shadows — warm charcoal */
+    --shadow-soft: 0 2px 12px -2px hsl(15 11% 11% / 0.08);
+    --shadow-card: 0 4px 24px -4px hsl(15 11% 11% / 0.12);
+    --shadow-elevated: 0 12px 40px -8px hsl(15 11% 11% / 0.15);
 
-    /* Mentor page — calm therapeutic palette (sage + soft beige) */
-    --mentor-bg: 80 25% 97%;
-    --mentor-surface: 80 20% 94%;
-    --mentor-border: 150 15% 82%;
-    --mentor-accent: 165 35% 38%;
-    --mentor-accent-foreground: 0 0% 100%;
+    /* Sidebar — Burgundy theme */
+    --sidebar-background: 337 74% 17%;
+    --sidebar-foreground: 38 44% 96%;
+    --sidebar-primary: 20 48% 42%;
+    --sidebar-primary-foreground: 38 44% 96%;
+    --sidebar-accent: 337 60% 22%;
+    --sidebar-accent-foreground: 38 44% 96%;
+    --sidebar-border: 337 50% 25%;
+    --sidebar-ring: 20 48% 42%;
+
+    /* Mentor page — warm cream surface, burgundy/terracotta accents */
+    --mentor-bg: 38 44% 96%;
+    --mentor-surface: 35 30% 92%;
+    --mentor-border: 35 22% 82%;
+    --mentor-accent: 20 48% 42%;
+    --mentor-accent-foreground: 38 44% 96%;
   }
 
   .dark {
-    --background: 270 30% 8%;
-    --foreground: 260 30% 95%;
+    /* Dark mode anchored on warm charcoal + burgundy */
+    --background: 15 11% 11%;
+    --foreground: 38 44% 96%;
 
-    --card: 270 25% 12%;
-    --card-foreground: 260 30% 95%;
+    --card: 15 11% 14%;
+    --card-foreground: 38 44% 96%;
 
-    --popover: 270 25% 12%;
-    --popover-foreground: 260 30% 95%;
+    --popover: 15 11% 14%;
+    --popover-foreground: 38 44% 96%;
 
-    --primary: 260 30% 95%;
-    --primary-foreground: 270 30% 8%;
+    --primary: 38 44% 96%;
+    --primary-foreground: 15 11% 11%;
 
-    --secondary: 270 25% 18%;
-    --secondary-foreground: 260 30% 95%;
+    --secondary: 337 40% 22%;
+    --secondary-foreground: 38 44% 96%;
 
-    --muted: 270 25% 18%;
-    --muted-foreground: 260 15% 60%;
+    --muted: 15 11% 18%;
+    --muted-foreground: 38 20% 70%;
 
-    --accent: 5 100% 69%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 19 45% 55%;
+    --accent-foreground: 15 11% 11%;
 
-    /* Success: Sage Green */
-    --success: 115 15% 55%;
-    --success-foreground: 270 30% 8%;
+    --success: 19 45% 55%;
+    --success-foreground: 15 11% 11%;
 
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 260 30% 95%;
+    --destructive: 337 74% 35%;
+    --destructive-foreground: 38 44% 96%;
 
-    --border: 270 25% 22%;
-    --input: 270 25% 22%;
-    --ring: 255 60% 55%;
+    --border: 15 11% 22%;
+    --input: 15 11% 22%;
+    --ring: 20 48% 42%;
 
-    --teal: 255 60% 55%;
-    --teal-light: 255 50% 65%;
+    --teal: 19 45% 55%;
+    --teal-light: 344 24% 49%;
 
-    --sidebar-background: 270 30% 10%;
-    --sidebar-foreground: 260 30% 95%;
-    --sidebar-primary: 5 100% 69%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 25% 18%;
-    --sidebar-accent-foreground: 260 30% 95%;
-    --sidebar-border: 270 25% 22%;
-    --sidebar-ring: 255 60% 55%;
+    --sidebar-background: 15 11% 11%;
+    --sidebar-foreground: 38 44% 96%;
+    --sidebar-primary: 20 48% 42%;
+    --sidebar-primary-foreground: 38 44% 96%;
+    --sidebar-accent: 337 40% 22%;
+    --sidebar-accent-foreground: 38 44% 96%;
+    --sidebar-border: 15 11% 22%;
+    --sidebar-ring: 20 48% 42%;
   }
 }
 
@@ -144,12 +144,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Assistant', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Heebo', sans-serif;
-    font-weight: 800;
+    font-family: 'Miriam Libre', sans-serif;
+    font-weight: 700;
   }
 
   h1, h2 {
@@ -164,8 +164,8 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Heebo', sans-serif;
-    font-weight: 800;
+    font-family: 'Miriam Libre', sans-serif;
+    font-weight: 700;
   }
 
   .font-body {

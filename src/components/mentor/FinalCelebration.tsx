@@ -35,7 +35,7 @@ export function FinalCelebration() {
         particleCount: Math.floor(200 * ratio),
         spread: 70,
         origin,
-        colors: ["#58005a", "#ff6f61", "#f5f2ff", "#c9a84c"],
+        colors: ["#4b0b24", "#9e5a38", "#c07a59", "#faf7f2"],
       });
     fire({ x: 0.2, y: 0.5 }, 0.4);
     fire({ x: 0.8, y: 0.5 }, 0.4);

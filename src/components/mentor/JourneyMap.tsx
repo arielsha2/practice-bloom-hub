@@ -322,7 +322,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                   >
                     <div
                       style={{
-                        fontFamily: "Heebo, serif",
+                        fontFamily: "Miriam Libre, sans-serif",
                         fontWeight: 700,
                         fontSize: 15,
                         lineHeight: 1.2,
@@ -400,7 +400,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                 }}
               >
                 <div
-                  style={{ fontFamily: "Heebo, serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--foreground))" }}
+                  style={{ fontFamily: "Miriam Libre, sans-serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--foreground))" }}
                 >
                   {isRTL ? "קליניקה משגשגת" : "Thriving Practice"}
                 </div>
