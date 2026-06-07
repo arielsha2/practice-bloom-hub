@@ -1185,6 +1185,29 @@ export default function Mentor() {
                       </div>
                     </div>
 
+                    {/* Handoff fallback banner — shows when mentor named a tool but auto-handoff didn't trigger */}
+                    {suggestedBotKey && (
+                      <div className="border-t border-mentor-border/60 px-3 md:px-4 py-2.5 bg-mentor-accent/5">
+                        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+                          <p className="text-xs md:text-sm text-foreground/80 flex-1 min-w-0">
+                            {isRTL
+                              ? `נראה שהמנטור רוצה להעביר אותך ל${BOT_LABELS[suggestedBotKey] ?? suggestedBotKey}`
+                              : `It looks like the mentor wants to send you to ${BOT_LABELS[suggestedBotKey] ?? suggestedBotKey}`}
+                          </p>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setActiveBotKey(suggestedBotKey);
+                              chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground text-xs h-8 px-3 flex-shrink-0"
+                          >
+                            {isRTL ? "פתח את הכלי" : "Open the tool"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Composer */}
                     <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
                       <div className="flex gap-2 items-end max-w-3xl mx-auto">
