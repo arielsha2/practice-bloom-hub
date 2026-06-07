@@ -144,8 +144,10 @@ const fadeUp = {
 };
 
 export function MentorSalesPage() {
+  useRevealOnScroll();
   return (
     <div dir="rtl" className="bg-background text-foreground">
+
       {/* ============ HERO — CHARCOAL ============ */}
       <Band tone="charcoal" className="!py-0">
         <div className="text-center pt-16 md:pt-24 pb-20 md:pb-28">
