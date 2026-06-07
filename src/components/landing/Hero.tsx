@@ -102,11 +102,12 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Gradient transition to next section */}
+      {/* Gradient transition to next (cream) section */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 h-[80px] pointer-events-none"
         style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }}
       />
+
 
       {/* Join community dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
