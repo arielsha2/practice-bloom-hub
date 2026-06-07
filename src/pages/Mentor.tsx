@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -483,6 +483,95 @@ export default function Mentor() {
       const m = u.pathname.match(/\/ai-assistants\/([^\/?#]+)/);
       if (m && BOT_KEYS.includes(m[1])) return m[1];
     } catch {}
+    return null;
+  };
+
+  // Display labels for the five user-facing tools.
+  const BOT_LABELS: Record<string, string> = {
+    "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
+    "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
+    "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
+    "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
+    "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
+  };
+
+  // Formal names/aliases used to detect tool mentions. Intentionally avoids
+  // bare casual words like "נישה" or "מחיר" so a sentence like
+  // "דיברנו על נישה אתמול" does NOT match.
+  const BOT_ALIASES: Record<string, RegExp[]> = {
+    "niche-finder": [/Niche\s*Finder/i, /מציאת\s*נישה/],
+    "pricing-calculator": [/Pricing\s*Calculator/i, /\bPricing\b/i, /תמחור/],
+    "self-presentation": [/Self[-\s]*Presentation/i, /הצגה\s*עצמית/],
+    "contact-finder": [/Contact\s*Finder/i, /רשת\s*קשרים/],
+    "connection-bridge": [/Connection\s*Bridge/i, /שיחת\s*המרה/, /שיחת\s*היכרות/],
+  };
+
+  // Transition phrases — mentor signalling an actual handoff (not a casual mention).
+  const HANDOFF_PHRASES = [
+    // Hebrew
+    /אני\s*מעביר[הת]?\s*אות[ךכ]/,
+    /אעביר\s*אות[ךכ]/,
+    /שולח[ת]?\s*אות[ךכ]/,
+    /נעבור\s*עכשיו\s*ל/,
+    /תעביר\s*אות[יו]/,
+    // English
+    /sending\s+you\s+to/i,
+    /transferring\s+you\s+to/i,
+    /let'?s\s+move\s+to/i,
+    /i'?m\s+sending\s+you/i,
+  ];
+
+  // Return last N sentences of a text (split on Hebrew/Latin sentence terminators + newlines).
+  const lastSentences = (text: string, n: number): string => {
+    const parts = (text || "")
+      .replace(/\[HANDOFF:[a-z-]+\]/gi, "")
+      .split(/(?<=[.!?。…])\s+|\n+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    return parts.slice(-n).join(" ");
+  };
+
+  // Find which bot is mentioned in the given text (formal aliases only).
+  const findMentionedBot = (text: string): string | null => {
+    for (const bk of BOT_KEYS) {
+      const aliases = BOT_ALIASES[bk];
+      if (!aliases) continue;
+      if (aliases.some((re) => re.test(text))) return bk;
+    }
+    return null;
+  };
+
+  // Three-tier handoff detection:
+  //   1. Exact tag [HANDOFF:bot-key]
+  //   2. Bare bot URL anywhere in the text (markdown or plain)
+  //   3. A transition phrase AND a tool name, both within the last 3 sentences
+  const detectHandoff = (text: string): string | null => {
+    if (!text) return null;
+
+    // 1. Exact tag.
+    const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
+    if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
+
+    // 2. Any bot URL (markdown link OR bare URL) anywhere in the message.
+    const urlRegex = /https?:\/\/[^\s)>\]]+\/ai-assistants\/[a-z-]+[^\s)>\]]*/gi;
+    const urlMatches = text.match(urlRegex);
+    if (urlMatches) {
+      for (const url of urlMatches) {
+        const bk = extractBotKey(url);
+        if (bk) return bk;
+      }
+    }
+
+    // 3. Transition phrase + tool name, both in last 3 sentences.
+    const tail = lastSentences(text, 3);
+    if (tail) {
+      const hasPhrase = HANDOFF_PHRASES.some((re) => re.test(tail));
+      if (hasPhrase) {
+        const mentioned = findMentionedBot(tail);
+        if (mentioned) return mentioned;
+      }
+    }
+
     return null;
   };
 
