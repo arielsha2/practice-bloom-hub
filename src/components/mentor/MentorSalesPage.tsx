@@ -140,9 +140,15 @@ export function MentorSalesPage() {
   useRevealOnScroll();
   return (
     <div dir="rtl" className="bg-background text-foreground">
-      {/* ============ HERO — CHARCOAL ============ */}
-      <Band tone="charcoal" className="!py-0">
-        <div className="text-center pt-16 md:pt-24 pb-20 md:pb-28">
+      {/* ============ HERO ============ */}
+      <section
+        className="band band-grain relative w-full overflow-hidden"
+        style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
+      >
+        <div
+          className="container mx-auto px-4 max-w-4xl relative z-10 text-center"
+          style={{ paddingTop: "clamp(72px, 8vw, 100px)", paddingBottom: "clamp(72px, 7vw, 90px)" }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -159,6 +165,7 @@ export function MentorSalesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05 }}
             className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-6"
+            style={{ textShadow: "0 2px 12px rgba(75,11,36,0.5)" }}
           >
             המנטור לקליניקה
             <span
@@ -186,13 +193,35 @@ export function MentorSalesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25 }}
           >
-            <Button variant="cta" size="xl" onClick={openPayment}>
+            <button
+              onClick={openPayment}
+              className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              style={{
+                borderRadius: "4px",
+                background: "#9e5a38",
+                color: "#faf7f2",
+                padding: "14px 36px",
+                fontSize: "15px",
+                fontWeight: 500,
+                boxShadow: "0 2px 8px rgba(75,11,36,0.35)",
+              }}
+            >
               אני רוצה להיות אחד מ־20
-            </Button>
-            <p className="text-xs text-background/55 mt-5 tracking-wide">גישה לתמיד · כולל כל השיפורים העתידיים</p>
+            </button>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "rgba(250,247,242,0.4)",
+                marginTop: "0.75rem",
+                textAlign: "center",
+              }}
+            >
+              גישה לתמיד · כולל כל השיפורים העתידיים
+            </p>
           </motion.div>
         </div>
-      </Band>
+      </section>
+
 
       {/* ============ PROBLEM — CREAM ============ */}
       <Band tone="cream">
