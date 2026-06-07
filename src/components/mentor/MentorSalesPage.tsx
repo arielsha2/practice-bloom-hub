@@ -205,7 +205,7 @@ export function MentorSalesPage() {
           </h2>
           <Divider />
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-10">
-            למדת טיפול. למדת שיטות התערבות. למדת איך להחזיק מרחב טיפולי. אבל השאלות הבאות נשארו פתוחות:
+            למדת טיפול. למדת שיטות התערבות. למדת איך להחזיק מרחב טיפולי. אבל שאלות מהותיות נשארו פתוחות:
           </p>
         </motion.div>
 
