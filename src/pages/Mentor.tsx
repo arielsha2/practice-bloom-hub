@@ -833,6 +833,9 @@ export default function Mentor() {
               </Button>
             </div>
           </div>
+          <div className="mt-8 w-full max-w-lg">
+            <WebsiteComingSoonCard variant="paywall" />
+          </div>
         </main>
         <Footer />
       </div>
@@ -1201,7 +1204,7 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
-        {/* <WebsiteBuilderCTA /> hidden — replaced by coming-soon teaser in FinalCelebration */}
+        <WebsiteComingSoonCard />
       </div>
       <Footer />
     </div>
