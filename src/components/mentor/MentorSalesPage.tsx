@@ -283,7 +283,6 @@ export function MentorSalesPage() {
       {/* ============ SOLUTION INTRO — CREAM ============ */}
       <Band tone="cream">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
-          <Eyebrow>המענה</Eyebrow>
           <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
             מה אם היה מישהו שמחזיק אותך בדיוק שם?
           </h2>
