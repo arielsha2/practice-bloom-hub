@@ -37,6 +37,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
+import { MentorSalesPage } from "@/components/mentor/MentorSalesPage";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
@@ -803,40 +804,13 @@ export default function Mentor() {
     document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Paywall
+  // Paywall — full sales page
   if (!accessLoading && hasAccess === false) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
-        <main className="flex-1 pt-16 flex items-center justify-center px-4">
-          <div className="max-w-lg w-full bg-card border-2 border-mentor-accent/30 rounded-2xl p-8 shadow-xl text-center">
-            <div className="w-14 h-14 mx-auto rounded-full bg-mentor-accent/15 flex items-center justify-center mb-4">
-              <Sparkles className="w-6 h-6 text-mentor-accent" />
-            </div>
-            <h1 className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-3">
-              {isRTL ? "המנטור פתוח לרוכשים בלבד" : "The Mentor is for purchasers only"}
-            </h1>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              {isRTL
-                ? "כדי להיכנס לשיחה עם המנטור, יש לרכוש גישה. סטודנטים בנקודת המפנה יכולים להשתמש בבוטים דרך עמוד הקורס."
-                : "To chat with the Mentor, please purchase access. Turning Point students can use the bots from the course page."}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button
-                size="lg"
-                onClick={() => window.open(MENTOR_SALES_URL, "_blank", "noopener,noreferrer")}
-                className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
-              >
-                {isRTL ? "לרכישת המנטור" : "Purchase the Mentor"}
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/")}>
-                {isRTL ? "חזרה לדף הבית" : "Back to home"}
-              </Button>
-            </div>
-          </div>
-          <div className="mt-8 w-full max-w-lg">
-            <WebsiteComingSoonCard variant="paywall" />
-          </div>
+        <main className="flex-1 pt-16">
+          <MentorSalesPage />
         </main>
         <Footer />
       </div>
