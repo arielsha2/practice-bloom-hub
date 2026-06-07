@@ -55,8 +55,20 @@ function Band({
     tone === "cream" ? "band-cream" : tone === "charcoal" ? "band-charcoal" : "band-burgundy";
   return (
     <section id={id} className={`band band-grain ${toneClass} ${className}`}>
-      <div className="container mx-auto px-4 max-w-4xl py-20 md:py-28 relative z-10">
+      <div className="container mx-auto px-4 max-w-4xl pt-20 pb-24 relative z-10">
         {children}
+      </div>
+    </section>
+  );
+}
+
+function InterludeBanner({ text }: { text: string }) {
+  return (
+    <section className="band band-burgundy band-grain">
+      <div className="container mx-auto px-4 max-w-2xl py-12 text-center">
+        <p className="font-display text-xl md:text-2xl leading-snug text-background">
+          {text}
+        </p>
       </div>
     </section>
   );
