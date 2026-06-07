@@ -33,7 +33,7 @@ export function MentorSection() {
               <Sparkles className="w-4 h-4 text-mentor-accent" />
               <span className="text-mentor-accent font-medium text-sm">{isRTL ? "המנטור" : "The Mentor"}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-display text-foreground mb-4 tracking-tight">
               {isRTL ? "קליניקה מלאה. ראש שקט. צמיחה אמיתית." : "A Full Practice. A Calm Mind. Real Growth."}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">

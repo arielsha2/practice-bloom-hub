@@ -57,21 +57,18 @@ export function Benefits() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="bg-card rounded-2xl p-8 border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300 h-full relative overflow-hidden group-hover:-translate-y-1">
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+                <div className="bg-card rounded-lg p-8 border border-border/50 shadow-card h-full relative">
                   <div className="relative z-10">
                     {/* Icon */}
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-7 h-7 text-primary" />
+                    <div className="w-14 h-14 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-6">
+                      <Icon className="w-7 h-7 text-accent" />
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-xl font-semibold text-foreground mb-3">
+                    <h3 className="text-xl font-display text-foreground mb-3">
                       {t(`benefits.${benefit.key}.title`)}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-muted-foreground">
                       {t(`benefits.${benefit.key}.desc`)}
                     </p>
                   </div>

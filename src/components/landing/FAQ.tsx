@@ -64,7 +64,7 @@ export const FAQ = () => {
         <header className="text-center mb-12">
           <h2
             id="faq-heading"
-            className="text-3xl md:text-4xl font-bold text-foreground mb-3"
+            className="font-display text-3xl md:text-4xl text-foreground mb-3"
           >
             שאלות שמטפלים שואלים
           </h2>

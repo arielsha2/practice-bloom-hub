@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useRevealOnScroll } from "@/hooks/useReveal";
 import {
   Sparkles,
   Check,
@@ -55,8 +56,20 @@ function Band({
     tone === "cream" ? "band-cream" : tone === "charcoal" ? "band-charcoal" : "band-burgundy";
   return (
     <section id={id} className={`band band-grain ${toneClass} ${className}`}>
-      <div className="container mx-auto px-4 max-w-4xl py-20 md:py-28 relative z-10">
+      <div className="container mx-auto px-4 max-w-4xl pt-20 pb-24 relative z-10">
         {children}
+      </div>
+    </section>
+  );
+}
+
+function InterludeBanner({ text }: { text: string }) {
+  return (
+    <section className="band band-burgundy band-grain">
+      <div className="container mx-auto px-4 max-w-2xl py-12 text-center">
+        <p className="font-display text-xl md:text-2xl leading-snug text-background">
+          {text}
+        </p>
       </div>
     </section>
   );
@@ -131,8 +144,10 @@ const fadeUp = {
 };
 
 export function MentorSalesPage() {
+  useRevealOnScroll();
   return (
     <div dir="rtl" className="bg-background text-foreground">
+
       {/* ============ HERO — CHARCOAL ============ */}
       <Band tone="charcoal" className="!py-0">
         <div className="text-center pt-16 md:pt-24 pb-20 md:pb-28">
@@ -248,25 +263,29 @@ export function MentorSalesPage() {
           </p>
         </motion.div>
 
-        <motion.ul {...fadeUp} className="space-y-3 max-w-3xl mx-auto">
-          {personas.map((p, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-4 rounded-2xl p-5 border border-background/15 bg-background/[0.06] backdrop-blur-sm"
-            >
-              <span
-                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-display text-sm border"
-                style={{
-                  color: "hsl(var(--terracotta))",
-                  borderColor: "hsl(var(--terracotta) / 0.5)",
-                  background: "hsl(var(--foreground) / 0.3)",
-                }}
+        <motion.ul {...fadeUp} className="grid md:grid-cols-5 gap-4 max-w-3xl mx-auto">
+          {personas.map((p, i) => {
+            // Asymmetric 60/40 rhythm: cards alternate 3-col / 2-col widths
+            const span = i % 2 === 0 ? "md:col-span-3" : "md:col-span-2";
+            return (
+              <li
+                key={i}
+                className={`card-asym flex items-start gap-4 p-5 border border-background/15 bg-background/[0.06] backdrop-blur-sm ${span}`}
               >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="text-background leading-relaxed pt-1">{p}</span>
-            </li>
-          ))}
+                <span
+                  className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-display text-sm border tnum"
+                  style={{
+                    color: "hsl(var(--terracotta))",
+                    borderColor: "hsl(var(--terracotta) / 0.5)",
+                    background: "hsl(var(--foreground) / 0.3)",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-background pt-1">{p}</span>
+              </li>
+            );
+          })}
         </motion.ul>
 
         <motion.div
@@ -284,8 +303,12 @@ export function MentorSalesPage() {
         </motion.div>
       </Band>
 
+      {/* ============ INTERLUDE ============ */}
+      <InterludeBanner text="אף אחד לא לימד אותך את זה. אז איך יכולת לדעת?" />
+
       {/* ============ SOLUTION INTRO — CREAM ============ */}
       <Band tone="cream">
+
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>המענה</Eyebrow>
           <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
@@ -507,20 +530,20 @@ export function MentorSalesPage() {
           </div>
         </motion.div>
 
-        {/* PRICING CARD */}
+        {/* PRICING CARD — asymmetric corners + single shimmer sweep on entry */}
         <motion.div
           {...fadeUp}
-          className="max-w-2xl mx-auto rounded-3xl bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
+          className="reveal shimmer-once card-asym max-w-2xl mx-auto bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
         >
           <Eyebrow>מה ההשקעה שלך</Eyebrow>
           <p className="text-sm text-muted-foreground mb-2">
             מחיר קבוע בהמשך:{" "}
-            <span className="line-through opacity-70">₪1,800</span>
+            <span className="line-through opacity-70 tnum">₪1,800</span>
           </p>
 
           <div className="inline-flex items-baseline gap-2 mb-3">
             <span
-              className="font-display text-6xl md:text-7xl"
+              className="font-display text-6xl md:text-7xl tnum"
               style={{ color: "hsl(var(--accent))" }}
             >
               ₪750

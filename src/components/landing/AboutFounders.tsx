@@ -27,7 +27,7 @@ export function AboutFounders() {
           {...fadeUp}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-6">
+          <h2 className="text-3xl md:text-4xl font-display text-foreground mb-6">
             {t("founders.title")}
           </h2>
           <div className="max-w-3xl mx-auto space-y-4 text-lg text-muted-foreground leading-relaxed">
@@ -48,7 +48,8 @@ export function AboutFounders() {
             {...fadeUp}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
           >
-            <h3 className="text-xl font-semibold text-foreground mb-3">
+            <h3 className="text-xl font-display text-foreground mb-3">
+
               {t("founders.ariel.name")}
             </h3>
             <p className="text-muted-foreground leading-relaxed mb-6">
@@ -73,7 +74,7 @@ export function AboutFounders() {
             {...fadeUp}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
           >
-            <h3 className="text-xl font-semibold text-foreground mb-3">
+            <h3 className="text-xl font-display text-foreground mb-3">
               {t("founders.eliana.name")}
             </h3>
             <p className="text-muted-foreground leading-relaxed mb-6">
