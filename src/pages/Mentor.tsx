@@ -36,6 +36,7 @@ import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { JourneyMap } from "@/components/mentor/JourneyMap";
 import { FinalCelebration } from "@/components/mentor/FinalCelebration";
+import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
