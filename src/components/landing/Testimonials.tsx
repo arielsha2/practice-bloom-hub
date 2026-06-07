@@ -51,7 +51,7 @@ function TestimonialSlide({ item }: { item: Testimonial }) {
         <p className="text-muted-foreground leading-relaxed mb-6 whitespace-pre-line">
           {item.text}
         </p>
-        <p className="font-bold text-foreground">,  {item.author}</p>
+        <p className="font-bold text-foreground">{item.author}</p>
       </div>
     );
   }
