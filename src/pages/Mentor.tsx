@@ -746,7 +746,6 @@ export default function Mentor() {
           } catch {
             buffer = line + "\n" + buffer;
             break;
-      }
           }
         }
       }
