@@ -192,6 +192,7 @@ export function MentorSalesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25 }}
+            className="my-4"
           >
             <button
               onClick={openPayment}
@@ -200,10 +201,10 @@ export function MentorSalesPage() {
                 borderRadius: "4px",
                 background: "#9e5a38",
                 color: "#faf7f2",
-                padding: "14px 36px",
-                fontSize: "15px",
-                fontWeight: 500,
-                boxShadow: "0 2px 8px rgba(75,11,36,0.35)",
+                padding: "22px 64px",
+                fontSize: "19px",
+                fontWeight: 600,
+                boxShadow: "0 4px 16px rgba(75,11,36,0.4)",
               }}
             >
               אני רוצה להיות אחד מ־20
@@ -491,9 +492,12 @@ export function MentorSalesPage() {
           {...fadeUp}
           className="reveal shimmer-once card-asym max-w-2xl mx-auto bg-background text-foreground p-8 md:p-12 text-center shadow-elevated"
         >
-          ההשקעה שלך
-          <p className="text-sm text-muted-foreground mb-2">
-            מחיר קבוע בהמשך: <span className="line-through opacity-70 tnum">₪1,800</span>
+          <p className="font-display text-xl md:text-2xl text-foreground mb-3">ההשקעה שלך</p>
+          <p className="text-base md:text-lg text-muted-foreground mb-2">
+            מחיר קבוע בהמשך:{" "}
+            <span className="line-through opacity-80 tnum font-display text-2xl md:text-3xl text-foreground/80 mx-1">
+              ₪1,800
+            </span>
           </p>
           <div className="inline-flex items-baseline gap-2 mb-3">
             <span className="font-display text-6xl md:text-7xl tnum" style={{ color: "hsl(var(--accent))" }}>
@@ -513,9 +517,23 @@ export function MentorSalesPage() {
               </li>
             ))}
           </ul>
-          <Button variant="cta" size="xl" onClick={openPayment} className="w-full sm:w-auto">
-            אני רוצה להיות אחד מ־20
-          </Button>
+          <div className="py-3">
+            <button
+              onClick={openPayment}
+              className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 w-full sm:w-auto"
+              style={{
+                borderRadius: "4px",
+                background: "#9e5a38",
+                color: "#faf7f2",
+                padding: "22px 64px",
+                fontSize: "19px",
+                fontWeight: 600,
+                boxShadow: "0 4px 16px rgba(75,11,36,0.4)",
+              }}
+            >
+              אני רוצה להיות אחד מ־20
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground mt-5 tracking-wide">תשלום מאובטח דרך משולם</p>
         </motion.div>
       </Band>
