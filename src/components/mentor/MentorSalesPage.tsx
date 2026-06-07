@@ -21,10 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 
-const PAYMENT_URL =
-  "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
-const WHATSAPP_URL =
-  "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
+const PAYMENT_URL = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
+const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
 
 function openPayment() {
   window.open(PAYMENT_URL, "_blank", "noopener,noreferrer");
@@ -53,13 +51,10 @@ function Band({
   className?: string;
   id?: string;
 }) {
-  const toneClass =
-    tone === "cream" ? "band-cream" : tone === "charcoal" ? "band-charcoal" : "band-burgundy";
+  const toneClass = tone === "cream" ? "band-cream" : tone === "charcoal" ? "band-charcoal" : "band-burgundy";
   return (
     <section id={id} className={`band band-grain ${toneClass} ${className}`}>
-      <div className="container mx-auto px-4 max-w-4xl pt-20 pb-24 relative z-10">
-        {children}
-      </div>
+      <div className="container mx-auto px-4 max-w-4xl pt-20 pb-24 relative z-10">{children}</div>
     </section>
   );
 }
@@ -68,9 +63,7 @@ function InterludeBanner({ text }: { text: string }) {
   return (
     <section className="band band-burgundy band-grain">
       <div className="container mx-auto px-4 max-w-2xl py-12 text-center">
-        <p className="font-display text-xl md:text-2xl leading-snug text-background">
-          {text}
-        </p>
+        <p className="font-display text-xl md:text-2xl leading-snug text-background">{text}</p>
       </div>
     </section>
   );
@@ -148,7 +141,6 @@ export function MentorSalesPage() {
   useRevealOnScroll();
   return (
     <div dir="rtl" className="bg-background text-foreground">
-
       {/* ============ HERO — CHARCOAL ============ */}
       <Band tone="charcoal" className="!py-0">
         <div className="text-center pt-6 md:pt-8 pb-20 md:pb-28">
@@ -161,7 +153,6 @@ export function MentorSalesPage() {
           >
             <JourneyMap />
           </motion.div>
-
 
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -197,8 +188,8 @@ export function MentorSalesPage() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-base md:text-xl max-w-2xl mx-auto leading-relaxed mb-10 text-background/75"
           >
-            ליווי AI אישי שמוביל אותך שלב אחר שלב למלא את הקליניקה במטופלים
-            הנכונים. באותנטיות, בביטחון, ובלי להרגיש מכירתי.
+            ליווי AI אישי שמוביל אותך שלב אחר שלב למלא את הקליניקה במטופלים הנכונים. באותנטיות, בביטחון, ובלי להרגיש
+            מכירתי.
           </motion.p>
 
           <motion.div
@@ -209,9 +200,7 @@ export function MentorSalesPage() {
             <Button variant="cta" size="xl" onClick={openPayment}>
               אני רוצה להיות אחד מ־20
             </Button>
-            <p className="text-xs text-background/55 mt-5 tracking-wide">
-              ₪750 חד פעמי · גישה לתמיד · כולל כל השיפורים העתידיים
-            </p>
+            <p className="text-xs text-background/55 mt-5 tracking-wide">גישה לתמיד · כולל כל השיפורים העתידיים</p>
           </motion.div>
         </div>
       </Band>
@@ -227,25 +216,18 @@ export function MentorSalesPage() {
           </h2>
           <Divider />
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-10">
-            למדת טיפול. למדת שיטות התערבות. למדת איך להחזיק מרחב טיפולי. אבל
-            השאלות הבאות נשארו פתוחות:
+            למדת טיפול. למדת שיטות התערבות. למדת איך להחזיק מרחב טיפולי. אבל השאלות הבאות נשארו פתוחות:
           </p>
         </motion.div>
 
-        <motion.ul
-          {...fadeUp}
-          className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto"
-        >
+        <motion.ul {...fadeUp} className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
           {[
             "איך מוצאים מטופלים?",
             "איך מסבירים מה ייחודי בטיפול שלך כדי שאנשים ירצו להגיע דווקא אליך?",
             "איך ממלאים את הקליניקה באופן נעים ואותנטי, בלי להרגיש נזקקות ובלי להיות מכירתיים?",
             "כמה לתמחר את השעה הטיפולית שלך, ואיך להציג את המחיר בביטחון?",
           ].map((q, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-4 bg-card border border-border rounded-2xl p-5 shadow-soft"
-            >
+            <li key={i} className="flex items-start gap-4 bg-card border border-border rounded-2xl p-5 shadow-soft">
               <span className="icon-chip shrink-0" style={{ width: 44, height: 44 }}>
                 <HelpCircle className="w-5 h-5" />
               </span>
@@ -254,10 +236,7 @@ export function MentorSalesPage() {
           ))}
         </motion.ul>
 
-        <motion.p
-          {...fadeUp}
-          className="text-lg md:text-xl font-semibold text-center text-foreground mt-12"
-        >
+        <motion.p {...fadeUp} className="text-lg md:text-xl font-semibold text-center text-foreground mt-12">
           זה לא נלמד בשום מקום. אז איך יכולת לדעת?
         </motion.p>
       </Band>
@@ -270,9 +249,7 @@ export function MentorSalesPage() {
             את החידה הזו מטפלים מנסים לפתור לבד.
           </h2>
           <Divider />
-          <p className="text-background/80 text-base md:text-lg mb-10">
-            וזה לוקח הרבה זמן והרבה טעויות בדרך.
-          </p>
+          <p className="text-background/80 text-base md:text-lg mb-10">וזה לוקח הרבה זמן והרבה טעויות בדרך.</p>
         </motion.div>
 
         <motion.ul {...fadeUp} className="grid md:grid-cols-5 gap-4 max-w-3xl mx-auto">
@@ -300,10 +277,7 @@ export function MentorSalesPage() {
           })}
         </motion.ul>
 
-        <motion.div
-          {...fadeUp}
-          className="text-center mt-12 max-w-2xl mx-auto"
-        >
+        <motion.div {...fadeUp} className="text-center mt-12 max-w-2xl mx-auto">
           <p className="text-base md:text-lg leading-relaxed text-background/85">
             הבעיה היא לא רצון. היא לא כישרון. ואפילו לא הביטחון המקצועי.
           </p>
@@ -320,7 +294,6 @@ export function MentorSalesPage() {
 
       {/* ============ SOLUTION INTRO — CREAM ============ */}
       <Band tone="cream">
-
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>המענה</Eyebrow>
           <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
@@ -337,27 +310,18 @@ export function MentorSalesPage() {
             <HeartHandshake className="w-6 h-6" />
           </span>
           <div className="space-y-5 text-foreground leading-relaxed text-lg">
-            <p className="text-muted-foreground">
-              לא מרצה. לא קורס. לא עוד תוכן לצרוך.
-            </p>
+            <p className="text-muted-foreground">לא מרצה. לא קורס. לא עוד תוכן לצרוך.</p>
             <p>
-              מישהו שיושב איתך, שואל את השאלות הנכונות, ומוביל אותך לתשובה שכבר
-              קיימת בתוכך. לגרסה שלך שיודעת למלא את הקליניקה בביטחון
-              ובאותנטיות.
+              מישהו שיושב איתך, שואל את השאלות הנכונות, ומוביל אותך לתשובה שכבר קיימת בתוכך. לגרסה שלך שיודעת למלא את
+              הקליניקה בביטחון ובאותנטיות.
             </p>
-            <p
-              className="font-display text-xl md:text-2xl"
-              style={{ color: "hsl(var(--accent))" }}
-            >
+            <p className="font-display text-xl md:text-2xl" style={{ color: "hsl(var(--accent))" }}>
               הכוונה אישית. מיקוד. פעולות מדויקות.
             </p>
             <p className="text-muted-foreground">
-              הדבקת הפער בין המומחיות המקצועית שלך לבין היכולת שלך להביא
-              מטופלים מתאימים לקליניקה.
+              הדבקת הפער בין המומחיות המקצועית שלך לבין היכולת שלך להביא מטופלים מתאימים לקליניקה.
             </p>
-            <p className="text-2xl md:text-3xl font-display pt-3 text-primary">
-              זה המנטור לקליניקה.
-            </p>
+            <p className="text-2xl md:text-3xl font-display pt-3 text-primary">זה המנטור לקליניקה.</p>
           </div>
         </motion.div>
       </Band>
@@ -366,19 +330,12 @@ export function MentorSalesPage() {
       <Band tone="charcoal">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>חמשת השלבים</Eyebrow>
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            מה המנטור עושה בפועל.
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">מה המנטור עושה בפועל.</h2>
           <Divider />
-          <p className="text-background/75 text-base md:text-lg mb-12">
-            הוא מלווה אותך דרך חמישה שלבים מדויקים.
-          </p>
+          <p className="text-background/75 text-base md:text-lg mb-12">הוא מלווה אותך דרך חמישה שלבים מדויקים.</p>
         </motion.div>
 
-        <motion.div
-          {...fadeUp}
-          className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto"
-        >
+        <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {stages.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -392,12 +349,8 @@ export function MentorSalesPage() {
                   </span>
                   <div className="pt-1">
                     <div className="step-numeral mb-1.5">שלב {String(i + 1).padStart(2, "0")}</div>
-                    <h3 className="font-display text-xl mb-2 text-background">
-                      {s.title}
-                    </h3>
-                    <p className="text-background/70 leading-relaxed text-sm md:text-base">
-                      {s.text}
-                    </p>
+                    <h3 className="font-display text-xl mb-2 text-background">{s.title}</h3>
+                    <p className="text-background/70 leading-relaxed text-sm md:text-base">{s.text}</p>
                   </div>
                 </div>
               </div>
@@ -415,12 +368,10 @@ export function MentorSalesPage() {
             </span>
             <div className="pt-1">
               <div className="step-numeral mb-1.5">הרובד הפנימי</div>
-              <h3 className="font-display text-xl mb-2 text-background">
-                ובמקביל, העבודה שמתחת לפני השטח.
-              </h3>
+              <h3 className="font-display text-xl mb-2 text-background">ובמקביל, העבודה שמתחת לפני השטח.</h3>
               <p className="text-background/75 leading-relaxed">
-                הביטחון והנוכחות המקצועית. היכולת להתחבר לערך האמיתי שלך ולשדר
-                אותו. כי זה מה שבאמת מעכב גם כשיש את כל הידע העסקי.
+                הביטחון והנוכחות המקצועית. היכולת להתחבר לערך האמיתי שלך ולשדר אותו. כי זה מה שבאמת מעכב גם כשיש את כל
+                הידע העסקי.
               </p>
             </div>
           </div>
@@ -431,16 +382,11 @@ export function MentorSalesPage() {
       <Band tone="cream">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>החוויה</Eyebrow>
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            איך זה נראה בפועל?
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">איך זה נראה בפועל?</h2>
           <Divider />
         </motion.div>
 
-        <motion.div
-          {...fadeUp}
-          className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto"
-        >
+        <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
           {experiencePoints.map((e, i) => {
             const Icon = e.icon;
             return (
@@ -451,9 +397,7 @@ export function MentorSalesPage() {
                 <span className="icon-chip mb-5">
                   <Icon className="w-6 h-6" />
                 </span>
-                <h3 className="font-display text-xl mb-2 text-foreground">
-                  {e.title}
-                </h3>
+                <h3 className="font-display text-xl mb-2 text-foreground">{e.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{e.text}</p>
               </div>
             );
@@ -478,14 +422,10 @@ export function MentorSalesPage() {
           <Divider />
         </motion.div>
 
-        <motion.div
-          {...fadeUp}
-          className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto"
-        >
+        <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           <div className="relative rounded-2xl p-8 border border-background/15 bg-background/[0.06]">
             <p className="pull-quote relative text-background leading-relaxed text-lg">
-              מטפלת אחת העלתה מחירים, וסיפרה שלראשונה הרגישה שהיא מקבלת תגמול
-              שהיא באמת ראויה לו.
+              מטפלת אחת העלתה מחירים, וסיפרה שלראשונה הרגישה שהיא מקבלת תגמול שהיא באמת ראויה לו.
             </p>
           </div>
           <div className="relative rounded-2xl p-8 border border-background/15 bg-background/[0.06]">
@@ -516,27 +456,22 @@ export function MentorSalesPage() {
             </span>
             <div>
               <div className="step-numeral">בלעדי למייסדים</div>
-              <div className="font-display text-xl text-background">
-                20 מקומות בלבד
-              </div>
+              <div className="font-display text-xl text-background">20 מקומות בלבד</div>
             </div>
           </div>
           <div className="space-y-4 text-background/85 leading-relaxed">
+            <p>התמזל מזלך להיות בין 20 המטפלים הראשונים שנזמין בתנאים מיוחדים שלא יחזרו.</p>
             <p>
-              התמזל מזלך להיות בין 20 המטפלים הראשונים שנזמין בתנאים מיוחדים
-              שלא יחזרו.
-            </p>
-            <p>
-              בתמורה, אנחנו מבקשים את המשוב הכן שלך. מה עובד, מה לא, מה חסר.
-              חשוב לנו שהמנטור ייתן את המענה הטוב ביותר למטפלים כמוך.
+              בתמורה, אנחנו מבקשים את המשוב הכן שלך. מה עובד, מה לא, מה חסר. חשוב לנו שהמנטור ייתן את המענה הטוב ביותר
+              למטפלים כמוך.
             </p>
             <div className="rounded-xl p-5 border border-background/15 bg-background/[0.04] mt-4">
               <p className="font-semibold text-background mb-1.5">
                 המנטור מיועד למטפלים שמוכנים לא רק לקרוא, אלא לעשות.
               </p>
               <p className="text-sm text-background/65">
-                כל שלב מסתיים בפעולות ליישום בעולם האמיתי. אם אתה מחפש עוד ידע
-                לצבור, זה לא בשבילך. אם אתה מוכן להיות בתנועה, אנחנו כאן.
+                כל שלב מסתיים בפעולות ליישום בעולם האמיתי. אם אתה מחפש עוד ידע לצבור, זה לא בשבילך. אם אתה מוכן להיות
+                בתנועה, אנחנו כאן.
               </p>
             </div>
           </div>
@@ -549,15 +484,11 @@ export function MentorSalesPage() {
         >
           <Eyebrow>מה ההשקעה שלך</Eyebrow>
           <p className="text-sm text-muted-foreground mb-2">
-            מחיר קבוע בהמשך:{" "}
-            <span className="line-through opacity-70 tnum">₪1,800</span>
+            מחיר קבוע בהמשך: <span className="line-through opacity-70 tnum">₪1,800</span>
           </p>
 
           <div className="inline-flex items-baseline gap-2 mb-3">
-            <span
-              className="font-display text-6xl md:text-7xl tnum"
-              style={{ color: "hsl(var(--accent))" }}
-            >
+            <span className="font-display text-6xl md:text-7xl tnum" style={{ color: "hsl(var(--accent))" }}>
               ₪750
             </span>
           </div>
@@ -566,12 +497,7 @@ export function MentorSalesPage() {
           </p>
 
           <ul className="text-right max-w-md mx-auto space-y-3 mb-10">
-            {[
-              "גישה מלאה לתמיד",
-              "כולל כל השיפורים העתידיים",
-              "פחות משני מפגשי סופרוויז׳ן",
-              "שלך לתמיד",
-            ].map((b, i) => (
+            {["גישה מלאה לתמיד", "כולל כל השיפורים העתידיים", "פחות משני מפגשי סופרוויז׳ן", "שלך לתמיד"].map((b, i) => (
               <li key={i} className="flex items-center gap-3 text-foreground">
                 <span className="icon-chip shrink-0" style={{ width: 32, height: 32 }}>
                   <Check className="w-4 h-4" />
@@ -585,9 +511,7 @@ export function MentorSalesPage() {
             אני רוצה להיות אחד מ־20
           </Button>
 
-          <p className="text-xs text-muted-foreground mt-5 tracking-wide">
-            תשלום מאובטח דרך משולם
-          </p>
+          <p className="text-xs text-muted-foreground mt-5 tracking-wide">תשלום מאובטח דרך משולם</p>
         </motion.div>
       </Band>
 
@@ -597,12 +521,8 @@ export function MentorSalesPage() {
           <span className="icon-chip mx-auto mb-5">
             <MessageCircle className="w-6 h-6" />
           </span>
-          <h3 className="font-display text-2xl md:text-3xl text-foreground mb-2">
-            שאלות?
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            כתבו לאליענה ישירות. היא עונה אישית.
-          </p>
+          <h3 className="font-display text-2xl md:text-3xl text-foreground mb-2">שאלות?</h3>
+          <p className="text-muted-foreground mb-6">כתבו לאליענה ישירות. היא עונה אישית.</p>
           <Button
             variant="cta-dark"
             size="lg"
