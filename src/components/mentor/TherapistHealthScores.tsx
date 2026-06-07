@@ -138,9 +138,9 @@ export function TherapistHealthScores() {
               <p className="text-sm text-muted-foreground">צוואר הבקבוק</p>
               <p
                 className="text-lg font-bold mt-1 line-clamp-2 break-words"
-                title={bottleneck?.[0] || "—"}
+                title={bottleneck?.[0] || ", "}
               >
-                {bottleneck?.[0] || "—"}
+                {bottleneck?.[0] || ", "}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {bottleneck ? `מופיע אצל ${bottleneck[1]} מטפלים` : "אין נתונים"}

@@ -38,11 +38,11 @@ const Index = () => {
   const serviceLd = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    name: "TherapyKeys — ייעוץ עסקי למטפלים",
+    name: "TherapyKeys, ייעוץ עסקי למטפלים",
     alternateName: "Therapy Keys",
     url: "https://therapykeys.co.il",
     description:
-      'שירות ייעוץ עסקי ייחודי למטפלים ופסיכולוגים בישראל המעוניינים לבנות ולשווק קליניקה פרטית — מבוסס על שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא',
+      'שירות ייעוץ עסקי ייחודי למטפלים ופסיכולוגים בישראל המעוניינים לבנות ולשווק קליניקה פרטית, מבוסס על שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא',
     provider: { "@type": "Person", name: 'ד"ר אריאל שפירא' },
     areaServed: { "@type": "Country", name: "Israel" },
     serviceType: [
@@ -58,7 +58,7 @@ const Index = () => {
     <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen">
       <SEOHead
         title='ד"ר אריאל שפירא | פסיכולוג קליני וייעוץ עסקי למטפלים בישראל'
-        description='ד"ר אריאל שפירא, פסיכולוג קליני, מסייע למטפלים בישראל לבנות קליניקה פרטית מצליחה בשיטת "על שפת הקליניקה" — ללא פשרות על הזהות המקצועית.'
+        description='ד"ר אריאל שפירא, פסיכולוג קליני, מסייע למטפלים בישראל לבנות קליניקה פרטית מצליחה בשיטת "על שפת הקליניקה", ללא פשרות על הזהות המקצועית.'
         canonicalUrl="/"
         jsonLd={[personLd, serviceLd]}
       />

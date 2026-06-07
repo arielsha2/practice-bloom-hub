@@ -12,8 +12,8 @@ export function WebsiteComingSoonCard({ variant = "default", className }: Websit
 
   const footerText =
     variant === "paywall"
-      ? "יוצע לרוכשי המנטור בהמשך המסע — חלק מהערך הגדל של הליווי."
-      : "שמור את הסיכומים שעלו במסע — הם יהפכו לבסיס לאתר שלך.";
+      ? "יוצע לרוכשי המנטור בהמשך המסע, חלק מהערך הגדל של הליווי."
+      : "שמור את הסיכומים שעלו במסע, הם יהפכו לבסיס לאתר שלך.";
 
   return (
     <motion.div
@@ -26,14 +26,14 @@ export function WebsiteComingSoonCard({ variant = "default", className }: Websit
       <div className="rounded-2xl bg-gradient-to-br from-mentor-accent/10 via-card to-primary/10 p-6 md:p-8 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-mentor-accent/15 text-mentor-accent text-xs font-semibold mb-3">
           <Sparkles className="w-3.5 h-3.5" />
-          בקרוב — פיצ׳ר חדש
+          בקרוב, פיצ׳ר חדש
         </div>
         <h3 className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-3">
-          האתר האישי שלך — נבנה עבורך אוטומטית ✨
+          האתר האישי שלך, נבנה עבורך אוטומטית ✨
         </h3>
         <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          בקרוב נשיק כלי חדש שייקח את כל מה שבנית במסע עם המנטור — הנישה שלך,
-          הסיפור האישי, התמחור ושפת הפנייה — וייצור עבורך דף נחיתה מותאם אישית
+          בקרוב נשיק כלי חדש שייקח את כל מה שבנית במסע עם המנטור, הנישה שלך,
+          הסיפור האישי, התמחור ושפת הפנייה, וייצור עבורך דף נחיתה מותאם אישית
           שמדבר בדיוק אל המטופלים הנכונים ומזמין אותם לפנות אליך.
         </p>
         <p className="text-xs md:text-sm text-mentor-accent font-medium mt-4">

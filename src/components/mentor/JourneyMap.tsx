@@ -26,8 +26,8 @@ const STAGES: Stage[] = [
     titleEn: "Finding Your Niche",
     descHe: "לדעת בדיוק עם מי לעבוד.",
     descEn: "Know who you work with.",
-    hintHe: "תדעו בדיוק מי המטופל שאתם הכי טובים עבורו — ולמה הוא יבחר דווקא בכם",
-    hintEn: "Know exactly who you're best for — and why they'll choose you",
+    hintHe: "תדעו בדיוק מי המטופל שאתם הכי טובים עבורו, ולמה הוא יבחר דווקא בכם",
+    hintEn: "Know exactly who you're best for, and why they'll choose you",
     botKey: "niche-finder",
   },
   {
@@ -48,7 +48,7 @@ const STAGES: Stage[] = [
     titleEn: "Self-Presentation",
     descHe: "מסר ברור ומדויק.",
     descEn: "Clear, sharp message.",
-    hintHe: "משפט אחד שמסביר מה אתם עושים — ואנשים אומרים 'זה בדיוק מה שאני צריך'",
+    hintHe: "משפט אחד שמסביר מה אתם עושים, ואנשים אומרים 'זה בדיוק מה שאני צריך'",
     hintEn: "One sentence that makes people say 'that's exactly what I need'",
     botKey: "self-presentation",
   },
@@ -59,8 +59,8 @@ const STAGES: Stage[] = [
     titleEn: "Professional Network",
     descHe: "שותפויות שמזרימות פניות.",
     descEn: "Partnerships that refer.",
-    hintHe: "הרשימה של האנשים שישלחו אליכם מטופלים — ואיך לפנות אליהם",
-    hintEn: "The list of people who will send you clients — and how to reach them",
+    hintHe: "הרשימה של האנשים שישלחו אליכם מטופלים, ואיך לפנות אליהם",
+    hintEn: "The list of people who will send you clients, and how to reach them",
     botKey: "contact-finder",
   },
   {
@@ -76,7 +76,7 @@ const STAGES: Stage[] = [
   },
 ];
 
-// Horizontal layout on a wide viewBox (1400 x 380) — fits without scroll.
+// Horizontal layout on a wide viewBox (1400 x 380), fits without scroll.
 const VB_W = 1400;
 const VB_H = 380;
 const POSITIONS = STAGES.map((_, i) => ({
@@ -139,7 +139,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="relative">
-      {/* Header — compact */}
+      {/* Header, compact */}
       <div className="relative mb-4 text-center">
         <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur border border-mentor-accent/40 rounded-full px-3 py-1 mb-2 shadow-sm">
           <Compass className="w-3.5 h-3.5 text-mentor-accent" />
@@ -153,15 +153,15 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           {hasStarted
             ? isRTL
-              ? `${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם${activeStage ? ' — אתם נמצאים כעת ב"' + activeStage.titleHe + '"' : ""}.`
-              : `${completedCount} of ${STAGES.length} stations behind you${activeStage ? ` — currently at "${activeStage.titleEn}"` : ""}.`
+              ? `${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם${activeStage ? ', אתם נמצאים כעת ב"' + activeStage.titleHe + '"' : ""}.`
+              : `${completedCount} of ${STAGES.length} stations behind you${activeStage ? `, currently at "${activeStage.titleEn}"` : ""}.`
             : isRTL
-              ? "המסע מהתלבטות לקליניקה משגשגת — חמש תחנות, שביל אחד."
-              : "From doubt to a thriving practice — five stations, one path."}
+              ? "המסע מהתלבטות לקליניקה משגשגת, חמש תחנות, שביל אחד."
+              : "From doubt to a thriving practice, five stations, one path."}
         </p>
       </div>
 
-      {/* Map container — compact horizontal */}
+      {/* Map container, compact horizontal */}
       <div className="relative max-w-6xl mx-auto rounded-2xl overflow-hidden border border-mentor-border/60 shadow-xl bg-gradient-to-br from-mentor-surface via-card to-mentor-accent/5">
         <div aria-hidden className="absolute inset-0 pointer-events-none opacity-40">
           <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-mentor-accent/20 blur-3xl" />
@@ -311,7 +311,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
                   </div>
                 </foreignObject>
 
-                {/* Title — placed alternating above/below to clear path */}
+                {/* Title, placed alternating above/below to clear path */}
                 <foreignObject x={pos.x - 90} y={idx % 2 === 0 ? pos.y + 42 : pos.y - 78} width={180} height={56}>
                   <div
                     style={{
@@ -412,7 +412,7 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
           </motion.g>
         </svg>
 
-        {/* Footer — progress + active station */}
+        {/* Footer, progress + active station */}
         <div className="relative px-4 md:px-6 py-3 border-t border-mentor-border/40 bg-card/60 backdrop-blur">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
             <span className="font-medium">{isRTL ? "התקדמות במסע" : "Journey progress"}</span>

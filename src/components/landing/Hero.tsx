@@ -34,7 +34,7 @@ export function Hero() {
         }}
       />
 
-      {/* Subtle warm glow — very understated */}
+      {/* Subtle warm glow, very understated */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
         <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px]" />
@@ -78,7 +78,7 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Image - Left side — frameless 3D float */}
+          {/* Image - Left side, frameless 3D float */}
           <motion.div
             className={`${isRTL ? "lg:order-2" : "lg:order-1"} flex items-center justify-center`}
             initial={{ opacity: 0, scale: 0.95 }}
