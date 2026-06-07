@@ -184,6 +184,111 @@
     box-shadow: var(--shadow-elevated);
   }
 
+  /* ===== Sophisticated Boutique — section bands ===== */
+  .band {
+    @apply relative w-full overflow-hidden;
+  }
+  .band-cream {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .band-charcoal {
+    background-color: hsl(var(--foreground));
+    color: hsl(var(--background));
+  }
+  .band-burgundy {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Subtle warm grain — adds tactility on solid bands */
+  .band-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+
+  /* Eyebrow label — uppercase tracked terracotta */
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] mb-4;
+    color: hsl(var(--accent));
+  }
+  .band-charcoal .section-eyebrow,
+  .band-burgundy .section-eyebrow {
+    color: hsl(var(--terracotta));
+  }
+
+  /* Hairline divider — small terracotta rule with diamond dot */
+  .section-divider {
+    @apply mx-auto my-6 flex items-center justify-center gap-2;
+  }
+  .section-divider::before,
+  .section-divider::after {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background-color: hsl(var(--accent));
+    opacity: 0.7;
+  }
+  .section-divider::after { background-color: hsl(var(--accent)); }
+  .section-divider .dot {
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background-color: hsl(var(--accent));
+    opacity: 0.85;
+  }
+
+  /* Icon chip — circular framed icon, two tones */
+  .icon-chip {
+    @apply inline-flex items-center justify-center rounded-full;
+    width: 56px;
+    height: 56px;
+    background-color: hsl(var(--background));
+    border: 1px solid hsl(var(--primary) / 0.18);
+    color: hsl(var(--accent));
+    box-shadow:
+      0 8px 20px -10px hsl(15 11% 11% / 0.18),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.6);
+  }
+  .band-charcoal .icon-chip,
+  .band-burgundy .icon-chip {
+    background-color: hsl(var(--foreground));
+    border-color: hsl(var(--accent) / 0.6);
+    color: hsl(var(--terracotta));
+    box-shadow:
+      0 10px 24px -10px hsl(20 48% 42% / 0.45),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.06);
+  }
+
+  /* Big numeric badge for stepped sections */
+  .step-numeral {
+    font-family: 'Miriam Libre', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: hsl(var(--accent));
+    text-transform: uppercase;
+  }
+
+  /* Pull-quote oversized glyph */
+  .pull-quote::before {
+    content: "\201C";
+    position: absolute;
+    top: -3.5rem;
+    right: -1rem;
+    font-family: 'Miriam Libre', serif;
+    font-size: 9rem;
+    line-height: 1;
+    color: hsl(var(--accent) / 0.18);
+    pointer-events: none;
+  }
+
   /* Article prose styling */
   .prose-article {
     @apply leading-relaxed;
@@ -226,3 +331,4 @@
     @apply inline-block px-6 py-3 bg-accent text-accent-foreground rounded-lg font-medium no-underline hover:opacity-90 transition-opacity;
   }
 }
+

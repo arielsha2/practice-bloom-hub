@@ -49,7 +49,7 @@ export function ResetMentorButton({ variant = "compact", onResetDone }: Props) {
         onClick={() => setOpen(true)}
         disabled={isResetting}
         className="gap-2"
-        title="כפתור אדמין — איפוס המסע לבדיקת חוויית מטפל חדש"
+        title="כפתור אדמין, איפוס המסע לבדיקת חוויית מטפל חדש"
       >
         {isResetting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
         איפוס מסע (אדמין)

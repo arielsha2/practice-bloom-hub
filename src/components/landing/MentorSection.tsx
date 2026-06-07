@@ -38,8 +38,8 @@ export function MentorSection() {
             </h2>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {isRTL
-                ? "המנטור הוא בן הזוג האסטרטגי שלכם — ללוות, לחדד החלטות ולהפוך מטפל מצוין לקליניקה משגשגת. הנה מה שתקבלו:"
-                : "The Mentor is your strategic partner — guiding decisions and turning a great therapist into a thriving practice. Here is what you gain:"}
+                ? "המנטור הוא בן הזוג האסטרטגי שלכם, ללוות, לחדד החלטות ולהפוך מטפל מצוין לקליניקה משגשגת. הנה מה שתקבלו:"
+                : "The Mentor is your strategic partner, guiding decisions and turning a great therapist into a thriving practice. Here is what you gain:"}
             </p>
           </div>
 

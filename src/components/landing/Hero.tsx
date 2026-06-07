@@ -23,29 +23,29 @@ export function Hero() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: 'hsl(35, 40%, 96%)' }}>
-      {/* Subtle grain/noise texture overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.035] mix-blend-multiply"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '256px 256px',
-        }}
-      />
-
-      {/* Subtle warm glow — very understated */}
+    <section
+      id="home"
+      className="band band-charcoal band-grain min-h-screen flex items-center justify-center relative overflow-hidden"
+    >
+      {/* Subtle warm glows */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
-        <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[150px]" />
+        <div
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[150px]"
+          style={{ background: "hsl(var(--accent) / 0.18)" }}
+        />
+        <div
+          className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full blur-[150px]"
+          style={{ background: "hsl(var(--primary) / 0.4)" }}
+        />
       </div>
+
 
       <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Text Content - Right side */}
           <div className={`flex flex-col ${isRTL ? "text-right lg:order-1" : "lg:order-2"}`}>
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-display tracking-tight text-foreground mb-6 leading-[1.15]"
+              className="text-5xl md:text-6xl lg:text-7xl font-display tracking-tight text-background mb-6 leading-[1.15]"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
             >
@@ -53,12 +53,13 @@ export function Hero() {
             </motion.h1>
 
             <motion.p
-              className="text-lg md:text-xl text-foreground/70 mb-10 max-w-xl leading-relaxed"
+              className="text-lg md:text-xl text-background/75 mb-10 max-w-xl leading-relaxed"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
             >
               {t("hero.subtitle")}
             </motion.p>
+
 
             <motion.div
               {...fadeUp}
@@ -78,7 +79,7 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Image - Left side — frameless 3D float */}
+          {/* Image - Left side, frameless 3D float */}
           <motion.div
             className={`${isRTL ? "lg:order-2" : "lg:order-1"} flex items-center justify-center`}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -101,11 +102,12 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Gradient transition to next section */}
+      {/* Gradient transition to next (cream) section */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 h-[80px] pointer-events-none"
         style={{ background: 'linear-gradient(to bottom, transparent, hsl(var(--background)))' }}
       />
+
 
       {/* Join community dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

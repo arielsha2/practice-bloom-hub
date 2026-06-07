@@ -18,32 +18,28 @@ export function HowItWorks() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section id="how-it-works" className="pt-8 md:pt-12 pb-24 bg-background relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[80px]" />
-      </div>
-
+    <section id="how-it-works" className="band band-cream py-24 md:py-32 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         {/* Section header */}
-        <motion.div 
+        <motion.div
           className={`text-center max-w-2xl mx-auto mb-16 ${isRTL ? 'text-right md:text-center' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="inline-block text-primary font-medium text-sm mb-4 tracking-wider uppercase">
+          <div className="section-eyebrow justify-center">
             {t('howItWorks.label')}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-4 tracking-wide">
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground mb-4 tracking-tight leading-tight">
             {t('howItWorks.title')}
           </h2>
+          <div className="section-divider" aria-hidden="true"><span className="dot" /></div>
           <p className="text-lg text-muted-foreground">
             {t('howItWorks.subtitle')}
           </p>
         </motion.div>
+
 
         {/* Steps */}
         <div className="relative">

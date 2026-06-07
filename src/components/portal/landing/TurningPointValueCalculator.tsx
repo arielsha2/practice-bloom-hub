@@ -29,7 +29,7 @@ export function TurningPointValueCalculator() {
             מה זה אומר בפועל לקליניקה שלך?
           </h2>
           <p className="text-muted-foreground mb-6">
-            גם תוספת של מטופל אחד או שניים בעקבות התוכנית — מחזירה את ההשקעה פי כמה וכמה.
+            גם תוספת של מטופל אחד או שניים בעקבות התוכנית, מחזירה את ההשקעה פי כמה וכמה.
           </p>
 
           {/* Arrow guiding the eye down */}

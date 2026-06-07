@@ -97,7 +97,7 @@ export function FinalCelebration() {
       "שלום [שם], נעים מאוד.",
       handshake + (niche.transformation ? ` ${niche.transformation}.` : "."),
       sp.story_version ? "" : "",
-      "אשמח להכיר ולבדוק אם יש לנו במה לשתף פעולה — האם נוח לך לשיחה קצרה השבוע?",
+      "אשמח להכיר ולבדוק אם יש לנו במה לשתף פעולה, האם נוח לך לשיחה קצרה השבוע?",
       "תודה,",
       "[השם שלך]",
     ].filter(Boolean);
@@ -141,7 +141,7 @@ export function FinalCelebration() {
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-mentor-accent" />
-            הנה הסיכום של כל מה שעלה — שלך לשמור, להעתיק ולהשתמש.
+            הנה הסיכום של כל מה שעלה, שלך לשמור, להעתיק ולהשתמש.
           </p>
         </div>
 
@@ -179,7 +179,7 @@ export function FinalCelebration() {
             </p>
           )}
 
-          {/* Coming soon — personalized website builder teaser */}
+          {/* Coming soon, personalized website builder teaser */}
           <WebsiteComingSoonCard className="mt-2" />
         </div>
       </div>
