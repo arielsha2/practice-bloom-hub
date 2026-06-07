@@ -260,25 +260,29 @@ export function MentorSalesPage() {
           </p>
         </motion.div>
 
-        <motion.ul {...fadeUp} className="space-y-3 max-w-3xl mx-auto">
-          {personas.map((p, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-4 rounded-2xl p-5 border border-background/15 bg-background/[0.06] backdrop-blur-sm"
-            >
-              <span
-                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-display text-sm border"
-                style={{
-                  color: "hsl(var(--terracotta))",
-                  borderColor: "hsl(var(--terracotta) / 0.5)",
-                  background: "hsl(var(--foreground) / 0.3)",
-                }}
+        <motion.ul {...fadeUp} className="grid md:grid-cols-5 gap-4 max-w-3xl mx-auto">
+          {personas.map((p, i) => {
+            // Asymmetric 60/40 rhythm: cards alternate 3-col / 2-col widths
+            const span = i % 2 === 0 ? "md:col-span-3" : "md:col-span-2";
+            return (
+              <li
+                key={i}
+                className={`card-asym flex items-start gap-4 p-5 border border-background/15 bg-background/[0.06] backdrop-blur-sm ${span}`}
               >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="text-background leading-relaxed pt-1">{p}</span>
-            </li>
-          ))}
+                <span
+                  className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-display text-sm border tnum"
+                  style={{
+                    color: "hsl(var(--terracotta))",
+                    borderColor: "hsl(var(--terracotta) / 0.5)",
+                    background: "hsl(var(--foreground) / 0.3)",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-background pt-1">{p}</span>
+              </li>
+            );
+          })}
         </motion.ul>
 
         <motion.div
