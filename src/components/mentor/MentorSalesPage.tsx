@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useRevealOnScroll } from "@/hooks/useReveal";
 import {
   Sparkles,
   Check,
