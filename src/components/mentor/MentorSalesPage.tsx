@@ -494,7 +494,7 @@ export function MentorSalesPage() {
         >
           <p className="font-display text-xl md:text-2xl text-foreground mb-3">ההשקעה שלך</p>
           <p className="text-base md:text-lg text-muted-foreground mb-2">
-            מחיר המנטור:{" "}
+            מחיר המנטור בהמשך:{" "}
             <span className="line-through opacity-80 tnum font-display text-2xl md:text-3xl text-foreground/80 mx-1">
               ₪1,800
             </span>
