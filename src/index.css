@@ -224,9 +224,12 @@
     background-size: 256px 256px;
   }
 
-  /* Eyebrow label — uppercase tracked terracotta */
+  /* Eyebrow label — uppercase tracked terracotta (Miriam Libre 700) */
   .section-eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] mb-4;
+    @apply inline-flex items-center gap-2 text-xs uppercase mb-3;
+    font-family: 'Miriam Libre', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.22em;
     color: hsl(var(--accent));
   }
   .band-charcoal .section-eyebrow,
