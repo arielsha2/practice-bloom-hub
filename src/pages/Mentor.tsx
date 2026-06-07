@@ -606,6 +606,23 @@ export default function Mentor() {
     setInput("");
   }, [language, storageKey]);
 
+  // Suggested bot for the fallback banner: last assistant message mentions
+  // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
+  // Suppressed while a bot is already open, while the next response is loading,
+  // and while a pending-return dialog is showing.
+  const suggestedBotKey = useMemo<string | null>(() => {
+    if (activeBotKey || isLoading) return null;
+    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+    if (!lastAssistant?.content) return null;
+    // If a real handoff was already detected we don't need a fallback banner.
+    if (detectHandoff(lastAssistant.content)) return null;
+    const tail = lastSentences(lastAssistant.content, 3);
+    return findMentionedBot(tail);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, activeBotKey, isLoading]);
+
+
+
   // Handle return from a bot tool: ?from=<botKey>
   const handledFromRef = useRef(false);
   useEffect(() => {
