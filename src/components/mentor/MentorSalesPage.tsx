@@ -240,29 +240,25 @@ export function MentorSalesPage() {
           <p className="text-background/80 text-base md:text-lg mb-10">וזה לוקח הרבה זמן והרבה טעויות בדרך.</p>
         </motion.div>
 
-        <motion.ul {...fadeUp} className="grid md:grid-cols-5 gap-4 max-w-3xl mx-auto">
-          {personas.map((p, i) => {
-            // Asymmetric 60/40 rhythm: cards alternate 3-col / 2-col widths
-            const span = i % 2 === 0 ? "md:col-span-3" : "md:col-span-2";
-            return (
-              <li
-                key={i}
-                className={`card-asym flex items-start gap-4 p-5 border border-background/15 bg-background/[0.06] backdrop-blur-sm ${span}`}
+        <motion.ul {...fadeUp} className="flex flex-col gap-3 max-w-3xl mx-auto">
+          {personas.map((p, i) => (
+            <li
+              key={i}
+              className={`reveal stagger-${Math.min(i, 4)} flex items-center gap-6 py-5 px-6 md:px-8 border border-background/15 bg-background/[0.06] rounded-tr-2xl rounded-tl-none rounded-br-none rounded-bl-none min-h-[72px]`}
+            >
+              <span
+                className="flex-1 text-background/90 leading-relaxed text-right"
               >
-                <span
-                  className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-display text-sm border tnum"
-                  style={{
-                    color: "hsl(var(--terracotta))",
-                    borderColor: "hsl(var(--terracotta) / 0.5)",
-                    background: "hsl(var(--foreground) / 0.3)",
-                  }}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="text-background pt-1">{p}</span>
-              </li>
-            );
-          })}
+                {p}
+              </span>
+              <span
+                className="shrink-0 font-display text-xs tnum tracking-wider"
+                style={{ color: "hsl(var(--terracotta))" }}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            </li>
+          ))}
         </motion.ul>
 
         <motion.div {...fadeUp} className="text-center mt-12 max-w-2xl mx-auto">
