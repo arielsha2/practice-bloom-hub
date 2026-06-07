@@ -233,7 +233,6 @@ export function MentorSalesPage() {
       {/* ============ PERSONAS — BURGUNDY ============ */}
       <Band tone="burgundy">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
-          <Eyebrow>זיהוי</Eyebrow>
           <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
             את החידה הזו מטפלים מנסים לפתור לבד.
           </h2>
