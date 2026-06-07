@@ -303,8 +303,12 @@ export function MentorSalesPage() {
         </motion.div>
       </Band>
 
+      {/* ============ INTERLUDE ============ */}
+      <InterludeBanner text="אף אחד לא לימד אותך את זה. אז איך יכולת לדעת?" />
+
       {/* ============ SOLUTION INTRO — CREAM ============ */}
       <Band tone="cream">
+
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>המענה</Eyebrow>
           <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
