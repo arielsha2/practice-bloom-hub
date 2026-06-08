@@ -275,13 +275,13 @@ export function MentorSalesPage() {
               key={i}
               className={`reveal stagger-${Math.min(i, 4)} flex items-center gap-6 py-5 px-6 md:px-8 border border-background/15 bg-background/[0.06] rounded-tr-2xl rounded-tl-none rounded-br-none rounded-bl-none min-h-[72px]`}
             >
-              <span className="flex-1 text-background/90 leading-relaxed text-right">{p}</span>
               <span
                 className="shrink-0 font-display text-xs tnum tracking-wider"
                 style={{ color: "hsl(var(--terracotta))" }}
               >
                 {String(i + 1).padStart(2, "0")}
               </span>
+              <span className="flex-1 text-background/90 leading-relaxed text-right">{p}</span>
             </li>
           ))}
         </motion.ul>
