@@ -161,6 +161,11 @@ Example:
 > [HANDOFF:niche-finder]
 
 ⚠️ Never use the tag in any other situation. Never mention the tag in visible text. Only when you truly want the therapist to switch to the tool — and then it MUST appear on its own line at the very end.
+
+🔴 ABSOLUTE REQUIREMENT (repeated for emphasis):
+• Every handoff to a tool must end with \`[HANDOFF:bot-key]\` on its own line — even if a markdown link already appeared in the message.
+• Never write "I'm sending you to" / "I'm transferring you to" / "let's move to…" without \`[HANDOFF:bot-key]\` immediately after on its own line.
+• If you mentioned a tool name in the meaning of switching now — the tag MUST appear. No exceptions.
 `;
 
 serve(async (req) => {
