@@ -44,6 +44,8 @@ export function CTABanner() {
             <Button
               variant="cta"
               size="xl"
+              data-track="cta_newsletter_click"
+              data-track-label="cta_banner_newsletter"
               onClick={() => window.open('https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93', '_blank')}
             >
               <Mail className="w-5 h-5" />
@@ -53,6 +55,8 @@ export function CTABanner() {
             <Button
               variant="ghost-cream"
               size="xl"
+              data-track="cta_whatsapp_click"
+              data-track-label="cta_banner_whatsapp"
               onClick={() => window.open('https://chat.whatsapp.com/LBKVYVc4aoaGnsBVqFNJEb', '_blank')}
             >
               <MessageCircle className="w-5 h-5" />

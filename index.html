@@ -31,6 +31,38 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://therapykeys.co.il/og-image.jpg" />
 
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "x3wgwbgfup");
+    </script>
+
+    <!-- Google Analytics 4 (gtag.js) -->
+    <!-- TODO: החלף את GA_MEASUREMENT_ID ב-Measurement ID שלך (G-XXXXXXXXXX) מתוך GA4 → Admin → Data Streams -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID', { send_page_view: true });
+    </script>
+
+    <!-- Auto-track any element with data-track="event_name" -->
+    <script>
+      document.addEventListener('click', function(e){
+        var el = e.target.closest && e.target.closest('[data-track]');
+        if (!el) return;
+        var name = el.getAttribute('data-track');
+        var label = el.getAttribute('data-track-label') || el.textContent.trim().slice(0, 80);
+        var page = location.pathname + location.search;
+        try { window.gtag && window.gtag('event', name, { event_label: label, page_path: page }); } catch(_) {}
+        try { window.clarity && window.clarity('event', name); } catch(_) {}
+      }, { capture: true });
+    </script>
+
     <!-- JSON-LD: Organization -->
     <script type="application/ld+json">
     {

@@ -69,6 +69,8 @@ export function Hero() {
                 variant="cta"
                 size="xl"
                 className="group"
+                data-track="hero_cta_click"
+                data-track-label="hero_join_community"
                 onClick={() => setOpen(true)}
               >
                 {t("hero.cta")}
@@ -131,6 +133,8 @@ export function Hero() {
                 href="https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93"
                 target="_blank"
                 rel="noopener noreferrer"
+                data-track="newsletter_signup_click"
+                data-track-label="hero_dialog_newsletter"
                 onClick={() => setOpen(false)}
               >
                 <Mail className="w-5 h-5" />
@@ -147,6 +151,8 @@ export function Hero() {
                 href="https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv"
                 target="_blank"
                 rel="noopener noreferrer"
+                data-track="whatsapp_click"
+                data-track-label="hero_dialog_whatsapp"
                 onClick={() => setOpen(false)}
               >
                 <MessageCircle className="w-5 h-5" />
