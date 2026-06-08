@@ -69,6 +69,8 @@ export function Hero() {
                 variant="cta"
                 size="xl"
                 className="group"
+                data-track="hero_cta_click"
+                data-track-label="hero_join_community"
                 onClick={() => setOpen(true)}
               >
                 {t("hero.cta")}
