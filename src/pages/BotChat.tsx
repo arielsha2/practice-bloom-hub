@@ -368,7 +368,7 @@ const BotChat = () => {
           botIcon={botIcon}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton
-          onReturnToMentor={user ? handleReturnToMentor : undefined}
+          onReturnToMentor={user && isEmbedded ? handleReturnToMentor : undefined}
           isReturningToMentor={returningToMentor}
         />
 
