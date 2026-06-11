@@ -409,6 +409,46 @@ export function useUsersManagement() {
     return cohort ? (isRTL ? cohort.name_he : cohort.name_en) : null;
   };
 
+  // Grant the 8-day free mentor trial (resets the trial window)
+  const grantFreeTrial = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          plan: 'free',
+          trial_start_date: new Date().toISOString(),
+          trial_reminder_sent_at: null,
+          plan_updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({
+        title: isRTL ? 'הצלחה' : 'Success',
+        description: isRTL ? 'אושרו 8 ימי התנסות חינם במנטור' : '8-day free mentor trial granted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Get trial status for a user
+  const getTrialStatus = (userId: string): { status: TrialStatus; endsAt: Date | null } => {
+    const user = users.find(u => u.id === userId) as UserProfile | undefined;
+    if (!user) return { status: 'none', endsAt: null };
+    if (user.plan === 'paid') return { status: 'paid', endsAt: null };
+    if (!user.trial_start_date) return { status: 'none', endsAt: null };
+    const endsAt = new Date(new Date(user.trial_start_date).getTime() + 8 * 24 * 60 * 60 * 1000);
+    return { status: endsAt > new Date() ? 'active' : 'expired', endsAt };
+  };
+
   return {
     users,
     enrollments,
@@ -423,6 +463,16 @@ export function useUsersManagement() {
     deletePendingEnrollment,
     getUserEnrollments,
     getPendingEnrollments,
+    isEnrolledInCourse,
+    getUserRole,
+    getUserCohorts,
+    getCohortName,
+    hasMentorAccess,
+    toggleMentorAccess,
+    grantFreeTrial,
+    getTrialStatus,
+  };
+}
     isEnrolledInCourse,
     getUserRole,
     getUserCohorts,
