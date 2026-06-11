@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, X, Search, Shield, Sparkles } from 'lucide-react';
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2 } from 'lucide-react';
+import type { TrialStatus } from '@/hooks/useUsersManagement';
 import { format } from 'date-fns';
 
 interface UserProfile {
@@ -62,9 +63,12 @@ interface UsersTableProps {
   getUserRole: (userId: string) => 'admin' | 'student' | 'none';
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
+  getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
+  onGrantFreeTrial: (user: UserProfile) => void;
+  isGrantingTrial?: boolean;
 }
 
 export function UsersTable({
@@ -75,9 +79,12 @@ export function UsersTable({
   getUserRole,
   getUserCohorts,
   hasMentorAccess,
+  getTrialStatus,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
+  onGrantFreeTrial,
+  isGrantingTrial,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
@@ -186,15 +193,15 @@ export function UsersTable({
               <TableHead>{isRTL ? 'תפקיד' : 'Role'}</TableHead>
               <TableHead>{isRTL ? 'מחזורים' : 'Cohorts'}</TableHead>
               <TableHead>{isRTL ? 'קורסים' : 'Courses'}</TableHead>
-              
               <TableHead>{isRTL ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
+              <TableHead>{isRTL ? 'התנסות חינם' : 'Free Trial'}</TableHead>
               <TableHead>{isRTL ? 'פעולות' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {isRTL ? 'לא נמצאו משתמשים' : 'No users found'}
                 </TableCell>
               </TableRow>
@@ -272,6 +279,42 @@ export function UsersTable({
                       {user.created_at
                         ? format(new Date(user.created_at), 'dd/MM/yyyy')
                         : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const trial = getTrialStatus(user.id);
+                        if (trial.status === 'paid') {
+                          return (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {isRTL ? 'שילם' : 'Paid'}
+                            </Badge>
+                          );
+                        }
+                        if (trial.status === 'active') {
+                          const days = Math.max(
+                            0,
+                            Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          );
+                          return (
+                            <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                              <Gift className="w-3 h-3" />
+                              {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onGrantFreeTrial(user)}
+                            disabled={isGrantingTrial}
+                          >
+                            <Gift className="w-4 h-4 me-1" />
+                            {isRTL ? 'אשר 8 ימי התנסות' : 'Grant 8-day trial'}
+                          </Button>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

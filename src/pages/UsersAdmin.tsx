@@ -43,6 +43,8 @@ export default function UsersAdmin() {
     getUserCohorts,
     hasMentorAccess,
     toggleMentorAccess,
+    grantFreeTrial,
+    getTrialStatus,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -198,9 +200,12 @@ export default function UsersAdmin() {
                 getUserRole={getUserRole}
                 getUserCohorts={getUserCohorts}
                 hasMentorAccess={hasMentorAccess}
+                getTrialStatus={getTrialStatus}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
+                onGrantFreeTrial={(u) => grantFreeTrial.mutate({ userId: u.id })}
+                isGrantingTrial={grantFreeTrial.isPending}
               />
 
               <PendingUsersTable
