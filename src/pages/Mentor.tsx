@@ -39,6 +39,7 @@ import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { MentorSalesPage } from "@/components/mentor/MentorSalesPage";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 
 function MentorTopBar() {
@@ -431,6 +432,7 @@ export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
+  const userPlanInfo = useUserPlan();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
   const journeyRef = useRef(journey);
   useEffect(() => {
