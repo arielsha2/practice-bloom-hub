@@ -71,6 +71,7 @@ const BotChat = () => {
   const { data: savedMessages = [], isLoading: messagesLoading } = useBotMessages(activeConversationId);
   const deleteConversation = useDeleteConversation();
   const addUserMemory = useAddUserMemory();
+  const { access: planAccess, loading: planLoading } = useBotAccess(botKey);
 
   // Chat hook
   const {
@@ -224,8 +225,6 @@ const BotChat = () => {
   }
 
   // Plan-based access gate (skip for public bots / unauthenticated public flow)
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { access: planAccess, loading: planLoading } = useBotAccess(botKey);
   if (user && !isPublicBot(botKey) && !planLoading && planAccess !== 'allowed') {
     return <UpgradeGate />;
   }
