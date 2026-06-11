@@ -18,7 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2 } from 'lucide-react';
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { TrialStatus } from '@/hooks/useUsersManagement';
 import { format } from 'date-fns';
 
@@ -68,7 +78,9 @@ interface UsersTableProps {
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
   onGrantFreeTrial: (user: UserProfile) => void;
+  onDeleteUser: (user: UserProfile) => void;
   isGrantingTrial?: boolean;
+  isDeletingUser?: boolean;
 }
 
 export function UsersTable({
@@ -84,11 +96,14 @@ export function UsersTable({
   onRemoveFromCourse,
   onChangeRole,
   onGrantFreeTrial,
+  onDeleteUser,
   isGrantingTrial,
+  isDeletingUser,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [cohortFilter, setCohortFilter] = useState<string>('all');
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter(e => e.user_id === userId);
@@ -334,6 +349,15 @@ export function UsersTable({
                           <Shield className="w-4 h-4 me-1" />
                           {isRTL ? 'תפקיד' : 'Role'}
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setUserToDelete(user)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4 me-1" />
+                          {isRTL ? 'הסר' : 'Delete'}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -350,6 +374,36 @@ export function UsersTable({
           : `${filteredUsers.length} users${filteredUsers.length !== users.length ? ` (of ${users.length})` : ''} total`
         }
       </p>
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isRTL ? 'מחיקת משתמש' : 'Delete user'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? `פעולה זו תמחק לצמיתות את ${userToDelete?.email || 'המשתמש'} ואת כל הנתונים המשויכים (הרשמות, תפקידים, פרופיל). לא ניתן לבטל.`
+                : `This will permanently delete ${userToDelete?.email || 'this user'} and all related data (enrollments, roles, profile). This cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'ביטול' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingUser}
+              onClick={() => {
+                if (userToDelete) {
+                  onDeleteUser(userToDelete);
+                  setUserToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRTL ? 'מחק לצמיתות' : 'Delete permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

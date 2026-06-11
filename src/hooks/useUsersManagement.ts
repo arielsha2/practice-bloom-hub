@@ -439,6 +439,33 @@ export function useUsersManagement() {
     },
   });
 
+  // Delete user completely (auth + profile + roles + enrollments)
+  const deleteUser = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-enrollments'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      toast({
+        title: isRTL ? 'הצלחה' : 'Success',
+        description: isRTL ? 'המשתמש נמחק' : 'User deleted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Get trial status for a user
   const getTrialStatus = (userId: string): { status: TrialStatus; endsAt: Date | null } => {
     const user = users.find(u => u.id === userId) as UserProfile | undefined;
@@ -470,6 +497,7 @@ export function useUsersManagement() {
     hasMentorAccess,
     toggleMentorAccess,
     grantFreeTrial,
+    deleteUser,
     getTrialStatus,
   };
 }
