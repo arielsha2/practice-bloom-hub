@@ -43,6 +43,8 @@ export default function UsersAdmin() {
     getUserCohorts,
     hasMentorAccess,
     toggleMentorAccess,
+    grantFreeTrial,
+    getTrialStatus,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
