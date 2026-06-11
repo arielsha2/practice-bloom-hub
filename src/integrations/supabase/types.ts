@@ -724,18 +724,30 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          meshulam_transaction_id: string | null
+          plan: string
+          plan_updated_at: string | null
+          trial_start_date: string | null
         }
         Insert: {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
           id: string
+          meshulam_transaction_id?: string | null
+          plan?: string
+          plan_updated_at?: string | null
+          trial_start_date?: string | null
         }
         Update: {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
           id?: string
+          meshulam_transaction_id?: string | null
+          plan?: string
+          plan_updated_at?: string | null
+          trial_start_date?: string | null
         }
         Relationships: []
       }
@@ -1251,6 +1263,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_user_access: {
+        Args: { _user_id: string }
+        Returns: {
+          has_paid: boolean
+          plan: string
+          trial_active: boolean
+          trial_ends_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
