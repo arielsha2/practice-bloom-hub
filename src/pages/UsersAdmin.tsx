@@ -200,9 +200,12 @@ export default function UsersAdmin() {
                 getUserRole={getUserRole}
                 getUserCohorts={getUserCohorts}
                 hasMentorAccess={hasMentorAccess}
+                getTrialStatus={getTrialStatus}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
+                onGrantFreeTrial={(u) => grantFreeTrial.mutate({ userId: u.id })}
+                isGrantingTrial={grantFreeTrial.isPending}
               />
 
               <PendingUsersTable
