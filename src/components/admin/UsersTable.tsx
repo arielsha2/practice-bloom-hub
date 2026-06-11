@@ -193,15 +193,15 @@ export function UsersTable({
               <TableHead>{isRTL ? 'תפקיד' : 'Role'}</TableHead>
               <TableHead>{isRTL ? 'מחזורים' : 'Cohorts'}</TableHead>
               <TableHead>{isRTL ? 'קורסים' : 'Courses'}</TableHead>
-              
               <TableHead>{isRTL ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
+              <TableHead>{isRTL ? 'התנסות חינם' : 'Free Trial'}</TableHead>
               <TableHead>{isRTL ? 'פעולות' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {isRTL ? 'לא נמצאו משתמשים' : 'No users found'}
                 </TableCell>
               </TableRow>
