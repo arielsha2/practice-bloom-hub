@@ -894,12 +894,47 @@ export default function Mentor() {
     document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Paywall — full sales page
-  if (!accessLoading && hasAccess === false) {
+  // Paywall — full sales page (trial users get through and see the mentor)
+  if (!accessLoading && hasAccess === false && !userPlanInfo.trialActive) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
         <main className="flex-1 pt-16">
+          {/* Free-trial invitation — visible to anyone who lands on the mentor without access */}
+          <section className="container mx-auto px-4 pt-8">
+            <div
+              dir="rtl"
+              className="max-w-3xl mx-auto rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-[#ff6f61]/10 p-6 md:p-8 shadow-md text-center"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff6f61]/15 text-[#ff6f61] text-xs font-semibold mb-3">
+                <Sparkles className="w-3.5 h-3.5" />
+                {isRTL ? "ההזמנה שלך" : "Your invitation"}
+              </div>
+              <h2 className="text-2xl md:text-3xl font-serif font-bold text-primary mb-2">
+                {isRTL ? "יש לך 8 ימי ניסיון חינם עם המנטור" : "You have 8 free days with the mentor"}
+              </h2>
+              <p className="text-foreground/80 leading-relaxed mb-5 max-w-xl mx-auto">
+                {isRTL
+                  ? "ללא כרטיס אשראי וללא מחויבות. מזינה מייל, מקבלת קישור — ומתחילה לעבוד עם המנטור עוד היום."
+                  : "No credit card, no commitment. Enter your email, get a link, and start working with the mentor today."}
+              </p>
+              <Link to="/auth?mode=signup&intent=trial">
+                <Button
+                  size="lg"
+                  className="bg-[#ff6f61] hover:bg-[#ff5a4d] text-white rounded-xl px-7"
+                >
+                  <Sparkles className="w-4 h-4 ms-1" />
+                  {isRTL ? "התחילי 8 ימי ניסיון חינם" : "Start 8 free days"}
+                </Button>
+              </Link>
+              <p className="text-xs text-muted-foreground mt-3">
+                {isRTL ? "כבר רשומה? " : "Already signed up? "}
+                <Link to="/auth" className="underline hover:text-primary">
+                  {isRTL ? "להתחברות" : "Log in"}
+                </Link>
+              </p>
+            </div>
+          </section>
           <MentorSalesPage />
         </main>
         <Footer />

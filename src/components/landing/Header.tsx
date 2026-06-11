@@ -56,17 +56,11 @@ export function Header() {
           >
             {t("nav.portal")}
           </Link>
-          {user ? (
+          {user && (
             <Link to="/dashboard">
               <Button variant="cta" size="sm" className="gap-1.5">
                 <LayoutDashboard className="w-4 h-4" />
                 {t("nav.dashboard")}
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/auth?mode=signup&intent=trial">
-              <Button variant="cta" size="sm" className="gap-1.5 bg-[#ff6f61] hover:bg-[#ff5a4d] text-white">
-                {isRTL ? "8 ימי ניסיון חינם" : "Free 8-day trial"}
               </Button>
             </Link>
           )}
