@@ -41,6 +41,7 @@ import { MentorSalesPage } from "@/components/mentor/MentorSalesPage";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
+import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -1290,6 +1291,9 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
+        {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && (
+          <UpgradeInvite />
+        )}
         <WebsiteComingSoonCard />
       </div>
       <Footer />
