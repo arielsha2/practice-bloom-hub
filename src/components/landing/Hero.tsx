@@ -2,13 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowRight, ArrowLeft, Mail, MessageCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroFoundersImg from "@/assets/hero-founders.png";
@@ -41,7 +35,6 @@ export function Hero() {
         />
       </div>
 
-
       <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Text Content - Right side */}
@@ -62,7 +55,6 @@ export function Hero() {
               {t("hero.subtitle")}
             </motion.p>
 
-
             <motion.div
               className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
               {...fadeUp}
@@ -71,7 +63,7 @@ export function Hero() {
               <Link
                 to="/auth?mode=signup&intent=trial"
                 className="inline-flex"
-                onClick={() => trackEvent('contact_button_click', { location: 'hero_start_trial' })}
+                onClick={() => trackEvent("contact_button_click", { location: "hero_start_trial" })}
               >
                 <Button
                   size="xl"
@@ -94,7 +86,7 @@ export function Hero() {
                 data-track="hero_cta_click"
                 data-track-label="hero_join_community"
                 onClick={() => {
-                  trackEvent('contact_button_click', { location: 'hero_join_community' });
+                  trackEvent("contact_button_click", { location: "hero_join_community" });
                   setOpen(true);
                 }}
               >
@@ -107,9 +99,7 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
             >
-              {isRTL
-                ? "ללא כרטיס אשראי · גישה מלאה למנטור אליענה · 8 ימים"
-                : "No credit card · Full access to the mentor · 8 days"}
+              {isRTL ? "ללא כרטיס אשראי · גרסת התנסות · 7 ימים" : "No credit card · Full access to the mentor · 8 days"}
             </motion.p>
           </div>
 
@@ -136,10 +126,6 @@ export function Hero() {
         </div>
       </div>
 
-
-
-
-
       {/* Join community dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md" dir={isRTL ? "rtl" : "ltr"}>
@@ -148,19 +134,12 @@ export function Hero() {
               {isRTL ? 'הצטרפו לקהילת "על שפת הקליניקה"' : 'Join the "Al Sfat HaClinica" community'}
             </DialogTitle>
             <DialogDescription className={isRTL ? "text-right" : ""}>
-              {isRTL
-                ? "בחרו את הדרך המועדפת עליכם להישאר בקשר"
-                : "Choose your preferred way to stay in touch"}
+              {isRTL ? "בחרו את הדרך המועדפת עליכם להישאר בקשר" : "Choose your preferred way to stay in touch"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 pt-2">
-            <Button
-              variant="cta"
-              size="lg"
-              className="w-full"
-              asChild
-            >
+            <Button variant="cta" size="lg" className="w-full" asChild>
               <a
                 href="https://sfat.myflodesk.com/c6d2334e-ea5d-4f2a-bc16-0fb3fc548d93"
                 target="_blank"
@@ -174,11 +153,7 @@ export function Hero() {
               </a>
             </Button>
 
-            <Button
-              size="lg"
-              className="w-full bg-[#25D366] text-white hover:bg-[#20BD5A]"
-              asChild
-            >
+            <Button size="lg" className="w-full bg-[#25D366] text-white hover:bg-[#20BD5A]" asChild>
               <a
                 href="https://chat.whatsapp.com/LIFDBs6thhtH3L7LqMTfdv"
                 target="_blank"
@@ -186,7 +161,7 @@ export function Hero() {
                 data-track="whatsapp_click"
                 data-track-label="hero_dialog_whatsapp"
                 onClick={() => {
-                  trackEvent('whatsapp_click', { location: 'hero_dialog' });
+                  trackEvent("whatsapp_click", { location: "hero_dialog" });
                   setOpen(false);
                 }}
               >
@@ -195,7 +170,6 @@ export function Hero() {
               </a>
             </Button>
           </div>
-
         </DialogContent>
       </Dialog>
     </section>
