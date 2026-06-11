@@ -22,7 +22,10 @@ export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const [mode, setMode] = useState<AuthMode>('login');
+  const isTrialIntent = searchParams.get('intent') === 'trial';
+  const [mode, setMode] = useState<AuthMode>(
+    isTrialIntent || searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -121,9 +124,9 @@ export default function Auth() {
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
     if (user && !loading && mode !== 'reset') {
-      navigate('/dashboard');
+      navigate(isTrialIntent ? '/welcome' : '/dashboard');
     }
-  }, [user, loading, navigate, mode]);
+  }, [user, loading, navigate, mode, isTrialIntent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
