@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, X, Search, Shield, Sparkles } from 'lucide-react';
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2 } from 'lucide-react';
+import type { TrialStatus } from '@/hooks/useUsersManagement';
 import { format } from 'date-fns';
 
 interface UserProfile {
