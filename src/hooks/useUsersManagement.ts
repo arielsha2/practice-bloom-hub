@@ -473,11 +473,3 @@ export function useUsersManagement() {
     getTrialStatus,
   };
 }
-    isEnrolledInCourse,
-    getUserRole,
-    getUserCohorts,
-    getCohortName,
-    hasMentorAccess,
-    toggleMentorAccess,
-  };
-}
