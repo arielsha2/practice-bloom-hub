@@ -349,6 +349,15 @@ export function UsersTable({
                           <Shield className="w-4 h-4 me-1" />
                           {isRTL ? 'תפקיד' : 'Role'}
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setUserToDelete(user)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4 me-1" />
+                          {isRTL ? 'הסר' : 'Delete'}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -365,6 +374,36 @@ export function UsersTable({
           : `${filteredUsers.length} users${filteredUsers.length !== users.length ? ` (of ${users.length})` : ''} total`
         }
       </p>
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isRTL ? 'מחיקת משתמש' : 'Delete user'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? `פעולה זו תמחק לצמיתות את ${userToDelete?.email || 'המשתמש'} ואת כל הנתונים המשויכים (הרשמות, תפקידים, פרופיל). לא ניתן לבטל.`
+                : `This will permanently delete ${userToDelete?.email || 'this user'} and all related data (enrollments, roles, profile). This cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'ביטול' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingUser}
+              onClick={() => {
+                if (userToDelete) {
+                  onDeleteUser(userToDelete);
+                  setUserToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRTL ? 'מחק לצמיתות' : 'Delete permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
