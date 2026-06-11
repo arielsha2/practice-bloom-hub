@@ -244,7 +244,21 @@ serve(async (req) => {
       ? `\n\n═══════════════════════════════\nתקופת ניסיון (חובה לקרוא):\n═══════════════════════════════\nאתה עובד כעת עם משתמשת בתקופת ניסיון של 8 ימים. הכלי היחיד שזמין הוא מחשבון התמחור. אל תזכיר זאת אלא אם נשאלת ישירות. נהל שיחה טבעית, הכירי אותה, והפני אותה למחשבון התמחור כצעד הבא הטבעי. רק לאחר שהיא סיימה את התמחור, הציעי בעדינות להמשיך יחד במסע המלא.`
       : "";
 
-    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock;
+    const defaultLang = language === "en" ? "English" : "Hebrew";
+    const languageRule = `
+
+═══════════════════════════════
+LANGUAGE RULE (overrides everything else):
+═══════════════════════════════
+- Default language for this conversation: ${defaultLang}.
+- Reply in ${defaultLang} unless the user's most recent message is clearly written in another language.
+- If the user writes in another language (e.g. switches from Hebrew to English mid-conversation), match their language for the rest of this conversation.
+- NEVER reply in Arabic. NEVER use Arabic script. If you find yourself drafting Arabic, rewrite in ${defaultLang} before sending.
+- Hebrew = Hebrew script (אבגד). English = Latin script. Do not mix scripts within one reply.
+- Tool names, brand names, and URLs may stay in their original language.
+`;
+
+    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock + languageRule;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
