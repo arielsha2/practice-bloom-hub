@@ -24,6 +24,8 @@ import { Menu } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
+import { useBotAccess } from '@/hooks/useUserPlan';
+import { UpgradeGate } from '@/components/access/UpgradeGate';
 
 const botIcons: Record<string, React.ReactNode> = {
   'niche-finder': <Compass className="w-5 h-5 text-primary" />,
@@ -69,6 +71,7 @@ const BotChat = () => {
   const { data: savedMessages = [], isLoading: messagesLoading } = useBotMessages(activeConversationId);
   const deleteConversation = useDeleteConversation();
   const addUserMemory = useAddUserMemory();
+  const { access: planAccess, loading: planLoading } = useBotAccess(botKey);
 
   // Chat hook
   const {
@@ -219,6 +222,11 @@ const BotChat = () => {
   // Bot not found
   if (!botConfig) {
     return <Navigate to="/ai-assistants" replace />;
+  }
+
+  // Plan-based access gate (skip for public bots / unauthenticated public flow)
+  if (user && !isPublicBot(botKey) && !planLoading && planAccess !== 'allowed') {
+    return <UpgradeGate />;
   }
 
   const botName = language === 'he' ? botConfig.name_he : botConfig.name_en;

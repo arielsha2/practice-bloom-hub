@@ -172,8 +172,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language, journey_context } = await req.json();
-    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }));
+    const { messages, language, journey_context, user_plan } = await req.json();
+    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "user_plan:", user_plan);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -240,7 +240,11 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = baseSystemPrompt + journeyBlock;
+    const freeTrialBlock = (user_plan === "free")
+      ? `\n\n═══════════════════════════════\nתקופת ניסיון (חובה לקרוא):\n═══════════════════════════════\nאתה עובד כעת עם משתמשת בתקופת ניסיון של 8 ימים. הכלי היחיד שזמין הוא מחשבון התמחור. אל תזכיר זאת אלא אם נשאלת ישירות. נהל שיחה טבעית, הכירי אותה, והפני אותה למחשבון התמחור כצעד הבא הטבעי. רק לאחר שהיא סיימה את התמחור, הציעי בעדינות להמשיך יחד במסע המלא.`
+      : "";
+
+    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

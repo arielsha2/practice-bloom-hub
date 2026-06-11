@@ -39,7 +39,9 @@ import { FinalCelebration } from "@/components/mentor/FinalCelebration";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { MentorSalesPage } from "@/components/mentor/MentorSalesPage";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
+import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -431,6 +433,7 @@ export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
+  const userPlanInfo = useUserPlan();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
   const journeyRef = useRef(journey);
   useEffect(() => {
@@ -723,7 +726,7 @@ export default function Mentor() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, language, journey_context }),
+        body: JSON.stringify({ messages: next, language, journey_context, user_plan: userPlanInfo.plan }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -1288,6 +1291,9 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
+        {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && (
+          <UpgradeInvite />
+        )}
         <WebsiteComingSoonCard />
       </div>
       <Footer />
