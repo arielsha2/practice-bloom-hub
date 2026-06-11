@@ -251,11 +251,20 @@ export default function Auth() {
               <ModeIcon className="w-8 h-8 text-primary" />
             </div>
             <CardTitle className="text-2xl md:text-3xl font-serif font-medium text-foreground">
-              {getTitle()}
+              {isTrialIntent && mode === 'signup' ? 'התחילי את 8 הימים שלך עם המנטור' : getTitle()}
             </CardTitle>
             <CardDescription>
-              {getSubtitle()}
+              {isTrialIntent && mode === 'signup'
+                ? 'ללא כרטיס אשראי. ללא מחויבות. גישה מלאה למנטור אליענה ולמחשבון התמחור.'
+                : getSubtitle()}
             </CardDescription>
+            {isTrialIntent && mode === 'signup' && (
+              <ul className="text-sm text-foreground/80 text-start mt-4 space-y-1.5 max-w-xs mx-auto" dir="rtl">
+                <li>✓ המנטור אליענה — שיחות בלי הגבלה</li>
+                <li>✓ מחשבון תמחור חכם</li>
+                <li>✓ כל ההיסטוריה שלך נשמרת</li>
+              </ul>
+            )}
           </CardHeader>
           <CardContent>
             {mode === 'signup' && signupSent ? (
