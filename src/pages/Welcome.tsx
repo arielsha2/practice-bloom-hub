@@ -36,7 +36,7 @@ export default function Welcome() {
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-secondary to-background">
       <SEOHead
         title="ברוכים הבאים | המסע שלך מתחיל — TherapyKeys"
-        description="התחלת את 8 ימי הניסיון החינמי עם המנטור אליענה. הנה איך להתחיל ומה מחכה לך בהמשך."
+        description="התחלת את 7 ימי הניסיון החינמי עם המנטור אליענה. הנה איך להתחיל ומה מחכה לך בהמשך."
         canonicalUrl="/welcome"
         noindex
       />
@@ -63,7 +63,7 @@ export default function Welcome() {
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Calendar className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-xl font-serif font-semibold text-foreground">8 ימים מתנה — מה כלול</h2>
+            <h2 className="text-xl font-serif font-semibold text-foreground">7 ימים מתנה — מה כלול</h2>
           </div>
           <ul className="space-y-3">
             {INCLUDED.map((line, i) => (
@@ -100,7 +100,8 @@ export default function Welcome() {
         <section className="bg-gradient-to-br from-primary/5 to-[#ff6f61]/5 rounded-3xl border border-primary/10 shadow-card p-8 mb-8">
           <h2 className="text-xl font-serif font-semibold text-foreground mb-3">מה קורה אחרי 8 הימים?</h2>
           <p className="text-foreground/80 leading-relaxed mb-5">
-            אם תבחרי להמשיך — תקבלי גישה לכל הכלים, לקבוצת המטפלים, ולליווי המלא. אם לא — לא קורה כלום, אף אחד לא יחייב אותך.
+            אם תבחרי להמשיך — תקבלי גישה לכל הכלים, לקבוצת המטפלים, ולליווי המלא. אם לא — לא קורה כלום, אף אחד לא יחייב
+            אותך.
           </p>
           <a href={PAY_URL} target="_blank" rel="noreferrer">
             <Button
@@ -124,9 +125,7 @@ export default function Welcome() {
               <ArrowLeft className="w-4 h-4 me-2 transition-transform group-hover:-translate-x-1" />
             </Button>
           </Link>
-          <p className="text-xs text-muted-foreground mt-4">
-            המנטור זמין 24/7 — את יכולה לחזור מתי שתרצי.
-          </p>
+          <p className="text-xs text-muted-foreground mt-4">המנטור זמין 24/7 — את יכולה לחזור מתי שתרצי.</p>
         </div>
       </main>
     </div>

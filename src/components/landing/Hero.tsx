@@ -72,7 +72,7 @@ export function Hero() {
                   data-track-label="hero_start_trial"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {isRTL ? "התחילי 8 ימי ניסיון חינם עם גירסת ההתנסות של המנטור" : "Start 8 free days with the mentor"}
+                  {isRTL ? "התחילי 7 ימי ניסיון חינם עם גירסת ההתנסות של המנטור" : "Start 8 free days with the mentor"}
                   <Arrow
                     className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                   />

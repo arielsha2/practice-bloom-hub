@@ -1,24 +1,11 @@
-import { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2 } from 'lucide-react';
+import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,9 +15,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import type { TrialStatus } from '@/hooks/useUsersManagement';
-import { format } from 'date-fns';
+} from "@/components/ui/alert-dialog";
+import type { TrialStatus } from "@/hooks/useUsersManagement";
+import { format } from "date-fns";
 
 interface UserProfile {
   id: string;
@@ -70,7 +57,7 @@ interface UsersTableProps {
   enrollments: Enrollment[];
   courses: Course[];
   cohorts: Cohort[];
-  getUserRole: (userId: string) => 'admin' | 'student' | 'none';
+  getUserRole: (userId: string) => "admin" | "student" | "none";
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
   getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
@@ -101,65 +88,56 @@ export function UsersTable({
   isDeletingUser,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [cohortFilter, setCohortFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [cohortFilter, setCohortFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
-    return enrollments.filter(e => e.user_id === userId);
+    return enrollments.filter((e) => e.user_id === userId);
   };
 
   const getCourseName = (courseKey: string) => {
-    const course = courses.find(c => c.course_key === courseKey);
+    const course = courses.find((c) => c.course_key === courseKey);
     return course ? (isRTL ? course.name_he : course.name_en) : courseKey;
   };
 
   const getCohortName = (cohortId: string | null) => {
     if (!cohortId) return null;
-    const cohort = cohorts.find(c => c.id === cohortId);
+    const cohort = cohorts.find((c) => c.id === cohortId);
     return cohort ? (isRTL ? cohort.name_he : cohort.name_en) : null;
   };
 
-  const getRoleBadge = (role: 'admin' | 'student' | 'none') => {
+  const getRoleBadge = (role: "admin" | "student" | "none") => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return (
           <Badge variant="destructive" className="gap-1">
             <Shield className="w-3 h-3" />
-            {isRTL ? 'מנהל' : 'Admin'}
+            {isRTL ? "מנהל" : "Admin"}
           </Badge>
         );
-      case 'student':
-        return (
-          <Badge variant="default">
-            {isRTL ? 'סטודנט' : 'Student'}
-          </Badge>
-        );
+      case "student":
+        return <Badge variant="default">{isRTL ? "סטודנט" : "Student"}</Badge>;
       default:
-        return (
-          <Badge variant="secondary">
-            {isRTL ? 'לא רשום' : 'Not Enrolled'}
-          </Badge>
-        );
+        return <Badge variant="secondary">{isRTL ? "לא רשום" : "Not Enrolled"}</Badge>;
     }
   };
 
   // Filter users
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     // Search filter
     const query = searchQuery.toLowerCase();
-    const matchesSearch = !query || 
-      user.email?.toLowerCase().includes(query) ||
-      user.display_name?.toLowerCase().includes(query);
+    const matchesSearch =
+      !query || user.email?.toLowerCase().includes(query) || user.display_name?.toLowerCase().includes(query);
 
     // Cohort filter
     let matchesCohort = true;
-    if (cohortFilter !== 'all') {
+    if (cohortFilter !== "all") {
       const userCohorts = getUserCohorts(user.id);
-      if (cohortFilter === 'none') {
+      if (cohortFilter === "none") {
         matchesCohort = userCohorts.length === 0;
       } else {
-        matchesCohort = userCohorts.some(c => c.id === cohortFilter);
+        matchesCohort = userCohorts.some((c) => c.id === cohortFilter);
       }
     }
 
@@ -174,21 +152,21 @@ export function UsersTable({
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={isRTL ? 'חפש לפי מייל או שם...' : 'Search by email or name...'}
+            placeholder={isRTL ? "חפש לפי מייל או שם..." : "Search by email or name..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="ps-10"
           />
         </div>
-        
+
         {/* Cohort Filter */}
         <Select value={cohortFilter} onValueChange={setCohortFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder={isRTL ? 'סנן לפי מחזור' : 'Filter by cohort'} />
+            <SelectValue placeholder={isRTL ? "סנן לפי מחזור" : "Filter by cohort"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isRTL ? 'כל המחזורים' : 'All Cohorts'}</SelectItem>
-            <SelectItem value="none">{isRTL ? 'ללא מחזור' : 'No Cohort'}</SelectItem>
+            <SelectItem value="all">{isRTL ? "כל המחזורים" : "All Cohorts"}</SelectItem>
+            <SelectItem value="none">{isRTL ? "ללא מחזור" : "No Cohort"}</SelectItem>
             {cohorts.map((cohort) => (
               <SelectItem key={cohort.id} value={cohort.id}>
                 {isRTL ? cohort.name_he : cohort.name_en}
@@ -203,21 +181,21 @@ export function UsersTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{isRTL ? 'מייל' : 'Email'}</TableHead>
-              <TableHead>{isRTL ? 'שם' : 'Name'}</TableHead>
-              <TableHead>{isRTL ? 'תפקיד' : 'Role'}</TableHead>
-              <TableHead>{isRTL ? 'מחזורים' : 'Cohorts'}</TableHead>
-              <TableHead>{isRTL ? 'קורסים' : 'Courses'}</TableHead>
-              <TableHead>{isRTL ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
-              <TableHead>{isRTL ? 'התנסות חינם' : 'Free Trial'}</TableHead>
-              <TableHead>{isRTL ? 'פעולות' : 'Actions'}</TableHead>
+              <TableHead>{isRTL ? "מייל" : "Email"}</TableHead>
+              <TableHead>{isRTL ? "שם" : "Name"}</TableHead>
+              <TableHead>{isRTL ? "תפקיד" : "Role"}</TableHead>
+              <TableHead>{isRTL ? "מחזורים" : "Cohorts"}</TableHead>
+              <TableHead>{isRTL ? "קורסים" : "Courses"}</TableHead>
+              <TableHead>{isRTL ? "תאריך הצטרפות" : "Joined"}</TableHead>
+              <TableHead>{isRTL ? "התנסות חינם" : "Free Trial"}</TableHead>
+              <TableHead>{isRTL ? "פעולות" : "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {isRTL ? 'לא נמצאו משתמשים' : 'No users found'}
+                  {isRTL ? "לא נמצאו משתמשים" : "No users found"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -225,18 +203,18 @@ export function UsersTable({
                 const userEnrollments = getUserEnrollments(user.id);
                 const userCohorts = getUserCohorts(user.id);
                 const role = getUserRole(user.id);
-                
+
                 return (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.email || '-'}</TableCell>
-                    <TableCell>{user.display_name || (isRTL ? 'ללא שם' : 'No name')}</TableCell>
+                    <TableCell className="font-medium">{user.email || "-"}</TableCell>
+                    <TableCell>{user.display_name || (isRTL ? "ללא שם" : "No name")}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1">
                         {getRoleBadge(role)}
                         {hasMentorAccess(user.id) && (
                           <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
                             <Sparkles className="w-3 h-3" />
-                            {isRTL ? 'מנטור' : 'Mentor'}
+                            {isRTL ? "מנטור" : "Mentor"}
                           </Badge>
                         )}
                       </div>
@@ -244,9 +222,7 @@ export function UsersTable({
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {userCohorts.length === 0 ? (
-                          <span className="text-muted-foreground text-sm">
-                            {isRTL ? 'ללא מחזור' : 'No cohort'}
-                          </span>
+                          <span className="text-muted-foreground text-sm">{isRTL ? "ללא מחזור" : "No cohort"}</span>
                         ) : (
                           userCohorts.map((cohort) => (
                             <Badge key={cohort.id} variant="outline">
@@ -258,26 +234,18 @@ export function UsersTable({
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {role === 'admin' ? (
+                        {role === "admin" ? (
                           <span className="text-primary text-sm font-medium">
-                            {isRTL ? 'גישה לכל הקורסים' : 'Access to all courses'}
+                            {isRTL ? "גישה לכל הקורסים" : "Access to all courses"}
                           </span>
                         ) : userEnrollments.length === 0 ? (
-                          <span className="text-muted-foreground text-sm">
-                            {isRTL ? 'ללא קורסים' : 'No courses'}
-                          </span>
+                          <span className="text-muted-foreground text-sm">{isRTL ? "ללא קורסים" : "No courses"}</span>
                         ) : (
                           userEnrollments.map((enrollment) => (
-                            <Badge
-                              key={enrollment.id}
-                              variant="secondary"
-                              className="gap-1 pe-1"
-                            >
+                            <Badge key={enrollment.id} variant="secondary" className="gap-1 pe-1">
                               {getCourseName(enrollment.course_key)}
                               {enrollment.cohort_id && (
-                                <span className="text-xs opacity-70">
-                                  ({getCohortName(enrollment.cohort_id)})
-                                </span>
+                                <span className="text-xs opacity-70">({getCohortName(enrollment.cohort_id)})</span>
                               )}
                               <button
                                 onClick={() => onRemoveFromCourse(enrollment.id)}
@@ -290,26 +258,22 @@ export function UsersTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {user.created_at
-                        ? format(new Date(user.created_at), 'dd/MM/yyyy')
-                        : '-'}
-                    </TableCell>
+                    <TableCell>{user.created_at ? format(new Date(user.created_at), "dd/MM/yyyy") : "-"}</TableCell>
                     <TableCell>
                       {(() => {
                         const trial = getTrialStatus(user.id);
-                        if (trial.status === 'paid') {
+                        if (trial.status === "paid") {
                           return (
                             <Badge variant="default" className="gap-1">
                               <CheckCircle2 className="w-3 h-3" />
-                              {isRTL ? 'שילם' : 'Paid'}
+                              {isRTL ? "שילם" : "Paid"}
                             </Badge>
                           );
                         }
-                        if (trial.status === 'active') {
+                        if (trial.status === "active") {
                           const days = Math.max(
                             0,
-                            Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                            Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
                           );
                           return (
                             <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
@@ -326,28 +290,20 @@ export function UsersTable({
                             disabled={isGrantingTrial}
                           >
                             <Gift className="w-4 h-4 me-1" />
-                            {isRTL ? 'אשר 8 ימי התנסות' : 'Grant 8-day trial'}
+                            {isRTL ? "אשר 7 ימי התנסות" : "Grant 8-day trial"}
                           </Button>
                         );
                       })()}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onAssignCourse(user)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => onAssignCourse(user)}>
                           <UserPlus className="w-4 h-4 me-1" />
-                          {isRTL ? 'שייך' : 'Assign'}
+                          {isRTL ? "שייך" : "Assign"}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onChangeRole(user)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => onChangeRole(user)}>
                           <Shield className="w-4 h-4 me-1" />
-                          {isRTL ? 'תפקיד' : 'Role'}
+                          {isRTL ? "תפקיד" : "Role"}
                         </Button>
                         <Button
                           variant="ghost"
@@ -356,7 +312,7 @@ export function UsersTable({
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-4 h-4 me-1" />
-                          {isRTL ? 'הסר' : 'Delete'}
+                          {isRTL ? "הסר" : "Delete"}
                         </Button>
                       </div>
                     </TableCell>
@@ -369,26 +325,23 @@ export function UsersTable({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        {isRTL 
-          ? `סה"כ ${filteredUsers.length} משתמשים${filteredUsers.length !== users.length ? ` (מתוך ${users.length})` : ''}`
-          : `${filteredUsers.length} users${filteredUsers.length !== users.length ? ` (of ${users.length})` : ''} total`
-        }
+        {isRTL
+          ? `סה"כ ${filteredUsers.length} משתמשים${filteredUsers.length !== users.length ? ` (מתוך ${users.length})` : ""}`
+          : `${filteredUsers.length} users${filteredUsers.length !== users.length ? ` (of ${users.length})` : ""} total`}
       </p>
 
       <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
-        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+        <AlertDialogContent dir={isRTL ? "rtl" : "ltr"}>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isRTL ? 'מחיקת משתמש' : 'Delete user'}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{isRTL ? "מחיקת משתמש" : "Delete user"}</AlertDialogTitle>
             <AlertDialogDescription>
               {isRTL
-                ? `פעולה זו תמחק לצמיתות את ${userToDelete?.email || 'המשתמש'} ואת כל הנתונים המשויכים (הרשמות, תפקידים, פרופיל). לא ניתן לבטל.`
-                : `This will permanently delete ${userToDelete?.email || 'this user'} and all related data (enrollments, roles, profile). This cannot be undone.`}
+                ? `פעולה זו תמחק לצמיתות את ${userToDelete?.email || "המשתמש"} ואת כל הנתונים המשויכים (הרשמות, תפקידים, פרופיל). לא ניתן לבטל.`
+                : `This will permanently delete ${userToDelete?.email || "this user"} and all related data (enrollments, roles, profile). This cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'ביטול' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>{isRTL ? "ביטול" : "Cancel"}</AlertDialogCancel>
             <AlertDialogAction
               disabled={isDeletingUser}
               onClick={() => {
@@ -399,7 +352,7 @@ export function UsersTable({
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isRTL ? 'מחק לצמיתות' : 'Delete permanently'}
+              {isRTL ? "מחק לצמיתות" : "Delete permanently"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

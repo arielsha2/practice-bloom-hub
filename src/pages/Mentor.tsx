@@ -625,8 +625,6 @@ export default function Mentor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, activeBotKey, isLoading]);
 
-
-
   // Handle return from a bot tool: ?from=<botKey>
   const handledFromRef = useRef(false);
   useEffect(() => {
@@ -795,20 +793,17 @@ export default function Mentor() {
           const {
             data: { session },
           } = await supabase.auth.getSession();
-          const analyzeResp = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${session?.access_token ?? ""}`,
-              },
-              body: JSON.stringify({
-                user_id: auth.user.id,
-                messages: [...messages, { role: "user", content: text.trim() }],
-              }),
-            }
-          );
+          const analyzeResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token ?? ""}`,
+            },
+            body: JSON.stringify({
+              user_id: auth.user.id,
+              messages: [...messages, { role: "user", content: text.trim() }],
+            }),
+          });
           if (analyzeResp.ok) {
             const { completed, current, stuck_point } = await analyzeResp.json();
             const stageMap: Record<string, number> = {
@@ -844,22 +839,19 @@ export default function Mentor() {
             // Call mentor-score from client and persist score directly via RLS
             if (auth.user) {
               try {
-                const scoreResp = await fetch(
-                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-score`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${session?.access_token ?? ""}`,
-                    },
-                    body: JSON.stringify({
-                      user_id: auth.user.id,
-                      messages: [...messages, { role: "user", content: text.trim() }],
-                      journey_context: { completed_stages: completed, current },
-                      trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
-                    }),
-                  }
-                );
+                const scoreResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-score`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session?.access_token ?? ""}`,
+                  },
+                  body: JSON.stringify({
+                    user_id: auth.user.id,
+                    messages: [...messages, { role: "user", content: text.trim() }],
+                    journey_context: { completed_stages: completed, current },
+                    trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
+                  }),
+                });
 
                 if (scoreResp.ok) {
                   const scoreData = await scoreResp.json();
@@ -951,10 +943,7 @@ export default function Mentor() {
                 </Button>
               </Link>
 
-              <p
-                className="text-xs mt-5"
-                style={{ color: "hsl(var(--background) / 0.6)" }}
-              >
+              <p className="text-xs mt-5" style={{ color: "hsl(var(--background) / 0.6)" }}>
                 {isRTL ? "כבר רשומה? " : "Already signed up? "}
                 <Link
                   to="/auth"
@@ -1360,9 +1349,7 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
-        {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && (
-          <UpgradeInvite />
-        )}
+        {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && <UpgradeInvite />}
         <WebsiteComingSoonCard />
       </div>
       <Footer />
