@@ -45,6 +45,7 @@ export default function UsersAdmin() {
     toggleMentorAccess,
     grantFreeTrial,
     getTrialStatus,
+    deleteUser,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -206,6 +207,8 @@ export default function UsersAdmin() {
                 onChangeRole={handleChangeRole}
                 onGrantFreeTrial={(u) => grantFreeTrial.mutate({ userId: u.id })}
                 isGrantingTrial={grantFreeTrial.isPending}
+                onDeleteUser={(u) => deleteUser.mutate({ userId: u.id })}
+                isDeletingUser={deleteUser.isPending}
               />
 
               <PendingUsersTable

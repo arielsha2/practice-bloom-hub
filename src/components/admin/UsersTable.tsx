@@ -18,7 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2 } from 'lucide-react';
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { TrialStatus } from '@/hooks/useUsersManagement';
 import { format } from 'date-fns';
 
@@ -68,7 +78,9 @@ interface UsersTableProps {
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
   onGrantFreeTrial: (user: UserProfile) => void;
+  onDeleteUser: (user: UserProfile) => void;
   isGrantingTrial?: boolean;
+  isDeletingUser?: boolean;
 }
 
 export function UsersTable({
@@ -84,11 +96,14 @@ export function UsersTable({
   onRemoveFromCourse,
   onChangeRole,
   onGrantFreeTrial,
+  onDeleteUser,
   isGrantingTrial,
+  isDeletingUser,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [cohortFilter, setCohortFilter] = useState<string>('all');
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter(e => e.user_id === userId);
