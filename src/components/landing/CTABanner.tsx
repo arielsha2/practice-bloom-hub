@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Mail, MessageCircle, Star } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 export function CTABanner() {
   const { t, isRTL } = useLanguage();
@@ -57,7 +58,10 @@ export function CTABanner() {
               size="xl"
               data-track="cta_whatsapp_click"
               data-track-label="cta_banner_whatsapp"
-              onClick={() => window.open('https://chat.whatsapp.com/LBKVYVc4aoaGnsBVqFNJEb', '_blank')}
+              onClick={() => {
+                trackEvent('whatsapp_click', { location: 'cta_banner' });
+                window.open('https://chat.whatsapp.com/LBKVYVc4aoaGnsBVqFNJEb', '_blank');
+              }}
             >
               <MessageCircle className="w-5 h-5" />
               {t('cta.whatsapp')}

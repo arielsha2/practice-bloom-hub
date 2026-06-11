@@ -12,6 +12,7 @@ import { Footer } from '@/components/landing/Footer';
 import { SEOHead } from '@/components/SEOHead';
 import { CheckCircle, User, UserPlus, Mail, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { trackEvent } from '@/lib/analytics';
 
 type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
 type ResetStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -138,6 +139,7 @@ export default function Auth() {
         if (error) {
           toast.error(error.message);
         } else {
+          trackEvent('form_submission', { form: 'login', location: 'auth_page' });
           toast.success(t('auth.loginSuccess'));
           navigate('/dashboard');
         }
@@ -153,6 +155,7 @@ export default function Auth() {
             toast.error(errMsg || t('auth.signupError'));
           }
         } else {
+          trackEvent('form_submission', { form: 'signup', location: 'auth_page' });
           setSignupSent(true);
         }
       } else if (mode === 'forgot') {
@@ -160,6 +163,7 @@ export default function Auth() {
         if (error) {
           toast.error(error.message);
         } else {
+          trackEvent('form_submission', { form: 'forgot_password', location: 'auth_page' });
           setResetSent(true);
         }
       } else if (mode === 'reset') {
@@ -178,6 +182,7 @@ export default function Auth() {
         if (error) {
           toast.error(error.message);
         } else {
+          trackEvent('form_submission', { form: 'password_reset', location: 'auth_page' });
           toast.success(t('auth.passwordUpdated'));
           navigate('/dashboard');
         }
