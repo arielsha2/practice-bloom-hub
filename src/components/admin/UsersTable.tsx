@@ -281,6 +281,42 @@ export function UsersTable({
                         : '-'}
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const trial = getTrialStatus(user.id);
+                        if (trial.status === 'paid') {
+                          return (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {isRTL ? 'שילם' : 'Paid'}
+                            </Badge>
+                          );
+                        }
+                        if (trial.status === 'active') {
+                          const days = Math.max(
+                            0,
+                            Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          );
+                          return (
+                            <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                              <Gift className="w-3 h-3" />
+                              {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onGrantFreeTrial(user)}
+                            disabled={isGrantingTrial}
+                          >
+                            <Gift className="w-4 h-4 me-1" />
+                            {isRTL ? 'אשר 8 ימי התנסות' : 'Grant 8-day trial'}
+                          </Button>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
