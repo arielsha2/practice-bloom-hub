@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { PaymentOptionsDialog } from '../PaymentOptionsDialog';
+import { trackEvent } from '@/lib/analytics';
 
 export function TurningPointCTA() {
   const { user } = useAuth();
@@ -34,7 +35,10 @@ export function TurningPointCTA() {
               <Button
                 size="lg"
                 variant="cta"
-                onClick={() => window.open('/syllabus.pdf', '_blank')}
+                onClick={() => {
+                  trackEvent('contact_button_click', { location: 'turning_point_syllabus_download' });
+                  window.open('/syllabus.pdf', '_blank');
+                }}
               >
                 <FileDown className="w-5 h-5 me-2" />
                 הורדת סילבוס התוכנית
@@ -42,7 +46,16 @@ export function TurningPointCTA() {
               <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm mt-4 flex-row-reverse">
                 <Phone className="w-4 h-4" />
                 <span>או שלחי לנו הודעה בוואטסאפ:</span>
-                <a href="https://wa.me/972544928993" target="_blank" rel="noopener noreferrer" className="text-teal hover:underline font-medium">
+                <a
+                  href="https://wa.me/972544928993"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-teal hover:underline font-medium"
+                  onClick={() => {
+                    trackEvent('whatsapp_click', { location: 'turning_point_syllabus' });
+                    trackEvent('phone_click', { location: 'turning_point_syllabus' });
+                  }}
+                >
                   054-4928993
                 </a>
               </div>
@@ -65,7 +78,10 @@ export function TurningPointCTA() {
                 <Button
                   size="xl"
                   variant="cta"
-                  onClick={() => setShowPaymentDialog(true)}
+                  onClick={() => {
+                    trackEvent('contact_button_click', { location: 'turning_point_join' });
+                    setShowPaymentDialog(true);
+                  }}
                 >
                   אני רוצה להצטרף לתוכנית
                   <ArrowLeft className="w-5 h-5 ms-1" />

@@ -12,6 +12,7 @@ import {
 import { ArrowRight, ArrowLeft, Mail, MessageCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroFoundersImg from "@/assets/hero-founders.png";
+import { trackEvent } from "@/lib/analytics";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -67,7 +68,11 @@ export function Hero() {
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
             >
-              <Link to="/auth?mode=signup&intent=trial" className="inline-flex">
+              <Link
+                to="/auth?mode=signup&intent=trial"
+                className="inline-flex"
+                onClick={() => trackEvent('contact_button_click', { location: 'hero_start_trial' })}
+              >
                 <Button
                   size="xl"
                   className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto"
@@ -88,7 +93,10 @@ export function Hero() {
                 className="text-background/80 hover:text-background hover:bg-background/10"
                 data-track="hero_cta_click"
                 data-track-label="hero_join_community"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                  trackEvent('contact_button_click', { location: 'hero_join_community' });
+                  setOpen(true);
+                }}
               >
                 {t("hero.cta")}
               </Button>
@@ -177,7 +185,10 @@ export function Hero() {
                 rel="noopener noreferrer"
                 data-track="whatsapp_click"
                 data-track-label="hero_dialog_whatsapp"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  trackEvent('whatsapp_click', { location: 'hero_dialog' });
+                  setOpen(false);
+                }}
               >
                 <MessageCircle className="w-5 h-5" />
                 {isRTL ? "הצטרפות לקבוצת הוואטסאפ" : "Join the WhatsApp group"}

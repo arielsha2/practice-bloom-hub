@@ -619,7 +619,15 @@ export default function PublicTherapistSite() {
               >
                 טלפון
               </div>
-              <a href={`tel:${c.phone}`} style={{ color: C.ink, textDecoration: "none", fontSize: 16 }}>
+              <a
+                href={`tel:${c.phone}`}
+                style={{ color: C.ink, textDecoration: "none", fontSize: 16 }}
+                onClick={() => {
+                  try {
+                    (window as any).gtag?.("event", "phone_click", { location: "therapist_site_phone" });
+                  } catch {}
+                }}
+              >
                 {c.phone}
               </a>
             </div>
