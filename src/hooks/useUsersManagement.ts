@@ -8,7 +8,12 @@ interface UserProfile {
   email: string | null;
   display_name: string | null;
   created_at: string | null;
+  plan?: string | null;
+  trial_start_date?: string | null;
+  plan_updated_at?: string | null;
 }
+
+export type TrialStatus = 'paid' | 'active' | 'expired' | 'none';
 
 interface Enrollment {
   id: string;
