@@ -63,9 +63,12 @@ interface UsersTableProps {
   getUserRole: (userId: string) => 'admin' | 'student' | 'none';
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
+  getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
+  onGrantFreeTrial: (user: UserProfile) => void;
+  isGrantingTrial?: boolean;
 }
 
 export function UsersTable({
