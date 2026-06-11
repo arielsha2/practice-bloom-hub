@@ -24,6 +24,7 @@ import UsersAdmin from "./pages/UsersAdmin";
 import CoursesAdmin from "./pages/CoursesAdmin";
 import TurningPoint from "./pages/TurningPoint";
 import Mentor from "./pages/Mentor";
+import Welcome from "./pages/Welcome";
 import AdminInsights from "./pages/AdminInsights";
 import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="/admin/courses" element={<CoursesAdmin />} />
               <Route path="/turning-point" element={<TurningPoint />} />
               <Route path="/mentor" element={<Mentor />} />
+              <Route path="/welcome" element={<Welcome />} />
               <Route path="/mentor/website-builder" element={<WebsiteBuilder />} />
               <Route path="/t/:slug" element={<PublicTherapistSite />} />
               <Route path="/contact-finder" element={<BotChat />} />

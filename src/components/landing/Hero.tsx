@@ -9,7 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ArrowRight, ArrowLeft, Mail, MessageCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroFoundersImg from "@/assets/hero-founders.png";
 
 const fadeUp = {
@@ -62,23 +63,46 @@ export function Hero() {
 
 
             <motion.div
+              className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
               {...fadeUp}
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
             >
+              <Link to="/auth?mode=signup&intent=trial" className="inline-flex">
+                <Button
+                  size="xl"
+                  className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto"
+                  data-track="hero_cta_click"
+                  data-track-label="hero_start_trial"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {isRTL ? "התחילי 8 ימי ניסיון חינם עם המנטור" : "Start 8 free days with the mentor"}
+                  <Arrow
+                    className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
+                  />
+                </Button>
+              </Link>
+
               <Button
-                variant="cta"
+                variant="ghost"
                 size="xl"
-                className="group"
+                className="text-background/80 hover:text-background hover:bg-background/10"
                 data-track="hero_cta_click"
                 data-track-label="hero_join_community"
                 onClick={() => setOpen(true)}
               >
                 {t("hero.cta")}
-                <Arrow
-                  className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
-                />
               </Button>
             </motion.div>
+
+            <motion.p
+              className="text-xs md:text-sm text-background/60 mt-4"
+              {...fadeUp}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
+            >
+              {isRTL
+                ? "ללא כרטיס אשראי · גישה מלאה למנטור אליענה · 8 ימים"
+                : "No credit card · Full access to the mentor · 8 days"}
+            </motion.p>
           </div>
 
           {/* Image - Left side, frameless 3D float */}

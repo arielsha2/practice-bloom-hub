@@ -5,6 +5,7 @@ import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Compass, Map, PenTool, Calculator, Bot, Handshake, Mic, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TrialBanner } from '@/components/access/TrialBanner';
 
 const botData = [
   { key: 'niche', icon: Compass },
@@ -38,6 +39,7 @@ const AIAssistants = () => {
       />
       <Header />
       <main className="flex-1 pt-16">
+        <TrialBanner />
         <section className="py-24 bg-secondary relative overflow-hidden">
           {/* Decorative background */}
           <div className="absolute inset-0 pointer-events-none">

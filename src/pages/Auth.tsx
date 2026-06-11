@@ -22,7 +22,10 @@ export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const [mode, setMode] = useState<AuthMode>('login');
+  const isTrialIntent = searchParams.get('intent') === 'trial';
+  const [mode, setMode] = useState<AuthMode>(
+    isTrialIntent || searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -121,9 +124,9 @@ export default function Auth() {
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
     if (user && !loading && mode !== 'reset') {
-      navigate('/dashboard');
+      navigate(isTrialIntent ? '/welcome' : '/dashboard');
     }
-  }, [user, loading, navigate, mode]);
+  }, [user, loading, navigate, mode, isTrialIntent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,11 +251,20 @@ export default function Auth() {
               <ModeIcon className="w-8 h-8 text-primary" />
             </div>
             <CardTitle className="text-2xl md:text-3xl font-serif font-medium text-foreground">
-              {getTitle()}
+              {isTrialIntent && mode === 'signup' ? 'התחילי את 8 הימים שלך עם המנטור' : getTitle()}
             </CardTitle>
             <CardDescription>
-              {getSubtitle()}
+              {isTrialIntent && mode === 'signup'
+                ? 'ללא כרטיס אשראי. ללא מחויבות. גישה מלאה למנטור אליענה ולמחשבון התמחור.'
+                : getSubtitle()}
             </CardDescription>
+            {isTrialIntent && mode === 'signup' && (
+              <ul className="text-sm text-foreground/80 text-start mt-4 space-y-1.5 max-w-xs mx-auto" dir="rtl">
+                <li>✓ המנטור אליענה — שיחות בלי הגבלה</li>
+                <li>✓ מחשבון תמחור חכם</li>
+                <li>✓ כל ההיסטוריה שלך נשמרת</li>
+              </ul>
+            )}
           </CardHeader>
           <CardContent>
             {mode === 'signup' && signupSent ? (

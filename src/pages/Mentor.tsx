@@ -42,6 +42,7 @@ import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
+import { TrialBanner } from "@/components/access/TrialBanner";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -919,6 +920,7 @@ export default function Mentor() {
       <MentorTopBar />
 
       <main className="flex-1 pt-16">
+        <TrialBanner />
         {/* Soft intro */}
         <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
           <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
