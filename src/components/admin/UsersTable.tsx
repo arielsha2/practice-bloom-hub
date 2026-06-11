@@ -79,9 +79,12 @@ export function UsersTable({
   getUserRole,
   getUserCohorts,
   hasMentorAccess,
+  getTrialStatus,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
+  onGrantFreeTrial,
+  isGrantingTrial,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
