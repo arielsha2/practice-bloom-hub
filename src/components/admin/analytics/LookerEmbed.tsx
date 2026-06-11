@@ -7,11 +7,12 @@ import { toast } from 'sonner';
 import { Pencil, Save, X, ExternalLink } from 'lucide-react';
 
 const SETTING_KEY = 'looker_analytics_url';
+const DEFAULT_LOOKER_URL = 'https://lookerstudio.google.com/embed/reporting/a8225d73-9eb7-4193-9a13-a0d161cdf8a3/page/gM00F';
 
 export function LookerEmbed() {
-  const [url, setUrl] = useState<string>('');
+  const [url, setUrl] = useState<string>(DEFAULT_LOOKER_URL);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(DEFAULT_LOOKER_URL);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export function LookerEmbed() {
         .select('value')
         .eq('key', SETTING_KEY)
         .maybeSingle();
-      const v = data?.value ?? '';
+      const v = data?.value?.trim() || DEFAULT_LOOKER_URL;
       setUrl(v);
       setDraft(v);
       setLoading(false);
