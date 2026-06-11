@@ -727,6 +727,7 @@ export type Database = {
           meshulam_transaction_id: string | null
           plan: string
           plan_updated_at: string | null
+          trial_reminder_sent_at: string | null
           trial_start_date: string | null
         }
         Insert: {
@@ -737,6 +738,7 @@ export type Database = {
           meshulam_transaction_id?: string | null
           plan?: string
           plan_updated_at?: string | null
+          trial_reminder_sent_at?: string | null
           trial_start_date?: string | null
         }
         Update: {
@@ -747,6 +749,7 @@ export type Database = {
           meshulam_transaction_id?: string | null
           plan?: string
           plan_updated_at?: string | null
+          trial_reminder_sent_at?: string | null
           trial_start_date?: string | null
         }
         Relationships: []
