@@ -150,18 +150,17 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else if (mode === "signup") {
-        const { data, error: fnError } = await supabase.functions.invoke("signup-passwordless", {
-          body: { email },
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+          },
         });
-        if (fnError || data?.error) {
-          const errMsg = data?.error || fnError?.message;
-          if (errMsg === "already_registered") {
-            toast.error(t("auth.alreadyRegisteredFull"));
-          } else {
-            toast.error(errMsg || t("auth.signupError"));
-          }
+        if (otpError) {
+          toast.error(otpError.message);
         } else {
-          trackEvent("form_submission", { form: "signup", location: "auth_page" });
+          trackEvent("form_submission", { form: "signup_magiclink", location: "auth_page" });
           setSignupSent(true);
         }
       } else if (mode === "forgot") {
