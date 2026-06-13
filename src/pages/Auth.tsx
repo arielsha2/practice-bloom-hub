@@ -150,18 +150,17 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else if (mode === "signup") {
-        const { data, error: fnError } = await supabase.functions.invoke("signup-passwordless", {
-          body: { email },
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+          },
         });
-        if (fnError || data?.error) {
-          const errMsg = data?.error || fnError?.message;
-          if (errMsg === "already_registered") {
-            toast.error(t("auth.alreadyRegisteredFull"));
-          } else {
-            toast.error(errMsg || t("auth.signupError"));
-          }
+        if (otpError) {
+          toast.error(otpError.message);
         } else {
-          trackEvent("form_submission", { form: "signup", location: "auth_page" });
+          trackEvent("form_submission", { form: "signup_magiclink", location: "auth_page" });
           setSignupSent(true);
         }
       } else if (mode === "forgot") {
@@ -299,17 +298,47 @@ export default function Auth() {
             {mode === "signup" && signupSent ? (
               <div className="text-center space-y-4">
                 <CheckCircle className="w-16 h-16 text-success mx-auto" />
-                <p className="text-muted-foreground">{t("auth.signupSuccessPasswordless")}</p>
-                <button
+                <p className="text-foreground font-medium">
+                  שלחנו לך קישור כניסה ל-{email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  לחיצה אחת על הקישור באימייל ואת/ה בפנים — בלי סיסמה.
+                  <br />
+                  בדוק/י גם בתיקיית הקידום/ספאם. הקישור תקף ל-60 דקות.
+                </p>
+                <Button
                   type="button"
-                  onClick={() => {
-                    setMode("login");
-                    setSignupSent(false);
+                  variant="outline"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={async () => {
+                    setIsSubmitting(true);
+                    const { error } = await supabase.auth.signInWithOtp({
+                      email,
+                      options: {
+                        shouldCreateUser: true,
+                        emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+                      },
+                    });
+                    setIsSubmitting(false);
+                    if (error) toast.error(error.message);
+                    else toast.success("שלחנו שוב — בדוק/י את המייל");
                   }}
-                  className="text-sm text-primary hover:underline transition-colors"
                 >
-                  {t("auth.backToLogin")}
-                </button>
+                  לא קיבלתי — שלח/י שוב
+                </Button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setSignupSent(false);
+                    }}
+                    className="text-sm text-primary hover:underline transition-colors"
+                  >
+                    {t("auth.backToLogin")}
+                  </button>
+                </div>
               </div>
             ) : mode === "forgot" && resetSent ? (
               <div className="text-center space-y-4">
@@ -431,16 +460,54 @@ export default function Auth() {
                   )}
                 </form>
 
-                {/* Forgot password link - only on login */}
+                {/* Forgot password + magic link - only on login */}
                 {mode === "login" && (
-                  <div className="mt-4 text-center">
-                    <button
+                  <div className="mt-4 space-y-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">או</span>
+                      </div>
+                    </div>
+                    <Button
                       type="button"
-                      onClick={() => setMode("forgot")}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      variant="outline"
+                      className="w-full"
+                      disabled={isSubmitting || !email}
+                      onClick={async () => {
+                        if (!email) {
+                          toast.error("הזינו את כתובת האימייל שלכם");
+                          return;
+                        }
+                        setIsSubmitting(true);
+                        const { error } = await supabase.auth.signInWithOtp({
+                          email,
+                          options: {
+                            shouldCreateUser: false,
+                            emailRedirectTo: `${window.location.origin}/dashboard`,
+                          },
+                        });
+                        setIsSubmitting(false);
+                        if (error) toast.error(error.message);
+                        else {
+                          trackEvent("form_submission", { form: "login_magiclink", location: "auth_page" });
+                          setSignupSent(true);
+                        }
+                      }}
                     >
-                      {t("auth.forgotPassword")}
-                    </button>
+                      שלחו לי קישור כניסה למייל (ללא סיסמה)
+                    </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    </div>
                   </div>
                 )}
 

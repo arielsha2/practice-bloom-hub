@@ -1,68 +1,86 @@
-# GA4 Event Tracking — 4 Conversion Events
+## הבעיה
 
-The site already loads gtag and has `src/lib/analytics.ts` with `trackEvent()`, but most CTAs only carry `data-track` attributes that nothing reads. I'll add explicit `trackEvent(...)` calls (alongside the existing attributes) so the 4 events fire reliably and consistently from every relevant touchpoint.
+זרימת ההרשמה הנוכחית להתנסות מורכבת מדי:
+1. הזנת מייל באתר
+2. קבלת אימייל הזמנה
+3. לחיצה על קישור
+4. בחירת סיסמה
+5. כניסה
 
-## Events and where each one fires
+**תקלות מזוהות:**
+- משתמשים שכבר רשומים (סטודנטים, הרשמות קודמות) מקבלים שגיאת `already_registered` ונחסמים
+- מי שמזין מייל פעמיים נכשל בלי הסבר ובלי אופציה לנסות שוב
+- בחירת סיסמה היא חיכוך מיותר עבור התנסות של 8 ימים
+- אנשים לא מוצאים את האימייל / לא מבינים שצריך ללחוץ
 
-### 1. `whatsapp_click`
-Fires on every WhatsApp link/button. `location` distinguishes them in GA4.
+---
 
-- `src/components/landing/Hero.tsx` — "הצטרפות לקבוצת הוואטסאפ" dialog button → `location: "hero_dialog"`
-- `src/components/landing/CTABanner.tsx` — banner WhatsApp button → `location: "cta_banner"`
-- `src/components/portal/landing/TurningPointCTA.tsx` — `wa.me/972544928993` link → `location: "turning_point_syllabus"`
+## הפתרון המוצע: כניסה במגיק-לינק (לחיצה אחת, בלי סיסמה)
 
-### 2. `contact_button_click`
-Fires on primary "contact us / join us / start" CTAs that lead to a conversation (not a passive newsletter signup).
+במקום "הזמנה + בחירת סיסמה", נשלח **מגיק-לינק אחיד** לכל מי שמזין מייל בכפתור ההתנסות:
+- משתמש חדש → נוצר אוטומטית בלחיצה על הלינק, נכנס ישר ל-`/welcome`
+- משתמש קיים (סטודנט / נרשם בעבר) → אותו לינק פשוט מחבר אותו לחשבון הקיים
+- מי שלחץ פעמיים → מקבל לינק חדש שמחליף את הקודם, בלי חסימה ובלי שגיאה
 
-- `src/components/landing/Hero.tsx` — "Start 8 free days" trial Link → `location: "hero_start_trial"`
-- `src/components/landing/Hero.tsx` — "Join community" button (opens dialog) → `location: "hero_join_community"`
-- `src/components/portal/landing/TurningPointCTA.tsx` — "אני רוצה להצטרף לתוכנית" (opens payment dialog) → `location: "turning_point_join"`
-- `src/components/portal/landing/TurningPointCTA.tsx` — "הורדת סילבוס" button → `location: "turning_point_syllabus_download"`
+**מה המשתמש רואה:**
+1. מזין מייל → "שלחנו לך קישור כניסה למייל. לחיצה אחת ואת/ה בפנים."
+2. לוחץ על הקישור באימייל → נכנס מיד, ללא סיסמה
+3. בכניסות הבאות → מזין מייל שוב, מקבל לינק חדש
 
-### 3. `phone_click`
-Fires on `tel:` and visible phone-number links.
+הסיסמה הופכת לאופציונלית — אפשר להציע ב-`/welcome` "רוצה להגדיר סיסמה לכניסות הבאות?" למי שמעדיף.
 
-- `src/components/portal/landing/TurningPointCTA.tsx` — the visible `054-4928993` phone number link (currently a `wa.me` href, but presented as a phone number — I'll also fire `phone_click` there since users perceive it as a phone tap; `whatsapp_click` still fires too)
-- `src/pages/PublicTherapistSite.tsx` line 622 — `tel:${c.phone}` link → `location: "therapist_site_phone"`
+---
 
-### 4. `form_submission`
-Fires on successful submission of public-facing forms.
+## שינויים נדרשים
 
-- `src/pages/Auth.tsx` — inside `handleSubmit`, after each successful branch:
-  - signup success → `trackEvent("form_submission", { form: "signup", location: "auth_page" })`
-  - login success → `form: "login"`
-  - forgot-password success → `form: "forgot_password"`
-  - password reset success → `form: "password_reset"`
+### 1. Edge function `signup-passwordless`
+- להחליף `inviteUserByEmail` ב-`generateLink({ type: 'magiclink' })` שעובד גם למשתמשים קיימים וגם לחדשים
+- **להסיר את חסימת `already_registered`** — זו הסיבה המרכזית שאנשים נתקעים
+- להחזיר תמיד `success: true` כל עוד המייל תקין, גם בלחיצות חוזרות (אפשר עם rate-limit פנימי של דקה אחת למייל)
+- redirect ל-`/welcome?intent=trial` במקום ל-`/auth?mode=reset`
 
-## Implementation pattern
+### 2. `src/pages/Auth.tsx` (טופס ההתנסות)
+- בעמוד signup: לשנות את ההודעה ל"נשלח לך קישור כניסה — לחיצה אחת ואת/ה בפנים"
+- להוריד את האזהרה "alreadyRegisteredFull" (כבר לא תופיע)
+- במסך האישור: להוסיף כפתור "לא קיבלתי — שלח שוב" שמפעיל את אותו edge function בלי שגיאה
+- להוסיף הסבר ברור: "בדוק/י גם בתיקיית הקידום/ספאם. הקישור תקף ל-60 דקות."
 
-For buttons that already have `onClick`, wrap or extend the handler:
-```ts
-onClick={() => {
-  trackEvent("whatsapp_click", { location: "cta_banner" });
-  window.open('https://chat.whatsapp.com/...', '_blank');
-}}
-```
+### 3. עמוד `/welcome` (אחרי כניסה)
+- להוסיף באנר עדין: "רוצה להגדיר סיסמה כדי להיכנס מהר יותר בעתיד? [הגדר/י סיסמה]" — אופציונלי, לא חוסם
+- אם המשתמש מדלג — בכניסה הבאה הוא פשוט יבקש מגיק-לינק חדש
 
-For `<a>` tags with `href`, attach `onClick`:
-```tsx
-<a
-  href="https://wa.me/972544928993"
-  onClick={() => trackEvent("whatsapp_click", { location: "turning_point_syllabus" })}
-  ...
-/>
-```
+### 4. עמוד `/auth` בכניסה (login mode)
+- להוסיף אפשרות שנייה ברורה: "כניסה ללא סיסמה — שלח/י לי קישור למייל"
+- שדה הסיסמה נשאר למי שכבר הגדיר, אבל לא חובה
 
-For `Auth.tsx`, add `trackEvent("form_submission", {...})` immediately after each `toast.success` / `setSignupSent(true)` line.
+### 5. תבנית מייל
+- אם יש תבנית auth email מותאמת — לעדכן את הטקסט של magic-link לעברית, ברור, עם CTA אחד גדול: "כניסה לפלטפורמה"
+- אם אין תבנית מותאמת — אפשר להוסיף בהמשך (לא חוסם את השיפור הזה)
 
-Existing `data-track` attributes stay in place (harmless, useful for any future delegated handler).
+---
 
-## Files edited
+## תועלות
 
-- `src/components/landing/Hero.tsx`
-- `src/components/landing/CTABanner.tsx`
-- `src/components/portal/landing/TurningPointCTA.tsx`
-- `src/pages/Auth.tsx`
-- `src/pages/PublicTherapistSite.tsx`
+| לפני | אחרי |
+|---|---|
+| 5 שלבים | 2 שלבים (מייל → לחיצה) |
+| משתמש קיים נחסם | אותו זרימה לכולם |
+| הזנה כפולה = תקיעה | הזנה כפולה = לינק חדש |
+| חובה לבחור סיסמה | סיסמה אופציונלית |
 
-No new files, no schema changes, no new deps. After the changes are deployed, the 4 event names will start appearing in GA4 → Realtime → Events within minutes; once they show up, mark each as a **Key event** in GA4 Admin so they populate the Conversions chart in Looker Studio.
+---
+
+## פרטים טכניים (לא חובה לקרוא)
+
+- `supabase.auth.admin.generateLink({ type: 'magiclink', email })` מחזיר action_link גם למשתמשים קיימים — צריך לשלוח אותו במייל ידנית דרך הconnector של Brevo, או להשתמש ב-`supabase.auth.signInWithOtp({ email })` שעושה את שתי הפעולות יחד ועובד מצד הקליינט
+- ההמלצה: לעבור ל-`signInWithOtp` ישירות מהקליינט — חוסך את ה-edge function לגמרי, מנצל את תשתית האימיילים הקיימת של Supabase/Brevo, ועובד אוטומטית גם לחדשים וגם לקיימים
+- ה-trigger הקיים `handle_new_user` ימשיך ליצור פרופיל + trial_start_date אוטומטית
+- ה-trigger הקיים `auto_assign_course_role_on_signup` ימשיך לקשר סטודנטים קיימים לפי מייל
+
+---
+
+## מה אני צריך ממך כדי להתחיל
+
+1. **לאשר את הכיוון של magic-link** (כניסה בלחיצה אחת, בלי סיסמה כברירת מחדל)
+2. **לאשר הסרת חסימת "already_registered"** — כל מי שמזין מייל יקבל לינק, גם אם כבר רשום
+3. האם תרצה שאשמור גם את אופציית הסיסמה ב-/auth (לוגין כפול: מייל-לינק או סיסמה) או להחליף לחלוטין ל-magic-link בלבד?
