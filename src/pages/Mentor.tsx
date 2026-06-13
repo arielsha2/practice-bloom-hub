@@ -604,6 +604,16 @@ export default function Mentor() {
     }
   }, [messages, storageKey]);
 
+  // Track last-active timestamp (per user) for the returning-user welcome-back.
+  useEffect(() => {
+    if (!user?.id || messages.length === 0) return;
+    try {
+      localStorage.setItem(`mentor-last-active:${user.id}`, String(Date.now()));
+    } catch {
+      // ignore
+    }
+  }, [messages, user?.id]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -614,6 +624,52 @@ export default function Mentor() {
     }
     setInput("");
   }, [language, storageKey]);
+
+  // Returning-user welcome-back: triggers once per session when the user
+  // returns after >= 12h with an existing conversation past the initial intro.
+  const welcomeBackTriedRef = useRef(false);
+  useEffect(() => {
+    if (welcomeBackTriedRef.current) return;
+    if (!user?.id) return;
+    if (isLoading) return;
+    if (messages.length < MIN_MESSAGES_FOR_WELCOME_BACK) return;
+    if (input.trim().length > 0) return;
+
+    const sessionKey = `mentor-welcomeback-shown:${user.id}`;
+    try {
+      if (sessionStorage.getItem(sessionKey)) {
+        welcomeBackTriedRef.current = true;
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    let lastActiveRaw: string | null = null;
+    try {
+      lastActiveRaw = localStorage.getItem(`mentor-last-active:${user.id}`);
+    } catch {
+      return;
+    }
+    if (!lastActiveRaw) return;
+    const lastActive = Number(lastActiveRaw);
+    if (!Number.isFinite(lastActive)) return;
+
+    const hoursAway = (Date.now() - lastActive) / (1000 * 60 * 60);
+    if (hoursAway < WELCOME_BACK_THRESHOLD_HOURS) return;
+
+    welcomeBackTriedRef.current = true;
+    try {
+      sessionStorage.setItem(sessionKey, "1");
+    } catch {
+      // ignore
+    }
+
+    void sendWelcomeBack(Math.round(hoursAway));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, messages.length, isLoading]);
+
+
 
   // Suggested bot for the fallback banner: last assistant message mentions
   // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
