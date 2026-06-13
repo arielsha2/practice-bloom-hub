@@ -460,16 +460,54 @@ export default function Auth() {
                   )}
                 </form>
 
-                {/* Forgot password link - only on login */}
+                {/* Forgot password + magic link - only on login */}
                 {mode === "login" && (
-                  <div className="mt-4 text-center">
-                    <button
+                  <div className="mt-4 space-y-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">או</span>
+                      </div>
+                    </div>
+                    <Button
                       type="button"
-                      onClick={() => setMode("forgot")}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      variant="outline"
+                      className="w-full"
+                      disabled={isSubmitting || !email}
+                      onClick={async () => {
+                        if (!email) {
+                          toast.error("הזינו את כתובת האימייל שלכם");
+                          return;
+                        }
+                        setIsSubmitting(true);
+                        const { error } = await supabase.auth.signInWithOtp({
+                          email,
+                          options: {
+                            shouldCreateUser: false,
+                            emailRedirectTo: `${window.location.origin}/dashboard`,
+                          },
+                        });
+                        setIsSubmitting(false);
+                        if (error) toast.error(error.message);
+                        else {
+                          trackEvent("form_submission", { form: "login_magiclink", location: "auth_page" });
+                          setSignupSent(true);
+                        }
+                      }}
                     >
-                      {t("auth.forgotPassword")}
-                    </button>
+                      שלחו לי קישור כניסה למייל (ללא סיסמה)
+                    </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    </div>
                   </div>
                 )}
 
