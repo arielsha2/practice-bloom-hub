@@ -430,9 +430,13 @@ function AssistantMarkdown({
 // ============================================================
 // Main Mentor page
 // ============================================================
+const WELCOME_BACK_THRESHOLD_HOURS = 12;
+const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const userPlanInfo = useUserPlan();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
@@ -441,6 +445,7 @@ export default function Mentor() {
     journeyRef.current = journey;
   }, [journey]);
   const [searchParams, setSearchParams] = useSearchParams();
+
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
