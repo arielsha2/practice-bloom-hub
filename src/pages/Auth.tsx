@@ -298,17 +298,47 @@ export default function Auth() {
             {mode === "signup" && signupSent ? (
               <div className="text-center space-y-4">
                 <CheckCircle className="w-16 h-16 text-success mx-auto" />
-                <p className="text-muted-foreground">{t("auth.signupSuccessPasswordless")}</p>
-                <button
+                <p className="text-foreground font-medium">
+                  שלחנו לך קישור כניסה ל-{email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  לחיצה אחת על הקישור באימייל ואת/ה בפנים — בלי סיסמה.
+                  <br />
+                  בדוק/י גם בתיקיית הקידום/ספאם. הקישור תקף ל-60 דקות.
+                </p>
+                <Button
                   type="button"
-                  onClick={() => {
-                    setMode("login");
-                    setSignupSent(false);
+                  variant="outline"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={async () => {
+                    setIsSubmitting(true);
+                    const { error } = await supabase.auth.signInWithOtp({
+                      email,
+                      options: {
+                        shouldCreateUser: true,
+                        emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+                      },
+                    });
+                    setIsSubmitting(false);
+                    if (error) toast.error(error.message);
+                    else toast.success("שלחנו שוב — בדוק/י את המייל");
                   }}
-                  className="text-sm text-primary hover:underline transition-colors"
                 >
-                  {t("auth.backToLogin")}
-                </button>
+                  לא קיבלתי — שלח/י שוב
+                </Button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setSignupSent(false);
+                    }}
+                    className="text-sm text-primary hover:underline transition-colors"
+                  >
+                    {t("auth.backToLogin")}
+                  </button>
+                </div>
               </div>
             ) : mode === "forgot" && resetSent ? (
               <div className="text-center space-y-4">
