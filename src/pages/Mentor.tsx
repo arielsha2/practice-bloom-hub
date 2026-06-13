@@ -762,7 +762,76 @@ export default function Mentor() {
     }, 50);
   };
 
+  const sendWelcomeBack = async (hoursAway: number) => {
+    if (isLoading) return;
+    if (messages.length < MIN_MESSAGES_FOR_WELCOME_BACK) return;
+    setIsLoading(true);
+    try {
+      const j = journeyRef.current;
+      const journey_context = j
+        ? {
+            niche_output: j.niche_output,
+            self_presentation_output: j.self_presentation_output,
+            completed_stages: j.completed_stages,
+            tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
+          }
+        : null;
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages,
+          language,
+          journey_context,
+          user_plan: userPlanInfo.plan,
+          returning_user: { hours_away: hoursAway },
+        }),
+      });
+      if (!resp.ok || !resp.body) {
+        setIsLoading(false);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistant = "";
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(json);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              assistant += delta;
+              setMessages((prev) =>
+                prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m)),
+              );
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("welcome-back failed", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const send = async (text: string) => {
+
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
     const next = [...messages, userMsg];
