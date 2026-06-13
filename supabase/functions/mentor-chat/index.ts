@@ -172,8 +172,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language, journey_context, user_plan } = await req.json();
-    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "user_plan:", user_plan);
+    const { messages, language, journey_context, user_plan, returning_user } = await req.json();
+    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "user_plan:", user_plan, "returning_user:", JSON.stringify(returning_user ?? null));
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -258,7 +259,22 @@ LANGUAGE RULE (overrides everything else):
 - Tool names, brand names, and URLs may stay in their original language.
 `;
 
-    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock + languageRule;
+    let returningUserBlock = "";
+    if (returning_user && typeof returning_user === "object") {
+      const hours = Number((returning_user as any).hours_away) || 0;
+      const gapText = hours >= 24
+        ? `${Math.round(hours / 24)} ימים`
+        : `${hours} שעות`;
+      const gapTextEn = hours >= 24
+        ? `${Math.round(hours / 24)} days`
+        : `${hours} hours`;
+      returningUserBlock = language === "en"
+        ? `\n\n═══════════════════════════════\nRETURNING USER — open with a warm welcome-back (mandatory):\n═══════════════════════════════\nThis user is returning after about ${gapTextEn}. This message is auto-triggered — the user did NOT type anything new. Your reply must:\n1. Open warmly and briefly (2–4 sentences total). Welcome them back without being saccharine.\n2. Briefly remind them where you left off last time, using THEIR OWN WORDS from the prior conversation history (Clean Language — quote the exact phrases they used, not synonyms).\n3. Ask ONE question only: how their week went and whether they managed to apply or try anything from what you discussed.\n4. Do NOT restart the 4-question funnel. Do NOT relaunch the intro. Do NOT dump tool links. Do NOT issue a [HANDOFF:...] tag in this message.\n5. Wait for their answer before continuing.`
+        : `\n\n═══════════════════════════════\nמשתמש חוזר — חובה לפתוח בקבלת פנים חמה:\n═══════════════════════════════\nהמטפל/ת חוזר/ת אחרי כ-${gapText}. ההודעה הזו מופעלת אוטומטית — המשתמש לא כתב כלום עכשיו. התגובה שלך חייבת:\n1. לפתוח בחום ובקצרה (2–4 משפטים בסך הכל). לברך בשובו/ה בלי להיות מתקתקה.\n2. להזכיר בקצרה איפה עצרתם בפעם הקודמת, **תוך שימוש במילים המדויקות שלו/ה** מההיסטוריה (Clean Language — להחזיר את הניסוח שלו/ה כפי שהוא, לא מילים נרדפות).\n3. לשאול **שאלה אחת בלבד**: איך עבר עליו/ה השבוע, והאם הצליח/ה ליישם או לנסות משהו ממה שדיברתם.\n4. לא לפתוח מחדש את משפך 4 השאלות. לא לחזור על ההיכרות. לא לזרוק קישורים לכלים. **לא** להוציא תג [HANDOFF:...] בהודעה הזו.\n5. לחכות לתשובה לפני שממשיכים.`;
+    }
+
+    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

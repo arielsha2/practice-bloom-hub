@@ -430,9 +430,13 @@ function AssistantMarkdown({
 // ============================================================
 // Main Mentor page
 // ============================================================
+const WELCOME_BACK_THRESHOLD_HOURS = 12;
+const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const userPlanInfo = useUserPlan();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
@@ -441,6 +445,7 @@ export default function Mentor() {
     journeyRef.current = journey;
   }, [journey]);
   const [searchParams, setSearchParams] = useSearchParams();
+
 
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
@@ -599,6 +604,16 @@ export default function Mentor() {
     }
   }, [messages, storageKey]);
 
+  // Track last-active timestamp (per user) for the returning-user welcome-back.
+  useEffect(() => {
+    if (!user?.id || messages.length === 0) return;
+    try {
+      localStorage.setItem(`mentor-last-active:${user.id}`, String(Date.now()));
+    } catch {
+      // ignore
+    }
+  }, [messages, user?.id]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -609,6 +624,52 @@ export default function Mentor() {
     }
     setInput("");
   }, [language, storageKey]);
+
+  // Returning-user welcome-back: triggers once per session when the user
+  // returns after >= 12h with an existing conversation past the initial intro.
+  const welcomeBackTriedRef = useRef(false);
+  useEffect(() => {
+    if (welcomeBackTriedRef.current) return;
+    if (!user?.id) return;
+    if (isLoading) return;
+    if (messages.length < MIN_MESSAGES_FOR_WELCOME_BACK) return;
+    if (input.trim().length > 0) return;
+
+    const sessionKey = `mentor-welcomeback-shown:${user.id}`;
+    try {
+      if (sessionStorage.getItem(sessionKey)) {
+        welcomeBackTriedRef.current = true;
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    let lastActiveRaw: string | null = null;
+    try {
+      lastActiveRaw = localStorage.getItem(`mentor-last-active:${user.id}`);
+    } catch {
+      return;
+    }
+    if (!lastActiveRaw) return;
+    const lastActive = Number(lastActiveRaw);
+    if (!Number.isFinite(lastActive)) return;
+
+    const hoursAway = (Date.now() - lastActive) / (1000 * 60 * 60);
+    if (hoursAway < WELCOME_BACK_THRESHOLD_HOURS) return;
+
+    welcomeBackTriedRef.current = true;
+    try {
+      sessionStorage.setItem(sessionKey, "1");
+    } catch {
+      // ignore
+    }
+
+    void sendWelcomeBack(Math.round(hoursAway));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, messages.length, isLoading]);
+
+
 
   // Suggested bot for the fallback banner: last assistant message mentions
   // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
@@ -701,7 +762,76 @@ export default function Mentor() {
     }, 50);
   };
 
+  const sendWelcomeBack = async (hoursAway: number) => {
+    if (isLoading) return;
+    if (messages.length < MIN_MESSAGES_FOR_WELCOME_BACK) return;
+    setIsLoading(true);
+    try {
+      const j = journeyRef.current;
+      const journey_context = j
+        ? {
+            niche_output: j.niche_output,
+            self_presentation_output: j.self_presentation_output,
+            completed_stages: j.completed_stages,
+            tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
+          }
+        : null;
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages,
+          language,
+          journey_context,
+          user_plan: userPlanInfo.plan,
+          returning_user: { hours_away: hoursAway },
+        }),
+      });
+      if (!resp.ok || !resp.body) {
+        setIsLoading(false);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistant = "";
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(json);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              assistant += delta;
+              setMessages((prev) =>
+                prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m)),
+              );
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("welcome-back failed", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const send = async (text: string) => {
+
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
     const next = [...messages, userMsg];
