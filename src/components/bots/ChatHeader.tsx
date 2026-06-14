@@ -11,6 +11,7 @@ interface ChatHeaderProps {
   showMenuButton?: boolean;
   onReturnToMentor?: () => void;
   isReturningToMentor?: boolean;
+  isToolMode?: boolean;
 }
 
 export function ChatHeader({
@@ -20,12 +21,13 @@ export function ChatHeader({
   showMenuButton,
   onReturnToMentor,
   isReturningToMentor,
+  isToolMode,
 }: ChatHeaderProps) {
   const { t, isRTL } = useLanguage();
   const { isAdmin } = useIsAdmin();
 
   return (
-    <header className="flex items-center justify-between p-4 border-b border-border bg-card">
+    <header className={`flex items-center justify-between p-4 border-b border-border ${isToolMode ? 'bg-accent/5 border-accent/20' : 'bg-card'}`}>
       <div className="flex items-center gap-3">
         {showMenuButton && (
           <Button
@@ -38,13 +40,20 @@ export function ChatHeader({
           </Button>
         )}
         
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isToolMode ? 'bg-accent/15' : 'bg-primary/10'}`}>
           {botIcon}
         </div>
         
-        <h1 className="text-lg font-serif font-semibold text-foreground">
-          {botName}
-        </h1>
+        <div className="flex flex-col">
+          {isToolMode && (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
+              {isRTL ? 'כלי AI' : 'AI Tool'}
+            </span>
+          )}
+          <h1 className="text-lg font-serif font-semibold text-foreground leading-tight">
+            {botName}
+          </h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
