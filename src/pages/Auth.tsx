@@ -11,6 +11,7 @@ import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { CheckCircle, User, UserPlus, Mail, KeyRound } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 
@@ -30,6 +31,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [mailingConsent, setMailingConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [signupSent, setSignupSent] = useState(false);
@@ -150,11 +153,23 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else if (mode === "signup") {
+        if (!signupName.trim()) {
+          toast.error("נא למלא שם מלא");
+          return;
+        }
+        if (!mailingConsent) {
+          toast.error("חובה לאשר הצטרפות לרשימת התפוצה כדי להמשיך");
+          return;
+        }
         const { error: otpError } = await supabase.auth.signInWithOtp({
           email,
           options: {
             shouldCreateUser: true,
             emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+            data: {
+              display_name: signupName.trim(),
+              mailing_list_consent: true,
+            },
           },
         });
         if (otpError) {
