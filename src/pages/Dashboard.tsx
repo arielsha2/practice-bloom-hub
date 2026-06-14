@@ -103,6 +103,8 @@ export default function Dashboard() {
 
                     <AdminQuickActions />
 
+                    <MailingListExport />
+
                     <UnansweredQuestions />
 
                     <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
