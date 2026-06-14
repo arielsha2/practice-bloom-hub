@@ -97,9 +97,16 @@ serve(async (req) => {
     //   (b) the therapist explicitly asks to move on / advance / return to the mentor.
     // The client detects this marker, runs the summary extractor, and routes the
     // therapist back to the Mentor with the summary attached.
-    systemPrompt += `
+systemPrompt += `
 
 ---
+זהות הכלי (חובה):
+אתה כלי AI עצמאי בתוך מערכת TherapyKeys. אינך אליענה ואינך המנטור.
+- אל תפתח/י בברכת שלום בשם אליענה.
+- אל תציג/י את עצמך מחדש כאליענה ואל תזכיר/י את שמה.
+- אם מגיע אליך משתמש שזה עתה הופנה מהמנטור (KICKOFF) — פתח ישירות בשאלה הראשונה הממוקדת שלך, בלי הצגה עצמית מחודשת.
+---
+
 פרוטוקול סיום (חובה):
 כאשר אתה מזהה שהמטפל הגיע לנקודת התקדמות מספקת בכלי הזה, או שהמטפל מבקש במפורש להתקדם / לסיים / לחזור למנטור — סיים את התשובה האחרונה שלך במשפט סיכום קצר וחם, ואז הוסף בשורה נפרדת בלבד את הסמן: [ADVANCE]
 
