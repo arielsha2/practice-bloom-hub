@@ -34,9 +34,10 @@ interface ChatMessageProps {
   isStreaming?: boolean;
   enableVoice?: boolean;
   isLatestAssistant?: boolean;
+  variant?: 'mentor' | 'tool';
 }
 
-export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestAssistant }: ChatMessageProps) {
+export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestAssistant, variant = 'mentor' }: ChatMessageProps) {
   const isUser = role === 'user';
   const { t } = useLanguage();
   const [displayedContent, setDisplayedContent] = useState('');
@@ -264,12 +265,16 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   const showVoiceLoading = isVoiceSyncMode && (isStreaming || tts.isLoading) && !tts.isPlaying && !hasCompletedRef.current && wasStreamingRef.current || 
     (isVoiceSyncMode && isStreaming);
 
+  const isTool = variant === 'tool';
+
   return (
     <div
       className={cn(
         'flex gap-3 p-4 rounded-lg transition-all animate-fade-in',
         isUser
-          ? 'bg-primary/10 mr-0 ml-8'
+          ? isTool
+            ? 'bg-accent/10 mr-0 ml-8'
+            : 'bg-primary/10 mr-0 ml-8'
           : 'bg-card border border-border/50 ml-0 mr-8'
       )}
     >
@@ -277,11 +282,13 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
       <div
         className={cn(
           'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-          isUser ? 'bg-primary/20' : 'bg-accent/20'
+          isUser
+            ? isTool ? 'bg-accent/20' : 'bg-primary/20'
+            : 'bg-accent/20'
         )}
       >
         {isUser ? (
-          <User className="w-4 h-4 text-primary" />
+          <User className={cn('w-4 h-4', isTool ? 'text-accent' : 'text-primary')} />
         ) : (
           <Bot className="w-4 h-4 text-accent" />
         )}
