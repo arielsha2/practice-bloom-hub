@@ -40,14 +40,24 @@ export function MentorNotebookPanel() {
   const t = COPY[language === "en" ? "en" : "he"];
   const side: "left" | "right" = isRTL ? "left" : "right";
   const [open, setOpen] = useState(false);
-  const { content, setContent, loaded, status, updatedAt } = useMentorNotebook();
+  const { content, setContent, loaded, status, updatedAt, appendEntry } = useMentorNotebook();
 
   // Open panel briefly when an entry is appended from the chat
   useEffect(() => {
-    const handler = () => setOpen(true);
-    window.addEventListener("mentor-notebook:open", handler);
-    return () => window.removeEventListener("mentor-notebook:open", handler);
-  }, []);
+    const openHandler = () => setOpen(true);
+    const appendHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { body?: string; stageLabel?: string | null } | undefined;
+      if (!detail?.body) return;
+      void appendEntry(detail.body, detail.stageLabel ?? null);
+      setOpen(true);
+    };
+    window.addEventListener("mentor-notebook:open", openHandler);
+    window.addEventListener("mentor-notebook:append", appendHandler as EventListener);
+    return () => {
+      window.removeEventListener("mentor-notebook:open", openHandler);
+      window.removeEventListener("mentor-notebook:append", appendHandler as EventListener);
+    };
+  }, [appendEntry]);
 
   const formattedDate =
     updatedAt &&
