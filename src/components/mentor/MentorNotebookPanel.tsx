@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Notebook, X, Check, Loader2, AlertCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentorNotebook } from "@/hooks/useMentorNotebook";
+import { MentorNotebookEditor, type NotebookEditorHandle } from "./MentorNotebookEditor";
 
 const COPY = {
   he: {
@@ -12,44 +12,67 @@ const COPY = {
     title: "הפנקס האישי שלך",
     description: "הערות, תובנות, מסקנות וצעדים מעשיים מהמסע. נשמר אוטומטית.",
     placeholder:
-      "כתוב/י כאן הערות, תובנות וצעדים מעשיים שאתה לוקח/ת מהשיחה עם המנטור...\n\nאפשר גם להוסיף הודעות ישירות מהצ'אט בלחיצה על אייקון הפנקס שלצד כל הודעה.",
+      "כתוב/י כאן הערות, תובנות וצעדים מעשיים שאתה לוקח/ת מהשיחה עם המנטור...",
     saving: "שומר…",
     saved: "נשמר",
     error: "שגיאת שמירה",
     lastUpdated: "עודכן לאחרונה:",
     close: "סגירה",
-    hint: "טיפ: הפנקס נשאר זמין גם אחרי שתסיים/י את השיחה.",
+    hint: "טיפ: בחר/י טקסט וסמן/י עם הטוש הזוהר כדי להדגיש משפטים חשובים.",
   },
   en: {
     tab: "My Notebook",
     title: "Your Personal Notebook",
     description: "Notes, insights, conclusions and action items from your journey. Auto-saved.",
     placeholder:
-      "Write here notes, insights and action items you're taking from the conversation with the mentor...\n\nYou can also send messages directly from chat using the notebook icon next to each message.",
+      "Write notes, insights and action items you're taking from the conversation with the mentor...",
     saving: "Saving…",
     saved: "Saved",
     error: "Save error",
     lastUpdated: "Last updated:",
     close: "Close",
-    hint: "Tip: your notebook stays available after the conversation ends.",
+    hint: "Tip: select text and use the highlighter to mark important lines.",
   },
 };
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function buildAppendHTML(body: string, stageLabel: string | null, lang: "he" | "en") {
+  const now = new Date();
+  const dateStr = now.toLocaleString(lang === "en" ? "en-US" : "he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const header = stageLabel ? `📅 ${dateStr} · ${stageLabel}` : `📅 ${dateStr}`;
+  const bodyHtml = escapeHtml(body.trim()).replace(/\n/g, "<br/>");
+  return `<hr/><p><strong>${escapeHtml(header)}</strong></p><p>${bodyHtml}</p>`;
+}
 
 export function MentorNotebookPanel() {
   const { language, isRTL } = useLanguage();
   const t = COPY[language === "en" ? "en" : "he"];
   const side: "left" | "right" = isRTL ? "left" : "right";
   const [open, setOpen] = useState(false);
-  const { content, setContent, loaded, status, updatedAt, appendEntry } = useMentorNotebook();
+  const { content, setContent, loaded, status, updatedAt } = useMentorNotebook();
+  const editorRef = useRef<NotebookEditorHandle | null>(null);
 
-  // Open panel briefly when an entry is appended from the chat
   useEffect(() => {
     const openHandler = () => setOpen(true);
     const appendHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { body?: string; stageLabel?: string | null } | undefined;
       if (!detail?.body) return;
-      void appendEntry(detail.body, detail.stageLabel ?? null);
+      const html = buildAppendHTML(detail.body, detail.stageLabel ?? null, language === "en" ? "en" : "he");
       setOpen(true);
+      // Defer so the sheet/editor mounts before insertion
+      setTimeout(() => editorRef.current?.appendHTML(html), 50);
     };
     window.addEventListener("mentor-notebook:open", openHandler);
     window.addEventListener("mentor-notebook:append", appendHandler as EventListener);
@@ -57,7 +80,7 @@ export function MentorNotebookPanel() {
       window.removeEventListener("mentor-notebook:open", openHandler);
       window.removeEventListener("mentor-notebook:append", appendHandler as EventListener);
     };
-  }, [appendEntry]);
+  }, [language]);
 
   const formattedDate =
     updatedAt &&
@@ -71,7 +94,6 @@ export function MentorNotebookPanel() {
 
   return (
     <>
-      {/* Floating pull-out tab */}
       <button
         onClick={() => setOpen(true)}
         aria-label={t.tab}
@@ -96,30 +118,28 @@ export function MentorNotebookPanel() {
           dir={isRTL ? "rtl" : "ltr"}
         >
           <SheetHeader className="p-6 pb-3 border-b border-border">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
-                  <Notebook className="w-4 h-4 text-mentor-accent" />
-                </div>
-                <div className={isRTL ? "text-right" : "text-left"}>
-                  <SheetTitle className="text-base font-serif">{t.title}</SheetTitle>
-                  <SheetDescription className="text-xs mt-0.5">{t.description}</SheetDescription>
-                </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-mentor-accent/15 flex items-center justify-center">
+                <Notebook className="w-4 h-4 text-mentor-accent" />
+              </div>
+              <div className={isRTL ? "text-right" : "text-left"}>
+                <SheetTitle className="text-base font-serif">{t.title}</SheetTitle>
+                <SheetDescription className="text-xs mt-0.5">{t.description}</SheetDescription>
               </div>
             </div>
           </SheetHeader>
 
           <div className="flex-1 flex flex-col p-4 gap-3 min-h-0">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={t.placeholder}
-              disabled={!loaded}
-              dir={isRTL ? "rtl" : "ltr"}
-              className={`flex-1 min-h-0 resize-none text-sm leading-relaxed font-body ${
-                isRTL ? "text-right" : "text-left"
-              }`}
-            />
+            <div className="flex-1 min-h-0">
+              <MentorNotebookEditor
+                value={content}
+                onChange={setContent}
+                placeholder={t.placeholder}
+                isRTL={isRTL}
+                disabled={!loaded}
+                ref={editorRef}
+              />
+            </div>
 
             <div className="flex items-center justify-between text-xs text-muted-foreground gap-2 flex-wrap">
               <div className="flex items-center gap-1.5">
