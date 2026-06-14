@@ -745,6 +745,8 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          mailing_list_consent: boolean
+          mailing_list_consent_at: string | null
           meshulam_transaction_id: string | null
           plan: string
           plan_updated_at: string | null
@@ -756,6 +758,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          mailing_list_consent?: boolean
+          mailing_list_consent_at?: string | null
           meshulam_transaction_id?: string | null
           plan?: string
           plan_updated_at?: string | null
@@ -767,6 +771,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          mailing_list_consent?: boolean
+          mailing_list_consent_at?: string | null
           meshulam_transaction_id?: string | null
           plan?: string
           plan_updated_at?: string | null
