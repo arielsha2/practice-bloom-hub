@@ -29,6 +29,7 @@ import {
   Users,
   Trophy,
   Check,
+  NotebookPen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,7 @@ import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
+import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -1320,10 +1322,18 @@ export default function Mentor() {
                           return messages.map((m, i) => {
                             const isUser = m.role === "user";
                             const animate = !isUser && i === lastAssistantIdx;
+                            const cleanForNotebook = (m.content || "")
+                              .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+                              .trim();
+                            const stageDefs = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
+                            const currentKey = (journey?.reflection as any)?.current as string | undefined;
+                            const stageLabel =
+                              stageDefs.find((s) => s.key === currentKey)?.label ?? null;
+                            const sendToNotebookLabel = isRTL ? "שלח לפנקס" : "Send to notebook";
                             return (
                               <div
                                 key={i}
-                                className={`flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
+                                className={`group flex gap-2.5 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}
                               >
                                 {!isUser && (
                                   <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
@@ -1331,7 +1341,7 @@ export default function Mentor() {
                                   </div>
                                 )}
                                 <div
-                                  className={`max-w-[82%] rounded-2xl px-4 py-2.5 ${
+                                  className={`max-w-[82%] rounded-2xl px-4 py-2.5 relative ${
                                     isUser
                                       ? "bg-mentor-accent text-mentor-accent-foreground rounded-ee-none"
                                       : "bg-mentor-surface border border-mentor-border/60 text-foreground rounded-ss-none"
@@ -1352,6 +1362,24 @@ export default function Mentor() {
                                       />
                                     )}
                                   </div>
+                                  {user && cleanForNotebook && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        window.dispatchEvent(
+                                          new CustomEvent("mentor-notebook:append", {
+                                            detail: { body: cleanForNotebook, stageLabel },
+                                          }),
+                                        );
+                                        toast.success(isRTL ? "נוסף לפנקס" : "Added to notebook");
+                                      }}
+                                      title={sendToNotebookLabel}
+                                      aria-label={sendToNotebookLabel}
+                                      className={`absolute -bottom-2 ${isUser ? (isRTL ? "-left-2" : "-right-2") : (isRTL ? "-right-2" : "-left-2")} opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity bg-card border border-mentor-border/60 rounded-full p-1.5 shadow-sm hover:bg-mentor-accent hover:text-mentor-accent-foreground`}
+                                    >
+                                      <NotebookPen className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -1484,6 +1512,7 @@ export default function Mentor() {
         {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && <UpgradeInvite />}
         <WebsiteComingSoonCard />
       </div>
+      {user && <MentorNotebookPanel />}
       <Footer />
     </div>
   );
