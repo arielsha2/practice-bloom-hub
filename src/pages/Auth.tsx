@@ -373,6 +373,22 @@ export default function Auth() {
             ) : (
               <>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Name field - signup only */}
+                  {mode === "signup" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">שם מלא</Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
+                        placeholder="השם שלך"
+                        maxLength={100}
+                        required
+                      />
+                    </div>
+                  )}
+
                   {/* Email field - shown for login, signup, forgot */}
                   {(mode === "login" || mode === "signup" || mode === "forgot") && (
                     <div className="space-y-2">
@@ -390,6 +406,24 @@ export default function Auth() {
                       )}
                     </div>
                   )}
+
+                  {/* Mailing list consent - signup only, required */}
+                  {mode === "signup" && (
+                    <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-primary/20 bg-primary/5 p-3">
+                      <Checkbox
+                        checked={mailingConsent}
+                        onCheckedChange={(v) => setMailingConsent(v === true)}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-foreground leading-relaxed text-right">
+                        אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.
+                        <span className="block text-xs text-muted-foreground mt-1">
+                          * אישור זה הוא תנאי לשימוש במנטור.
+                        </span>
+                      </span>
+                    </label>
+                  )}
+
 
                   {/* Password field - shown for login only */}
                   {mode === "login" && (
