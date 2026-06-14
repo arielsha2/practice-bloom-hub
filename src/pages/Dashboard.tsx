@@ -13,6 +13,7 @@ import { AdminQuickActions } from '@/components/dashboard/AdminQuickActions';
 import { UnansweredQuestions } from '@/components/dashboard/UnansweredQuestions';
 import { LessonProgressChart } from '@/components/dashboard/LessonProgressChart';
 import { RecentUsersTable } from '@/components/dashboard/RecentUsersTable';
+import { MailingListExport } from '@/components/mentor/MailingListExport';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Navigate } from 'react-router-dom';
