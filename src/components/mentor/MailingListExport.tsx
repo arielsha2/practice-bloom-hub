@@ -22,67 +22,34 @@ type Row = {
 };
 
 async function fetchRows(): Promise<Row[]> {
-  // 1. Everyone who consented
-  const consentedRes = await supabase
+  // Every registered user — each gets an automatic 8-day mentor trial on signup,
+  // so the full profiles table represents "everyone who got access to the mentor".
+  const profilesRes = await supabase
     .from("profiles")
     .select("id, display_name, email, mailing_list_consent, mailing_list_consent_at, created_at")
-    .eq("mailing_list_consent", true);
-  if (consentedRes.error) throw consentedRes.error;
+    .not("email", "is", null);
+  if (profilesRes.error) throw profilesRes.error;
 
-  // 2. Everyone who ever started using the mentor (has a journey row)
+  // Users who actually opened a mentor journey
   const journeysRes = await supabase
     .from("therapist_journeys")
     .select("user_id");
   if (journeysRes.error) throw journeysRes.error;
-  const journeyUserIds = Array.from(
-    new Set((journeysRes.data || []).map((j: any) => j.user_id).filter(Boolean))
+  const journeySet = new Set(
+    (journeysRes.data || []).map((j: any) => j.user_id).filter(Boolean)
   );
 
-  // Fetch profiles for journey users (chunked to avoid URL length limits)
-  const journeyProfiles: any[] = [];
-  const chunkSize = 100;
-  for (let i = 0; i < journeyUserIds.length; i += chunkSize) {
-    const chunk = journeyUserIds.slice(i, i + chunkSize);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, display_name, email, mailing_list_consent, mailing_list_consent_at, created_at")
-      .in("id", chunk);
-    if (error) throw error;
-    journeyProfiles.push(...(data || []));
-  }
+  const rows: Row[] = (profilesRes.data || []).map((p: any) => ({
+    id: p.id,
+    display_name: p.display_name,
+    email: p.email,
+    mailing_list_consent: !!p.mailing_list_consent,
+    mailing_list_consent_at: p.mailing_list_consent_at,
+    created_at: p.created_at,
+    used_mentor: journeySet.has(p.id),
+  }));
 
-  const journeySet = new Set(journeyUserIds);
-  const byId = new Map<string, Row>();
-
-  for (const p of consentedRes.data || []) {
-    byId.set(p.id, {
-      id: p.id,
-      display_name: p.display_name,
-      email: p.email,
-      mailing_list_consent: !!p.mailing_list_consent,
-      mailing_list_consent_at: p.mailing_list_consent_at,
-      created_at: p.created_at,
-      used_mentor: journeySet.has(p.id),
-    });
-  }
-
-  for (const p of journeyProfiles) {
-    if (!byId.has(p.id)) {
-      byId.set(p.id, {
-        id: p.id,
-        display_name: p.display_name,
-        email: p.email,
-        mailing_list_consent: !!p.mailing_list_consent,
-        mailing_list_consent_at: p.mailing_list_consent_at,
-        created_at: p.created_at,
-        used_mentor: true,
-      });
-    } else {
-      byId.get(p.id)!.used_mentor = true;
-    }
-  }
-
-  return Array.from(byId.values()).sort((a, b) => {
+  return rows.sort((a, b) => {
     const ad = a.mailing_list_consent_at || a.created_at || "";
     const bd = b.mailing_list_consent_at || b.created_at || "";
     return bd.localeCompare(ad);
@@ -155,10 +122,10 @@ export function MailingListExport() {
       </CardHeader>
       <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="text-sm text-muted-foreground">
-          כל מי שאישר דיוור או החל בעבר להשתמש במנטור. הקובץ כולל עמודה שמציינת האם המשתמש אישר דיוור.
+          כל המשתמשים שנרשמו לאתר (כולם מקבלים אוטומטית גישה למנטור). הקובץ כולל עמודה שמציינת האם המשתמש אישר דיוור והאם פתח שיחה עם המנטור.
           {counts && (
             <span className="block mt-1 text-foreground font-medium">
-              סה״כ {counts.total} · אישרו דיוור: {counts.consented} · משתמשי מנטור ללא אישור: {counts.legacy}
+              סה״כ {counts.total} · אישרו דיוור: {counts.consented} · ללא אישור דיוור: {counts.legacy}
             </span>
           )}
         </div>

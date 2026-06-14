@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Blocks mentor usage until the user has consented to join the
- * "על שפת הקליניקה" mailing list. Required by privacy/marketing compliance.
+ * Asks users who signed up before mailing consent existed to opt in.
+ * If they close the dialog, we redirect them home — mentor access requires consent.
  */
 export function MailingConsentGate() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [consent, setConsent] = useState(false);
@@ -68,16 +70,16 @@ export function MailingConsentGate() {
     setOpen(false);
   }
 
+  function handleClose() {
+    setOpen(false);
+    navigate("/");
+  }
+
   if (!user || !checked) return null;
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* not dismissible */ }}>
-      <DialogContent
-        dir="rtl"
-        className="max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <DialogContent dir="rtl" className="max-w-md">
         <DialogHeader>
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <MailCheck className="w-6 h-6 text-primary" />
@@ -112,20 +114,30 @@ export function MailingConsentGate() {
               אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה".
               אפשר להסיר את עצמך בכל עת.
               <span className="block text-xs text-muted-foreground mt-1">
-                * אישור זה הוא תנאי לשימוש במנטור.
+                * אישור זה הוא תנאי לשימוש במנטור. אם תסגור/י את החלון תוחזר/י למסך הבית.
               </span>
             </span>
           </label>
 
-          <Button
-            onClick={submit}
-            disabled={saving || !consent || !name.trim()}
-            className="w-full"
-            size="lg"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
-            המשך למנטור
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={submit}
+              disabled={saving || !consent || !name.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
+              המשך למנטור
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              className="w-full text-muted-foreground"
+            >
+              לא כרגע — חזרה למסך הבית
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
