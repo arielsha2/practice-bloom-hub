@@ -195,7 +195,7 @@ const BENEFITS_EN = [
 ];
 
 const OUTCOMES_HE = [
-  "יומן עמוס במטופלים שמתאימים לך",
+  "יומן מלא במטופלים שמתאימים לך",
   "מחיר שמשקף את הערך האמיתי שלך",
   "מסר שיווקי שמושך את האנשים הנכונים",
   "פחות התלבטות, יותר פעולה",
@@ -449,7 +449,6 @@ export default function Mentor() {
   }, [journey]);
   const [searchParams, setSearchParams] = useSearchParams();
 
-
   const benefits = language === "he" ? BENEFITS_HE : BENEFITS_EN;
   const outcomes = language === "he" ? OUTCOMES_HE : OUTCOMES_EN;
   const starters = language === "he" ? STARTERS_HE : STARTERS_EN;
@@ -672,8 +671,6 @@ export default function Mentor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, messages.length, isLoading]);
 
-
-
   // Suggested bot for the fallback banner: last assistant message mentions
   // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
   // Suppressed while a bot is already open, while the next response is loading,
@@ -816,9 +813,7 @@ export default function Mentor() {
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               assistant += delta;
-              setMessages((prev) =>
-                prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m)),
-              );
+              setMessages((prev) => prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m)));
             }
           } catch {
             buffer = line + "\n" + buffer;
@@ -834,7 +829,6 @@ export default function Mentor() {
   };
 
   const send = async (text: string) => {
-
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };
     const next = [...messages, userMsg];
@@ -1322,13 +1316,10 @@ export default function Mentor() {
                           return messages.map((m, i) => {
                             const isUser = m.role === "user";
                             const animate = !isUser && i === lastAssistantIdx;
-                            const cleanForNotebook = (m.content || "")
-                              .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
-                              .trim();
+                            const cleanForNotebook = (m.content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
                             const stageDefs = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
                             const currentKey = (journey?.reflection as any)?.current as string | undefined;
-                            const stageLabel =
-                              stageDefs.find((s) => s.key === currentKey)?.label ?? null;
+                            const stageLabel = stageDefs.find((s) => s.key === currentKey)?.label ?? null;
                             const sendToNotebookLabel = isRTL ? "שלח לפנקס" : "Send to notebook";
                             return (
                               <div
@@ -1375,7 +1366,7 @@ export default function Mentor() {
                                       }}
                                       title={sendToNotebookLabel}
                                       aria-label={sendToNotebookLabel}
-                                      className={`absolute -bottom-2 ${isUser ? (isRTL ? "-left-2" : "-right-2") : (isRTL ? "-right-2" : "-left-2")} opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity bg-card border border-mentor-border/60 rounded-full p-1.5 shadow-sm hover:bg-mentor-accent hover:text-mentor-accent-foreground`}
+                                      className={`absolute -bottom-2 ${isUser ? (isRTL ? "-left-2" : "-right-2") : isRTL ? "-right-2" : "-left-2"} opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity bg-card border border-mentor-border/60 rounded-full p-1.5 shadow-sm hover:bg-mentor-accent hover:text-mentor-accent-foreground`}
                                     >
                                       <NotebookPen className="w-3.5 h-3.5" />
                                     </button>
