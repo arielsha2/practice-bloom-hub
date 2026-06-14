@@ -1486,6 +1486,7 @@ export default function Mentor() {
         {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && <UpgradeInvite />}
         <WebsiteComingSoonCard />
       </div>
+      {user && <MentorNotebookPanel />}
       <Footer />
     </div>
   );
