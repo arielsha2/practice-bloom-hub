@@ -43,6 +43,7 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
+import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
