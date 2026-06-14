@@ -1105,6 +1105,7 @@ export default function Mentor() {
         canonicalUrl="/mentor"
       />
       <MentorTopBar />
+      <MailingConsentGate />
 
       <main className="flex-1 pt-16">
         <TrialBanner />
