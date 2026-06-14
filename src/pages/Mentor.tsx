@@ -29,6 +29,7 @@ import {
   Users,
   Trophy,
   Check,
+  NotebookPen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,7 @@ import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
+import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
