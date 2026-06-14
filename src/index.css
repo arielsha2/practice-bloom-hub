@@ -420,3 +420,15 @@
   }
 }
 
+
+/* Mentor notebook highlight (yellow marker) */
+.notebook-highlight,
+.prose mark.notebook-highlight,
+mark.notebook-highlight {
+  background: linear-gradient(120deg, rgba(253, 224, 71, 0.55) 0%, rgba(250, 204, 21, 0.65) 100%);
+  color: inherit;
+  padding: 0.05em 0.15em;
+  border-radius: 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
