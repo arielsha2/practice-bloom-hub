@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
 
 const COPY = {
   he: {
@@ -52,6 +53,7 @@ export function MailingConsentGate() {
   const { user } = useAuth();
   const { language, isRTL } = useLanguage();
   const navigate = useNavigate();
+  const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const t = COPY[language] || COPY.he;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -61,6 +63,12 @@ export function MailingConsentGate() {
 
   useEffect(() => {
     if (!user) return;
+    if (accessLoading) return;
+    // Users with full mentor access (admin, mentor role, paid) bypass the consent gate entirely.
+    if (hasAccess) {
+      setChecked(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -76,7 +84,7 @@ export function MailingConsentGate() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, accessLoading, hasAccess]);
 
   async function submit() {
     if (!user) return;
