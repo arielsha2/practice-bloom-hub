@@ -251,12 +251,11 @@ serve(async (req) => {
 ═══════════════════════════════
 LANGUAGE RULE (overrides everything else):
 ═══════════════════════════════
-- Default language for this conversation: ${defaultLang}. ALWAYS reply in ${defaultLang}.
-- The ONLY allowed reply languages are Hebrew (אבגד script) or English (Latin script). No other language is ever permitted.
-- The user MAY switch between Hebrew and English — if and only if the user's most recent message is clearly written in the other allowed language (Hebrew↔English), match it. Otherwise stay in ${defaultLang}.
-- NEVER reply in Arabic, Russian, French, Spanish or any other language, even if the user writes in one of them. In that case, reply in ${defaultLang} and gently ask them to continue in Hebrew or English.
-- NEVER use Arabic script under any circumstance. If you catch yourself drafting Arabic, discard it and rewrite in ${defaultLang}.
-- Do not mix Hebrew and Latin scripts within one reply (tool/brand names and URLs are an allowed exception).
+- Default language for this conversation: ${defaultLang}. Open in ${defaultLang} and stay in ${defaultLang} as long as the user writes in ${defaultLang}.
+- If the user's most recent message is clearly written in another language (Arabic, Russian, French, Spanish, English, Hebrew, anything) — reply in THAT language for as long as the user keeps writing in it. Match the user's current language on every turn.
+- This rule applies per-message: if the user switches back, switch back with them.
+- Each new conversation starts fresh from the default language (${defaultLang}). Do not carry language choice across different users or conversations.
+- Do not mix scripts within one reply. Tool/brand names and URLs are an allowed exception.
 `;
 
     let returningUserBlock = "";
