@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Loader2, Mail } from "lucide-react";
@@ -24,11 +24,10 @@ export function MailingListExport() {
     setCount(c ?? 0);
   }
 
-  // load count on mount
-  useState(() => {
+  useEffect(() => {
     loadCount();
-    return undefined as any;
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function download() {
     setLoading(true);
