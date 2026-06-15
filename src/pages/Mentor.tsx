@@ -867,14 +867,16 @@ export default function Mentor() {
             tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
           }
         : null;
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders,
         body: JSON.stringify({
           messages,
           language,
           journey_context,
-          user_plan: userPlanInfo.plan,
           returning_user: { hours_away: hoursAway },
         }),
       });
