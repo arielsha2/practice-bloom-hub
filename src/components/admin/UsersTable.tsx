@@ -95,6 +95,7 @@ export function UsersTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [cohortFilter, setCohortFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [userToUpgrade, setUserToUpgrade] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter((e) => e.user_id === userId);
