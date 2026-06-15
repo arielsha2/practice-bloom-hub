@@ -46,6 +46,7 @@ export default function UsersAdmin() {
     grantFreeTrial,
     getTrialStatus,
     deleteUser,
+    upgradeToPaid,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
