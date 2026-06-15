@@ -472,6 +472,7 @@ export default function Mentor() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
+  const [trialRestricted, setTrialRestricted] = useState(false);
   const [pendingReturn, setPendingReturn] = useState<{
     botKey: string;
     toolName: string;
