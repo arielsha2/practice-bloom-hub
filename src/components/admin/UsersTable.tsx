@@ -377,6 +377,33 @@ export function UsersTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!userToUpgrade} onOpenChange={(open) => !open && setUserToUpgrade(null)}>
+        <AlertDialogContent dir={isRTL ? "rtl" : "ltr"}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? "שדרוג לגישה מלאה" : "Upgrade to paid"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? `האם לשדרג את ${userToUpgrade?.email || "המשתמש"} לגישה מלאה?`
+                : `Upgrade ${userToUpgrade?.email || "this user"} to full access?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? "ביטול" : "Cancel"}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isUpgradingToPaid}
+              onClick={() => {
+                if (userToUpgrade) {
+                  onUpgradeToPaid(userToUpgrade);
+                  setUserToUpgrade(null);
+                }
+              }}
+            >
+              {isRTL ? "שדרג" : "Upgrade"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
