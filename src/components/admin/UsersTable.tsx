@@ -280,11 +280,26 @@ export function UsersTable({
                             0,
                             Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
                           );
+                          const isMentor = hasMentorAccess(user.id);
                           return (
-                            <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
-                              <Gift className="w-3 h-3" />
-                              {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
-                            </Badge>
+                            <div className="flex flex-wrap items-center gap-1">
+                              <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                                <Gift className="w-3 h-3" />
+                                {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
+                              </Badge>
+                              {isMentor && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => setUserToUpgrade(user)}
+                                  disabled={isUpgradingToPaid}
+                                >
+                                  <ArrowUpCircle className="w-3.5 h-3.5 me-1" />
+                                  {isRTL ? "שדרג לתשלום" : "Upgrade to paid"}
+                                </Button>
+                              )}
+                            </div>
                           );
                         }
                         return (
