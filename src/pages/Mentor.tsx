@@ -394,8 +394,11 @@ function AssistantMarkdown({
   onBotLink: (botKey: string) => void;
   extractBotKey: (href: string) => string | null;
 }) {
-  // Strip [HANDOFF:bot-key] marker — it's a protocol signal, not visible text
-  const cleaned = (content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
+  // Strip [HANDOFF:bot-key] and [INSIGHT] markers — they are protocol signals, not visible text
+  const cleaned = (content || "")
+    .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+    .replace(/\[INSIGHT\]\s*/gi, "")
+    .trim();
   const display = useTypewriter(cleaned, animate);
   return (
     <ReactMarkdown
@@ -1316,7 +1319,10 @@ export default function Mentor() {
                           return messages.map((m, i) => {
                             const isUser = m.role === "user";
                             const animate = !isUser && i === lastAssistantIdx;
-                            const cleanForNotebook = (m.content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
+                            const cleanForNotebook = (m.content || "")
+                              .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+                              .replace(/\[INSIGHT\]\s*/gi, "")
+                              .trim();
                             const stageDefs = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
                             const currentKey = (journey?.reflection as any)?.current as string | undefined;
                             const stageLabel = stageDefs.find((s) => s.key === currentKey)?.label ?? null;
