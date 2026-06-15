@@ -210,6 +210,8 @@ export default function UsersAdmin() {
                 isGrantingTrial={grantFreeTrial.isPending}
                 onDeleteUser={(u) => deleteUser.mutate({ userId: u.id })}
                 isDeletingUser={deleteUser.isPending}
+                onUpgradeToPaid={(u) => upgradeToPaid.mutate({ userId: u.id })}
+                isUpgradingToPaid={upgradeToPaid.isPending}
               />
 
               <PendingUsersTable
