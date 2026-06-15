@@ -1614,6 +1614,9 @@ export default function Mentor() {
       </main>
 
       <div className="container mx-auto px-4 pb-8">
+        {trialRestricted && userPlanInfo.trialActive && !userPlanInfo.hasPaidAccess && (
+          <UpgradeInvite onDismiss={() => setTrialRestricted(false)} />
+        )}
         {userPlanInfo.plan === "free" && (journey?.completed_stages ?? []).includes("pricing") && <UpgradeInvite />}
         <WebsiteComingSoonCard />
       </div>
