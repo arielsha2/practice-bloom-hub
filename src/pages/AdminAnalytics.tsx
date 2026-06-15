@@ -59,6 +59,10 @@ export default function AdminAnalytics() {
             <>
               <KPICards data={data} />
 
+              <MentorConversationsSection period={period} />
+
+
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader><CardTitle className="text-base">משפך המרה</CardTitle></CardHeader>
