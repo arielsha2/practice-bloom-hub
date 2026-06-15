@@ -501,6 +501,7 @@ export function useUsersManagement() {
     toggleMentorAccess,
     grantFreeTrial,
     deleteUser,
+    upgradeToPaid,
     getTrialStatus,
   };
 }
