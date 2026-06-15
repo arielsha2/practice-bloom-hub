@@ -739,6 +739,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_conversations: {
+        Row: {
+          id: string
+          insight_count: number
+          messages: Json
+          session_id: string
+          stage: string | null
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          insight_count?: number
+          messages?: Json
+          session_id?: string
+          stage?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          insight_count?: number
+          messages?: Json
+          session_id?: string
+          stage?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentor_notebooks: {
         Row: {
           content: string

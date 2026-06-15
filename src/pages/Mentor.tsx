@@ -394,8 +394,11 @@ function AssistantMarkdown({
   onBotLink: (botKey: string) => void;
   extractBotKey: (href: string) => string | null;
 }) {
-  // Strip [HANDOFF:bot-key] marker — it's a protocol signal, not visible text
-  const cleaned = (content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
+  // Strip [HANDOFF:bot-key] and [INSIGHT] markers — they are protocol signals, not visible text
+  const cleaned = (content || "")
+    .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+    .replace(/\[INSIGHT\]\s*/gi, "")
+    .trim();
   const display = useTypewriter(cleaned, animate);
   return (
     <ReactMarkdown
@@ -605,6 +608,93 @@ export default function Mentor() {
       // ignore
     }
   }, [messages, storageKey]);
+
+  // Mirror the conversation to Supabase (in parallel with localStorage backup).
+  // Session is keyed by language; a fresh session_id is minted per language and
+  // reused across reloads. Insight tag occurrences in assistant messages bump
+  // insight_count. Errors are swallowed — DB persistence is non-blocking.
+  const sessionIdRef = useRef<string | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
+  const lastSavedRef = useRef<string>("");
+  useEffect(() => {
+    if (!user?.id) return;
+    if (messages.length === 0) return;
+
+    // Mint or restore session id for this language.
+    const sessionKey = `mentor-session:${language}:${user.id}`;
+    if (!sessionIdRef.current) {
+      try {
+        const stored = localStorage.getItem(sessionKey);
+        if (stored) {
+          sessionIdRef.current = stored;
+        } else {
+          const sid = crypto.randomUUID();
+          localStorage.setItem(sessionKey, sid);
+          sessionIdRef.current = sid;
+        }
+      } catch {
+        sessionIdRef.current = crypto.randomUUID();
+      }
+    }
+
+    // Skip if last message is an empty assistant placeholder (mid-stream).
+    const last = messages[messages.length - 1];
+    if (last?.role === "assistant" && !last.content) return;
+
+    const serialized = JSON.stringify(messages);
+    if (serialized === lastSavedRef.current) return;
+
+    const t = setTimeout(async () => {
+      try {
+        const insightCount = messages.reduce((acc, m) => {
+          if (m.role !== "assistant") return acc;
+          const matches = (m.content || "").match(/\[INSIGHT\]/gi);
+          return acc + (matches ? matches.length : 0);
+        }, 0);
+
+        const currentStage = (journeyRef.current?.reflection as any)?.current ?? null;
+
+        if (conversationIdRef.current) {
+          const { error } = await supabase
+            .from("mentor_conversations")
+            .update({
+              messages: messages as any,
+              insight_count: insightCount,
+              stage: currentStage,
+            })
+            .eq("id", conversationIdRef.current);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase
+            .from("mentor_conversations")
+            .insert({
+              user_id: user.id,
+              session_id: sessionIdRef.current,
+              messages: messages as any,
+              insight_count: insightCount,
+              stage: currentStage,
+            })
+            .select("id")
+            .single();
+          if (error) throw error;
+          conversationIdRef.current = data.id;
+        }
+        lastSavedRef.current = serialized;
+      } catch (e) {
+        console.warn("mentor conversation save failed", e);
+      }
+    }, 600);
+
+    return () => clearTimeout(t);
+  }, [messages, user?.id, language]);
+
+  // Reset DB session refs when language changes (each language is a separate session).
+  useEffect(() => {
+    sessionIdRef.current = null;
+    conversationIdRef.current = null;
+    lastSavedRef.current = "";
+  }, [language, user?.id]);
+
 
   // Track last-active timestamp (per user) for the returning-user welcome-back.
   useEffect(() => {
@@ -1316,7 +1406,10 @@ export default function Mentor() {
                           return messages.map((m, i) => {
                             const isUser = m.role === "user";
                             const animate = !isUser && i === lastAssistantIdx;
-                            const cleanForNotebook = (m.content || "").replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "").trim();
+                            const cleanForNotebook = (m.content || "")
+                              .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+                              .replace(/\[INSIGHT\]\s*/gi, "")
+                              .trim();
                             const stageDefs = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;
                             const currentKey = (journey?.reflection as any)?.current as string | undefined;
                             const stageLabel = stageDefs.find((s) => s.key === currentKey)?.label ?? null;
