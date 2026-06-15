@@ -184,8 +184,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language, journey_context, user_plan, returning_user } = await req.json();
-    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "user_plan:", user_plan, "returning_user:", JSON.stringify(returning_user ?? null));
+    const { messages, language, journey_context, returning_user } = await req.json();
+    console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "returning_user:", JSON.stringify(returning_user ?? null));
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -194,6 +194,95 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ===== Trial enforcement: verify JWT, pull plan from DB, classify intent =====
+    let user_plan: "free" | "paid" = "paid"; // default to no restriction if unauthenticated (shouldn't happen)
+    let isTrial = false;
+    try {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const supaUrl = Deno.env.get("SUPABASE_URL");
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (authHeader.startsWith("Bearer ") && supaUrl && anonKey && serviceKey) {
+        const userClient = createClient(supaUrl, anonKey, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
+        const userId = claims?.claims?.sub;
+        if (!claimsErr && userId) {
+          const admin = createClient(supaUrl, serviceKey);
+          const [{ data: access }, { data: isAdmin }] = await Promise.all([
+            admin.rpc("get_user_access", { _user_id: userId }),
+            admin.rpc("has_role", { _user_id: userId, _role: "admin" }),
+          ]);
+          const row: any = Array.isArray(access) ? access[0] : access;
+          const hasPaid = !!row?.has_paid || !!isAdmin;
+          user_plan = hasPaid ? "paid" : "free";
+          isTrial = !hasPaid && !!row?.trial_active;
+        }
+      }
+    } catch (e) {
+      console.error("Trial enforcement: failed to load plan, defaulting to permissive:", e);
+    }
+
+    // If trial: classify the last 3 user messages — block anything that isn't pricing
+    if (isTrial) {
+      const recentUserMessages = (messages as any[])
+        .filter((m) => m?.role === "user" && typeof m?.content === "string")
+        .slice(-3)
+        .map((m) => m.content)
+        .join("\n---\n");
+
+      if (recentUserMessages.trim().length > 0) {
+        let intent: "pricing" | "other" = "pricing";
+        try {
+          const classifierResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "אתה מסווג כוונות. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות: 'pricing' (כל מה שקשור למחיר, תעריפים, גביה, ערך כספי, הנחות, מחסומים פנימיים סביב כסף) או 'other' (נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל). החזר רק את המילה pricing או other — בלי הסבר.",
+                },
+                { role: "user", content: recentUserMessages },
+              ],
+              max_tokens: 5,
+              temperature: 0,
+            }),
+          });
+          if (classifierResp.ok) {
+            const data = await classifierResp.json();
+            const raw = (data?.choices?.[0]?.message?.content ?? "").toLowerCase().trim();
+            if (raw.includes("other") && !raw.includes("pricing")) intent = "other";
+          } else {
+            console.error("Classifier non-OK status:", classifierResp.status);
+          }
+        } catch (e) {
+          console.error("Classifier failed, defaulting to 'pricing':", e);
+        }
+
+        console.log("Trial classify result:", intent, "for user_plan=", user_plan);
+        if (intent === "other") {
+          return new Response(
+            JSON.stringify({
+              error: "trial_restricted",
+              allowed_topic: "pricing",
+              message: "בתקופת ההתנסות השיחה עם המנטור מתמקדת בתמחור בלבד.",
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
+    }
+    // ===== End trial enforcement =====
+
 
     // Load admin-editable settings (fallback to hardcoded prompts)
     let dbPromptHe: string | null = null;
