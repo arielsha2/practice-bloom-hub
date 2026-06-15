@@ -66,8 +66,10 @@ interface UsersTableProps {
   onChangeRole: (user: UserProfile) => void;
   onGrantFreeTrial: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
+  onUpgradeToPaid: (user: UserProfile) => void;
   isGrantingTrial?: boolean;
   isDeletingUser?: boolean;
+  isUpgradingToPaid?: boolean;
 }
 
 export function UsersTable({
