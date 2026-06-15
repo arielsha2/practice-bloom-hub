@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2 } from "lucide-react";
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2, ArrowUpCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,8 +66,10 @@ interface UsersTableProps {
   onChangeRole: (user: UserProfile) => void;
   onGrantFreeTrial: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
+  onUpgradeToPaid: (user: UserProfile) => void;
   isGrantingTrial?: boolean;
   isDeletingUser?: boolean;
+  isUpgradingToPaid?: boolean;
 }
 
 export function UsersTable({
@@ -84,13 +86,16 @@ export function UsersTable({
   onChangeRole,
   onGrantFreeTrial,
   onDeleteUser,
+  onUpgradeToPaid,
   isGrantingTrial,
   isDeletingUser,
+  isUpgradingToPaid,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [cohortFilter, setCohortFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [userToUpgrade, setUserToUpgrade] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter((e) => e.user_id === userId);
@@ -275,11 +280,26 @@ export function UsersTable({
                             0,
                             Math.ceil((trial.endsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
                           );
+                          const isMentor = hasMentorAccess(user.id);
                           return (
-                            <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
-                              <Gift className="w-3 h-3" />
-                              {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
-                            </Badge>
+                            <div className="flex flex-wrap items-center gap-1">
+                              <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                                <Gift className="w-3 h-3" />
+                                {isRTL ? `התנסות (${days} ימים)` : `Trial (${days}d)`}
+                              </Badge>
+                              {isMentor && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => setUserToUpgrade(user)}
+                                  disabled={isUpgradingToPaid}
+                                >
+                                  <ArrowUpCircle className="w-3.5 h-3.5 me-1" />
+                                  {isRTL ? "שדרג לתשלום" : "Upgrade to paid"}
+                                </Button>
+                              )}
+                            </div>
                           );
                         }
                         return (
@@ -353,6 +373,33 @@ export function UsersTable({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isRTL ? "מחק לצמיתות" : "Delete permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!userToUpgrade} onOpenChange={(open) => !open && setUserToUpgrade(null)}>
+        <AlertDialogContent dir={isRTL ? "rtl" : "ltr"}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? "שדרוג לגישה מלאה" : "Upgrade to paid"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? `האם לשדרג את ${userToUpgrade?.email || "המשתמש"} לגישה מלאה?`
+                : `Upgrade ${userToUpgrade?.email || "this user"} to full access?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? "ביטול" : "Cancel"}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isUpgradingToPaid}
+              onClick={() => {
+                if (userToUpgrade) {
+                  onUpgradeToPaid(userToUpgrade);
+                  setUserToUpgrade(null);
+                }
+              }}
+            >
+              {isRTL ? "שדרג" : "Upgrade"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

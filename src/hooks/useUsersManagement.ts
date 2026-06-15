@@ -439,6 +439,36 @@ export function useUsersManagement() {
     },
   });
 
+  // Upgrade user from free trial to paid (removes trial flags, preserves all other data)
+  const upgradeToPaid = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          plan: "paid",
+          trial_start_date: null,
+          trial_reminder_sent_at: null,
+          plan_updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      toast({
+        title: isRTL ? "הצלחה" : "Success",
+        description: isRTL ? "המשתמש שודרג לגישה מלאה" : "User upgraded to paid",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? "שגיאה" : "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get trial status for a user
   const getTrialStatus = (userId: string): { status: TrialStatus; endsAt: Date | null } => {
     const user = users.find((u) => u.id === userId) as UserProfile | undefined;
@@ -471,6 +501,7 @@ export function useUsersManagement() {
     toggleMentorAccess,
     grantFreeTrial,
     deleteUser,
+    upgradeToPaid,
     getTrialStatus,
   };
 }
