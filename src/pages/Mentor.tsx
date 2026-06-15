@@ -942,13 +942,31 @@ export default function Mentor() {
             checkin_stage: (j as any).checkin_stage ?? "",
           }
         : null;
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, language, journey_context, user_plan: userPlanInfo.plan }),
+        headers: authHeaders,
+        body: JSON.stringify({ messages: next, language, journey_context }),
       });
 
       if (!resp.ok || !resp.body) {
+        if (resp.status === 403) {
+          const body = await resp.json().catch(() => null);
+          if (body?.error === "trial_restricted") {
+            toast.error(
+              isRTL
+                ? "השלב הזה זמין לחברות המנטור בלבד — בתקופת ההתנסות אני כאן בשבילך לתמחור 💛"
+                : "This stage is available to mentor members only — during trial I'm here for pricing 💛",
+            );
+            setTrialRestricted(true);
+            // Remove the optimistic user message so they can retry on pricing
+            setMessages((prev) => prev.slice(0, -1));
+            setIsLoading(false);
+            return;
+          }
+        }
         if (resp.status === 429)
           toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
         else if (resp.status === 402) toast.error(isRTL ? "נגמרו הקרדיטים, פנו למנהל" : "Credits exhausted");
