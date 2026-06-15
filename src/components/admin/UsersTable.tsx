@@ -86,8 +86,10 @@ export function UsersTable({
   onChangeRole,
   onGrantFreeTrial,
   onDeleteUser,
+  onUpgradeToPaid,
   isGrantingTrial,
   isDeletingUser,
+  isUpgradingToPaid,
 }: UsersTableProps) {
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
