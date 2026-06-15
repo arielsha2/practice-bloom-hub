@@ -13,6 +13,7 @@ import { KPICards } from '@/components/admin/analytics/KPICards';
 import { SignupsChart } from '@/components/admin/analytics/SignupsChart';
 import { BotUsageChart } from '@/components/admin/analytics/BotUsageChart';
 import { LookerEmbed } from '@/components/admin/analytics/LookerEmbed';
+import { MentorConversationsSection } from '@/components/admin/analytics/MentorConversationsSection';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -57,6 +58,10 @@ export default function AdminAnalytics() {
           {data && (
             <>
               <KPICards data={data} />
+
+              <MentorConversationsSection period={period} />
+
+
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card>
