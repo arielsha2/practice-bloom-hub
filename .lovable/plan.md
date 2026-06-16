@@ -1,32 +1,26 @@
-## ממצאים
+## Why /en/mentor shows 404
 
-בדקתי את הקוד:
+The route `/en/mentor` **is** defined in `src/App.tsx` and works in the Lovable preview. The 404 is happening on your live published site (`therapykeys.co.il`), and there are two likely causes:
 
-1. **`src/integrations/supabase/client.ts`** — קיים `persistSession: true`, `storage: localStorage`, `autoRefreshToken: true`, אבל **חסר `detectSessionInUrl: true`**. בלעדיו, קישורי magic-link/password-recovery לא תמיד מולידים סשן בעלייה הראשונה — מה שיכול להתבטא כ"נדרש להתחבר מחדש".
-2. **`signOut`** — נקרא רק בלחיצה מפורשת של המשתמש על "התנתקות" ב-`Header.tsx:15` וב-`Mentor.tsx:56`. אין קריאה אוטומטית בטעות.
-3. **`localStorage`** — אין שום מקום שמנקה את כל ה-storage. ההסרות היחידות הן ממוקדות למפתחות `mentor-chat:he/en` בלבד (איפוס מסע המנטור), ולא נוגעות במפתחות של Supabase Auth.
-4. **Refresh token** — `autoRefreshToken: true` כבר פעיל; ה-SDK מטפל בחידוש אוטומטי.
+### Cause 1 (most likely): the site hasn't been republished since the English routes were added
+Frontend route changes only go live **after you click Publish/Update**. The `/en` and `/en/mentor` routes were added in code, but the production build on `therapykeys.co.il` is still the old one without those routes.
 
-## מה אשנה
+**Fix:** click Publish → Update in the editor. No code change needed.
 
-**קובץ יחיד — `src/integrations/supabase/client.ts`:** הוספת `detectSessionInUrl: true` לאובייקט ה-`auth`.
+### Cause 2: Netlify SPA fallback not catching the deep link
+Your project deploys via `netlify.toml` to Netlify (not Lovable hosting), so the `public/_redirects` file (`/* /index.html 200`) is what makes deep links work. This file already exists and is correct, so this should not be the problem — but if after republishing `/en/mentor` still 404s while `/mentor` works, it means Netlify isn't picking up `_redirects`. In that case I'd add an explicit redirect rule to `netlify.toml`:
 
-```ts
-auth: {
-  storage: localStorage,
-  persistSession: true,
-  autoRefreshToken: true,
-  detectSessionInUrl: true,
-}
+```toml
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 ```
 
-## מה לא אשנה
+### Plan of action
 
-- `AuthContext` — תקין.
-- שום `signOut` קיים — כולם פעולות משתמש מכוונות.
-- `useResetMentorJourney` ו-`Mentor.tsx` — מוחקים רק מפתחות של המנטור, לא נוגעים ב-Auth.
-- שום קובץ אחר.
+1. **You republish** the site (Publish → Update). This is the fix in 95% of cases.
+2. **Test** `https://therapykeys.co.il/en/mentor` and `https://therapykeys.co.il/en` after publish completes (~1 min).
+3. **If still 404 after republish**, I add the explicit `[[redirects]]` block to `netlify.toml` as a belt-and-suspenders fallback and you republish again.
 
-## בדיקה
-
-לאחר השינוי: רענון דף או חזרה לאתר אחרי סגירת טאב — הסשן נשמר ב-`localStorage` (`sb-umtqmhzzxbfvokbiwsmr-auth-token`) ומשוחזר אוטומטית; אין צורך בהתחברות מחדש.
+No code changes are needed in step 1 — the routes are already there. Want me to proactively add the `netlify.toml` redirect rule now so a single republish definitely fixes it?
