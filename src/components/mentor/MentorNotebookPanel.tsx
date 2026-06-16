@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { Notebook, X, Check, Loader2, AlertCircle } from "lucide-react";
+import { Notebook, X, Check, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentorNotebook } from "@/hooks/useMentorNotebook";
 import { MentorNotebookEditor, type NotebookEditorHandle } from "./MentorNotebookEditor";
