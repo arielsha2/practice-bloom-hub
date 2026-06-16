@@ -83,7 +83,9 @@ export function MentorNotebookPanel() {
   const t = COPY[language === "en" ? "en" : "he"];
   const side: "left" | "right" = isRTL ? "left" : "right";
   const [open, setOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const { content, setContent, loaded, status, updatedAt } = useMentorNotebook();
+
   const editorRef = useRef<NotebookEditorHandle | null>(null);
 
   useEffect(() => {
