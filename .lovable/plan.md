@@ -1,26 +1,39 @@
-## Why /en/mentor shows 404
+## Plan: make `/en/mentor` work on the live domain
 
-The route `/en/mentor` **is** defined in `src/App.tsx` and works in the Lovable preview. The 404 is happening on your live published site (`therapykeys.co.il`), and there are two likely causes:
+I checked the live URLs. `https://therapykeys.co.il/en/mentor` now returns HTTP 200, so the server is no longer returning a raw hosting 404. If you still see “nothing” or a 404 page in the browser, the next fix should focus on making the app route and deployment target unmistakable.
 
-### Cause 1 (most likely): the site hasn't been republished since the English routes were added
-Frontend route changes only go live **after you click Publish/Update**. The `/en` and `/en/mentor` routes were added in code, but the production build on `therapykeys.co.il` is still the old one without those routes.
+### What I’ll do
 
-**Fix:** click Publish → Update in the editor. No code change needed.
+1. **Verify the exact live behavior in a browser**
+   - Open `https://therapykeys.co.il/en/mentor` as a real page.
+   - Check whether it shows the actual English mentor page, the app’s internal 404 screen, a cached old version, or a blank/error state.
 
-### Cause 2: Netlify SPA fallback not catching the deep link
-Your project deploys via `netlify.toml` to Netlify (not Lovable hosting), so the `public/_redirects` file (`/* /index.html 200`) is what makes deep links work. This file already exists and is correct, so this should not be the problem — but if after republishing `/en/mentor` still 404s while `/mentor` works, it means Netlify isn't picking up `_redirects`. In that case I'd add an explicit redirect rule to `netlify.toml`:
+2. **Check the deployed bundle version**
+   - Compare the live custom domain with the Lovable published URL.
+   - Confirm whether `therapykeys.co.il` is pointing to the same current deployment as `therapykeys.lovable.app`.
 
-```toml
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+3. **Harden the app route if needed**
+   - Keep `/mentor` Hebrew.
+   - Keep `/en/mentor` English on first paint.
+   - Add a safe fallback so `/en/mentor/` with a trailing slash also works if needed.
+
+4. **Remove misleading deployment assumptions**
+   - If this project is publishing through Lovable hosting, Netlify redirect files won’t affect the custom domain.
+   - I’ll avoid relying on `_redirects`/`netlify.toml` as the core fix unless the live deployment is truly self-hosted on Netlify.
+
+5. **Final verification**
+   - Test:
+     - `https://therapykeys.co.il/en`
+     - `https://therapykeys.co.il/en/mentor`
+     - `https://therapykeys.co.il/mentor`
+   - Confirm the English mentor link loads directly without toggling language.
+
+### Expected result
+
+English-speaking therapists can open and share:
+
+```text
+https://therapykeys.co.il/en/mentor
 ```
 
-### Plan of action
-
-1. **You republish** the site (Publish → Update). This is the fix in 95% of cases.
-2. **Test** `https://therapykeys.co.il/en/mentor` and `https://therapykeys.co.il/en` after publish completes (~1 min).
-3. **If still 404 after republish**, I add the explicit `[[redirects]]` block to `netlify.toml` as a belt-and-suspenders fallback and you republish again.
-
-No code changes are needed in step 1 — the routes are already there. Want me to proactively add the `netlify.toml` redirect rule now so a single republish definitely fixes it?
+and land directly on the English mentor page.
