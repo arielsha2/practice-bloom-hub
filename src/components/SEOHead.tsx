@@ -36,10 +36,20 @@ export const SEOHead = ({
 
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-      {/* hreflang */}
-      <link rel="alternate" hrefLang="he" href={fullCanonical} />
-      <link rel="alternate" hrefLang="en" href={fullCanonical} />
-      <link rel="alternate" hrefLang="x-default" href={fullCanonical} />
+      {/* hreflang — mirror /path <-> /en/path for known bilingual routes */}
+      {(() => {
+        const path = canonicalUrl.startsWith("http") ? new URL(canonicalUrl).pathname : canonicalUrl;
+        const isEn = path === "/en" || path.startsWith("/en/");
+        const hePath = isEn ? (path === "/en" ? "/" : path.replace(/^\/en/, "")) : path;
+        const enPath = isEn ? path : path === "/" ? "/en" : `/en${path}`;
+        return (
+          <>
+            <link rel="alternate" hrefLang="he" href={`${SITE_URL}${hePath}`} />
+            <link rel="alternate" hrefLang="en" href={`${SITE_URL}${enPath}`} />
+            <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}${hePath}`} />
+          </>
+        );
+      })()}
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
