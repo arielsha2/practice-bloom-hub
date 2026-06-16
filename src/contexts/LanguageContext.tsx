@@ -791,8 +791,42 @@ const translations: Record<Language, Record<string, string>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const EN_MIRRORED_PATHS: Record<string, string> = {
+  "/": "/en",
+  "/en": "/",
+  "/mentor": "/en/mentor",
+  "/en/mentor": "/mentor",
+};
+
+function detectLanguageFromPath(pathname: string): Language {
+  return pathname === "/en" || pathname.startsWith("/en/") ? "en" : "he";
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("he");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [language, setLanguageState] = useState<Language>(() =>
+    detectLanguageFromPath(typeof window !== "undefined" ? window.location.pathname : "/"),
+  );
+
+  // Sync language with URL changes
+  useEffect(() => {
+    const detected = detectLanguageFromPath(location.pathname);
+    if (detected !== language) {
+      setLanguageState(detected);
+    }
+  }, [location.pathname]);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    const currentPath = location.pathname;
+    // If on a mirrored path, navigate to the opposite-language version
+    if (lang === "en" && EN_MIRRORED_PATHS[currentPath] && !currentPath.startsWith("/en")) {
+      navigate(EN_MIRRORED_PATHS[currentPath] + location.search + location.hash);
+    } else if (lang === "he" && currentPath.startsWith("/en") && EN_MIRRORED_PATHS[currentPath]) {
+      navigate(EN_MIRRORED_PATHS[currentPath] + location.search + location.hash);
+    }
+  };
 
   const t = (key: string): string => {
     return translations[language][key] || key;
