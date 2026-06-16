@@ -1207,9 +1207,11 @@ export default function Mentor() {
       className="min-h-screen flex flex-col bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]"
     >
       <SEOHead
-        title="המנטור | ליווי AI אישי למטפלים — TherapyKeys"
-        description='מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
-        canonicalUrl="/mentor"
+        title={isRTL ? "המנטור | ליווי AI אישי למטפלים — TherapyKeys" : "The Mentor | AI Guidance for Therapists — TherapyKeys"}
+        description={isRTL
+          ? 'מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
+          : 'An AI mentor based on Dr. Ariel Shapira\u2019s method. Personal guidance for therapists on niche, pricing, marketing and building a private practice.'}
+        canonicalUrl={isRTL ? "/mentor" : "/en/mentor"}
       />
       <MentorTopBar />
       <MailingConsentGate />
