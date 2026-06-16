@@ -156,6 +156,24 @@ export const MentorNotebookEditor = forwardRef<NotebookEditorHandle, Props>(
             <Eraser className="w-3.5 h-3.5" />
           </Button>
 
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => {
+              const { from, to } = editor.state.selection;
+              if (from !== to) {
+                editor.chain().focus().deleteSelection().run();
+              } else {
+                editor.chain().focus().deleteRange({ from: Math.max(0, from - 1), to: from }).run();
+              }
+            }}
+            title="Delete selection / character"
+          >
+            <Delete className="w-3.5 h-3.5" />
+          </Button>
+
           <div className="flex-1" />
 
           <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0"
