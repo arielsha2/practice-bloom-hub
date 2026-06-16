@@ -18,7 +18,9 @@ interface Props {
 
 export interface NotebookEditorHandle {
   appendHTML: (html: string) => void;
+  deleteLastSegment: () => void;
 }
+
 
 // Convert legacy plain text (with --- separators) to HTML once on first load.
 function normalizeInitial(raw: string): string {
