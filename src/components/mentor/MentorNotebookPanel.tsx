@@ -195,6 +195,16 @@ export function MentorNotebookPanel() {
 
             <p className="text-xs text-muted-foreground/80 italic">{t.hint}</p>
 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="self-stretch text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 me-1" />
+              {t.deleteLastSegment}
+            </Button>
+
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="self-stretch">
               <X className="w-4 h-4 me-1" />
               {t.close}
@@ -202,6 +212,28 @@ export function MentorNotebookPanel() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{t.deleteConfirmDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>{t.deleteConfirmCancel}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                editorRef.current?.deleteLastSegment();
+                setDeleteConfirmOpen(false);
+              }}
+            >
+              {t.deleteConfirmDelete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+
