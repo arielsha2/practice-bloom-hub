@@ -44,15 +44,16 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <LanguageProvider>
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/en" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/ai-assistants/:botKey" element={<BotChat />} />
               <Route path="/contents" element={<Contents />} />
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/admin/courses" element={<CoursesAdmin />} />
               <Route path="/turning-point" element={<TurningPoint />} />
               <Route path="/mentor" element={<Mentor />} />
+              <Route path="/en/mentor" element={<Mentor />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/mentor/website-builder" element={<WebsiteBuilder />} />
               <Route path="/t/:slug" element={<PublicTherapistSite />} />
@@ -91,10 +93,10 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </LanguageProvider>
+          </LanguageProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
