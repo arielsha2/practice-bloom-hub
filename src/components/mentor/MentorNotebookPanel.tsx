@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { Notebook, X, Check, Loader2, AlertCircle } from "lucide-react";
+import { Notebook, X, Check, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentorNotebook } from "@/hooks/useMentorNotebook";
 import { MentorNotebookEditor, type NotebookEditorHandle } from "./MentorNotebookEditor";
@@ -19,6 +30,11 @@ const COPY = {
     lastUpdated: "עודכן לאחרונה:",
     close: "סגירה",
     hint: "טיפ: בחר/י טקסט וסמן/י עם הטוש הזוהר כדי להדגיש משפטים חשובים.",
+    deleteLastSegment: "מחק קטע אחרון",
+    deleteConfirmTitle: "למחוק את הקטע האחרון?",
+    deleteConfirmDescription: "הפעולה תמחק את הקטע האחרון שנכתב בפנקס. אפשר לבטל את הפעולה עם Ctrl+Z.",
+    deleteConfirmCancel: "ביטול",
+    deleteConfirmDelete: "מחק",
   },
   en: {
     tab: "My Notebook",
@@ -32,8 +48,14 @@ const COPY = {
     lastUpdated: "Last updated:",
     close: "Close",
     hint: "Tip: select text and use the highlighter to mark important lines.",
+    deleteLastSegment: "Delete last segment",
+    deleteConfirmTitle: "Delete the last segment?",
+    deleteConfirmDescription: "This will remove the last segment written in the notebook. You can undo with Ctrl+Z.",
+    deleteConfirmCancel: "Cancel",
+    deleteConfirmDelete: "Delete",
   },
 };
+
 
 function escapeHtml(s: string) {
   return s
@@ -61,7 +83,9 @@ export function MentorNotebookPanel() {
   const t = COPY[language === "en" ? "en" : "he"];
   const side: "left" | "right" = isRTL ? "left" : "right";
   const [open, setOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const { content, setContent, loaded, status, updatedAt } = useMentorNotebook();
+
   const editorRef = useRef<NotebookEditorHandle | null>(null);
 
   useEffect(() => {
@@ -171,6 +195,16 @@ export function MentorNotebookPanel() {
 
             <p className="text-xs text-muted-foreground/80 italic">{t.hint}</p>
 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="self-stretch text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 me-1" />
+              {t.deleteLastSegment}
+            </Button>
+
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="self-stretch">
               <X className="w-4 h-4 me-1" />
               {t.close}
@@ -178,6 +212,28 @@ export function MentorNotebookPanel() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{t.deleteConfirmDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>{t.deleteConfirmCancel}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                editorRef.current?.deleteLastSegment();
+                setDeleteConfirmOpen(false);
+              }}
+            >
+              {t.deleteConfirmDelete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+

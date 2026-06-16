@@ -7,6 +7,7 @@ import { useEffect, useImperativeHandle, forwardRef } from "react";
 import { Bold, Italic, Underline as UnderlineIcon, Highlighter, List, ListOrdered, Undo, Redo, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+
 interface Props {
   value: string;
   onChange: (html: string) => void;
@@ -17,7 +18,9 @@ interface Props {
 
 export interface NotebookEditorHandle {
   appendHTML: (html: string) => void;
+  deleteLastSegment: () => void;
 }
+
 
 // Convert legacy plain text (with --- separators) to HTML once on first load.
 function normalizeInitial(raw: string): string {
@@ -79,7 +82,29 @@ export const MentorNotebookEditor = forwardRef<NotebookEditorHandle, Props>(
         if (!editor) return;
         editor.chain().focus("end").insertContent(html).run();
       },
+      deleteLastSegment: () => {
+        if (!editor) return;
+        const html = editor.getHTML();
+        const empty =
+          !html ||
+          html === "<p></p>" ||
+          html === "<p><br></p>" ||
+          html === '<p><br class="ProseMirror-trailingBreak"></p>';
+        if (empty) return;
+
+        const hrs = html.match(/<hr[^>]*>/gi);
+        if (!hrs || hrs.length === 0) {
+          editor.commands.clearContent(true);
+          return;
+        }
+
+        const lastHr = hrs[hrs.length - 1];
+        const idx = html.lastIndexOf(lastHr);
+        const newHtml = html.slice(0, Math.max(0, idx)).trim();
+        editor.commands.setContent(newHtml || "<p></p>", { emitUpdate: true });
+      },
     }), [editor]);
+
 
     if (!editor) return null;
 
