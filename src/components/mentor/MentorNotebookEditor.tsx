@@ -4,7 +4,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import { useEffect, useImperativeHandle, forwardRef } from "react";
-import { Bold, Italic, Underline as UnderlineIcon, Highlighter, List, ListOrdered, Undo, Redo, Eraser } from "lucide-react";
+import { Bold, Italic, Underline as UnderlineIcon, Highlighter, List, ListOrdered, Undo, Redo, Eraser, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
