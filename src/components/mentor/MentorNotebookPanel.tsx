@@ -30,6 +30,11 @@ const COPY = {
     lastUpdated: "עודכן לאחרונה:",
     close: "סגירה",
     hint: "טיפ: בחר/י טקסט וסמן/י עם הטוש הזוהר כדי להדגיש משפטים חשובים.",
+    deleteLastSegment: "מחק קטע אחרון",
+    deleteConfirmTitle: "למחוק את הקטע האחרון?",
+    deleteConfirmDescription: "הפעולה תמחק את הקטע האחרון שנכתב בפנקס. אפשר לבטל את הפעולה עם Ctrl+Z.",
+    deleteConfirmCancel: "ביטול",
+    deleteConfirmDelete: "מחק",
   },
   en: {
     tab: "My Notebook",
@@ -43,8 +48,14 @@ const COPY = {
     lastUpdated: "Last updated:",
     close: "Close",
     hint: "Tip: select text and use the highlighter to mark important lines.",
+    deleteLastSegment: "Delete last segment",
+    deleteConfirmTitle: "Delete the last segment?",
+    deleteConfirmDescription: "This will remove the last segment written in the notebook. You can undo with Ctrl+Z.",
+    deleteConfirmCancel: "Cancel",
+    deleteConfirmDelete: "Delete",
   },
 };
+
 
 function escapeHtml(s: string) {
   return s
