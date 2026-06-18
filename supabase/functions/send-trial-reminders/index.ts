@@ -65,17 +65,18 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const now = new Date();
-  const upper = new Date(now.getTime() - 5.5 * 24 * 3600 * 1000).toISOString(); // < 5.5d ago
-  const lower = new Date(now.getTime() - 6.5 * 24 * 3600 * 1000).toISOString(); // >= 6.5d ago
+  // Send to any free-tier user whose trial ends in the next 2 days (and hasn't been reminded).
+  // trial ends at trial_start_date + 8 days. So target users with trial_start_date <= now - 6 days.
+  const cutoff = new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString();
+  const floor  = new Date(Date.now() - 8 * 24 * 3600 * 1000).toISOString();
 
   const { data, error } = await admin
     .from("profiles")
     .select("id, email, trial_start_date, trial_reminder_sent_at")
     .eq("plan", "free")
     .is("trial_reminder_sent_at", null)
-    .gte("trial_start_date", lower)
-    .lt("trial_start_date", upper);
+    .gte("trial_start_date", floor)
+    .lte("trial_start_date", cutoff);
 
   if (error) {
     console.error("query error:", error);
