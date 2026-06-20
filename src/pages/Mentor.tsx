@@ -586,9 +586,13 @@ export default function Mentor() {
   const detectHandoff = (text: string): string | null => {
     if (!text) return null;
 
-    // 1. Exact tag.
+    // 1. Exact tag — normalize through aliases (LLM sometimes invents keys
+    //    like "bridge-the-gap" instead of "connection-bridge").
     const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
-    if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
+    if (tagMatch) {
+      const normalized = normalizeBotKey(tagMatch[1]);
+      if (normalized) return normalized;
+    }
 
     // 2. Any bot URL (markdown link OR bare URL) anywhere in the message.
     const urlRegex = /https?:\/\/[^\s)>\]]+\/ai-assistants\/[a-z-]+[^\s)>\]]*/gi;
