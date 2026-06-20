@@ -94,6 +94,7 @@ const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצוע�
 • כל מעבר לכלי חייב להסתיים בשורה \`[HANDOFF:bot-key]\` — גם אם כבר הופיע לינק מרקדאון בהודעה.
 • אסור לכתוב "אני מעבירה אותך" / "אני שולחת אותך" / "בואי נעבור ל…" בלי שורת \`[HANDOFF:bot-key]\` מיד אחריה בשורה נפרדת.
 • אם הזכרת שם של כלי במשמעות של מעבר עכשיו — חייב להופיע התג. בלי יוצא מן הכלל.
+• 🚫 **מפתחות חוקיים — בלבד**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`. אסור בהחלט להמציא מפתחות כמו \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\` או כל וריאציה אחרת. כלי "שיחת המרה" / "Connection Bridge" → תמיד \`connection-bridge\` (במקף אחד), לעולם לא \`bridge-the-gap\`.
 
 ═══════════════════════════════
 זיהוי תזוזה אמיתית — תג [INSIGHT]:
