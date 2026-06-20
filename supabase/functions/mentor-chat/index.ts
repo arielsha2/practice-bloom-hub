@@ -94,6 +94,7 @@ const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצוע�
 • כל מעבר לכלי חייב להסתיים בשורה \`[HANDOFF:bot-key]\` — גם אם כבר הופיע לינק מרקדאון בהודעה.
 • אסור לכתוב "אני מעבירה אותך" / "אני שולחת אותך" / "בואי נעבור ל…" בלי שורת \`[HANDOFF:bot-key]\` מיד אחריה בשורה נפרדת.
 • אם הזכרת שם של כלי במשמעות של מעבר עכשיו — חייב להופיע התג. בלי יוצא מן הכלל.
+• 🚫 **מפתחות חוקיים — בלבד**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`. אסור בהחלט להמציא מפתחות כמו \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\` או כל וריאציה אחרת. כלי "שיחת המרה" / "Connection Bridge" → תמיד \`connection-bridge\` (במקף אחד), לעולם לא \`bridge-the-gap\`.
 
 ═══════════════════════════════
 זיהוי תזוזה אמיתית — תג [INSIGHT]:
@@ -172,6 +173,7 @@ Example:
 • Every handoff to a tool must end with \`[HANDOFF:bot-key]\` on its own line — even if a markdown link already appeared in the message.
 • Never write "I'm sending you to" / "I'm transferring you to" / "let's move to…" without \`[HANDOFF:bot-key]\` immediately after on its own line.
 • If you mentioned a tool name in the meaning of switching now — the tag MUST appear. No exceptions.
+• 🚫 **Valid keys — ONLY**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`. Never invent keys such as \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\` or any variation. The "Connection Bridge" / conversion-call tool is always \`connection-bridge\` (single hyphen), never \`bridge-the-gap\`.
 
 ═══════════════════════════════
 Detecting a genuine shift — [INSIGHT] tag:
@@ -235,7 +237,11 @@ serve(async (req) => {
         .join("\n---\n");
 
       if (recentUserMessages.trim().length > 0) {
-        let intent: "pricing" | "other" = "pricing";
+        // Default to 'other' on failure — fail closed during trial so users
+        // can't accidentally bypass the pricing-only scope when the classifier
+        // hiccups.
+        let intent: "pricing" | "other" = "other";
+        let classifierOk = false;
         try {
           const classifierResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -249,7 +255,11 @@ serve(async (req) => {
                 {
                   role: "system",
                   content:
-                    "אתה מסווג כוונות. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות: 'pricing' (כל מה שקשור למחיר, תעריפים, גביה, ערך כספי, הנחות, מחסומים פנימיים סביב כסף) או 'other' (נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל). החזר רק את המילה pricing או other — בלי הסבר.",
+                    "אתה מסווג כוונות מחמיר. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות:\n" +
+                    "- 'pricing': **רק אם ההודעה האחרונה עוסקת ישירות וברורות** במחיר/תעריף/גביה/הנחות/ערך כספי/מחסום פנימי סביב כסף.\n" +
+                    "- 'other': כל השאר — נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל, אבחון כללי של הקליניקה, התחבטויות מקצועיות, הכרות ראשונית.\n" +
+                    "במקרה של ספק — החזר 'other'. אם ההודעה היא רק הכרות/פתיחה בלי הזכרת מחיר — 'other'.\n" +
+                    "החזר רק את המילה pricing או other — בלי הסבר.",
                 },
                 { role: "user", content: recentUserMessages },
               ],
@@ -258,17 +268,21 @@ serve(async (req) => {
             }),
           });
           if (classifierResp.ok) {
+            classifierOk = true;
             const data = await classifierResp.json();
             const raw = (data?.choices?.[0]?.message?.content ?? "").toLowerCase().trim();
-            if (raw.includes("other") && !raw.includes("pricing")) intent = "other";
+            // Strict match: only flip to 'pricing' on an unambiguous answer.
+            if (raw === "pricing" || (raw.includes("pricing") && !raw.includes("other"))) {
+              intent = "pricing";
+            }
           } else {
             console.error("Classifier non-OK status:", classifierResp.status);
           }
         } catch (e) {
-          console.error("Classifier failed, defaulting to 'pricing':", e);
+          console.error("Classifier failed, defaulting to 'other':", e);
         }
 
-        console.log("Trial classify result:", intent, "for user_plan=", user_plan);
+        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "user_plan=", user_plan);
         if (intent === "other") {
           return new Response(
             JSON.stringify({
@@ -312,6 +326,13 @@ serve(async (req) => {
     const baseSystemPrompt = language === "en"
       ? (dbPromptEn || SYSTEM_PROMPT_EN)
       : (dbPromptHe || SYSTEM_PROMPT_HE);
+
+    // Hard guardrail appended unconditionally — applies even when the admin
+    // overrode the prompt via mentor_ai_settings. The model has been observed
+    // emitting [HANDOFF:bridge-the-gap] (invalid key, 100% failure rate).
+    const handoffGuardrail = language === "en"
+      ? `\n\n═══════════════════════════════\nHANDOFF KEY VALIDATION (hard rule, overrides any other guidance):\n═══════════════════════════════\nThe ONLY valid bot keys are exactly: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nNever, under any circumstance, emit any other key inside [HANDOFF:...]. Specifically forbidden: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, or any variation. The "Connection Bridge" / conversion-call tool is ALWAYS \`connection-bridge\` (single hyphen between the two words). If unsure — do not emit a HANDOFF tag at all.`
+      : `\n\n═══════════════════════════════\nאימות מפתח HANDOFF (כלל קשיח — גובר על כל הנחיה אחרת):\n═══════════════════════════════\nהמפתחות החוקיים היחידים הם, מילה במילה: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nאסור בהחלט, בשום מצב, להוציא מפתח אחר בתוך [HANDOFF:...]. אסורים במפורש: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, או כל וריאציה אחרת. הכלי "Connection Bridge" / "שיחת המרה" הוא תמיד \`connection-bridge\` (מקף יחיד בין שתי המילים). אם יש ספק — אל תוציא תג HANDOFF בכלל.`;
 
     // Build journey context block
     let journeyBlock = "";
@@ -373,7 +394,7 @@ LANGUAGE RULE (overrides everything else):
         : `\n\n═══════════════════════════════\nמשתמש חוזר — חובה לפתוח בקבלת פנים חמה:\n═══════════════════════════════\nהמטפל/ת חוזר/ת אחרי כ-${gapText}. ההודעה הזו מופעלת אוטומטית — המשתמש לא כתב כלום עכשיו. התגובה שלך חייבת:\n1. לפתוח בחום ובקצרה (2–4 משפטים בסך הכל). לברך בשובו/ה בלי להיות מתקתקה.\n2. להזכיר בקצרה איפה עצרתם בפעם הקודמת, **תוך שימוש במילים המדויקות שלו/ה** מההיסטוריה (Clean Language — להחזיר את הניסוח שלו/ה כפי שהוא, לא מילים נרדפות).\n3. לשאול **שאלה אחת בלבד**: איך עבר עליו/ה השבוע, והאם הצליח/ה ליישם או לנסות משהו ממה שדיברתם.\n4. לא לפתוח מחדש את משפך 4 השאלות. לא לחזור על ההיכרות. לא לזרוק קישורים לכלים. **לא** להוציא תג [HANDOFF:...] בהודעה הזו.\n5. לחכות לתשובה לפני שממשיכים.`;
     }
 
-    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
+    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
 
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

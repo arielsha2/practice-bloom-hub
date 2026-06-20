@@ -492,11 +492,34 @@ export default function Mentor() {
     "content-creator",
   ];
 
+  // Aliases the LLM occasionally hallucinates → canonical bot key.
+  // Bug observed in production: mentor produced [HANDOFF:bridge-the-gap]
+  // 12 times and 0/12 reached the bot. Always normalize before lookup.
+  const HANDOFF_ALIASES: Record<string, string> = {
+    "bridge-the-gap": "connection-bridge",
+    "bridge": "connection-bridge",
+    "conversion-call": "connection-bridge",
+    "conversion": "connection-bridge",
+    "niche": "niche-finder",
+    "pricing": "pricing-calculator",
+    "self-presentation-tool": "self-presentation",
+    "presentation": "self-presentation",
+    "contacts": "contact-finder",
+    "network": "contact-finder",
+  };
+
+  const normalizeBotKey = (raw: string | null | undefined): string | null => {
+    if (!raw) return null;
+    const k = raw.toLowerCase().trim();
+    const mapped = HANDOFF_ALIASES[k] ?? k;
+    return BOT_KEYS.includes(mapped) ? mapped : null;
+  };
+
   const extractBotKey = (href: string): string | null => {
     try {
       const u = new URL(href, window.location.origin);
       const m = u.pathname.match(/\/ai-assistants\/([^\/?#]+)/);
-      if (m && BOT_KEYS.includes(m[1])) return m[1];
+      if (m) return normalizeBotKey(m[1]);
     } catch {}
     return null;
   };
@@ -563,9 +586,13 @@ export default function Mentor() {
   const detectHandoff = (text: string): string | null => {
     if (!text) return null;
 
-    // 1. Exact tag.
+    // 1. Exact tag — normalize through aliases (LLM sometimes invents keys
+    //    like "bridge-the-gap" instead of "connection-bridge").
     const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
-    if (tagMatch && BOT_KEYS.includes(tagMatch[1])) return tagMatch[1];
+    if (tagMatch) {
+      const normalized = normalizeBotKey(tagMatch[1]);
+      if (normalized) return normalized;
+    }
 
     // 2. Any bot URL (markdown link OR bare URL) anywhere in the message.
     const urlRegex = /https?:\/\/[^\s)>\]]+\/ai-assistants\/[a-z-]+[^\s)>\]]*/gi;
@@ -955,14 +982,17 @@ export default function Mentor() {
         if (resp.status === 403) {
           const body = await resp.json().catch(() => null);
           if (body?.error === "trial_restricted") {
-            toast.error(
-              isRTL
-                ? "השלב הזה זמין לחברות המנטור בלבד — בתקופת ההתנסות אני כאן בשבילך לתמחור 💛"
-                : "This stage is available to mentor members only — during trial I'm here for pricing 💛",
-            );
+            const explainer = isRTL
+              ? "זה צורך אמיתי וחשוב — ואני שמחה שאת/ה מזהה אותו 💛\n\nבגרסת ההתנסות (8 ימים) העזרה שלי מתמקדת ב**תמחור** בלבד. את שאר המרכיבים — נישה, הצגה עצמית, רשת הפניות, שיחת המרה — נפתח יחד בגרסה המלאה.\n\nבינתיים, אם זה מתאים, בואי נעבוד על התמחור: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — או ספר/י לי מה המחיר שאת/ה גובה היום לפגישה, ואיך הוא מרגיש לך?"
+              : "That's a real and important need — and I'm glad you're noticing it 💛\n\nDuring the 8-day trial my help is focused on **pricing** only. The rest of the components — niche, self-presentation, referral network, conversion call — we'll open together in the full version.\n\nIn the meantime, if it fits, let's work on pricing: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — or tell me, what price are you charging today per session, and how does it feel?";
+            // Keep the user message; append an assistant bubble with the explanation.
+            setMessages((prev) => [...prev, { role: "assistant", content: explainer }]);
             setTrialRestricted(true);
-            // Remove the optimistic user message so they can retry on pricing
-            setMessages((prev) => prev.slice(0, -1));
+            toast.info(
+              isRTL
+                ? "בתקופת ההתנסות המנטור מתמקד בתמחור"
+                : "During trial the mentor focuses on pricing",
+            );
             setIsLoading(false);
             return;
           }
