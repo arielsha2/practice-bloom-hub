@@ -492,11 +492,34 @@ export default function Mentor() {
     "content-creator",
   ];
 
+  // Aliases the LLM occasionally hallucinates → canonical bot key.
+  // Bug observed in production: mentor produced [HANDOFF:bridge-the-gap]
+  // 12 times and 0/12 reached the bot. Always normalize before lookup.
+  const HANDOFF_ALIASES: Record<string, string> = {
+    "bridge-the-gap": "connection-bridge",
+    "bridge": "connection-bridge",
+    "conversion-call": "connection-bridge",
+    "conversion": "connection-bridge",
+    "niche": "niche-finder",
+    "pricing": "pricing-calculator",
+    "self-presentation-tool": "self-presentation",
+    "presentation": "self-presentation",
+    "contacts": "contact-finder",
+    "network": "contact-finder",
+  };
+
+  const normalizeBotKey = (raw: string | null | undefined): string | null => {
+    if (!raw) return null;
+    const k = raw.toLowerCase().trim();
+    const mapped = HANDOFF_ALIASES[k] ?? k;
+    return BOT_KEYS.includes(mapped) ? mapped : null;
+  };
+
   const extractBotKey = (href: string): string | null => {
     try {
       const u = new URL(href, window.location.origin);
       const m = u.pathname.match(/\/ai-assistants\/([^\/?#]+)/);
-      if (m && BOT_KEYS.includes(m[1])) return m[1];
+      if (m) return normalizeBotKey(m[1]);
     } catch {}
     return null;
   };
