@@ -394,7 +394,7 @@ LANGUAGE RULE (overrides everything else):
         : `\n\n═══════════════════════════════\nמשתמש חוזר — חובה לפתוח בקבלת פנים חמה:\n═══════════════════════════════\nהמטפל/ת חוזר/ת אחרי כ-${gapText}. ההודעה הזו מופעלת אוטומטית — המשתמש לא כתב כלום עכשיו. התגובה שלך חייבת:\n1. לפתוח בחום ובקצרה (2–4 משפטים בסך הכל). לברך בשובו/ה בלי להיות מתקתקה.\n2. להזכיר בקצרה איפה עצרתם בפעם הקודמת, **תוך שימוש במילים המדויקות שלו/ה** מההיסטוריה (Clean Language — להחזיר את הניסוח שלו/ה כפי שהוא, לא מילים נרדפות).\n3. לשאול **שאלה אחת בלבד**: איך עבר עליו/ה השבוע, והאם הצליח/ה ליישם או לנסות משהו ממה שדיברתם.\n4. לא לפתוח מחדש את משפך 4 השאלות. לא לחזור על ההיכרות. לא לזרוק קישורים לכלים. **לא** להוציא תג [HANDOFF:...] בהודעה הזו.\n5. לחכות לתשובה לפני שממשיכים.`;
     }
 
-    const systemPrompt = baseSystemPrompt + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
+    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
 
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
