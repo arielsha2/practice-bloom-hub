@@ -235,7 +235,11 @@ serve(async (req) => {
         .join("\n---\n");
 
       if (recentUserMessages.trim().length > 0) {
-        let intent: "pricing" | "other" = "pricing";
+        // Default to 'other' on failure — fail closed during trial so users
+        // can't accidentally bypass the pricing-only scope when the classifier
+        // hiccups.
+        let intent: "pricing" | "other" = "other";
+        let classifierOk = false;
         try {
           const classifierResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -249,7 +253,11 @@ serve(async (req) => {
                 {
                   role: "system",
                   content:
-                    "אתה מסווג כוונות. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות: 'pricing' (כל מה שקשור למחיר, תעריפים, גביה, ערך כספי, הנחות, מחסומים פנימיים סביב כסף) או 'other' (נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל). החזר רק את המילה pricing או other — בלי הסבר.",
+                    "אתה מסווג כוונות מחמיר. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות:\n" +
+                    "- 'pricing': **רק אם ההודעה האחרונה עוסקת ישירות וברורות** במחיר/תעריף/גביה/הנחות/ערך כספי/מחסום פנימי סביב כסף.\n" +
+                    "- 'other': כל השאר — נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל, אבחון כללי של הקליניקה, התחבטויות מקצועיות, הכרות ראשונית.\n" +
+                    "במקרה של ספק — החזר 'other'. אם ההודעה היא רק הכרות/פתיחה בלי הזכרת מחיר — 'other'.\n" +
+                    "החזר רק את המילה pricing או other — בלי הסבר.",
                 },
                 { role: "user", content: recentUserMessages },
               ],
@@ -258,17 +266,21 @@ serve(async (req) => {
             }),
           });
           if (classifierResp.ok) {
+            classifierOk = true;
             const data = await classifierResp.json();
             const raw = (data?.choices?.[0]?.message?.content ?? "").toLowerCase().trim();
-            if (raw.includes("other") && !raw.includes("pricing")) intent = "other";
+            // Strict match: only flip to 'pricing' on an unambiguous answer.
+            if (raw === "pricing" || (raw.includes("pricing") && !raw.includes("other"))) {
+              intent = "pricing";
+            }
           } else {
             console.error("Classifier non-OK status:", classifierResp.status);
           }
         } catch (e) {
-          console.error("Classifier failed, defaulting to 'pricing':", e);
+          console.error("Classifier failed, defaulting to 'other':", e);
         }
 
-        console.log("Trial classify result:", intent, "for user_plan=", user_plan);
+        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "user_plan=", user_plan);
         if (intent === "other") {
           return new Response(
             JSON.stringify({
