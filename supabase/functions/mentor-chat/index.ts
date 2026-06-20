@@ -327,6 +327,13 @@ serve(async (req) => {
       ? (dbPromptEn || SYSTEM_PROMPT_EN)
       : (dbPromptHe || SYSTEM_PROMPT_HE);
 
+    // Hard guardrail appended unconditionally — applies even when the admin
+    // overrode the prompt via mentor_ai_settings. The model has been observed
+    // emitting [HANDOFF:bridge-the-gap] (invalid key, 100% failure rate).
+    const handoffGuardrail = language === "en"
+      ? `\n\n═══════════════════════════════\nHANDOFF KEY VALIDATION (hard rule, overrides any other guidance):\n═══════════════════════════════\nThe ONLY valid bot keys are exactly: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nNever, under any circumstance, emit any other key inside [HANDOFF:...]. Specifically forbidden: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, or any variation. The "Connection Bridge" / conversion-call tool is ALWAYS \`connection-bridge\` (single hyphen between the two words). If unsure — do not emit a HANDOFF tag at all.`
+      : `\n\n═══════════════════════════════\nאימות מפתח HANDOFF (כלל קשיח — גובר על כל הנחיה אחרת):\n═══════════════════════════════\nהמפתחות החוקיים היחידים הם, מילה במילה: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nאסור בהחלט, בשום מצב, להוציא מפתח אחר בתוך [HANDOFF:...]. אסורים במפורש: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, או כל וריאציה אחרת. הכלי "Connection Bridge" / "שיחת המרה" הוא תמיד \`connection-bridge\` (מקף יחיד בין שתי המילים). אם יש ספק — אל תוציא תג HANDOFF בכלל.`;
+
     // Build journey context block
     let journeyBlock = "";
     if (journey_context && typeof journey_context === "object") {
