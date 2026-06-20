@@ -982,14 +982,17 @@ export default function Mentor() {
         if (resp.status === 403) {
           const body = await resp.json().catch(() => null);
           if (body?.error === "trial_restricted") {
-            toast.error(
-              isRTL
-                ? "השלב הזה זמין לחברות המנטור בלבד — בתקופת ההתנסות אני כאן בשבילך לתמחור 💛"
-                : "This stage is available to mentor members only — during trial I'm here for pricing 💛",
-            );
+            const explainer = isRTL
+              ? "זה צורך אמיתי וחשוב — ואני שמחה שאת/ה מזהה אותו 💛\n\nבגרסת ההתנסות (8 ימים) העזרה שלי מתמקדת ב**תמחור** בלבד. את שאר המרכיבים — נישה, הצגה עצמית, רשת הפניות, שיחת המרה — נפתח יחד בגרסה המלאה.\n\nבינתיים, אם זה מתאים, בואי נעבוד על התמחור: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — או ספר/י לי מה המחיר שאת/ה גובה היום לפגישה, ואיך הוא מרגיש לך?"
+              : "That's a real and important need — and I'm glad you're noticing it 💛\n\nDuring the 8-day trial my help is focused on **pricing** only. The rest of the components — niche, self-presentation, referral network, conversion call — we'll open together in the full version.\n\nIn the meantime, if it fits, let's work on pricing: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — or tell me, what price are you charging today per session, and how does it feel?";
+            // Keep the user message; append an assistant bubble with the explanation.
+            setMessages((prev) => [...prev, { role: "assistant", content: explainer }]);
             setTrialRestricted(true);
-            // Remove the optimistic user message so they can retry on pricing
-            setMessages((prev) => prev.slice(0, -1));
+            toast.info(
+              isRTL
+                ? "בתקופת ההתנסות המנטור מתמקד בתמחור"
+                : "During trial the mentor focuses on pricing",
+            );
             setIsLoading(false);
             return;
           }
