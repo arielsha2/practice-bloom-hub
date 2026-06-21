@@ -21,11 +21,13 @@ import { Button } from "@/components/ui/button";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const PAYMENT_URL = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
+const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
+const PAYMENT_URL_EN = "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
 
-function openPayment() {
-  window.open(PAYMENT_URL, "_blank", "noopener,noreferrer");
+function openPaymentFor(language: string) {
+  const url = language === "en" ? PAYMENT_URL_EN : PAYMENT_URL_HE;
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -355,7 +357,7 @@ export function MentorSalesPage() {
             className="my-4"
           >
             <button
-              onClick={openPayment}
+              onClick={() => openPaymentFor(language)}
               className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               style={{
                 borderRadius: "4px",
@@ -651,7 +653,7 @@ export function MentorSalesPage() {
           </ul>
           <div className="py-3">
             <button
-              onClick={openPayment}
+              onClick={() => openPaymentFor(language)}
               className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 w-full sm:w-auto"
               style={{
                 borderRadius: "4px",

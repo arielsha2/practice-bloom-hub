@@ -61,18 +61,18 @@ export function Hero() {
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
             >
               <Link
-                to="/auth?mode=signup&intent=trial"
+                to={isRTL ? "/mentor" : "/en/mentor"}
                 className="inline-flex"
-                onClick={() => trackEvent("contact_button_click", { location: "hero_start_trial" })}
+                onClick={() => trackEvent("contact_button_click", { location: "hero_start_mentor" })}
               >
                 <Button
                   size="xl"
                   className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto"
                   data-track="hero_cta_click"
-                  data-track-label="hero_start_trial"
+                  data-track-label="hero_start_mentor"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {isRTL ? "התחילי 7 ימי ניסיון חינם עם גירסת ההתנסות של המנטור" : "Start 8 free days with the mentor"}
+                  {isRTL ? "התחילו עכשיו עם המנטור" : "Start now with the mentor"}
                   <Arrow
                     className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                   />
@@ -93,14 +93,6 @@ export function Hero() {
                 {t("hero.cta")}
               </Button>
             </motion.div>
-
-            <motion.p
-              className="text-xs md:text-sm text-background/60 mt-4"
-              {...fadeUp}
-              transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
-            >
-              {isRTL ? "ללא כרטיס אשראי · גרסת התנסות · 7 ימים" : "No credit card · Full access to the mentor · 8 days"}
-            </motion.p>
           </div>
 
           {/* Image - Left side, frameless 3D float */}
