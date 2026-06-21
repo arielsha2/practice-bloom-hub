@@ -24,9 +24,8 @@ export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const isTrialIntent = searchParams.get("intent") === "trial";
   const [mode, setMode] = useState<AuthMode>(
-    isTrialIntent || searchParams.get("mode") === "signup" ? "signup" : "login",
+    searchParams.get("mode") === "signup" ? "signup" : "login",
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -134,9 +133,9 @@ export default function Auth() {
   useEffect(() => {
     // Don't redirect if in reset mode (user needs to set new password)
     if (user && !loading && mode !== "reset") {
-      navigate(isTrialIntent ? "/welcome" : "/dashboard");
+      navigate("/dashboard");
     }
-  }, [user, loading, navigate, mode, isTrialIntent]);
+  }, [user, loading, navigate, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +164,7 @@ export default function Auth() {
           email,
           options: {
             shouldCreateUser: true,
-            emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+            emailRedirectTo: `${window.location.origin}/mentor`,
             data: {
               display_name: signupName.trim(),
               mailing_list_consent: true,
@@ -294,20 +293,11 @@ export default function Auth() {
               <ModeIcon className="w-8 h-8 text-primary" />
             </div>
             <CardTitle className="text-2xl md:text-3xl font-serif font-medium text-foreground">
-              {isTrialIntent && mode === "signup" ? "התחילי את 8 הימים שלך עם המנטור" : getTitle()}
+              {getTitle()}
             </CardTitle>
             <CardDescription>
-              {isTrialIntent && mode === "signup"
-                ? "ללא כרטיס אשראי. ללא מחויבות. גירסת התנסות בשלב קביעת התמחור."
-                : getSubtitle()}
+              {getSubtitle()}
             </CardDescription>
-            {isTrialIntent && mode === "signup" && (
-              <ul className="text-sm text-foreground/80 text-start mt-4 space-y-1.5 max-w-xs mx-auto" dir="rtl">
-                <li>✓ המנטור אליענה — שיחות בלי הגבלה</li>
-                <li>✓ מחשבון תמחור חכם</li>
-                <li>✓ כל ההיסטוריה שלך נשמרת</li>
-              </ul>
-            )}
           </CardHeader>
           <CardContent>
             {mode === "signup" && signupSent ? (
@@ -332,7 +322,7 @@ export default function Auth() {
                       email,
                       options: {
                         shouldCreateUser: true,
-                        emailRedirectTo: `${window.location.origin}/welcome?intent=trial`,
+                        emailRedirectTo: `${window.location.origin}/mentor`,
                       },
                     });
                     setIsSubmitting(false);
