@@ -1160,13 +1160,13 @@ export default function Mentor() {
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
         <main className="flex-1 pt-16">
-          {/* Free-trial invitation — burgundy band that flows into the sales page below */}
+          {/* Purchase invitation — burgundy band that flows into the sales page below */}
           <section
             className="band band-grain relative w-full overflow-hidden"
             style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
           >
             <div
-              dir="rtl"
+              dir={isRTL ? "rtl" : "ltr"}
               className="container mx-auto px-4 max-w-3xl relative z-10 text-center"
               style={{ paddingTop: "clamp(56px, 6vw, 80px)", paddingBottom: "clamp(40px, 5vw, 64px)" }}
             >
@@ -1175,14 +1175,14 @@ export default function Mentor() {
                 style={{ color: "hsl(var(--terracotta))" }}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                {isRTL ? "ההזמנה שלך" : "Your invitation"}
+                {isRTL ? "המנטור לקליניקה" : "The Clinic Mentor"}
               </div>
 
               <h2
                 className="font-display tracking-tight mb-5 leading-[1.15]"
                 style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)" }}
               >
-                {isRTL ? "8 ימי התנסות חינם עם המנטור" : "8 free days with the mentor"}
+                {isRTL ? "ליווי AI אישי לבניית קליניקה מלאה" : "Personal AI guidance for a full practice"}
               </h2>
 
               <p
@@ -1194,11 +1194,20 @@ export default function Mentor() {
                 }}
               >
                 {isRTL
-                  ? "בלי כרטיס אשראי. בלי מחויבות. משאירה מייל, מקבלת קישור — ומתחילה לעבוד עם המנטור עוד היום."
-                  : "No credit card. No commitment. Leave your email, get a link, and start working with the mentor today."}
+                  ? "סופרוויז׳ן רגיש לעסק, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים."
+                  : "Sensitive business supervision, available anytime. Lifetime access, including all future improvements."}
               </p>
 
-              <Link to="/auth?mode=signup&intent=trial" className="inline-flex">
+              <a
+                href={
+                  isRTL
+                    ? "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab"
+                    : "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3"
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex"
+              >
                 <Button
                   size="xl"
                   className="rounded-xl px-8 shadow-lg"
@@ -1207,9 +1216,9 @@ export default function Mentor() {
                     color: "hsl(var(--background))",
                   }}
                 >
-                  {isRTL ? "להתחיל עכשיו בחינם" : "Start now — free"}
+                  {isRTL ? "לרכישת המנטור" : "Get the Mentor"}
                 </Button>
-              </Link>
+              </a>
 
               <p className="text-xs mt-5" style={{ color: "hsl(var(--background) / 0.6)" }}>
                 {isRTL ? "כבר רשומה? " : "Already signed up? "}
