@@ -357,7 +357,7 @@ export function MentorSalesPage() {
             className="my-4"
           >
             <button
-              onClick={openPayment}
+              onClick={() => openPaymentFor(language)}
               className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               style={{
                 borderRadius: "4px",
@@ -653,7 +653,7 @@ export function MentorSalesPage() {
           </ul>
           <div className="py-3">
             <button
-              onClick={openPayment}
+              onClick={() => openPaymentFor(language)}
               className="inline-flex items-center justify-center transition-all duration-200 hover:-translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 w-full sm:w-auto"
               style={{
                 borderRadius: "4px",
