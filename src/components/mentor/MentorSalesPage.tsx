@@ -190,7 +190,6 @@ const COPY = {
     },
   },
   en: {
-    badge: "Beta · 20 founding seats only",
     hero: {
       title: "The Clinic Mentor",
       subtitle: ["Sensitive business supervision.", "Available to you anytime, anywhere."],
