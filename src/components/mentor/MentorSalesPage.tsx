@@ -311,7 +311,7 @@ const COPY = {
         "Less than two supervision sessions",
         "Yours forever",
       ],
-      cta: "I want one of the 20 founding seats",
+      cta: "I need the Mentor",
       secure: "Secure payment via Meshulam",
     },
     contact: {
