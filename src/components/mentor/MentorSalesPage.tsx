@@ -126,15 +126,22 @@ const COPY = {
       subtitle: "הוא מלווה אותך דרך חמישה שלבים מדויקים.",
       stepLabel: "שלב",
       items: [
-        { title: "מי אתה כמטפל", text: "לא תיאור קליני. הייחוד שלך. מה אתה עושה שאחרים לא עושים. מה גורם למטופלים לרצות דווקא אותך." },
+        {
+          title: "מי אתה כמטפל",
+          text: "לא תיאור קליני. הייחוד שלך. מה אתה עושה שאחרים לא עושים. מה גורם למטופלים לרצות דווקא אותך.",
+        },
         { title: "כמה הערך של העבודה איתך", text: "לא מספר שרירותי. מחיר שנובע מערך אמיתי, ושאפשר לומר בלי להתנצל." },
-        { title: "מאיפה יגיעו הלקוחות", text: 'בחירת אנשי קשר ספציפיים שימליצו עליך, במקום "לירות בכל הכיוונים" ולא להבין למה אנשים לא פונים.' },
+        {
+          title: "מאיפה יגיעו הלקוחות",
+          text: 'בחירת אנשי קשר ספציפיים שימליצו עליך, במקום "לירות בכל הכיוונים" ולא להבין למה אנשים לא פונים.',
+        },
         { title: "איך מדברים עם אנשי קשר", text: "תרגול אמיתי, שיחה אמיתית, משוב מיידי." },
         { title: "איך להציג את עצמך", text: "המשפט שגורם לאנשים לרצות לשלוח אליך לקוחות." },
       ],
       innerLabel: "הרובד הפנימי",
       innerTitle: "ובמקביל, העבודה שמתחת לפני השטח.",
-      innerText: "הביטחון והנוכחות המקצועית. היכולת להתחבר לערך האמיתי שלך ולשדר אותו. כי זה מה שבאמת מעכב גם כשיש את כל הידע העסקי.",
+      innerText:
+        "הביטחון והנוכחות המקצועית. היכולת להתחבר לערך האמיתי שלך ולשדר אותו. כי זה מה שבאמת מעכב גם כשיש את כל הידע העסקי.",
     },
     experience: {
       eyebrow: "החוויה",
@@ -163,7 +170,8 @@ const COPY = {
       p1: "התמזל מזלך להיות בין 20 המטפלים הראשונים שנזמין בתנאים מיוחדים שלא יחזרו.",
       p2: "בתמורה, אנחנו מבקשים את המשוב הכן שלך. מה עובד, מה לא, מה חסר. חשוב לנו שהמנטור ייתן את המענה הטוב ביותר למטפלים כמוך.",
       warningTitle: "המנטור מיועד למטפלים שמוכנים לא רק לקרוא, אלא לעשות.",
-      warningBody: "כל שלב מסתיים בפעולות ליישום בעולם האמיתי. אם אתה מחפש עוד ידע לצבור, זה לא בשבילך. אם אתה מוכן להיות בתנועה, אנחנו כאן.",
+      warningBody:
+        "כל שלב מסתיים בפעולות ליישום בעולם האמיתי. אם אתה מחפש עוד ידע לצבור, זה לא בשבילך. אם אתה מוכן להיות בתנועה, אנחנו כאן.",
     },
     pricing: {
       investment: "ההשקעה שלך",
@@ -187,13 +195,14 @@ const COPY = {
       title: "The Clinic Mentor",
       subtitle: ["Sensitive business supervision.", "Available to you anytime, anywhere."],
       body: "An AI personal guide that leads you step by step to fill your practice with the right clients — authentically and confidently.",
-      cta: "I want one of the 20 seats",
+      cta: "I need the Mentor",
       ctaNote: "Lifetime access · Including all future improvements",
     },
     problem: {
       eyebrow: "The gap",
       title: ["Years of psychotherapy training.", "But no one ever taught you this."],
-      intro: "You learned therapy. You learned intervention methods. You learned how to hold a therapeutic space. But essential questions were left unanswered:",
+      intro:
+        "You learned therapy. You learned intervention methods. You learned how to hold a therapeutic space. But essential questions were left unanswered:",
       questions: [
         "How do you find clients?",
         "How do you explain what makes your therapy unique so people want to come specifically to you?",
@@ -215,7 +224,10 @@ const COPY = {
         "Who knows they need personal guidance — but a quality program costs thousands of dollars. And right now, that's not possible.",
       ],
       outro1: "The problem isn't willingness. It isn't talent. It isn't even professional confidence.",
-      outro2: ["What's missing is that no one ever taught you these skills.", "And you can't practice something you didn't know you needed."],
+      outro2: [
+        "What's missing is that no one ever taught you these skills.",
+        "And you can't practice something you didn't know you needed.",
+      ],
     },
     interlude: "No one ever taught you this. So how could you have known?",
     solution: {
@@ -233,23 +245,39 @@ const COPY = {
       stepLabel: "Stage",
       items: [
         { title: "Who you are as a therapist", text: "Your uniqueness. What makes clients want specifically you." },
-        { title: "What your work is worth", text: "A price that comes from real value — one you can state without apologizing." },
-        { title: "Where clients will come from", text: "Specific referral contacts — instead of shooting in all directions." },
+        {
+          title: "What your work is worth",
+          text: "A price that comes from real value — one you can state without apologizing.",
+        },
+        {
+          title: "Where clients will come from",
+          text: "Specific referral contacts — instead of shooting in all directions.",
+        },
         { title: "How to talk to referral contacts", text: "Real practice, real conversation, immediate feedback." },
         { title: "How to present yourself", text: "The sentence that makes people want to send you clients." },
       ],
       innerLabel: "And alongside all of this",
       innerTitle: "The work beneath the surface.",
-      innerText: "The Mentor works on what's beneath the surface — confidence, professional presence, and the ability to connect with your real value.",
+      innerText:
+        "The Mentor works on what's beneath the surface — confidence, professional presence, and the ability to connect with your real value.",
     },
     experience: {
       eyebrow: "The experience",
       title: "What does it actually look like?",
       items: [
-        { title: "Available when it suits you", text: "You come when it suits you — morning, evening, between clients." },
+        {
+          title: "Available when it suits you",
+          text: "You come when it suits you — morning, evening, between clients.",
+        },
         { title: "Remembers you", text: "It remembers what you said in the previous session." },
-        { title: "Focused questions", text: "It asks focused questions — not open-ended chat. AI trained on our method." },
-        { title: "Sends you to action", text: "It sends you to one specific action. And waits for you to identify what worked." },
+        {
+          title: "Focused questions",
+          text: "It asks focused questions — not open-ended chat. AI trained on our method.",
+        },
+        {
+          title: "Sends you to action",
+          text: "It sends you to one specific action. And waits for you to identify what worked.",
+        },
       ],
       closing: "Like supervision — only always available, with infinite patience.",
     },
@@ -277,7 +305,12 @@ const COPY = {
       futurePriceValue: "₪1,800 (~$600 USD)",
       currentPrice: "₪750",
       priceNote: "(~$250 USD) · One-time payment, incl. VAT",
-      bullets: ["Lifetime full access", "Including all future improvements", "Less than two supervision sessions", "Yours forever"],
+      bullets: [
+        "Lifetime full access",
+        "Including all future improvements",
+        "Less than two supervision sessions",
+        "Yours forever",
+      ],
       cta: "I want one of the 20 founding seats",
       secure: "Secure payment via Meshulam",
     },
@@ -395,9 +428,7 @@ export function MentorSalesPage() {
             {t.problem.title[1]}
           </h2>
           <Divider />
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-10">
-            {t.problem.intro}
-          </p>
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-10">{t.problem.intro}</p>
         </motion.div>
 
         <motion.ul {...fadeUp} className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
@@ -419,9 +450,7 @@ export function MentorSalesPage() {
       {/* ============ PERSONAS — BURGUNDY ============ */}
       <Band tone="burgundy">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            {t.personas.title}
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">{t.personas.title}</h2>
           <Divider />
           <p className="text-background/80 text-base md:text-lg mb-10">{t.personas.subtitle}</p>
         </motion.div>
@@ -444,9 +473,7 @@ export function MentorSalesPage() {
         </motion.ul>
 
         <motion.div {...fadeUp} className="text-center mt-12 max-w-2xl mx-auto">
-          <p className="text-base md:text-lg leading-relaxed text-background/85">
-            {t.personas.outro1}
-          </p>
+          <p className="text-base md:text-lg leading-relaxed text-background/85">{t.personas.outro1}</p>
           <p className="text-lg md:text-xl font-semibold leading-relaxed text-background mt-3">
             {t.personas.outro2[0]}
             <br />
@@ -461,9 +488,7 @@ export function MentorSalesPage() {
       {/* ============ SOLUTION INTRO — CREAM ============ */}
       <Band tone="cream">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            {t.solution.title}
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">{t.solution.title}</h2>
           <Divider />
         </motion.div>
 
@@ -508,7 +533,9 @@ export function MentorSalesPage() {
                     <Icon className="w-6 h-6" />
                   </span>
                   <div className="pt-1">
-                    <div className="step-numeral mb-1.5">{t.stages.stepLabel} {String(i + 1).padStart(2, "0")}</div>
+                    <div className="step-numeral mb-1.5">
+                      {t.stages.stepLabel} {String(i + 1).padStart(2, "0")}
+                    </div>
                     <h3 className="font-display text-xl mb-2 text-background">{s.title}</h3>
                     <p className="text-background/70 leading-relaxed text-sm md:text-base">{s.text}</p>
                   </div>
@@ -573,9 +600,7 @@ export function MentorSalesPage() {
       <Band tone="burgundy">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto">
           <Eyebrow>{t.proof.eyebrow}</Eyebrow>
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            {t.proof.title}
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">{t.proof.title}</h2>
           <Divider />
         </motion.div>
 
@@ -592,9 +617,7 @@ export function MentorSalesPage() {
       <Band tone="charcoal">
         <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto mb-12">
           <Eyebrow>{t.beta.eyebrow}</Eyebrow>
-          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">
-            {t.beta.title}
-          </h2>
+          <h2 className="font-display text-3xl md:text-5xl tracking-tight leading-tight mb-4">{t.beta.title}</h2>
           <Divider />
         </motion.div>
 
@@ -638,9 +661,7 @@ export function MentorSalesPage() {
               {t.pricing.currentPrice}
             </span>
           </div>
-          <p className="text-base md:text-lg text-foreground font-medium mb-8">
-            {t.pricing.priceNote}
-          </p>
+          <p className="text-base md:text-lg text-foreground font-medium mb-8">{t.pricing.priceNote}</p>
           <ul className="text-start max-w-md mx-auto space-y-3 mb-10">
             {t.pricing.bullets.map((b, i) => (
               <li key={i} className="flex items-center gap-3 text-foreground">
