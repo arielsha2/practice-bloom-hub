@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/accordion";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
 const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
 const PAYMENT_URL_EN = "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3";
