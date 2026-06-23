@@ -710,8 +710,12 @@ export function MentorSalesPage() {
             >
               {t.earlyQuote.text}
             </p>
-            <p className="mt-6 text-sm font-bold text-foreground">— {t.earlyQuote.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t.earlyQuote.details}</p>
+            {t.earlyQuote.name && !t.earlyQuote.name.includes("[") && (
+              <p className="mt-6 text-sm font-bold text-foreground">— {t.earlyQuote.name}</p>
+            )}
+            {t.earlyQuote.details && !t.earlyQuote.details.includes("[") && (
+              <p className="text-xs text-muted-foreground mt-1">{t.earlyQuote.details}</p>
+            )}
           </motion.div>
         </Band>
       )}
