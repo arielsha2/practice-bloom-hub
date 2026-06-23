@@ -710,8 +710,12 @@ export function MentorSalesPage() {
             >
               {t.earlyQuote.text}
             </p>
-            <p className="mt-6 text-sm font-bold text-foreground">— {t.earlyQuote.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t.earlyQuote.details}</p>
+            {t.earlyQuote.name && !t.earlyQuote.name.includes("[") && (
+              <p className="mt-6 text-sm font-bold text-foreground">— {t.earlyQuote.name}</p>
+            )}
+            {t.earlyQuote.details && !t.earlyQuote.details.includes("[") && (
+              <p className="text-xs text-muted-foreground mt-1">{t.earlyQuote.details}</p>
+            )}
           </motion.div>
         </Band>
       )}
@@ -945,12 +949,18 @@ export function MentorSalesPage() {
                   style={{ color: "hsl(var(--terracotta))", width: 28, height: 28 }}
                 />
                 <p className="italic text-foreground leading-relaxed pt-8">{c.quote}</p>
-                <div
-                  className="h-px w-12 my-5"
-                  style={{ background: "hsl(var(--terracotta))" }}
-                />
-                <p className="font-bold text-foreground text-sm">{t.proof.placeholderName}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t.proof.placeholderDetails}</p>
+                {t.proof.placeholderName && !t.proof.placeholderName.includes("[") && (
+                  <>
+                    <div
+                      className="h-px w-12 my-5"
+                      style={{ background: "hsl(var(--terracotta))" }}
+                    />
+                    <p className="font-bold text-foreground text-sm">{t.proof.placeholderName}</p>
+                    {t.proof.placeholderDetails && !t.proof.placeholderDetails.includes("[") && (
+                      <p className="text-xs text-muted-foreground mt-1">{t.proof.placeholderDetails}</p>
+                    )}
+                  </>
+                )}
               </div>
             ))}
           </motion.div>
