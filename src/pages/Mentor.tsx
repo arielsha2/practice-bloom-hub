@@ -1160,78 +1160,75 @@ export default function Mentor() {
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
         <main className="flex-1 pt-16">
-          {/* Purchase invitation — burgundy band that flows into the sales page below */}
-          <section
-            className="band band-grain relative w-full overflow-hidden"
-            style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
-          >
-            <div
-              dir={isRTL ? "rtl" : "ltr"}
-              className="container mx-auto px-4 max-w-3xl relative z-10 text-center"
-              style={{ paddingTop: "clamp(56px, 6vw, 80px)", paddingBottom: "clamp(40px, 5vw, 64px)" }}
+          {/* Hebrew keeps the legacy purchase-invitation hero above the sales page.
+              English ships a single merged hero from MentorSalesPage. */}
+          {isRTL && (
+            <section
+              className="band band-grain relative w-full overflow-hidden"
+              style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
             >
               <div
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-accent/40 bg-accent/10"
-                style={{ color: "hsl(var(--terracotta))" }}
+                dir="rtl"
+                className="container mx-auto px-4 max-w-3xl relative z-10 text-center"
+                style={{ paddingTop: "clamp(56px, 6vw, 80px)", paddingBottom: "clamp(40px, 5vw, 64px)" }}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                {isRTL ? "המנטור לקליניקה" : "The Clinic Mentor"}
-              </div>
+                <div
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-accent/40 bg-accent/10"
+                  style={{ color: "hsl(var(--terracotta))" }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  המנטור לקליניקה
+                </div>
 
-              <h2
-                className="font-display tracking-tight mb-5 leading-[1.15]"
-                style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)" }}
-              >
-                {isRTL ? "ליווי AI אישי לבניית קליניקה מלאה" : "Personal AI guidance for a full practice"}
-              </h2>
+                <h2
+                  className="font-display tracking-tight mb-5 leading-[1.15]"
+                  style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)" }}
+                >
+                  ליווי AI אישי לבניית קליניקה מלאה
+                </h2>
 
-              <p
-                className="mx-auto mb-8 leading-relaxed"
-                style={{
-                  color: "hsl(var(--background) / 0.78)",
-                  maxWidth: "34rem",
-                  fontSize: "clamp(0.95rem, 1.15vw, 1.05rem)",
-                }}
-              >
-                {isRTL
-                  ? "סופרוויז׳ן רגיש לעסק, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים."
-                  : "Sensitive business supervision, available anytime. Lifetime access, including all future improvements."}
-              </p>
-
-              <a
-                href={
-                  isRTL
-                    ? "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab"
-                    : "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3"
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex"
-              >
-                <Button
-                  size="xl"
-                  className="rounded-xl px-8 shadow-lg"
+                <p
+                  className="mx-auto mb-8 leading-relaxed"
                   style={{
-                    backgroundColor: "hsl(var(--terracotta))",
-                    color: "hsl(var(--background))",
+                    color: "hsl(var(--background) / 0.78)",
+                    maxWidth: "34rem",
+                    fontSize: "clamp(0.95rem, 1.15vw, 1.05rem)",
                   }}
                 >
-                  {isRTL ? "לרכישת המנטור" : "Get the Mentor"}
-                </Button>
-              </a>
+                  סופרוויז׳ן רגיש לעסק, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים.
+                </p>
 
-              <p className="text-xs mt-5" style={{ color: "hsl(var(--background) / 0.6)" }}>
-                {isRTL ? "כבר רשומה? " : "Already signed up? "}
-                <Link
-                  to="/auth"
-                  className="underline underline-offset-2 hover:opacity-100"
-                  style={{ color: "hsl(var(--background) / 0.85)" }}
+                <a
+                  href="https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex"
                 >
-                  {isRTL ? "להתחברות" : "Log in"}
-                </Link>
-              </p>
-            </div>
-          </section>
+                  <Button
+                    size="xl"
+                    className="rounded-xl px-8 shadow-lg"
+                    style={{
+                      backgroundColor: "hsl(var(--terracotta))",
+                      color: "hsl(var(--background))",
+                    }}
+                  >
+                    לרכישת המנטור
+                  </Button>
+                </a>
+
+                <p className="text-xs mt-5" style={{ color: "hsl(var(--background) / 0.6)" }}>
+                  כבר רשומה?{" "}
+                  <Link
+                    to="/auth"
+                    className="underline underline-offset-2 hover:opacity-100"
+                    style={{ color: "hsl(var(--background) / 0.85)" }}
+                  >
+                    להתחברות
+                  </Link>
+                </p>
+              </div>
+            </section>
+          )}
 
           <MentorSalesPage />
         </main>
