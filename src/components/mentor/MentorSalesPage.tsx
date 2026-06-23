@@ -757,16 +757,16 @@ export function MentorSalesPage() {
 
           <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-10 items-center max-w-4xl mx-auto">
             <div className="flex flex-col items-center">
-              <div
-                className="w-full aspect-[4/5] max-w-sm rounded-2xl border border-border bg-secondary/60 flex items-center justify-center shadow-soft overflow-hidden"
-                aria-label="Photo of Ariel and Eliana Shapira"
-              >
-                <span className="text-xs text-muted-foreground italic px-4 text-center">
-                  Photo of Ariel &amp; Eliana coming soon
-                </span>
-              </div>
+              <img
+                src={arielElianaPhoto.url}
+                alt="Ariel and Eliana Shapira"
+                className="w-full aspect-[4/3] max-w-sm rounded-2xl border border-border object-cover shadow-soft"
+                loading="lazy"
+              />
               <p className="mt-3 text-sm text-muted-foreground italic">{t.founders.caption}</p>
             </div>
+
+
 
             <div>
               <h3 className="font-display text-2xl md:text-3xl text-foreground mb-5 leading-snug">
