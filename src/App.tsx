@@ -40,7 +40,6 @@ import MarketWithoutLosingSoul from "./pages/en/MarketWithoutLosingSoul";
 import TherapistsUndercharge from "./pages/en/TherapistsUndercharge";
 import KnowLikeTrust from "./pages/en/KnowLikeTrust";
 import FirstClients from "./pages/en/FirstClients";
-import DebugByok from "./pages/DebugByok";
 const queryClient = new QueryClient();
 
 const App = () => (
