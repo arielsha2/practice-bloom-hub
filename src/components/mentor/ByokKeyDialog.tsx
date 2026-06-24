@@ -33,7 +33,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
   const [hint, setHint] = useState<string | null>(null);
   const looksValid = isLikelyGeminiKey(key);
 
-  const { armed, arm, needsManualPaste, pasteFromClipboard } = useByokClipboard({
+  const { arm } = useByokClipboard({
     currentValue: key,
     onDetected: (k) => {
       setKey(k);
@@ -58,17 +58,6 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
   const handleOpenAIStudio = async () => {
     window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
     await arm();
-  };
-
-  const handleManualPaste = async () => {
-    const ok = await pasteFromClipboard();
-    if (!ok) {
-      toast.error(
-        isRTL
-          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
-          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
-      );
-    }
   };
 
   const handleSave = async () => {
