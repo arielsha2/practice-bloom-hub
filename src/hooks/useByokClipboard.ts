@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-/** Matches a Google Gemini API key shape (starts with AIza, 35+ chars typical). */
-export const isLikelyGeminiKey = (raw: string) => /^AIza[A-Za-z0-9_-]{30,}$/.test(raw.trim());
+/** Loose Gemini key heuristic — supports old (AIza...) and new (AQ.Ab8RN...) formats.
+ *  Real validation is done server-side via a live Google API call. */
+export const isLikelyGeminiKey = (raw: string) => {
+  const t = raw.trim();
+  return t.length >= 20 && !/\s/.test(t) && !t.startsWith("http");
+};
 
 interface UseByokClipboardOptions {
   /** Current input value — we won't override if user already typed something. */

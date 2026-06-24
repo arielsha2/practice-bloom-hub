@@ -66,8 +66,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
     if (!ok) {
       toast.error(
         isRTL
-          ? "לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza."
-          : "No key found in your clipboard. Make sure you copied a key starting with AIza.",
+          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
       );
     }
   };
@@ -77,8 +77,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
     if (!isLikelyGeminiKey(trimmed)) {
       toast.error(
         isRTL
-          ? "המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים"
-          : "Key doesn't look valid — must start with AIza and be 35+ chars",
+          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
       );
       return;
     }
@@ -102,8 +102,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
         if (err === "invalid_key") {
           toast.error(
             isRTL
-              ? "המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף."
-              : "Invalid key — make sure you copied the full key starting with AIza, not the page URL.",
+              ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+              : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
           );
         } else if (err === "quota_exhausted") {
           toast.error(
@@ -204,7 +204,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
               type="text"
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="AIza..."
+              placeholder={isRTL ? "הדבק/י כאן את מפתח ה-API שלך" : "Paste your API key here"}
               dir="ltr"
               autoComplete="off"
               spellCheck={false}
@@ -220,8 +220,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
           {key && !looksValid && (
             <p className="text-xs text-amber-600">
               {isRTL
-                ? "זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים."
-                : "That doesn't look like a Gemini key. Valid keys start with AIza and are 35+ chars."}
+                ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+                : "Make sure you copied the full API key from Google AI Studio, not the page URL."}
             </p>
           )}
           {armed && needsManualPaste && !looksValid && (

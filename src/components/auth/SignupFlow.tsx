@@ -185,13 +185,13 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   const handleManualPaste = async () => {
     const ok = await pasteFromClipboard();
-    if (!ok) toast.error("לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza.");
+    if (!ok) toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
   };
 
   const handleSaveByok = async () => {
     const trimmed = byokKey.trim();
     if (!isLikelyGeminiKey(trimmed)) {
-      return toast.error("המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים");
+      return toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
     }
     setBusy(true);
     try {
@@ -211,7 +211,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       if (!resp.ok || !body?.ok) {
         const err = body?.error;
         if (err === "invalid_key") {
-          toast.error("המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף.");
+          toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
         } else if (err === "quota_exhausted") {
           toast.error("המכסה החודשית של המפתח נגמרה. צור/י מפתח חדש ב-Google AI Studio.");
         } else if (err === "invalid_format") {
@@ -417,14 +417,14 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את המפתח (מתחיל ב-AIza…)</Label>
+            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את מפתח ה-API שלך</Label>
             <div className="relative">
               <Input
                 id="byok-input"
                 type="text"
                 value={byokKey}
                 onChange={(e) => setByokKey(e.target.value)}
-                placeholder="AIza..."
+                placeholder="הדבק/י כאן את מפתח ה-API שלך"
                 dir="ltr"
                 autoComplete="off"
                 spellCheck={false}
@@ -436,7 +436,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
             </div>
             {byokKey && !byokLooksValid && (
               <p className="text-xs text-amber-600">
-                זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים.
+                ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.
               </p>
             )}
             {byokArmed && needsManualPaste && !byokLooksValid && (

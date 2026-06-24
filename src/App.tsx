@@ -40,6 +40,7 @@ import MarketWithoutLosingSoul from "./pages/en/MarketWithoutLosingSoul";
 import TherapistsUndercharge from "./pages/en/TherapistsUndercharge";
 import KnowLikeTrust from "./pages/en/KnowLikeTrust";
 import FirstClients from "./pages/en/FirstClients";
+import DebugByok from "./pages/DebugByok";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,6 +54,7 @@ const App = () => (
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/debug/byok" element={<DebugByok />} />
               <Route path="/en" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/ai-assistants/:botKey" element={<BotChat />} />
