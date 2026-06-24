@@ -1001,6 +1001,19 @@ export default function Mentor() {
             return;
           }
         }
+        if (resp.status === 402) {
+          const body = await resp.json().catch(() => null);
+          const err = body?.error;
+          if (err === "BYOK_KEY_REQUIRED" || err === "BYOK_KEY_INVALID" || err === "BYOK_KEY_QUOTA") {
+            // Roll back the user message — we'll resend it after they save a key.
+            setMessages((prev) => prev.slice(0, -1));
+            setPendingByokSend(text.trim());
+            setByokReason(err === "BYOK_KEY_INVALID" ? "invalid" : err === "BYOK_KEY_QUOTA" ? "quota" : "missing");
+            setByokDialogOpen(true);
+            setIsLoading(false);
+            return;
+          }
+        }
         if (resp.status === 429)
           toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
         else if (resp.status === 402) toast.error(isRTL ? "נגמרו הקרדיטים, פנו למנהל" : "Credits exhausted");
