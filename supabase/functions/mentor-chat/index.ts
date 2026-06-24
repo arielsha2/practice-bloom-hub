@@ -403,32 +403,95 @@ LANGUAGE RULE (overrides everything else):
     const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule;
 
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // ===== BYOK: paying (non-admin) users call Gemini with their own key =====
+    // Admins and free/trial users continue on the platform's Lovable AI Gateway.
+    let endpointUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    let bearerKey = LOVABLE_API_KEY;
+    let effectiveModel = modelToUse;
+    let usingByok = false;
+
+    if (user_plan === "paid" && !isAdminUser && authedUserId) {
+      try {
+        const supaUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const admin = createClient(supaUrl, serviceKey);
+        const { data: keyRow } = await admin
+          .from("user_ai_keys")
+          .select("encrypted_key")
+          .eq("user_id", authedUserId)
+          .maybeSingle();
+        if (!keyRow?.encrypted_key) {
+          return new Response(
+            JSON.stringify({ error: "BYOK_KEY_REQUIRED" }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        const userKey = await decryptSecret(keyRow.encrypted_key);
+        endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+        bearerKey = userKey;
+        // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
+        effectiveModel = effectiveModel.replace(/^google\//, "");
+        usingByok = true;
+      } catch (e) {
+        console.error("BYOK setup failed:", e);
+        return new Response(
+          JSON.stringify({ error: "BYOK_KEY_REQUIRED" }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
+    const response = await fetch(endpointUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${bearerKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: modelToUse,
+        model: effectiveModel,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
+      const status = response.status;
+      const t = await response.text().catch(() => "");
+      console.error("Chat backend error:", status, t.slice(0, 300), "byok=", usingByok);
+
+      if (usingByok) {
+        // Mark error on the user's key row so the UI can surface a useful message.
+        try {
+          const supaUrl = Deno.env.get("SUPABASE_URL")!;
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const admin = createClient(supaUrl, serviceKey);
+          await admin
+            .from("user_ai_keys")
+            .update({ last_error: `${status}` })
+            .eq("user_id", authedUserId!);
+        } catch (_) { /* swallow */ }
+
+        const errCode = status === 401 || status === 403
+          ? "BYOK_KEY_INVALID"
+          : status === 429
+          ? "BYOK_KEY_QUOTA"
+          : "BYOK_KEY_INVALID";
+        return new Response(JSON.stringify({ error: errCode }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
+      if (status === 402) {
         return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds to your Lovable AI workspace." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI gateway error" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -437,6 +500,7 @@ LANGUAGE RULE (overrides everything else):
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
+
   } catch (e) {
     console.error("mentor-chat error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
