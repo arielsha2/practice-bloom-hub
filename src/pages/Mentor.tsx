@@ -480,6 +480,9 @@ export default function Mentor() {
     summary: string;
     kickoff: string;
   } | null>(null);
+  const [byokDialogOpen, setByokDialogOpen] = useState(false);
+  const [byokReason, setByokReason] = useState<"missing" | "invalid" | "quota">("missing");
+  const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
