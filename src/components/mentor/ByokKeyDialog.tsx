@@ -66,8 +66,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
     if (!ok) {
       toast.error(
         isRTL
-          ? "לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza."
-          : "No key found in your clipboard. Make sure you copied a key starting with AIza.",
+          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
       );
     }
   };
