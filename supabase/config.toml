@@ -38,3 +38,10 @@ verify_jwt = false
 
 [functions.send-trial-reminders]
 verify_jwt = false
+
+[functions.signup-send-otp]
+verify_jwt = false
+
+[functions.signup-verify-otp]
+verify_jwt = false
+

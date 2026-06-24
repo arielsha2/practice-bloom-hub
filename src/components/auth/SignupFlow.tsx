@@ -36,7 +36,21 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<"free" | "paid">("free");
 
-  // Step 1 — send OTP
+  const callFn = async (name: string, payload: unknown) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    const body = await resp.json().catch(() => ({}));
+    return { ok: resp.ok, status: resp.status, body } as const;
+  };
+
+  // Step 1 — send OTP via our edge function
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalized = normalizeEmail(email);
@@ -44,51 +58,70 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
     if (!name.trim()) return toast.error("נא למלא שם מלא");
     if (!mailingConsent) return toast.error("חובה לאשר הצטרפות לרשימת התפוצה כדי להמשיך");
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { ok, status, body } = await callFn("signup-send-otp", {
       email: normalized,
-      options: {
-        shouldCreateUser: true,
-        data: { display_name: name.trim(), mailing_list_consent: true },
-      },
+      name: name.trim(),
+      mailing_list_consent: true,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (!ok) {
+      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
+      if (body?.error === "email_not_configured")
+        return toast.error("שירות המייל לא מוגדר — פנה/י לתמיכה");
+      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+    }
     setEmail(normalized);
     trackEvent("signup_step_complete", { step: 1 });
     setStep(2);
   };
 
   const resendOtp = async () => {
-    const { error } = await supabase.auth.signInWithOtp({
+    const { ok, body } = await callFn("signup-send-otp", {
       email,
-      options: {
-        shouldCreateUser: true,
-        data: { display_name: name.trim(), mailing_list_consent: true },
-      },
+      name: name.trim(),
+      mailing_list_consent: true,
     });
-    if (error) {
+    if (!ok) {
       trackEvent("signup_otp_failed");
-      toast.error(error.message);
-      throw error;
+      toast.error(body?.error === "rate_limited" ? "נסה/י שוב עוד מעט" : "השליחה נכשלה");
+      throw new Error("send failed");
     }
     trackEvent("signup_otp_resent");
     toast.success("שלחנו קוד חדש למייל");
   };
 
-  // Step 2 — verify OTP
+  // Step 2 — verify OTP via our edge function and set the session
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
     setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
-    setBusy(false);
-    if (error) {
+    const { ok, body } = await callFn("signup-verify-otp", {
+      email,
+      code: otp,
+      name: name.trim() || undefined,
+      mailing_list_consent: true,
+    });
+    if (!ok || !body?.token_hash) {
+      setBusy(false);
       trackEvent("signup_otp_failed");
-      return toast.error("הקוד שגוי או פג תוקפו");
+      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
+      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
+      return toast.error("הקוד שגוי");
+    }
+    // Mint a real session in the client using the token_hash from generateLink.
+    const { error: verifyErr } = await supabase.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: body.token_hash,
+    });
+    setBusy(false);
+    if (verifyErr) {
+      console.error(verifyErr);
+      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
     }
     trackEvent("signup_step_complete", { step: 2 });
     setStep(3);
   };
+
 
   // Step 3 — set password
   const handleSetPassword = async (e: React.FormEvent) => {
