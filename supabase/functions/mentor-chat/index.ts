@@ -201,6 +201,8 @@ serve(async (req) => {
     // ===== Trial enforcement: verify JWT, pull plan from DB, classify intent =====
     let user_plan: "free" | "paid" = "paid"; // default to no restriction if unauthenticated (shouldn't happen)
     let isTrial = false;
+    let authedUserId: string | null = null;
+    let isAdminUser = false;
     try {
       const authHeader = req.headers.get("Authorization") ?? "";
       const supaUrl = Deno.env.get("SUPABASE_URL");
@@ -214,6 +216,7 @@ serve(async (req) => {
         const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
         const userId = claims?.claims?.sub;
         if (!claimsErr && userId) {
+          authedUserId = userId;
           const admin = createClient(supaUrl, serviceKey);
           const [{ data: access }, { data: isAdmin }] = await Promise.all([
             admin.rpc("get_user_access", { _user_id: userId }),
@@ -221,6 +224,7 @@ serve(async (req) => {
           ]);
           const row: any = Array.isArray(access) ? access[0] : access;
           const hasPaid = !!row?.has_paid || !!isAdmin;
+          isAdminUser = !!isAdmin;
           user_plan = hasPaid ? "paid" : "free";
           isTrial = !hasPaid && !!row?.trial_active;
         }
@@ -228,6 +232,7 @@ serve(async (req) => {
     } catch (e) {
       console.error("Trial enforcement: failed to load plan, defaulting to permissive:", e);
     }
+
 
     // If trial: classify the last 3 user messages — block anything that isn't pricing
     if (isTrial) {
