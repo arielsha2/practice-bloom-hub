@@ -370,7 +370,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       )}
 
       {step === 4 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
               <KeyRound className="w-6 h-6 text-primary" />
@@ -380,66 +380,96 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
               המנטור פועל על מפתח Gemini אישי וחינמי של Google. ייקח כ-2 דקות.
             </p>
           </div>
-          <ol className="space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">1.</span>
-              <div className="flex-1 space-y-2">
-                <div>
-                  פתח/י את Google AI Studio:
-                </div>
-                <button
-                  type="button"
-                  onClick={() => window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer")}
-                  className="text-primary hover:underline inline-flex items-center gap-1 font-medium"
-                >
-                  פתיחה בלשונית חדשה <ExternalLink className="w-3 h-3" />
-                </button>
-                <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
-                  <code className="text-xs flex-1 truncate select-all">https://aistudio.google.com/apikey</code>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText("https://aistudio.google.com/apikey");
-                        toast.success("הקישור הועתק");
-                      } catch {
-                        toast.error("ההעתקה נכשלה");
-                      }
-                    }}
-                    className="text-xs text-primary hover:underline whitespace-nowrap"
-                  >
-                    העתק/י
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  אם הקישור לא נפתח — העתק/י והדבק/י את הכתובת בלשונית חדשה בדפדפן.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">2.</span>
-              <span>התחבר/י עם חשבון Google ולחץ/י "Create API key".</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">3.</span>
-              <span>העתק/י את המפתח (מתחיל ב-AIza…) והדבק/י כאן:</span>
-            </li>
-          </ol>
-          <Input
-            type="password"
-            value={byokKey}
-            onChange={(e) => setByokKey(e.target.value)}
-            placeholder="AIza..."
-            dir="ltr"
-            autoComplete="off"
-          />
+
+          <ByokVisualGuide />
+
+          <div className="space-y-2">
+            <Button
+              type="button"
+              onClick={handleOpenAIStudio}
+              variant="cta"
+              size="lg"
+              className="w-full"
+            >
+              <ExternalLink className="w-4 h-4 me-2" />
+              פתח/י Google AI Studio בלשונית חדשה
+            </Button>
+            <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
+              <code className="text-xs flex-1 truncate select-all">https://aistudio.google.com/apikey</code>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText("https://aistudio.google.com/apikey");
+                    toast.success("הקישור הועתק");
+                  } catch {
+                    toast.error("ההעתקה נכשלה");
+                  }
+                }}
+                className="text-xs text-primary hover:underline whitespace-nowrap"
+              >
+                העתק/י
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground text-right">
+              אם הקישור לא נפתח — העתק/י את הכתובת והדבק/י בלשונית חדשה בדפדפן.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את המפתח (מתחיל ב-AIza…)</Label>
+            <div className="relative">
+              <Input
+                id="byok-input"
+                type="text"
+                value={byokKey}
+                onChange={(e) => setByokKey(e.target.value)}
+                placeholder="AIza..."
+                dir="ltr"
+                autoComplete="off"
+                spellCheck={false}
+                className={byokLooksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+              />
+              {byokLooksValid && (
+                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+              )}
+            </div>
+            {byokKey && !byokLooksValid && (
+              <p className="text-xs text-amber-600">
+                זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים.
+              </p>
+            )}
+            {byokArmed && needsManualPaste && !byokLooksValid && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleManualPaste}
+                className="w-full"
+              >
+                <ClipboardPaste className="w-4 h-4 me-2" />
+                הדבק/י מפתח מה-clipboard
+              </Button>
+            )}
+          </div>
+
           <div className="flex items-start gap-2 text-xs text-muted-foreground rounded-md bg-muted/40 p-2">
             <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <p>המפתח שלך מוצפן ונשמר בשרת שלנו בלבד. אפשר להחליף או להסיר אותו בכל רגע.</p>
           </div>
-          <Button onClick={handleSaveByok} disabled={busy} variant="cta" className="w-full">
-            {busy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Sparkles className="w-4 h-4 me-2" />}
-            שמור/י והשלמ/י הרשמה
+
+          <Button
+            onClick={handleSaveByok}
+            disabled={busy || !byokLooksValid}
+            variant="cta"
+            size="lg"
+            className={`w-full ${byokLooksValid && !busy ? "animate-pulse" : ""}`}
+          >
+            {busy ? (
+              <><Loader2 className="w-4 h-4 me-2 animate-spin" />מאמת מול Google...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 me-2" />שמור/י והשלמ/י הרשמה</>
+            )}
           </Button>
         </div>
       )}
