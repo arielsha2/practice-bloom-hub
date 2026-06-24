@@ -446,6 +446,7 @@ export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const userPlanInfo = useUserPlan();
   const { journey, refresh: refreshJourney } = useTherapistJourney();
