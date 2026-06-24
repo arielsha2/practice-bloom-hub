@@ -212,10 +212,9 @@ serve(async (req) => {
         const userClient = createClient(supaUrl, anonKey, {
           global: { headers: { Authorization: authHeader } },
         });
-        const token = authHeader.replace("Bearer ", "");
-        const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
-        const userId = claims?.claims?.sub;
-        if (!claimsErr && userId) {
+        const { data: userData, error: userErr } = await userClient.auth.getUser();
+        const userId = userData?.user?.id;
+        if (!userErr && userId) {
           authedUserId = userId;
           const admin = createClient(supaUrl, serviceKey);
           const [{ data: access }, { data: isAdmin }] = await Promise.all([

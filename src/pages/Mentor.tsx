@@ -483,6 +483,43 @@ export default function Mentor() {
   const [byokDialogOpen, setByokDialogOpen] = useState(false);
   const [byokReason, setByokReason] = useState<"missing" | "invalid" | "quota">("missing");
   const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
+  const [byokAutoChecked, setByokAutoChecked] = useState(false);
+
+  // Proactively open the BYOK setup dialog for paid (non-admin) users who
+  // have not yet saved a Gemini key, so they aren't confused on first load.
+  useEffect(() => {
+    if (byokAutoChecked) return;
+    if (userPlanInfo.loading) return;
+    if (!user) return;
+    if (userPlanInfo.plan !== "paid") return;
+    let cancelled = false;
+    (async () => {
+      // Admins keep using the platform gateway — no BYOK needed.
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (cancelled) return;
+      if (isAdmin) {
+        setByokAutoChecked(true);
+        return;
+      }
+      const { data: keyRow } = await supabase
+        .from("user_ai_keys")
+        .select("key_hint")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!keyRow?.key_hint) {
+        setByokReason("missing");
+        setByokDialogOpen(true);
+      }
+      setByokAutoChecked(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, userPlanInfo.loading, userPlanInfo.plan, byokAutoChecked]);
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
