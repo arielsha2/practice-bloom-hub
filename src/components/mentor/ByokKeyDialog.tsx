@@ -102,8 +102,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
         if (err === "invalid_key") {
           toast.error(
             isRTL
-              ? "המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף."
-              : "Invalid key — make sure you copied the full key starting with AIza, not the page URL.",
+              ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+              : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
           );
         } else if (err === "quota_exhausted") {
           toast.error(
