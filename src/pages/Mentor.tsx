@@ -46,6 +46,7 @@ import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
+import { ByokKeyDialog } from "@/components/mentor/ByokKeyDialog";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
