@@ -422,14 +422,14 @@ export default function Auth() {
                   </div>
                 )}
 
-                {(mode === "login" || mode === "signup") && (
+                {mode === "login" && (
                   <div className="mt-6 text-center">
                     <button
                       type="button"
-                      onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                      onClick={() => setMode("signup")}
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
+                      {t("auth.noAccount")}
                     </button>
                   </div>
                 )}
