@@ -1201,6 +1201,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ai_keys: {
+        Row: {
+          created_at: string
+          encrypted_key: string
+          key_hint: string
+          last_error: string | null
+          last_validated_at: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_key: string
+          key_hint: string
+          last_error?: string | null
+          last_validated_at?: string | null
+          provider?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_key?: string
+          key_hint?: string
+          last_error?: string | null
+          last_validated_at?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_lesson_notes: {
         Row: {
           content: string

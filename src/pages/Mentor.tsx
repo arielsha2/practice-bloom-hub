@@ -46,6 +46,7 @@ import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
+import { ByokKeyDialog } from "@/components/mentor/ByokKeyDialog";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -479,6 +480,9 @@ export default function Mentor() {
     summary: string;
     kickoff: string;
   } | null>(null);
+  const [byokDialogOpen, setByokDialogOpen] = useState(false);
+  const [byokReason, setByokReason] = useState<"missing" | "invalid" | "quota">("missing");
+  const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
@@ -993,6 +997,19 @@ export default function Mentor() {
                 ? "בתקופת ההתנסות המנטור מתמקד בתמחור"
                 : "During trial the mentor focuses on pricing",
             );
+            setIsLoading(false);
+            return;
+          }
+        }
+        if (resp.status === 402) {
+          const body = await resp.json().catch(() => null);
+          const err = body?.error;
+          if (err === "BYOK_KEY_REQUIRED" || err === "BYOK_KEY_INVALID" || err === "BYOK_KEY_QUOTA") {
+            // Roll back the user message — we'll resend it after they save a key.
+            setMessages((prev) => prev.slice(0, -1));
+            setPendingByokSend(text.trim());
+            setByokReason(err === "BYOK_KEY_INVALID" ? "invalid" : err === "BYOK_KEY_QUOTA" ? "quota" : "missing");
+            setByokDialogOpen(true);
             setIsLoading(false);
             return;
           }
@@ -1659,6 +1676,31 @@ export default function Mentor() {
         <WebsiteComingSoonCard />
       </div>
       {user && <MentorNotebookPanel />}
+      <ByokKeyDialog
+        open={byokDialogOpen}
+        onOpenChange={(o) => {
+          setByokDialogOpen(o);
+          if (!o) setPendingByokSend(null);
+        }}
+        reason={byokReason}
+        onSaved={() => {
+          const pending = pendingByokSend;
+          setPendingByokSend(null);
+          if (pending) setTimeout(() => send(pending), 50);
+        }}
+      />
+      {userPlanInfo.plan === "paid" && user && (
+        <button
+          type="button"
+          onClick={() => {
+            setByokReason("missing");
+            setByokDialogOpen(true);
+          }}
+          className="fixed bottom-4 end-4 z-40 text-xs text-muted-foreground bg-background/90 backdrop-blur border border-border rounded-full px-3 py-1.5 shadow-sm hover:text-foreground hover:border-primary/40 transition"
+        >
+          {isRTL ? "ניהול מפתח AI" : "Manage AI key"}
+        </button>
+      )}
       <Footer />
     </div>
   );
