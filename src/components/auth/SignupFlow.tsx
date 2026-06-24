@@ -381,11 +381,11 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
             <Button
               type="button"
               onClick={handleOpenAIStudio}
-              variant="cta-burgundy"
-              size="lg"
-              className="w-full text-base"
+              variant="cta"
+              size="xl"
+              className="w-full text-lg shadow-2xl ring-2 ring-accent/40 ring-offset-2 ring-offset-background"
             >
-              <ExternalLink className="w-5 h-5 me-2" />
+              <ExternalLink className="w-6 h-6 me-2" />
               פתח/י Google AI Studio בלשונית חדשה
             </Button>
             <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
@@ -419,7 +419,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
                 value={byokKey}
                 onChange={(e) => setByokKey(e.target.value)}
                 placeholder="הדבק/י כאן את מפתח ה-API שלך"
-                dir="ltr"
+                dir={byokKey ? "ltr" : "rtl"}
                 autoComplete="off"
                 spellCheck={false}
                 className={`h-12 text-base ${byokLooksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
