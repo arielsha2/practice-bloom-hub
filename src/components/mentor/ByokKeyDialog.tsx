@@ -220,8 +220,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
           {key && !looksValid && (
             <p className="text-xs text-amber-600">
               {isRTL
-                ? "זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים."
-                : "That doesn't look like a Gemini key. Valid keys start with AIza and are 35+ chars."}
+                ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+                : "Make sure you copied the full API key from Google AI Studio, not the page URL."}
             </p>
           )}
           {armed && needsManualPaste && !looksValid && (
