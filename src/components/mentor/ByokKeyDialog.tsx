@@ -152,8 +152,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
         <ByokVisualGuide />
 
         <div className="space-y-2">
-          <Button type="button" onClick={handleOpenAIStudio} variant="cta-burgundy" size="lg" className="w-full text-base">
-            <ExternalLink className="w-5 h-5 me-2" />
+          <Button type="button" onClick={handleOpenAIStudio} variant="cta" size="xl" className="w-full text-lg shadow-2xl ring-2 ring-accent/40 ring-offset-2 ring-offset-background">
+            <ExternalLink className="w-6 h-6 me-2" />
             {isRTL ? "פתח/י Google AI Studio בלשונית חדשה" : "Open Google AI Studio in a new tab"}
           </Button>
           <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
