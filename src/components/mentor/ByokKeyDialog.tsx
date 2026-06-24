@@ -77,8 +77,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
     if (!isLikelyGeminiKey(trimmed)) {
       toast.error(
         isRTL
-          ? "המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים"
-          : "Key doesn't look valid — must start with AIza and be 35+ chars",
+          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
+          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
       );
       return;
     }
