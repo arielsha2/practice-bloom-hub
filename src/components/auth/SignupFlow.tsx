@@ -353,16 +353,37 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           <ol className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="font-bold text-primary">1.</span>
-              <div>
-                פתח/י את{" "}
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline inline-flex items-center gap-1"
+              <div className="flex-1 space-y-2">
+                <div>
+                  פתח/י את Google AI Studio:
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer")}
+                  className="text-primary hover:underline inline-flex items-center gap-1 font-medium"
                 >
-                  Google AI Studio <ExternalLink className="w-3 h-3" />
-                </a>
+                  פתיחה בלשונית חדשה <ExternalLink className="w-3 h-3" />
+                </button>
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
+                  <code className="text-xs flex-1 truncate select-all">https://aistudio.google.com/apikey</code>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText("https://aistudio.google.com/apikey");
+                        toast.success("הקישור הועתק");
+                      } catch {
+                        toast.error("ההעתקה נכשלה");
+                      }
+                    }}
+                    className="text-xs text-primary hover:underline whitespace-nowrap"
+                  >
+                    העתק/י
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  אם הקישור לא נפתח — העתק/י והדבק/י את הכתובת בלשונית חדשה בדפדפן.
+                </p>
               </div>
             </li>
             <li className="flex items-start gap-2">
