@@ -169,23 +169,17 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   // Step 4 — BYOK
   const byokLooksValid = isLikelyGeminiKey(byokKey);
-  const { armed: byokArmed, arm: armByokClipboard, needsManualPaste, pasteFromClipboard } =
-    useByokClipboard({
-      currentValue: byokKey,
-      onDetected: (k) => {
-        setByokKey(k);
-        toast.success("זיהינו מפתח ב-clipboard ✓");
-      },
-    });
+  const { arm: armByokClipboard } = useByokClipboard({
+    currentValue: byokKey,
+    onDetected: (k) => {
+      setByokKey(k);
+      toast.success("זיהינו מפתח ב-clipboard ✓");
+    },
+  });
 
   const handleOpenAIStudio = async () => {
     window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
     await armByokClipboard();
-  };
-
-  const handleManualPaste = async () => {
-    const ok = await pasteFromClipboard();
-    if (!ok) toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
   };
 
   const handleSaveByok = async () => {
