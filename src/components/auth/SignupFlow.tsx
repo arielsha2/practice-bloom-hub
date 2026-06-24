@@ -424,7 +424,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
                 type="text"
                 value={byokKey}
                 onChange={(e) => setByokKey(e.target.value)}
-                placeholder="AIza..."
+                placeholder="הדבק/י כאן את מפתח ה-API שלך"
                 dir="ltr"
                 autoComplete="off"
                 spellCheck={false}
