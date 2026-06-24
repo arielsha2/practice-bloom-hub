@@ -1,137 +1,83 @@
+## הבעיה
 
-## המטרה
-זרימת הרשמה ליניארית של 4 שלבים: מייל → אימות OTP → בחירת סיסמה → BYOK (מותנה). הרשאת תשלום מגיעה משולם (webhook) או מאדמין (ידני, עם audit). חוויית כניסה ברורה גם למשתמשים קיימים.
+ב-Supabase Auth מוגדר Custom SMTP דרך Brevo, אבל המיילים לא מגיעים (כל הקריאות ל-`/otp` חוזרות 200 — Supabase שלח, אבל המייל נופל בדרך — כנראה sender לא מאומת ב-Brevo, או הטמפלייט של ה-Magic Link לא כולל את הקוד). זו תלות חיצונית שלא נוכל לדבג בקלות מתוך הקוד.
 
----
+## הפתרון
 
-## 1. זרימת הרשמה — 4 שלבים עם stepper
+נשתלט על שליחת ה-OTP בעצמנו ונחתוך לחלוטין את הזרימה של Supabase Auth Email. נייצר קוד 6-ספרות, נשמור hash בטבלה, ונשלח את המייל דרך **Brevo connector** (כבר מחובר ב-secrets — `BREVO_API_KEY`) — כך שאם המייל לא מגיע, יש לנו לוג מלא של מה Brevo החזיר.
 
-`/auth?mode=signup` עם state-machine פנימי:
+## ארכיטקטורה
 
 ```text
-[1 מייל] → [2 קוד אימות] → [3 סיסמה] → [4 מפתח Gemini — רק paid]
+[Step 1: Email/Name]
+   ↓ POST /functions/v1/signup-send-otp { email, name, consent }
+   ↓   - rate-limit (60s lock per email; 3 attempts / 10 min)
+   ↓   - generate 6-digit code
+   ↓   - INSERT signup_otp_codes (email, code_hash, expires_at = now()+10m)
+   ↓   - send via Brevo connector gateway
+[Step 2: OTP entry]
+   ↓ POST /functions/v1/signup-verify-otp { email, code }
+   ↓   - compare hash, mark consumed
+   ↓   - admin.createUser OR admin.generateLink (magiclink) → returns session
+   ↓   - return { access_token, refresh_token }
+   ↓ client: supabase.auth.setSession(...)
+[Step 3: Set password]  (existing flow continues)
+[Step 4: BYOK or pending banner]  (existing flow continues)
 ```
 
-- **שלב 1:** מייל + שם + הסכמת רשימת תפוצה. שולח OTP.
-- **שלב 2:** קוד 6 ספרות. `verifyOtp({ type: 'email' })` יוצר session.
-  - "שלח שוב" מושבת ל-60 שניות עם countdown. אחרי 3 שליחות: "שלחנו מספר קודים. בדוק/י ספאם או חכה/י כמה דקות."
-  - כפתור "מייל שגוי? התחל מחדש".
-- **שלב 3:** סיסמה + וידוא + מד חוזק. `updateUser({ password })`. בהצלחה מעדכן `profiles.password_set = true`.
-- **שלב 4 (מותנה ב-`profiles.plan`):**
-  - `paid` → BYOK inline (חובה לסיום).
-  - `free` → דילוג, ניווט ל-`/mentor` עם banner "ממתין לאישור תשלום".
+## שינויים
 
----
+### חדש: טבלה `signup_otp_codes`
+- עמודות: `email`, `code_hash`, `expires_at`, `consumed_at`, `attempts`, `last_sent_at`
+- אינדקס על `email`; cleanup של רשומות ישנות
+- RLS: service_role בלבד (אף client לא נוגע)
 
-## 2. נתיב שני ל-BYOK — משתמש קיים שסומן כ-paid
-
-ב-`Mentor.tsx`: אם `plan = 'paid'`, לא admin, אין שורה ב-`user_ai_keys` עם `key_hint` → פותח `ByokKeyDialog` אוטומטית. אם `free` → מציג את ה-banner.
-
----
-
-## 3. מסך התחברות — בלי user enumeration
-
-`/auth?mode=login` — מייל + סיסמה + "שכחתי סיסמה". **החלטת אבטחה (מתועדת בקוד):** המערכת ציבורית, אז לא בודקים אם המייל קיים. שגיאת `Invalid credentials` → הודעה אחידה תמיד:
-> "פרטים שגויים. אם נרשמת בעבר דרך קישור מייל ללא סיסמה — [אפס/י סיסמה כדי להגדיר אחת לראשונה]."
-
-קישור מעביר ל-`mode=forgot` עם המייל מולא מראש.
-
----
-
-## 4. איפוס סיסמה
-`mode=forgot` נפרד; המייל מפנה ל-`/auth?mode=reset`.
-
----
-
-## 5. Banner ב-`/mentor` — בזמן אמת
-
-- `plan = 'free'` → banner: "הרשמתך הושלמה. גישתך למנטור תינתן לאחר אישור תשלום."
-- **Realtime:** `postgres_changes` על `profiles` עם פילטר `id=eq.<user.id>`. שינוי ל-`paid` → banner נעלם, BYOK נפתח אוטומטית.
-- Fallback: re-fetch של `profiles.plan` ב-`visibilitychange`.
-- מיגרציה: `ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;` + `REPLICA IDENTITY FULL`.
-- invalidate של `queryKey: ['user-plan', userId]` כשמקבלים שינוי.
-
----
-
-## 6. הרשאת paid — אוטומטית או ידנית, עם audit
-
-- **אוטומטי:** webhook משולם + טריגרים קיימים — ללא שינוי.
-- **ידני (אדמין):** ב-`UsersTable` פעולת "סמן כמשלם / בטל" → `admin-set-user-plan` edge function:
-  1. אימות admin (`has_role`).
-  2. קריאת `old_plan`.
-  3. כתיבה ל-`plan_changes` (`user_id, changed_by, old_plan, new_plan, source='admin', changed_at`).
-  4. עדכון `profiles.plan` + `plan_updated_at`.
-- טבלת `plan_changes` עם RLS: קריאה רק ל-admin, כתיבה רק דרך service_role.
-
----
-
-## 7. עמידות בכשל שלב 3
-
-- עמודה חדשה `profiles.password_set boolean not null default false`.
-- **מיגרציה זהירה — לא ברירת מחדל גלובלית בשתי פעולות נפרדות:**
-  ```sql
-  ALTER TABLE profiles ADD COLUMN password_set boolean NOT NULL DEFAULT false;
-  UPDATE profiles SET password_set = true;  -- כל הקיימים: true
-  -- חדשים: handle_new_user יכניס false במפורש
+### חדש: Edge Function `signup-send-otp` (verify_jwt = false)
+- input: `{ email, name?, mailing_list_consent? }`
+- בודק rate limit מול `last_sent_at`
+- מייצר קוד אקראי 6 ספרות, שומר hash (SHA-256 + salt)
+- שולח HTML email דרך Brevo:
   ```
-  עדכון `handle_new_user` להוסיף `password_set = false` ב-INSERT — מונע race condition שבו משתמש חדש יקבל את הברירת המחדל הישנה (true) לרגע.
-- בטעינת `Auth.tsx`: session פעיל + `password_set = false` → הצגת שלב 3 ישירות.
-- בלוגין מוצלח: בדיקת `password_set`; אם false, ניווט לשלב 3.
+  POST https://connector-gateway.lovable.dev/brevo/smtp/email
+  Authorization: Bearer $LOVABLE_API_KEY
+  X-Connection-Api-Key: $BREVO_API_KEY
+  ```
+- sender: `noreply@therapykeys.co.il` (יתאם לשולח המאומת ב-Brevo — נחזיר שגיאה ברורה אם לא מאומת)
+- HTML בעברית, RTL, brand colors, קוד 6-ספרות גדול וברור
+- מחזיר `{ ok: true }`
 
----
+### חדש: Edge Function `signup-verify-otp` (verify_jwt = false)
+- input: `{ email, code }`
+- מאמת hash + לא פג + לא נוצל; מסמן `consumed_at`
+- אם המשתמש לא קיים ב-auth: `supabase.auth.admin.createUser({ email, email_confirm: true, user_metadata: { display_name, mailing_list_consent } })`
+- מייצר session: `supabase.auth.admin.generateLink({ type: 'magiclink', email })` → ממיר ל-`access_token` + `refresh_token` (או דרך `signInWithOtp` עם custom flow). פתרון פשוט יותר: מחזירים `email + one-time login token` ע"י `generateLink` ומפעילים `verifyOtp` בצד client עם ה-token שהתקבל.
+- מחזיר `{ access_token, refresh_token, is_new_user }`
 
-## 8. אנליטיקס מלא לזיהוי צוואר בקבוק
+### עדכון: `SignupFlow.tsx`
+- `handleSendOtp`: במקום `supabase.auth.signInWithOtp` → קריאה ל-`signup-send-otp`
+- `handleVerifyOtp`: במקום `supabase.auth.verifyOtp` → קריאה ל-`signup-verify-otp` + `supabase.auth.setSession(...)`
+- `resendOtp`: קריאה חוזרת ל-`signup-send-otp`
+- הודעות שגיאה מאוחדות (להמשיך עם הנוסחים הקיימים)
 
-- `trackEvent('signup_step_complete', { step: 1|2|3 })` — לכל שלב חובה.
-- `trackEvent('signup_step_4_shown', { plan: 'paid' })` — כמה הגיעו ל-BYOK.
-- `trackEvent('signup_step_4_skipped', { plan: 'free' })` — כמה דילגו כי לא משלמים.
-- `trackEvent('signup_step_4_complete')` — שמירת מפתח Gemini הצליחה.
-- `trackEvent('signup_complete', { had_byok: boolean })` — סיום כל הזרימה.
-- `trackEvent('signup_otp_resent', { attempt: n })`, `trackEvent('signup_otp_failed')`.
+### לא נוגעים
+- `Auth.tsx` (login רגיל עם סיסמה)
+- `Mentor.tsx` (Realtime banner + BYOK)
+- `admin-set-user-plan` ו-`plan_changes`
+- Supabase Auth SMTP — נשאיר כמו שזה לטובת password reset (שזה מסלול נפרד שעובד טוב יותר, ויש כבר custom SMTP מוגדר)
 
-ההפרדה בין `shown` ל-`skipped` ל-`complete` נחוצה כי בלעדיה דילוג לגיטימי (free) נראה זהה לנשירה (paid שלא סיים BYOK).
+## דברים שצריך לוודא לפני שמתחילים
 
----
+**מקור האימייל (sender) חייב להיות מאומת ב-Brevo.** אם הדומיין `therapykeys.co.il` או כתובת `noreply@therapykeys.co.il` לא מאומתים בפאנל של Brevo — המייל ייכשל גם דרך הזרימה החדשה. ה-edge function תחזיר שגיאת Brevo מפורשת ונדע מיד.
 
-## 9. שיפורים נוספים
+אם תרצה, אחרי הביצוע אבדוק את ה-status מול Brevo עם קריאת test, ואם יש בעיית sender — אכוון אותך לתקן.
 
-- **נירמול מייל:** `email.trim().toLowerCase()` בכל הקלטים.
-- **Autofocus + מקלדת:** focus אוטומטי בכל שלב; ב-OTP `inputMode="numeric"` + `autoComplete="one-time-code"`.
-- **Race webhook באמצע signup:** הלוגיקה כבר מטפלת — קריאה טרייה ל-`plan` לפני שלב 4.
-- **שגיאות רשת:** wrapper אחיד עם toast עברי.
-- **RTL & a11y:** stepper, OTP, הודעות — aria-current, aria-live, בדיקת RTL.
+## קבצים
 
----
+**חדשים:**
+- `supabase/migrations/...` — טבלת `signup_otp_codes` + RLS
+- `supabase/functions/signup-send-otp/index.ts`
+- `supabase/functions/signup-verify-otp/index.ts`
 
-## פרטים טכניים
-
-**קבצים חדשים:**
-- `src/pages/Signup.tsx` או `<SignupFlow />`
-- `src/components/auth/SignupStepper.tsx`
-- `src/components/auth/OtpResendButton.tsx`
-- `src/components/mentor/PaymentPendingBanner.tsx`
-- `supabase/functions/admin-set-user-plan/index.ts`
-
-**קבצים שיתעדכנו:**
-- `src/pages/Auth.tsx` — login/forgot/reset + טיפול ב-`password_set=false`
-- `src/pages/Mentor.tsx` — banner + Realtime + BYOK אוטומטי
-- `src/components/admin/UsersTable.tsx` — "סמן כמשלם"
-- `src/components/mentor/ByokKeyDialog.tsx` — מצב inline
-
-**מיגרציות:**
-1. `profiles.password_set` (ADD COLUMN default false → UPDATE קיימים ל-true → עדכון `handle_new_user`).
-2. טבלת `plan_changes` עם RLS וגרנטים.
-3. הוספת `profiles` ל-`supabase_realtime` + `REPLICA IDENTITY FULL`.
-
----
-
-## בדיקות
-1. הרשמת free → 3 שלבים → `/mentor` עם banner. אין BYOK.
-2. אדמין מסמן כ-paid תוך כדי שהמשתמש ב-`/mentor` → banner נעלם, BYOK נפתח, ללא refresh.
-3. הרשמה עם webhook מקדים → שלב 4 BYOK נדרש.
-4. OTP — 60s lock, 3 ניסיונות → הודעת המתנה.
-5. כשל רשת בשלב 3 → חזרה ל-`/auth` ממשיכה בשלב 3.
-6. לוגין למשתמש בלי סיסמה → הודעה אחידה + קישור איפוס.
-7. אדמין משנה plan → שורה ב-`plan_changes`. משתמש רגיל לא יכול לקרוא.
-8. נירמול מייל: `User@X.com` ו-`user@x.com` → אותה רשומה.
-9. אנליטיקס: כל 5 האירועים של signup נורים נכון בכל תרחיש (free / paid / paid-מקדים).
+**מעודכנים:**
+- `src/components/auth/SignupFlow.tsx` — החלפת 2 הקריאות ל-Supabase auth ב-edge functions
+- `supabase/config.toml` — שתי פונקציות עם `verify_jwt = false`
