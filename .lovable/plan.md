@@ -1,56 +1,64 @@
+# Plan: Paying users bring their own Gemini API key
 
-# Plan: Edit /en/mentor sales page
+After payment, the mentor keeps working — but the first time a paying user sends a message, the mentor asks them to paste their own free Google Gemini API key. From that point on, their mentor chats run on Google's bill, not ours.
 
-This is a **pure edit pass** on the existing English Mentor sales page in `src/pages/Mentor.tsx` (the `en` branch). The Mentor AI product, payment URL (`https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3`), `/auth` link, color palette, typography, and overall design system stay untouched. All 13 changes ship in one pass.
+## The user experience (kept as simple as it gets)
 
-## Scope guardrails
+1. User pays, lands in the mentor as usual.
+2. Their first message triggers a clean dialog: *"To activate your personal mentor, paste your free Google Gemini API key. It takes 2 minutes — here's how:"* with a 3-step illustrated guide and a single input field.
+   - **Step 1**: Click "Open Google AI Studio" (opens `aistudio.google.com/apikey` in new tab).
+   - **Step 2**: Sign in with any Google account, click "Create API key".
+   - **Step 3**: Copy the key (starts with `AIza...`) and paste it below.
+3. They paste → we validate the key with a tiny test call → save → their original message is sent automatically. No second click.
+4. From then on, the dialog never appears again unless the key fails (revoked, quota hit, invalid). In that case the same dialog reappears with a clear error: *"Your Gemini key stopped working — please paste a new one."*
+5. A small "Manage AI key" link sits in the mentor header so they can replace it anytime.
 
-- File: `src/pages/Mentor.tsx`, English branch only. Hebrew page is not modified.
-- No new dependencies, no global CSS changes, no design-token changes.
-- All new sections reuse existing card/section primitives (cream `#FDFBF7`-style sections, dark burgundy sections, terracotta accents, Heebo font already loaded).
-- Placeholder text (`[Name placeholder]`, `[License]`, `[Country]`) renders visibly on the live page until you replace it.
-- Founders photo: you will upload a joint photo separately; I'll wire in a single `<img>` slot with a neutral background placeholder until the file lands.
-- Pricing keeps both currencies; `$249 USD` becomes the visually dominant figure and shekel stays as secondary.
+Free / trial / non-paying users continue using our tokens via the existing Lovable AI Gateway path — nothing changes for them.
 
-## Changes (in build order)
+## Why this is the simplest viable shape
 
-1. **Hero merge (Change 1)** — Delete the second hero block. Update headline, subheadline, and CTA label on the first hero. Add the small reassurance line under the CTA. Move "Already signed up? Log in" out of the hero body — but instead of editing `Header.tsx` globally (which would affect every page), add a small ghost "Log in" link in the hero's top-right corner area for the English page only. Keep the floating "The Clinic Mentor" pill.
+- **One field, one provider.** No model picker, no provider picker, no OpenRouter credits-to-load step.
+- **Free for the user.** Gemini's free tier is generous enough that most therapists will never pay Google a cent.
+- **Same model family already in use** (`google/gemini-2.5-flash` etc.) — prompts, temperatures, max tokens all carry over identically.
+- **Lazy onboarding.** We only interrupt them the moment they actually try to use the mentor, not during checkout.
 
-2. **Trust bar (Change 2)** — New thin band directly under hero, cream background, 4 centered icon+label items using existing icon-card styling.
+## Technical section
 
-3. **The Gap (Change 3)** — Edit question 1 wording, append a new 5th question card matching existing card markup.
+### Storage
+- New table `public.user_ai_keys`:
+  - `user_id uuid PK references auth.users on delete cascade`
+  - `provider text not null default 'gemini'`
+  - `encrypted_key text not null` (encrypted with `pgsodium` or app-level AES-GCM using a new `USER_KEY_ENCRYPTION_SECRET`)
+  - `key_hint text` (last 4 chars, for "ending in ...A1b2" UI)
+  - `created_at`, `updated_at`, `last_validated_at`, `last_error text`
+- RLS: user can `SELECT key_hint, last_validated_at, last_error` for their own row; only edge functions (service role) read `encrypted_key`. Insert/update via edge function only.
+- Standard `GRANT` block per project conventions.
 
-4. **Persona Mirror (Change 4)** — Replace items 01, 03, 07 text only.
+### Edge functions
+- **`save-user-ai-key`** (new): receives raw key from client, makes one cheap test call to Gemini (`models/gemini-2.5-flash:generateContent` with a 1-token prompt), encrypts, upserts row. Returns `{ ok: true, hint }` or `{ ok: false, error }`. Never logs the key.
+- **`mentor-chat`** (modify): at the top, look up caller's plan via existing `get_user_access`. If `has_paid` is true → fetch + decrypt their Gemini key and call Google's Generative Language API directly (`https://generativelanguage.googleapis.com/v1beta/...`) instead of the Lovable gateway. If no key on file → return `{ error: 'BYOK_KEY_REQUIRED' }` with HTTP 402. If the Google call returns 401/403/429 → mark `last_error`, return `{ error: 'BYOK_KEY_INVALID' | 'BYOK_KEY_QUOTA' }`. Free users continue through the existing Lovable gateway path unchanged.
+- Streaming behavior preserved: Google's native SSE format is forwarded as-is (same shape the AI SDK consumes).
 
-5. **Early pull-quote (Change 5)** — New cream section between persona mirror and "What if someone held you right there?" Centered, max-width 700px, terracotta quote marks, italic quote, placeholder attribution.
+### Frontend
+- New `<ByokKeyDialog />` component (lives next to the mentor chat). Opens on:
+  - First send when the chat hook receives `BYOK_KEY_REQUIRED`.
+  - Any send that returns `BYOK_KEY_INVALID` / `BYOK_KEY_QUOTA`.
+  - Click on a new "Manage AI key" link in the mentor header.
+- Three-step illustrated content (Hebrew + English via existing LanguageContext), single text input, "Save & continue" button. On success, automatically retries the pending message.
+- Small banner inside the dialog: *"Your key is encrypted and stored only on our server. We never see it. You can rotate or remove it anytime."*
 
-6. **The Bridge (Change 6)** — Add the italic AI-clarification paragraph inside the existing card, before the "This is the Clinic Mentor." line.
+### Secrets
+- Add `USER_KEY_ENCRYPTION_SECRET` (generated, 64 chars) for app-level AES-GCM if we don't use `pgsodium`.
 
-7. **Founder credibility (Change 7)** — New cream section before "THE FIVE STAGES". Two-column desktop / stacked mobile. Left: image slot (placeholder until you upload joint photo) with "Ariel & Eliana Shapira" caption. Right: headline + body + "Send a WhatsApp message" ghost button reusing the existing WhatsApp href already on the page.
+### Out of scope (intentionally)
+- No usage analytics per user's key (Google's console already shows that).
+- No multi-provider support.
+- No admin override UI — admins keep using our tokens via the existing path.
+- Voice/TTS (ElevenLabs) keeps using the platform key — only LLM text generation moves to BYOK.
 
-8. **5 Stages expansion (Change 8)** — Replace each stage's description string with the new 2–3 sentence version. Titles, icons, numbering, cards unchanged.
-
-9. **Sample conversation (Change 9)** — Append to "What does it actually look like?" section. New chat-styled block, max-width 680px, three alternating bubbles (dark burgundy for Mentor, cream-with-border for You), small label above each, terracotta section sub-label.
-
-10. **Testimonials replacement (Change 10)** — Replace the existing testimonial cards array with the 7 new quotes. Keep section label "FROM THE FIELD", headline, and dark background. Grid: 3 + 3 + 1 wide centered card on desktop, single column on mobile. Each card: cream bg, terracotta opening quote glyph, italic quote, thin terracotta divider, bold `[Name placeholder]`, muted `[License] · [Years] · [Country]`.
-
-11. **Who it's for / Not for (Change 11)** — New cream section after testimonials, before pricing. Two columns with vertical divider. Left: green ✓ items. Right: neutral gray ○ items (explicitly not red X, not framed as rejection).
-
-12. **FAQ (Change 12)** — New dark section before pricing. Reuses the existing `Accordion` shadcn component (already in the project per `src/components/ui/accordion.tsx`). 7 Q&A items, collapsed by default, terracotta left border on open state, cream expanded background.
-
-13. **Pricing emphasis (Change 13)** — Inside existing pricing card: swap the type hierarchy so `$249 USD` is the dominant figure and the shekel amount becomes the secondary line. Add the italic price-anchor sentence below the inclusions checklist.
-
-## Technical notes
-
-- All edits stay in `src/pages/Mentor.tsx` and its `en` JSX branch. If a section grows unwieldy, I may extract it into a small co-located component file under `src/components/mentor/en/` to keep the page readable — no behavior change.
-- Accordion uses existing `@/components/ui/accordion` — no new package.
-- New icons (lock, users, star, message, check, circle, quote) all come from `lucide-react`, already a project dependency.
-- The hero's top-right "Log in" mini-link is local to the English hero, so the global `Header.tsx` change from the previous task stays intact.
-- Founders photo slot: render an `<img>` with a neutral cream box and the caption "Ariel & Eliana Shapira" so the layout is final the moment you drop the asset in.
-- Copy is written verbatim from your spec; no rewording.
-
-## What does NOT change
-
-- Mentor chat product, methodology, payment URL, `/auth` link, color tokens, fonts, Hebrew Mentor page, Hebrew translations, nav/header on other pages, database, edge functions, or any backend logic.
-
-After your approval I'll switch to build mode and apply all 13 edits in a single pass, then report back with a screenshot of the updated English page.
+## What we'll build, in order
+1. Migration: `user_ai_keys` table + RLS + GRANTs.
+2. `save-user-ai-key` edge function + secret.
+3. Modify `mentor-chat` to branch on paid + key presence and call Gemini directly.
+4. `ByokKeyDialog` component + integration into the mentor chat hook (`useBotChat` / mentor equivalent) + "Manage AI key" header link.
+5. Manual QA: free user (unchanged), paid user without key (dialog appears, save works, message retries), paid user with bad key (dialog reappears with right error), key rotation from header.
