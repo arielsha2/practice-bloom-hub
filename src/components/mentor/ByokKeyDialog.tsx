@@ -208,13 +208,13 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
               dir="ltr"
               autoComplete="off"
               spellCheck={false}
-              className={looksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+              className={`h-12 text-base ${looksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !saving && looksValid) handleSave();
               }}
             />
             {looksValid && (
-              <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+              <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-3 top-1/2 -translate-y-1/2" />
             )}
           </div>
           {key && !looksValid && (
@@ -223,12 +223,6 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
                 ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
                 : "Make sure you copied the full API key from Google AI Studio, not the page URL."}
             </p>
-          )}
-          {armed && needsManualPaste && !looksValid && (
-            <Button type="button" variant="outline" size="sm" onClick={handleManualPaste} className="w-full">
-              <ClipboardPaste className="w-4 h-4 me-2" />
-              {isRTL ? "הדבק/י מפתח מה-clipboard" : "Paste key from clipboard"}
-            </Button>
           )}
         </div>
 
