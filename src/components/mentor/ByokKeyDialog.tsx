@@ -1,11 +1,22 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ExternalLink, KeyRound, ShieldCheck, Sparkles, CheckCircle2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Loader2,
+  ExternalLink,
+  KeyRound,
+  ShieldCheck,
+  Sparkles,
+  CheckCircle2,
+  ClipboardPaste,
+} from "lucide-react";
 import { toast } from "sonner";
+import { ByokVisualGuide } from "@/components/auth/ByokVisualGuide";
+import { useByokClipboard, isLikelyGeminiKey } from "@/hooks/useByokClipboard";
 
 interface ByokKeyDialogProps {
   open: boolean;
@@ -21,6 +32,15 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
+  const looksValid = isLikelyGeminiKey(key);
+
+  const { armed, arm, needsManualPaste, pasteFromClipboard } = useByokClipboard({
+    currentValue: key,
+    onDetected: (k) => {
+      setKey(k);
+      toast.success(isRTL ? "זיהינו מפתח ב-clipboard ✓" : "Detected a key in your clipboard ✓");
+    },
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -36,10 +56,30 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
     })();
   }, [open]);
 
+  const handleOpenAIStudio = async () => {
+    window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
+    await arm();
+  };
+
+  const handleManualPaste = async () => {
+    const ok = await pasteFromClipboard();
+    if (!ok) {
+      toast.error(
+        isRTL
+          ? "לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza."
+          : "No key found in your clipboard. Make sure you copied a key starting with AIza.",
+      );
+    }
+  };
+
   const handleSave = async () => {
     const trimmed = key.trim();
-    if (trimmed.length < 20) {
-      toast.error(isRTL ? "המפתח נראה קצר מדי" : "That key looks too short");
+    if (!isLikelyGeminiKey(trimmed)) {
+      toast.error(
+        isRTL
+          ? "המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים"
+          : "Key doesn't look valid — must start with AIza and be 35+ chars",
+      );
       return;
     }
     setSaving(true);
@@ -60,9 +100,19 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
       if (!resp.ok || !body?.ok) {
         const err = body?.error;
         if (err === "invalid_key") {
-          toast.error(isRTL ? "המפתח לא תקף — בדוק שהעתקת נכון" : "Invalid key — double-check you copied it correctly");
+          toast.error(
+            isRTL
+              ? "המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף."
+              : "Invalid key — make sure you copied the full key starting with AIza, not the page URL.",
+          );
         } else if (err === "quota_exhausted") {
-          toast.error(isRTL ? "המכסה של המפתח נגמרה — צור מפתח חדש" : "This key is out of quota — create a new one");
+          toast.error(
+            isRTL
+              ? "המכסה החודשית של המפתח נגמרה. צור/י מפתח חדש ב-Google AI Studio."
+              : "This key is out of quota — create a new one in Google AI Studio.",
+          );
+        } else if (err === "invalid_format") {
+          toast.error(isRTL ? "המפתח קצר מדי. ודא/י שהעתקת את כולו." : "Key too short — make sure you copied all of it.");
         } else {
           toast.error(isRTL ? "לא הצלחנו לאמת את המפתח" : "Couldn't validate the key");
         }
@@ -90,7 +140,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir={isRTL ? "rtl" : "ltr"} className="max-w-lg">
+      <DialogContent dir={isRTL ? "rtl" : "ltr"} className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
             <KeyRound className="w-6 h-6 text-primary" />
@@ -111,40 +161,31 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
           </div>
         )}
 
-        <ol className="space-y-3 text-sm">
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-            <div className="flex-1">
-              <p className="font-medium">
-                {isRTL ? "פתח את Google AI Studio" : "Open Google AI Studio"}
-              </p>
-              <a
-                href="https://aistudio.google.com/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline text-xs mt-1"
-              >
-                aistudio.google.com/apikey <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-            <p className="flex-1">
-              {isRTL
-                ? "התחבר עם כל חשבון Google ולחץ ״Create API key״."
-                : 'Sign in with any Google account and click "Create API key".'}
-            </p>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">3</span>
-            <p className="flex-1">
-              {isRTL
-                ? "העתק את המפתח (מתחיל ב-AIza…) והדבק כאן:"
-                : "Copy the key (starts with AIza…) and paste below:"}
-            </p>
-          </li>
-        </ol>
+        <ByokVisualGuide />
+
+        <div className="space-y-2">
+          <Button type="button" onClick={handleOpenAIStudio} variant="cta" size="lg" className="w-full">
+            <ExternalLink className="w-4 h-4 me-2" />
+            {isRTL ? "פתח/י Google AI Studio בלשונית חדשה" : "Open Google AI Studio in a new tab"}
+          </Button>
+          <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
+            <code className="text-xs flex-1 truncate select-all">https://aistudio.google.com/apikey</code>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText("https://aistudio.google.com/apikey");
+                  toast.success(isRTL ? "הקישור הועתק" : "Link copied");
+                } catch {
+                  toast.error(isRTL ? "ההעתקה נכשלה" : "Copy failed");
+                }
+              }}
+              className="text-xs text-primary hover:underline whitespace-nowrap"
+            >
+              {isRTL ? "העתק/י" : "Copy"}
+            </button>
+          </div>
+        </div>
 
         {hint && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -153,18 +194,43 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
           </p>
         )}
 
-        <Input
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          placeholder="AIza..."
-          dir="ltr"
-          autoComplete="off"
-          spellCheck={false}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !saving) handleSave();
-          }}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="byok-dialog-input" className="text-sm">
+            {isRTL ? "הדבק/י כאן את המפתח" : "Paste your key here"}
+          </Label>
+          <div className="relative">
+            <Input
+              id="byok-dialog-input"
+              type="text"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="AIza..."
+              dir="ltr"
+              autoComplete="off"
+              spellCheck={false}
+              className={looksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !saving && looksValid) handleSave();
+              }}
+            />
+            {looksValid && (
+              <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+            )}
+          </div>
+          {key && !looksValid && (
+            <p className="text-xs text-amber-600">
+              {isRTL
+                ? "זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים."
+                : "That doesn't look like a Gemini key. Valid keys start with AIza and are 35+ chars."}
+            </p>
+          )}
+          {armed && needsManualPaste && !looksValid && (
+            <Button type="button" variant="outline" size="sm" onClick={handleManualPaste} className="w-full">
+              <ClipboardPaste className="w-4 h-4 me-2" />
+              {isRTL ? "הדבק/י מפתח מה-clipboard" : "Paste key from clipboard"}
+            </Button>
+          )}
+        </div>
 
         <div className="flex items-start gap-2 text-xs text-muted-foreground rounded-md bg-muted/40 p-2">
           <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -175,9 +241,14 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
           </p>
         </div>
 
-        <Button onClick={handleSave} disabled={saving} size="lg" className="w-full">
+        <Button
+          onClick={handleSave}
+          disabled={saving || !looksValid}
+          size="lg"
+          className={`w-full ${looksValid && !saving ? "animate-pulse" : ""}`}
+        >
           {saving ? (
-            <><Loader2 className="w-4 h-4 me-2 animate-spin" />{isRTL ? "מאמת..." : "Validating..."}</>
+            <><Loader2 className="w-4 h-4 me-2 animate-spin" />{isRTL ? "מאמת מול Google..." : "Validating with Google..."}</>
           ) : (
             <><Sparkles className="w-4 h-4 me-2" />{isRTL ? "שמור והמשך" : "Save & continue"}</>
           )}
