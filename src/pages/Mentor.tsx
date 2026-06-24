@@ -1702,5 +1702,6 @@ export default function Mentor() {
         </button>
       )}
       <Footer />
+    </div>
   );
 }
