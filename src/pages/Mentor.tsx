@@ -48,6 +48,7 @@ import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
 import { ByokKeyDialog } from "@/components/mentor/ByokKeyDialog";
+import { PaymentPendingBanner } from "@/components/mentor/PaymentPendingBanner";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
