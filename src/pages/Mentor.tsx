@@ -1676,7 +1676,31 @@ export default function Mentor() {
         <WebsiteComingSoonCard />
       </div>
       {user && <MentorNotebookPanel />}
+      <ByokKeyDialog
+        open={byokDialogOpen}
+        onOpenChange={(o) => {
+          setByokDialogOpen(o);
+          if (!o) setPendingByokSend(null);
+        }}
+        reason={byokReason}
+        onSaved={() => {
+          const pending = pendingByokSend;
+          setPendingByokSend(null);
+          if (pending) setTimeout(() => send(pending), 50);
+        }}
+      />
+      {userPlanInfo.plan === "paid" && user && (
+        <button
+          type="button"
+          onClick={() => {
+            setByokReason("missing");
+            setByokDialogOpen(true);
+          }}
+          className="fixed bottom-4 end-4 z-40 text-xs text-muted-foreground bg-background/90 backdrop-blur border border-border rounded-full px-3 py-1.5 shadow-sm hover:text-foreground hover:border-primary/40 transition"
+        >
+          {isRTL ? "ניהול מפתח AI" : "Manage AI key"}
+        </button>
+      )}
       <Footer />
-    </div>
   );
 }
