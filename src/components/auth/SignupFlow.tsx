@@ -211,7 +211,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       if (!resp.ok || !body?.ok) {
         const err = body?.error;
         if (err === "invalid_key") {
-          toast.error("המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף.");
+          toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
         } else if (err === "quota_exhausted") {
           toast.error("המכסה החודשית של המפתח נגמרה. צור/י מפתח חדש ב-Google AI Studio.");
         } else if (err === "invalid_format") {
