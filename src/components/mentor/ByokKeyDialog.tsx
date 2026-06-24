@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Sparkles,
   CheckCircle2,
-  ClipboardPaste,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ByokVisualGuide } from "@/components/auth/ByokVisualGuide";
@@ -34,7 +33,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
   const [hint, setHint] = useState<string | null>(null);
   const looksValid = isLikelyGeminiKey(key);
 
-  const { armed, arm, needsManualPaste, pasteFromClipboard } = useByokClipboard({
+  const { arm } = useByokClipboard({
     currentValue: key,
     onDetected: (k) => {
       setKey(k);
@@ -59,17 +58,6 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
   const handleOpenAIStudio = async () => {
     window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
     await arm();
-  };
-
-  const handleManualPaste = async () => {
-    const ok = await pasteFromClipboard();
-    if (!ok) {
-      toast.error(
-        isRTL
-          ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
-          : "Make sure you copied the full API key from Google AI Studio, not the page URL.",
-      );
-    }
   };
 
   const handleSave = async () => {
@@ -164,8 +152,8 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
         <ByokVisualGuide />
 
         <div className="space-y-2">
-          <Button type="button" onClick={handleOpenAIStudio} variant="cta" size="lg" className="w-full">
-            <ExternalLink className="w-4 h-4 me-2" />
+          <Button type="button" onClick={handleOpenAIStudio} variant="cta-burgundy" size="lg" className="w-full text-base">
+            <ExternalLink className="w-5 h-5 me-2" />
             {isRTL ? "פתח/י Google AI Studio בלשונית חדשה" : "Open Google AI Studio in a new tab"}
           </Button>
           <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
@@ -208,13 +196,13 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
               dir="ltr"
               autoComplete="off"
               spellCheck={false}
-              className={looksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+              className={`h-12 text-base ${looksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !saving && looksValid) handleSave();
               }}
             />
             {looksValid && (
-              <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+              <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-3 top-1/2 -translate-y-1/2" />
             )}
           </div>
           {key && !looksValid && (
@@ -223,12 +211,6 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
                 ? "ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף."
                 : "Make sure you copied the full API key from Google AI Studio, not the page URL."}
             </p>
-          )}
-          {armed && needsManualPaste && !looksValid && (
-            <Button type="button" variant="outline" size="sm" onClick={handleManualPaste} className="w-full">
-              <ClipboardPaste className="w-4 h-4 me-2" />
-              {isRTL ? "הדבק/י מפתח מה-clipboard" : "Paste key from clipboard"}
-            </Button>
           )}
         </div>
 

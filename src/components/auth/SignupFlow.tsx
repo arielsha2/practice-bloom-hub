@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2, ClipboardPaste } from "lucide-react";
+import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
@@ -169,23 +169,17 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   // Step 4 — BYOK
   const byokLooksValid = isLikelyGeminiKey(byokKey);
-  const { armed: byokArmed, arm: armByokClipboard, needsManualPaste, pasteFromClipboard } =
-    useByokClipboard({
-      currentValue: byokKey,
-      onDetected: (k) => {
-        setByokKey(k);
-        toast.success("זיהינו מפתח ב-clipboard ✓");
-      },
-    });
+  const { arm: armByokClipboard } = useByokClipboard({
+    currentValue: byokKey,
+    onDetected: (k) => {
+      setByokKey(k);
+      toast.success("זיהינו מפתח ב-clipboard ✓");
+    },
+  });
 
   const handleOpenAIStudio = async () => {
     window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
     await armByokClipboard();
-  };
-
-  const handleManualPaste = async () => {
-    const ok = await pasteFromClipboard();
-    if (!ok) toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
   };
 
   const handleSaveByok = async () => {
@@ -387,11 +381,11 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
             <Button
               type="button"
               onClick={handleOpenAIStudio}
-              variant="cta"
+              variant="cta-burgundy"
               size="lg"
-              className="w-full"
+              className="w-full text-base"
             >
-              <ExternalLink className="w-4 h-4 me-2" />
+              <ExternalLink className="w-5 h-5 me-2" />
               פתח/י Google AI Studio בלשונית חדשה
             </Button>
             <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
@@ -428,28 +422,16 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
                 dir="ltr"
                 autoComplete="off"
                 spellCheck={false}
-                className={byokLooksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+                className={`h-12 text-base ${byokLooksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
               />
               {byokLooksValid && (
-                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-3 top-1/2 -translate-y-1/2" />
               )}
             </div>
             {byokKey && !byokLooksValid && (
               <p className="text-xs text-amber-600">
                 ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.
               </p>
-            )}
-            {byokArmed && needsManualPaste && !byokLooksValid && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleManualPaste}
-                className="w-full"
-              >
-                <ClipboardPaste className="w-4 h-4 me-2" />
-                הדבק/י מפתח מה-clipboard
-              </Button>
             )}
           </div>
 
