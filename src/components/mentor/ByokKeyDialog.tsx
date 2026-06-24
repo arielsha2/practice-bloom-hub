@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Sparkles,
   CheckCircle2,
-  ClipboardPaste,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ByokVisualGuide } from "@/components/auth/ByokVisualGuide";
