@@ -417,7 +417,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את המפתח (מתחיל ב-AIza…)</Label>
+            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את מפתח ה-API שלך</Label>
             <div className="relative">
               <Input
                 id="byok-input"
