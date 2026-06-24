@@ -1001,6 +1001,39 @@ export type Database = {
           },
         ]
       }
+      signup_otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          last_sent_at: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          last_sent_at?: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          last_sent_at?: string
+        }
+        Relationships: []
+      }
       student_enrollments: {
         Row: {
           activated_at: string | null
