@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink } from "lucide-react";
+import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2, ClipboardPaste } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
 import { OtpResendButton } from "./OtpResendButton";
+import { ByokVisualGuide } from "./ByokVisualGuide";
+import { useByokClipboard, isLikelyGeminiKey } from "@/hooks/useByokClipboard";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -166,9 +168,31 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
   };
 
   // Step 4 — BYOK
+  const byokLooksValid = isLikelyGeminiKey(byokKey);
+  const { armed: byokArmed, arm: armByokClipboard, needsManualPaste, pasteFromClipboard } =
+    useByokClipboard({
+      currentValue: byokKey,
+      onDetected: (k) => {
+        setByokKey(k);
+        toast.success("זיהינו מפתח ב-clipboard ✓");
+      },
+    });
+
+  const handleOpenAIStudio = async () => {
+    window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
+    await armByokClipboard();
+  };
+
+  const handleManualPaste = async () => {
+    const ok = await pasteFromClipboard();
+    if (!ok) toast.error("לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza.");
+  };
+
   const handleSaveByok = async () => {
     const trimmed = byokKey.trim();
-    if (trimmed.length < 20) return toast.error("המפתח נראה קצר מדי");
+    if (!isLikelyGeminiKey(trimmed)) {
+      return toast.error("המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים");
+    }
     setBusy(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -186,9 +210,15 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       const body = await resp.json().catch(() => ({}));
       if (!resp.ok || !body?.ok) {
         const err = body?.error;
-        if (err === "invalid_key") toast.error("המפתח לא תקף — בדוק/י שהעתקת נכון");
-        else if (err === "quota_exhausted") toast.error("המכסה של המפתח נגמרה — צור מפתח חדש");
-        else toast.error("לא הצלחנו לאמת את המפתח");
+        if (err === "invalid_key") {
+          toast.error("המפתח לא תקין — ודא/י שהעתקת את המפתח המלא שמתחיל ב-AIza ולא את ה-URL של הדף.");
+        } else if (err === "quota_exhausted") {
+          toast.error("המכסה החודשית של המפתח נגמרה. צור/י מפתח חדש ב-Google AI Studio.");
+        } else if (err === "invalid_format") {
+          toast.error("המפתח קצר מדי. ודא/י שהעתקת את כולו.");
+        } else {
+          toast.error("לא הצלחנו לאמת את המפתח. נסה/י שוב.");
+        }
         return;
       }
       trackEvent("signup_step_4_complete");
