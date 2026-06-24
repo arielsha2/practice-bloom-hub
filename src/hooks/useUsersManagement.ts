@@ -439,19 +439,16 @@ export function useUsersManagement() {
     },
   });
 
-  // Upgrade user from free trial to paid (removes trial flags, preserves all other data)
+  // Upgrade user from free trial to paid via audit-logged edge function.
+  // The function records the change in plan_changes (who, when, old, new) before
+  // updating profiles.plan, so admin-driven changes leave a trail.
   const upgradeToPaid = useMutation({
     mutationFn: async ({ userId }: { userId: string }) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          plan: "paid",
-          trial_start_date: null,
-          trial_reminder_sent_at: null,
-          plan_updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+      const { data, error } = await supabase.functions.invoke("admin-set-user-plan", {
+        body: { user_id: userId, new_plan: "paid" },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });

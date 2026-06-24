@@ -796,6 +796,36 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_plan: string
+          old_plan: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_plan: string
+          old_plan?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_plan?: string
+          old_plan?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -805,6 +835,7 @@ export type Database = {
           mailing_list_consent: boolean
           mailing_list_consent_at: string | null
           meshulam_transaction_id: string | null
+          password_set: boolean
           plan: string
           plan_updated_at: string | null
           trial_reminder_sent_at: string | null
@@ -818,6 +849,7 @@ export type Database = {
           mailing_list_consent?: boolean
           mailing_list_consent_at?: string | null
           meshulam_transaction_id?: string | null
+          password_set?: boolean
           plan?: string
           plan_updated_at?: string | null
           trial_reminder_sent_at?: string | null
@@ -831,6 +863,7 @@ export type Database = {
           mailing_list_consent?: boolean
           mailing_list_consent_at?: string | null
           meshulam_transaction_id?: string | null
+          password_set?: boolean
           plan?: string
           plan_updated_at?: string | null
           trial_reminder_sent_at?: string | null
