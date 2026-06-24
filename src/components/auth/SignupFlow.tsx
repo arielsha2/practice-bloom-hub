@@ -185,7 +185,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   const handleManualPaste = async () => {
     const ok = await pasteFromClipboard();
-    if (!ok) toast.error("לא נמצא מפתח ב-clipboard. ודא/י שהעתקת מפתח שמתחיל ב-AIza.");
+    if (!ok) toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
   };
 
   const handleSaveByok = async () => {
