@@ -387,11 +387,11 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
             <Button
               type="button"
               onClick={handleOpenAIStudio}
-              variant="cta"
+              variant="cta-burgundy"
               size="lg"
-              className="w-full"
+              className="w-full text-base"
             >
-              <ExternalLink className="w-4 h-4 me-2" />
+              <ExternalLink className="w-5 h-5 me-2" />
               פתח/י Google AI Studio בלשונית חדשה
             </Button>
             <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
