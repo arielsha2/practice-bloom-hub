@@ -54,6 +54,7 @@ const App = () => (
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/debug/byok" element={<DebugByok />} />
               <Route path="/en" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/ai-assistants/:botKey" element={<BotChat />} />
