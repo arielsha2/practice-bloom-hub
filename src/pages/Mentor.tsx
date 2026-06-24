@@ -1250,6 +1250,7 @@ export default function Mentor() {
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
         <main className="flex-1 pt-16">
+          {user && <PaymentPendingBanner />}
           {/* Hebrew keeps the legacy purchase-invitation hero above the sales page.
               English ships a single merged hero from MentorSalesPage. */}
           {isRTL && (
