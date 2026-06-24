@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2, ClipboardPaste } from "lucide-react";
+import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
