@@ -428,28 +428,16 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
                 dir="ltr"
                 autoComplete="off"
                 spellCheck={false}
-                className={byokLooksValid ? "pe-9 border-green-500 focus-visible:ring-green-500" : "pe-9"}
+                className={`h-12 text-base ${byokLooksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
               />
               {byokLooksValid && (
-                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-2 top-1/2 -translate-y-1/2" />
+                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-3 top-1/2 -translate-y-1/2" />
               )}
             </div>
             {byokKey && !byokLooksValid && (
               <p className="text-xs text-amber-600">
                 ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.
               </p>
-            )}
-            {byokArmed && needsManualPaste && !byokLooksValid && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleManualPaste}
-                className="w-full"
-              >
-                <ClipboardPaste className="w-4 h-4 me-2" />
-                הדבק/י מפתח מה-clipboard
-              </Button>
             )}
           </div>
 
