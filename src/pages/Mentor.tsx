@@ -523,8 +523,41 @@ export default function Mentor() {
       cancelled = true;
     };
   }, [user, userPlanInfo.loading, userPlanInfo.plan, byokAutoChecked]);
+
+  // Realtime: when an admin (or webhook) flips this user's plan, refresh
+  // useUserPlan immediately so the banner disappears and BYOK auto-opens
+  // without requiring a page reload.
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`profile-plan-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
+          setByokAutoChecked(false);
+        },
+      )
+      .subscribe();
+
+    // Fallback: also refetch on window focus in case realtime drops.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [user?.id, queryClient]);
+
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
+
 
   const BOT_KEYS = [
     "connection-bridge",
