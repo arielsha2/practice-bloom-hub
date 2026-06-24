@@ -436,7 +436,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
             </div>
             {byokKey && !byokLooksValid && (
               <p className="text-xs text-amber-600">
-                זה לא נראה כמו מפתח Gemini. מפתח תקין מתחיל ב-AIza ובאורך 35+ תווים.
+                ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.
               </p>
             )}
             {byokArmed && needsManualPaste && !byokLooksValid && (
