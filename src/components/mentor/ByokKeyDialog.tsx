@@ -204,7 +204,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
               type="text"
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="AIza..."
+              placeholder={isRTL ? "הדבק/י כאן את מפתח ה-API שלך" : "Paste your API key here"}
               dir="ltr"
               autoComplete="off"
               spellCheck={false}
