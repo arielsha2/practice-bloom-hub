@@ -193,7 +193,7 @@ export function ByokKeyDialog({ open, onOpenChange, reason = "missing", onSaved 
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder={isRTL ? "הדבק/י כאן את מפתח ה-API שלך" : "Paste your API key here"}
-              dir="ltr"
+              dir={key ? "ltr" : isRTL ? "rtl" : "ltr"}
               autoComplete="off"
               spellCheck={false}
               className={`h-12 text-base ${looksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
