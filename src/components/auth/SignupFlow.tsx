@@ -191,7 +191,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
   const handleSaveByok = async () => {
     const trimmed = byokKey.trim();
     if (!isLikelyGeminiKey(trimmed)) {
-      return toast.error("המפתח לא נראה תקין — צריך להתחיל ב-AIza ובאורך 35+ תווים");
+      return toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
     }
     setBusy(true);
     try {
