@@ -419,7 +419,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
                 value={byokKey}
                 onChange={(e) => setByokKey(e.target.value)}
                 placeholder="הדבק/י כאן את מפתח ה-API שלך"
-                dir="ltr"
+                dir={byokKey ? "ltr" : "rtl"}
                 autoComplete="off"
                 spellCheck={false}
                 className={`h-12 text-base ${byokLooksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
