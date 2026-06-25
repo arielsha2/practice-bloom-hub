@@ -1163,56 +1163,77 @@ export default function Mentor() {
     } finally {
       setIsLoading(false);
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (auth.user) {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          const analyzeResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token ?? ""}`,
-            },
-            body: JSON.stringify({
-              user_id: auth.user.id,
-              messages: [...messages, { role: "user", content: text.trim() }],
-            }),
-          });
-          if (analyzeResp.ok) {
-            const { completed, current, stuck_point } = await analyzeResp.json();
-            const stageMap: Record<string, number> = {
-              niche: 1,
-              pricing: 2,
-              "self-presentation": 3,
-              network: 4,
-              conversion: 5,
-            };
-            const stepNumber = stageMap[current] ?? 1;
-            const { data: existing } = await supabase
-              .from("therapist_journeys")
-              .select("stuck_points")
-              .eq("user_id", auth.user.id)
-              .maybeSingle();
-            const merged = [...((existing?.stuck_points as string[] | null) ?? [])];
-            if (stuck_point && stuck_point.trim() && !merged.includes(stuck_point)) {
-              merged.push(stuck_point);
-            }
-            await supabase.from("therapist_journeys").upsert(
-              {
-                user_id: auth.user.id,
-                step_number: stepNumber,
-                stuck_points: merged,
-                completed_stages: completed ?? [],
-                reflection: { current } as any,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "user_id" },
-            );
-            window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
+        const fullHistory = [...messages, { role: "user", content: text.trim() }];
+        const totalCount = fullHistory.length;
+        const msSinceLast = Date.now() - lastAnalyzedAtRef.current;
+        const newMsgsSinceLast = totalCount - lastAnalyzedCountRef.current;
+        const shouldAnalyze =
+          lastAnalyzedAtRef.current === 0 || // first time
+          newMsgsSinceLast >= 3 ||
+          msSinceLast >= 2 * 60 * 1000;
 
-            // Call mentor-score from client and persist score directly via RLS
-            if (auth.user) {
+        if (!shouldAnalyze) {
+          // Skip analyze + score this turn — saves 2 LLM calls per message.
+          console.log("[mentor-analyze] skipped (debounce)", { newMsgsSinceLast, msSinceLast });
+        } else {
+          const { data: auth } = await supabase.auth.getUser();
+          if (auth.user) {
+            // Mark immediately so concurrent sends don't re-fire.
+            lastAnalyzedCountRef.current = totalCount;
+            lastAnalyzedAtRef.current = Date.now();
+
+            const ANALYZE_WINDOW = 20;
+            const trimmedHistory = fullHistory.length > ANALYZE_WINDOW
+              ? fullHistory.slice(-ANALYZE_WINDOW)
+              : fullHistory;
+
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            const analyzeResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-analyze`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session?.access_token ?? ""}`,
+              },
+              body: JSON.stringify({
+                user_id: auth.user.id,
+                messages: trimmedHistory,
+              }),
+            });
+            if (analyzeResp.ok) {
+              const { completed, current, stuck_point } = await analyzeResp.json();
+              const stageMap: Record<string, number> = {
+                niche: 1,
+                pricing: 2,
+                "self-presentation": 3,
+                network: 4,
+                conversion: 5,
+              };
+              const stepNumber = stageMap[current] ?? 1;
+              const { data: existing } = await supabase
+                .from("therapist_journeys")
+                .select("stuck_points")
+                .eq("user_id", auth.user.id)
+                .maybeSingle();
+              const merged = [...((existing?.stuck_points as string[] | null) ?? [])];
+              if (stuck_point && stuck_point.trim() && !merged.includes(stuck_point)) {
+                merged.push(stuck_point);
+              }
+              await supabase.from("therapist_journeys").upsert(
+                {
+                  user_id: auth.user.id,
+                  step_number: stepNumber,
+                  stuck_points: merged,
+                  completed_stages: completed ?? [],
+                  reflection: { current } as any,
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "user_id" },
+              );
+              window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
+
+              // Call mentor-score from client and persist score directly via RLS
               try {
                 const scoreResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-score`, {
                   method: "POST",
@@ -1222,7 +1243,7 @@ export default function Mentor() {
                   },
                   body: JSON.stringify({
                     user_id: auth.user.id,
-                    messages: [...messages, { role: "user", content: text.trim() }],
+                    messages: trimmedHistory,
                     journey_context: { completed_stages: completed, current },
                     trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
                   }),
@@ -1254,6 +1275,7 @@ export default function Mentor() {
       }
     }
   };
+
 
   const showWelcome = messages.length === 0;
 
