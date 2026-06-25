@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { TherapistHealthScores } from "@/components/mentor/TherapistHealthScores";
 import { MailingListExport } from "@/components/mentor/MailingListExport";
+import { MentorTestimonialsAdmin } from "@/components/mentor/MentorTestimonialsAdmin";
 
 interface Settings {
   id?: string;
@@ -142,6 +143,10 @@ export default function MentorAdmin() {
         <TherapistHealthScores />
 
         <MailingListExport />
+
+        <MentorTestimonialsAdmin />
+
+
 
 
 
