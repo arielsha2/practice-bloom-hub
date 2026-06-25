@@ -1503,6 +1503,54 @@ export default function Mentor() {
                     </p>
                   </div>
 
+                  {!activeBotKey && messages.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 border-mentor-accent/40 text-mentor-accent hover:bg-mentor-accent hover:text-mentor-accent-foreground"
+                          title={isRTL ? "הורד או שתף את השיחה" : "Download or share conversation"}
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="hidden sm:inline">{isRTL ? "השיחה שלי" : "My chat"}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align={isRTL ? "start" : "end"}>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            try {
+                              await downloadConversationPdf(messages, {
+                                isRTL,
+                                displayName: user?.email ?? null,
+                              });
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(isRTL ? "ההורדה נכשלה" : "Download failed");
+                            }
+                          }}
+                        >
+                          <Download className="w-4 h-4 me-2" />
+                          {isRTL ? "הורד כ-PDF" : "Download PDF"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            try {
+                              await copyConversationText(messages, { isRTL });
+                              toast.success(isRTL ? "הועתק ללוח" : "Copied to clipboard");
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(isRTL ? "ההעתקה נכשלה" : "Copy failed");
+                            }
+                          }}
+                        >
+                          <CopyIcon className="w-4 h-4 me-2" />
+                          {isRTL ? "העתק כטקסט (לוואטסאפ/מייל)" : "Copy as text (WhatsApp/email)"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
                   {!activeBotKey && (
                     <Button
                       size="sm"
