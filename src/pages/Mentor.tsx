@@ -512,7 +512,6 @@ export default function Mentor() {
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
-          setByokAutoChecked(false);
         },
       )
       .subscribe();
@@ -1053,19 +1052,7 @@ export default function Mentor() {
             return;
           }
         }
-        if (resp.status === 402) {
-          const body = await resp.json().catch(() => null);
-          const err = body?.error;
-          if (err === "BYOK_KEY_REQUIRED" || err === "BYOK_KEY_INVALID" || err === "BYOK_KEY_QUOTA") {
-            // Roll back the user message — we'll resend it after they save a key.
-            setMessages((prev) => prev.slice(0, -1));
-            setPendingByokSend(text.trim());
-            setByokReason(err === "BYOK_KEY_INVALID" ? "invalid" : err === "BYOK_KEY_QUOTA" ? "quota" : "missing");
-            setByokDialogOpen(true);
-            setIsLoading(false);
-            return;
-          }
-        }
+        // (BYOK error codes removed — paid users now use the server key.)
         if (resp.status === 429)
           toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
         else if (resp.status === 402) toast.error(isRTL ? "נגמרו הקרדיטים, פנו למנהל" : "Credits exhausted");
@@ -1799,31 +1786,7 @@ export default function Mentor() {
         <WebsiteComingSoonCard />
       </div>
       {user && <MentorNotebookPanel />}
-      <ByokKeyDialog
-        open={byokDialogOpen}
-        onOpenChange={(o) => {
-          setByokDialogOpen(o);
-          if (!o) setPendingByokSend(null);
-        }}
-        reason={byokReason}
-        onSaved={() => {
-          const pending = pendingByokSend;
-          setPendingByokSend(null);
-          if (pending) setTimeout(() => send(pending), 50);
-        }}
-      />
-      {userPlanInfo.plan === "paid" && user && (
-        <button
-          type="button"
-          onClick={() => {
-            setByokReason("missing");
-            setByokDialogOpen(true);
-          }}
-          className="fixed bottom-4 end-4 z-40 text-xs text-muted-foreground bg-background/90 backdrop-blur border border-border rounded-full px-3 py-1.5 shadow-sm hover:text-foreground hover:border-primary/40 transition"
-        >
-          {isRTL ? "ניהול מפתח AI" : "Manage AI key"}
-        </button>
-      )}
+      {/* BYOK dialog and "Manage AI key" button removed — server uses GEMINI_API_KEY. */}
       <Footer />
     </div>
   );
