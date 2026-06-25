@@ -88,6 +88,7 @@ export function UsersTable({
   getUserCohorts,
   hasMentorAccess,
   getTrialStatus,
+  getByokStatus,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
