@@ -71,7 +71,7 @@ export function TurningPointPricing() {
               <div className="space-y-2 mb-8 text-sm text-right max-w-sm mx-auto">
                 {[
                   "12 מפגשים (6 למידה + 6 הטמעה)",
-                  "גישה פתוחה לתכנים ",
+                  "גישה פתוחה לתכנים לתמיד",
                   "חוברות תרגול + תסריטים",
                   "מדריך דיגיטלי במתנה (שווי 497 ₪)",
                   "בוטים ייחודיים לעזרה בשיווק",
