@@ -339,29 +339,26 @@ serve(async (req) => {
       ? `\n\n═══════════════════════════════\nHANDOFF KEY VALIDATION (hard rule, overrides any other guidance):\n═══════════════════════════════\nThe ONLY valid bot keys are exactly: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nNever, under any circumstance, emit any other key inside [HANDOFF:...]. Specifically forbidden: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, or any variation. The "Connection Bridge" / conversion-call tool is ALWAYS \`connection-bridge\` (single hyphen between the two words). If unsure — do not emit a HANDOFF tag at all.`
       : `\n\n═══════════════════════════════\nאימות מפתח HANDOFF (כלל קשיח — גובר על כל הנחיה אחרת):\n═══════════════════════════════\nהמפתחות החוקיים היחידים הם, מילה במילה: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`.\n\nאסור בהחלט, בשום מצב, להוציא מפתח אחר בתוך [HANDOFF:...]. אסורים במפורש: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, או כל וריאציה אחרת. הכלי "Connection Bridge" / "שיחת המרה" הוא תמיד \`connection-bridge\` (מקף יחיד בין שתי המילים). אם יש ספק — אל תוציא תג HANDOFF בכלל.`;
 
-    // Build journey context block
+    // Build journey context block — prefer compact tool summaries over raw JSON
+    // outputs to keep system-prompt tokens small. If a summary doesn't exist
+    // for a tool, skip it entirely instead of dumping the full output JSON.
     let journeyBlock = "";
     if (journey_context && typeof journey_context === "object") {
       const lines: string[] = [];
-      const niche = journey_context.niche_output;
-      const sp = journey_context.self_presentation_output;
       const completed = journey_context.completed_stages;
       const toolSummaries = journey_context.tool_summaries;
 
-      if (niche && typeof niche === "object" && Object.keys(niche).length > 0) {
-        lines.push(`Niche Finder output: ${JSON.stringify(niche)}`);
-      }
-      if (sp && typeof sp === "object" && Object.keys(sp).length > 0) {
-        lines.push(`Self Presentation output: ${JSON.stringify(sp)}`);
-      }
-      if (Array.isArray(completed) && completed.length > 0) {
-        lines.push(`Completed stages: ${completed.join(", ")}`);
-      }
       if (toolSummaries && typeof toolSummaries === "object") {
         for (const [k, v] of Object.entries(toolSummaries)) {
           const summary = (v as any)?.summary;
-          if (summary) lines.push(`Tool "${k}" summary: ${summary}`);
+          if (summary && typeof summary === "string") {
+            // Cap each summary at 400 chars to stay defensive against bloat.
+            lines.push(`Tool "${k}" summary: ${summary.slice(0, 400)}`);
+          }
         }
+      }
+      if (Array.isArray(completed) && completed.length > 0) {
+        lines.push(`Completed stages: ${completed.join(", ")}`);
       }
       if (lines.length > 0) {
         journeyBlock = `\n\n═══════════════════════════════\nמידע מהמסע של המטפל / Therapist's journey context (use it, don't re-ask):\n═══════════════════════════════\n${lines.join("\n")}`;
