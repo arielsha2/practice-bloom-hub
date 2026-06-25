@@ -84,60 +84,9 @@ serve(async (req) => {
       : (STAGE_KEYS.find((k) => !completed.includes(k)) ?? "niche");
     const stuck_point = typeof parsed.stuck_point === "string" ? parsed.stuck_point.trim() : "";
 
-    // Trigger mentor-score synchronously (waitUntil was getting EarlyDrop'd)
-    if (user_id) {
-      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-      // Pick a JWT-formatted key when available. If none exists in this Edge
-      // runtime, call mentor-score without auth headers because verify_jwt=false.
-      const candidates: Array<[string, string | undefined]> = [
-        ["SUPABASE_ANON_KEY", Deno.env.get("SUPABASE_ANON_KEY")],
-        ["SUPABASE_PUBLISHABLE_KEY", Deno.env.get("SUPABASE_PUBLISHABLE_KEY")],
-        ["SUPABASE_SERVICE_ROLE_KEY", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")],
-        ["PROJECT_ANON_KEY", PROJECT_ANON_KEY],
-      ];
-      const picked = candidates.find(([, v]) => !!v && v.split(".").length === 3);
-      const tokenName = picked?.[0] ?? "none";
-      const token = picked?.[1] ?? "";
-      console.log(
-        "triggering mentor-score for user:",
-        user_id,
-        "using:", tokenName,
-        "token_len:", token.length,
-      );
-
-      try {
-        if (!SUPABASE_URL) {
-          console.error("mentor-score: missing SUPABASE_URL");
-        } else {
-          const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-          };
-          if (token) {
-            headers.Authorization = `Bearer ${token}`;
-            headers.apikey = token;
-          } else {
-            console.warn("mentor-score: no JWT-format key in env; invoking without auth headers");
-          }
-
-          const scoreResp = await fetch(`${SUPABASE_URL}/functions/v1/mentor-score`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              user_id,
-              messages,
-              journey_context: { completed_stages: completed, current },
-              trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
-            }),
-          });
-          const txt = await scoreResp.text();
-          console.log("mentor-score response", scoreResp.status, txt.slice(0, 300));
-        }
-      } catch (e) {
-        console.error("mentor-score trigger error:", e);
-      }
-    } else {
-      console.warn("mentor-analyze: no user_id provided, skipping mentor-score");
-    }
+    // NOTE: mentor-score is invoked from the client (src/pages/Mentor.tsx)
+    // immediately after this function returns. We no longer trigger it from
+    // here to avoid duplicate LLM calls (was firing ~2x per user message).
 
     return new Response(JSON.stringify({ completed, current, stuck_point }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
