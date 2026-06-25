@@ -204,7 +204,7 @@ const COPY: any = {
     hero: {
       titleLine1: "You became a therapist to help people.",
       titleLine2: "Let's make sure enough people find you.",
-      body: "An AI personal guide that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
+      body: "An AI personal supervision that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
       cta: "✦  Start building my full practice  →",
       ctaNote: "One-time payment · full access · No subscription · special rate for Beta version",
       loginPrompt: "Already signed up?",
