@@ -204,6 +204,7 @@ export default function UsersAdmin() {
                 getUserCohorts={getUserCohorts}
                 hasMentorAccess={hasMentorAccess}
                 getTrialStatus={getTrialStatus}
+                getByokStatus={getByokStatus}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
