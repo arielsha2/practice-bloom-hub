@@ -32,7 +32,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
 const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
-const PAYMENT_URL_EN = "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3";
+const PAYMENT_URL_EN = "https://www.paypal.com/ncp/payment/W98DBBEAANPPS";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
 
 function openPaymentFor(language: string) {
