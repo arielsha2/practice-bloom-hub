@@ -1,39 +1,41 @@
-## מטרה
 
-להוסיף לטבלת המשתמשים באדמין עמודה שמראה לכל משתמש האם הזין מפתח Gemini תקין, כולל ה-4 ספרות האחרונות ותאריך האימות האחרון.
+# בדיקת AI Gateway אחרי 4 התיקונים
 
-## איך זה יעבוד
+בדקתי את ה-logs מהדקות האחרונות (25/06, 13:43–13:45 UTC) — תקופה שכוללת שיחת בדיקה חיה. התוצאות מאשרות שכל 4 התיקונים תופסים בייצור.
 
-לכל משתמש בטבלה תוצג תווית אחת מתוך שלוש:
-- **✓ תקין · ••••XXXX** (ירוק) — קיים מפתח, `last_error` ריק, ויש `last_validated_at`.
-- **⚠ שגיאה · ••••XXXX** (אדום) — קיים מפתח אבל `last_error` לא ריק (לרוב invalid/quota).
-- **— ללא מפתח** (אפור) — אין שורה ב-`user_ai_keys`.
+## מה ראיתי לכל הודעת משתמש
 
-ב-tooltip יוצג תאריך האימות האחרון והסיבה לשגיאה אם יש.
+דוגמה — הודעה אחת ב-13:43:26–13:43:34 (חלון של ~8 שניות, run אחד):
 
-## שינויים טכניים
+| קריאה | מודל | tokens in | tokens out | תפקיד |
+|---|---|---|---|---|
+| 1 | gemini-2.5-pro | 7,702 | 1,304 | mentor-chat (תשובת המנטור) |
+| 2 | gemini-2.5-flash | 1,803 | 36 | classifier (trial-topic) |
+| 3 | gemini-2.5-flash | 1,992 | 118 | mentor-analyze |
+| 4 | gemini-2.5-flash | 1,910 | 122 | mentor-score |
 
-1. **RLS / קריאה**: כרגע `user_ai_keys` חשוף רק לבעלים. נוסיף policy `SELECT` לאדמינים בלבד דרך `has_role(auth.uid(), 'admin')`. לא נחשוף את `encrypted_key` ל-UI — נבחר רק `user_id, key_hint, last_validated_at, last_error, updated_at`.
+**סה"כ: 4 קריאות, ~13,400 input tokens להודעה.**
 
-2. **Hook** (`src/hooks/useUsersManagement.ts`):
-   - query חדש `admin-user-ai-keys` שמושך את העמודות לעיל לכל המשתמשים.
-   - פונקציה `getByokStatus(userId)` שמחזירה `{ status: 'valid'|'error'|'missing', hint, lastValidatedAt, lastError }`.
-   - לייצא ב-return.
+לשם השוואה למצב לפני התיקונים:
+- מ-**~15 קריאות** להודעה → ל-**4 קריאות** (-73%)
+- מ-**~40,000 input tokens** לקריאה → ל-**~7,700 לקריאה הגדולה (pro)** וכ-**~1,900 לכל flash** (-80% ב-pro, -95% ב-flash)
+- **mentor-score לא נקרא יותר מהשרת** — רק פעם אחת מהקליינט ✅
 
-3. **UI** (`src/components/admin/UsersTable.tsx`):
-   - עמודה חדשה "מפתח AI" / "AI Key" בין "התנסות חינם" ל-"פעולות".
-   - Badge עם אייקון (`CheckCircle2` / `AlertTriangle` / `KeyRound`) + ה-hint + tooltip.
-   - לא נוסיף עריכה — תצוגה בלבד.
+## אישור לכל אחד מהתיקונים
 
-4. **Migration** — policy אחת בלבד:
-   ```sql
-   CREATE POLICY "Admins can view all AI key metadata"
-     ON public.user_ai_keys FOR SELECT TO authenticated
-     USING (public.has_role(auth.uid(), 'admin'));
-   ```
+1. **תיקון 1 (הסרת קריאה כפולה ל-score)** — אישור: רק קריאת score אחת לכל הודעה (לפני: 2). ✅
+2. **תיקון 2 (debounce של analyze)** — אישור: בהודעה ב-13:44:37 רואים רק flash אחד של 1,772/40 (classifier בלבד), בלי analyze/score — כלומר ה-gate חסם את ההודעה הזו (פחות מ-3 הודעות מאז הניתוח הקודם). ✅
+3. **תיקון 3 (חלון 20 הודעות ל-chat)** — אישור: input של mentor-chat ירד מ-~40k ל-~7.7k. ✅
+4. **תיקון 4 (דחיסת journeyBlock)** — מובלע בתוך תיקון 3, ה-7.7k משקפים system prompt + 20 הודעות אחרונות בלי JSON ענק של niche/self-presentation. ✅
 
-## מה לא נכלל
+## עלות לכל הודעה (כיום)
 
-- אין שינוי באופן שבו המנטור עצמו משתמש במפתח.
-- אין כפתור לאדמין למחוק/להחליף מפתח של משתמש (אפשר להוסיף בהמשך אם תרצה).
-- ה-`encrypted_key` נשאר חסום לחלוטין — האדמין רואה רק את ה-4 ספרות האחרונות.
+~0.10 credits להודעה (בעיקר ה-pro). לפני התיקונים: ~0.65–1.0 credits להודעה לפי דפוס ה-burst שראינו מ-`dr.ariel.shapira`. **חיסכון משוער: 85%.**
+
+## המלצה
+
+הסיום של הוראה 1 אושר. מוכן להמשיך להוראה 2 כשתשלח אותה — או, אם תרצה, אני יכול לחקור את שתי נקודות הליטוש שנותרו:
+- ה-classifier (flash 1,800 in / 36 out) רץ על *כל* הודעה — אפשר להוסיף לו debounce/cache כי הוא מוסיף ~0.0025 credits להודעה לחינם.
+- ה-system prompt של mentor-chat עדיין יושב על ~6,000 tokens לפני ההיסטוריה — מקום נוסף לקיצוץ אם נרצה לדחוס עוד.
+
+מה הלאה?
