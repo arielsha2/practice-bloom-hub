@@ -86,7 +86,7 @@ const experienceIcons = [Clock, Anchor, ScrollText, Flame];
 // NOTE: Hebrew COPY left exactly as-is. English COPY restructured for the new sales page spec.
 const COPY: any = {
   he: {
-    badge: "גרסת בטא · 20 מקומות בלבד",
+    badge: "גרסת בטא ",
     hero: {
       title: "המנטור לקליניקה",
       subtitle: [" ליווי למטפלים לקליניקה מלאה.", "לרשותך בכל זמן, בכל מקום."],
