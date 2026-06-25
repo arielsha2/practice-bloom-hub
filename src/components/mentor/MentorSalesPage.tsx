@@ -909,41 +909,9 @@ export function MentorSalesPage() {
           <Divider />
         </motion.div>
 
-        {isEn ? (
-          <motion.div {...fadeUp} className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {t.proof.cards.map((c: { quote: string; wide?: boolean }, i: number) => (
-              <div
-                key={i}
-                className={`relative rounded-2xl p-7 md:p-8 bg-card border border-border shadow-soft ${
-                  c.wide ? "md:col-span-3 md:max-w-3xl md:mx-auto" : ""
-                }`}
-              >
-                <QuoteIcon
-                  className="absolute top-5 left-5 opacity-90"
-                  style={{ color: "hsl(var(--terracotta))", width: 28, height: 28 }}
-                />
-                <p className="italic text-foreground leading-relaxed pt-8">{c.quote}</p>
-                {t.proof.placeholderName && !t.proof.placeholderName.includes("[") && (
-                  <>
-                    <div className="h-px w-12 my-5" style={{ background: "hsl(var(--terracotta))" }} />
-                    <p className="font-bold text-foreground text-sm">{t.proof.placeholderName}</p>
-                    {t.proof.placeholderDetails && !t.proof.placeholderDetails.includes("[") && (
-                      <p className="text-xs text-muted-foreground mt-1">{t.proof.placeholderDetails}</p>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {t.proof.quotes.map((q: string, i: number) => (
-              <div key={i} className="relative rounded-2xl p-8 border border-background/15 bg-background/[0.06]">
-                <p className="pull-quote relative text-background leading-relaxed text-lg">{q}</p>
-              </div>
-            ))}
-          </motion.div>
-        )}
+        <motion.div {...fadeUp}>
+          <MentorTestimonialsCarousel language={language} isRTL={isRTL} />
+        </motion.div>
       </Band>
 
       {/* ============ EN — IS THIS FOR YOU (cream) ============ */}
