@@ -503,3 +503,6 @@ export function useUsersManagement() {
     deleteUser,
     upgradeToPaid,
     getTrialStatus,
+  };
+}
+
