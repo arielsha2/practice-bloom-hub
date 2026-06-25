@@ -494,6 +494,11 @@ export default function Mentor() {
   } | null>(null);
   // (BYOK dialog removed — server-side GEMINI_API_KEY is used for paid users.)
 
+  // Debounce gating for mentor-analyze: run only if 3+ new messages since
+  // last analysis OR 2+ minutes have passed. Prevents per-message LLM fan-out.
+  const lastAnalyzedCountRef = useRef(0);
+  const lastAnalyzedAtRef = useRef(0);
+
 
   // Realtime: when an admin (or webhook) flips this user's plan, refresh
   // useUserPlan immediately so the banner disappears and BYOK auto-opens
