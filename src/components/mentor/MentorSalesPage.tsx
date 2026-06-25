@@ -571,6 +571,23 @@ export function MentorSalesPage() {
             >
               {t.hero.ctaNote}
             </p>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "rgba(250,247,242,0.6)",
+                marginTop: "0.6rem",
+                textAlign: "center",
+              }}
+            >
+              <span>{t.hero.loginPrompt} </span>
+              <Link
+                to="/auth"
+                className="underline underline-offset-2"
+                style={{ color: "rgba(250,247,242,0.95)" }}
+              >
+                {t.hero.loginLink}
+              </Link>
+            </p>
           </motion.div>
         </div>
       </section>
