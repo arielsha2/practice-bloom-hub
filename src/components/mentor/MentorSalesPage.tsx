@@ -452,7 +452,7 @@ const COPY: any = {
       ],
       anchor:
         "At this price, you're investing less than: one hour of private business coaching · one continuing education workshop · two months on a therapist directory",
-      cta: "I want one of the 20 founding seats",
+      cta: "I want the Mentor to assist me",
       secure: "Secure payment via Meshulam",
     },
     contact: {
