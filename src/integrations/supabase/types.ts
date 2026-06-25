@@ -799,6 +799,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_testimonials: {
+        Row: {
+          author: string | null
+          body_text: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          kind: string
+          language: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          body_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          kind: string
+          language: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          body_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          kind?: string
+          language?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       plan_changes: {
         Row: {
           changed_at: string
