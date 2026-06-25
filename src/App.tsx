@@ -29,6 +29,7 @@ import AdminInsights from "./pages/AdminInsights";
 import WebsiteBuilder from "./pages/WebsiteBuilder";
 import PublicTherapistSite from "./pages/PublicTherapistSite";
 import MentorAdmin from "./pages/MentorAdmin";
+import MentorTestimonialsAdmin from "./pages/MentorTestimonialsAdmin";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import ShivukKlinika from "./pages/ShivukKlinika";
 import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/contact-finder" element={<BotChat />} />
               <Route path="/admin-insights" element={<AdminInsights />} />
               <Route path="/admin/mentor" element={<MentorAdmin />} />
+              <Route path="/admin/testimonials" element={<MentorTestimonialsAdmin />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/שיווק-קליניקה-למטפלים" element={<ShivukKlinika />} />
               <Route path="/shivuk-klinika-lamtapelim" element={<ShivukKlinika />} />
