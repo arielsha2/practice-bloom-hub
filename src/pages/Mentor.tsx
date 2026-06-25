@@ -31,7 +31,16 @@ import {
   Trophy,
   Check,
   NotebookPen,
+  Download,
+  Copy as CopyIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { downloadConversationPdf, copyConversationText } from "@/lib/mentorExport";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
@@ -714,35 +723,58 @@ export default function Mentor() {
     }
   }, [messages, storageKey]);
 
-  // Mirror the conversation to Supabase (in parallel with localStorage backup).
-  // Session is keyed by language; a fresh session_id is minted per language and
-  // reused across reloads. Insight tag occurrences in assistant messages bump
-  // insight_count. Errors are swallowed — DB persistence is non-blocking.
-  const sessionIdRef = useRef<string | null>(null);
-  const conversationIdRef = useRef<string | null>(null);
+  // Unified-conversation model: a single row per (user_id, language) in
+  // mentor_conversations. On mount, hydrate from DB if it has more messages
+  // than localStorage (cross-device continuity). Saves are upserts.
+  const conversationLoadedRef = useRef(false);
   const lastSavedRef = useRef<string>("");
+
   useEffect(() => {
     if (!user?.id) return;
+    if (conversationLoadedRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("mentor_conversations")
+          .select("messages")
+          .eq("user_id", user.id)
+          .eq("language", language)
+          .maybeSingle();
+        if (cancelled) return;
+        const remote = Array.isArray((data as any)?.messages)
+          ? ((data as any).messages as Msg[])
+          : [];
+        // Prefer remote if it is longer (cross-device continuity); otherwise
+        // keep whatever localStorage already populated (avoids losing an
+        // in-progress reply that hasn't been flushed yet).
+        setMessages((prev) => (remote.length > prev.length ? remote : prev));
+        lastSavedRef.current = JSON.stringify(
+          remote.length > 0 ? remote : [],
+        );
+      } catch (e) {
+        console.warn("mentor conversation load failed", e);
+      } finally {
+        conversationLoadedRef.current = true;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, language]);
+
+  // Reset load flag when user/language changes so we re-hydrate.
+  useEffect(() => {
+    conversationLoadedRef.current = false;
+    lastSavedRef.current = "";
+  }, [user?.id, language]);
+
+  // Persist (upsert) the unified conversation. One row per (user, language).
+  useEffect(() => {
+    if (!user?.id) return;
+    if (!conversationLoadedRef.current) return;
     if (messages.length === 0) return;
 
-    // Mint or restore session id for this language.
-    const sessionKey = `mentor-session:${language}:${user.id}`;
-    if (!sessionIdRef.current) {
-      try {
-        const stored = localStorage.getItem(sessionKey);
-        if (stored) {
-          sessionIdRef.current = stored;
-        } else {
-          const sid = crypto.randomUUID();
-          localStorage.setItem(sessionKey, sid);
-          sessionIdRef.current = sid;
-        }
-      } catch {
-        sessionIdRef.current = crypto.randomUUID();
-      }
-    }
-
-    // Skip if last message is an empty assistant placeholder (mid-stream).
     const last = messages[messages.length - 1];
     if (last?.role === "assistant" && !last.content) return;
 
@@ -756,34 +788,21 @@ export default function Mentor() {
           const matches = (m.content || "").match(/\[INSIGHT\]/gi);
           return acc + (matches ? matches.length : 0);
         }, 0);
-
         const currentStage = (journeyRef.current?.reflection as any)?.current ?? null;
-
-        if (conversationIdRef.current) {
-          const { error } = await supabase
-            .from("mentor_conversations")
-            .update({
-              messages: messages as any,
-              insight_count: insightCount,
-              stage: currentStage,
-            })
-            .eq("id", conversationIdRef.current);
-          if (error) throw error;
-        } else {
-          const { data, error } = await supabase
-            .from("mentor_conversations")
-            .insert({
+        const { error } = await supabase
+          .from("mentor_conversations")
+          .upsert(
+            {
               user_id: user.id,
-              session_id: sessionIdRef.current,
+              language,
               messages: messages as any,
               insight_count: insightCount,
               stage: currentStage,
-            })
-            .select("id")
-            .single();
-          if (error) throw error;
-          conversationIdRef.current = data.id;
-        }
+              updated_at: new Date().toISOString(),
+            } as any,
+            { onConflict: "user_id,language" },
+          );
+        if (error) throw error;
         lastSavedRef.current = serialized;
       } catch (e) {
         console.warn("mentor conversation save failed", e);
@@ -792,13 +811,6 @@ export default function Mentor() {
 
     return () => clearTimeout(t);
   }, [messages, user?.id, language]);
-
-  // Reset DB session refs when language changes (each language is a separate session).
-  useEffect(() => {
-    sessionIdRef.current = null;
-    conversationIdRef.current = null;
-    lastSavedRef.current = "";
-  }, [language, user?.id]);
 
 
   // Track last-active timestamp (per user) for the returning-user welcome-back.
@@ -1490,6 +1502,54 @@ export default function Mentor() {
                           : "Listening ✦"}
                     </p>
                   </div>
+
+                  {!activeBotKey && messages.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 border-mentor-accent/40 text-mentor-accent hover:bg-mentor-accent hover:text-mentor-accent-foreground"
+                          title={isRTL ? "הורד או שתף את השיחה" : "Download or share conversation"}
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="hidden sm:inline">{isRTL ? "השיחה שלי" : "My chat"}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align={isRTL ? "start" : "end"}>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            try {
+                              await downloadConversationPdf(messages, {
+                                isRTL,
+                                displayName: user?.email ?? null,
+                              });
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(isRTL ? "ההורדה נכשלה" : "Download failed");
+                            }
+                          }}
+                        >
+                          <Download className="w-4 h-4 me-2" />
+                          {isRTL ? "הורד כ-PDF" : "Download PDF"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            try {
+                              await copyConversationText(messages, { isRTL });
+                              toast.success(isRTL ? "הועתק ללוח" : "Copied to clipboard");
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(isRTL ? "ההעתקה נכשלה" : "Copy failed");
+                            }
+                          }}
+                        >
+                          <CopyIcon className="w-4 h-4 me-2" />
+                          {isRTL ? "העתק כטקסט (לוואטסאפ/מייל)" : "Copy as text (WhatsApp/email)"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
 
                   {!activeBotKey && (
                     <Button
