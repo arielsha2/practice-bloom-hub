@@ -62,12 +62,6 @@ interface UsersTableProps {
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
   getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
-  getByokStatus: (userId: string) => {
-    status: "valid" | "error" | "missing";
-    hint: string | null;
-    lastValidatedAt: string | null;
-    lastError: string | null;
-  };
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
@@ -88,7 +82,7 @@ export function UsersTable({
   getUserCohorts,
   hasMentorAccess,
   getTrialStatus,
-  getByokStatus,
+  
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
@@ -201,7 +195,6 @@ export function UsersTable({
               <TableHead>{isRTL ? "קורסים" : "Courses"}</TableHead>
               <TableHead>{isRTL ? "תאריך הצטרפות" : "Joined"}</TableHead>
               <TableHead>{isRTL ? "התנסות חינם" : "Free Trial"}</TableHead>
-              <TableHead>{isRTL ? "מפתח AI" : "AI Key"}</TableHead>
               <TableHead>{isRTL ? "פעולות" : "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
