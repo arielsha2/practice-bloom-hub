@@ -188,7 +188,7 @@ export async function updateTherapistProgress(
   return { data, error };
 }
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; ts?: string };
 
 const BENEFITS_HE = [
   { icon: Target, title: "בהירות מקצועית", desc: "תדעו בדיוק מי המטופל שלכם וכיצד לדבר אליו." },
@@ -1044,7 +1044,7 @@ export default function Mentor() {
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
-    const userMsg: Msg = { role: "user", content: text.trim() };
+    const userMsg: Msg = { role: "user", content: text.trim(), ts: new Date().toISOString() };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
