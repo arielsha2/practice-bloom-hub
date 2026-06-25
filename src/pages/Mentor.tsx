@@ -56,7 +56,7 @@ import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
-import { ByokKeyDialog } from "@/components/mentor/ByokKeyDialog";
+// BYOK removed — paid users now run on the project's server-side GEMINI_API_KEY.
 import { PaymentPendingBanner } from "@/components/mentor/PaymentPendingBanner";
 
 function MentorTopBar() {
@@ -492,51 +492,13 @@ export default function Mentor() {
     summary: string;
     kickoff: string;
   } | null>(null);
-  const [byokDialogOpen, setByokDialogOpen] = useState(false);
-  const [byokReason, setByokReason] = useState<"missing" | "invalid" | "quota">("missing");
-  const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
-  const [byokAutoChecked, setByokAutoChecked] = useState(false);
+  // (BYOK dialog removed — server-side GEMINI_API_KEY is used for paid users.)
 
   // Debounce gating for mentor-analyze: run only if 3+ new messages since
   // last analysis OR 2+ minutes have passed. Prevents per-message LLM fan-out.
   const lastAnalyzedCountRef = useRef(0);
   const lastAnalyzedAtRef = useRef(0);
 
-  // Proactively open the BYOK setup dialog for paid (non-admin) users who
-  // have not yet saved a Gemini key, so they aren't confused on first load.
-  useEffect(() => {
-    if (byokAutoChecked) return;
-    if (userPlanInfo.loading) return;
-    if (!user) return;
-    if (userPlanInfo.plan !== "paid") return;
-    let cancelled = false;
-    (async () => {
-      // Admins keep using the platform gateway — no BYOK needed.
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      if (cancelled) return;
-      if (isAdmin) {
-        setByokAutoChecked(true);
-        return;
-      }
-      const { data: keyRow } = await supabase
-        .from("user_ai_keys")
-        .select("key_hint")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (!keyRow?.key_hint) {
-        setByokReason("missing");
-        setByokDialogOpen(true);
-      }
-      setByokAutoChecked(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, userPlanInfo.loading, userPlanInfo.plan, byokAutoChecked]);
 
   // Realtime: when an admin (or webhook) flips this user's plan, refresh
   // useUserPlan immediately so the banner disappears and BYOK auto-opens
@@ -550,7 +512,6 @@ export default function Mentor() {
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
-          setByokAutoChecked(false);
         },
       )
       .subscribe();
@@ -1091,19 +1052,7 @@ export default function Mentor() {
             return;
           }
         }
-        if (resp.status === 402) {
-          const body = await resp.json().catch(() => null);
-          const err = body?.error;
-          if (err === "BYOK_KEY_REQUIRED" || err === "BYOK_KEY_INVALID" || err === "BYOK_KEY_QUOTA") {
-            // Roll back the user message — we'll resend it after they save a key.
-            setMessages((prev) => prev.slice(0, -1));
-            setPendingByokSend(text.trim());
-            setByokReason(err === "BYOK_KEY_INVALID" ? "invalid" : err === "BYOK_KEY_QUOTA" ? "quota" : "missing");
-            setByokDialogOpen(true);
-            setIsLoading(false);
-            return;
-          }
-        }
+        // (BYOK error codes removed — paid users now use the server key.)
         if (resp.status === 429)
           toast.error(isRTL ? "יותר מדי בקשות, נסו שוב בעוד רגע" : "Rate limited, try again soon");
         else if (resp.status === 402) toast.error(isRTL ? "נגמרו הקרדיטים, פנו למנהל" : "Credits exhausted");
@@ -1837,31 +1786,7 @@ export default function Mentor() {
         <WebsiteComingSoonCard />
       </div>
       {user && <MentorNotebookPanel />}
-      <ByokKeyDialog
-        open={byokDialogOpen}
-        onOpenChange={(o) => {
-          setByokDialogOpen(o);
-          if (!o) setPendingByokSend(null);
-        }}
-        reason={byokReason}
-        onSaved={() => {
-          const pending = pendingByokSend;
-          setPendingByokSend(null);
-          if (pending) setTimeout(() => send(pending), 50);
-        }}
-      />
-      {userPlanInfo.plan === "paid" && user && (
-        <button
-          type="button"
-          onClick={() => {
-            setByokReason("missing");
-            setByokDialogOpen(true);
-          }}
-          className="fixed bottom-4 end-4 z-40 text-xs text-muted-foreground bg-background/90 backdrop-blur border border-border rounded-full px-3 py-1.5 shadow-sm hover:text-foreground hover:border-primary/40 transition"
-        >
-          {isRTL ? "ניהול מפתח AI" : "Manage AI key"}
-        </button>
-      )}
+      {/* BYOK dialog and "Manage AI key" button removed — server uses GEMINI_API_KEY. */}
       <Footer />
     </div>
   );

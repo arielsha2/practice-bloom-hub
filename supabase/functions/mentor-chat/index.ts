@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { decryptSecret } from "../_shared/byok-crypto.ts";
+// BYOK removed — paid users now run on the server-side GEMINI_API_KEY secret.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -501,42 +501,29 @@ LANGUAGE RULE (overrides everything else):
 
 
 
-    // ===== BYOK: paying (non-admin) users call Gemini with their own key =====
+    // ===== Server-side Gemini key for paying (non-admin) users =====
     // Admins and free/trial users continue on the platform's Lovable AI Gateway.
+    // Paid users call Google's Gemini OpenAI-compatible endpoint directly
+    // with the project's GEMINI_API_KEY secret — billed to the project owner.
     let endpointUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     let bearerKey = LOVABLE_API_KEY;
     let effectiveModel = modelToUse;
-    let usingByok = false;
+    let usingGemini = false;
 
-    if (user_plan === "paid" && !isAdminUser && authedUserId) {
-      try {
-        const supaUrl = Deno.env.get("SUPABASE_URL")!;
-        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const admin = createClient(supaUrl, serviceKey);
-        const { data: keyRow } = await admin
-          .from("user_ai_keys")
-          .select("encrypted_key")
-          .eq("user_id", authedUserId)
-          .maybeSingle();
-        if (!keyRow?.encrypted_key) {
-          return new Response(
-            JSON.stringify({ error: "BYOK_KEY_REQUIRED" }),
-            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-          );
-        }
-        const userKey = await decryptSecret(keyRow.encrypted_key);
-        endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-        bearerKey = userKey;
-        // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
-        effectiveModel = effectiveModel.replace(/^google\//, "");
-        usingByok = true;
-      } catch (e) {
-        console.error("BYOK setup failed:", e);
+    if (user_plan === "paid" && !isAdminUser) {
+      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+      if (!GEMINI_API_KEY) {
+        console.error("GEMINI_API_KEY not configured but a paid user reached mentor-chat");
         return new Response(
-          JSON.stringify({ error: "BYOK_KEY_REQUIRED" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+      endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+      bearerKey = GEMINI_API_KEY;
+      // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
+      effectiveModel = effectiveModel.replace(/^google\//, "");
+      usingGemini = true;
     }
 
     // Cap conversation history sent to the model at the last 20 messages.
@@ -563,30 +550,7 @@ LANGUAGE RULE (overrides everything else):
     if (!response.ok) {
       const status = response.status;
       const t = await response.text().catch(() => "");
-      console.error("Chat backend error:", status, t.slice(0, 300), "byok=", usingByok);
-
-      if (usingByok) {
-        // Mark error on the user's key row so the UI can surface a useful message.
-        try {
-          const supaUrl = Deno.env.get("SUPABASE_URL")!;
-          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-          const admin = createClient(supaUrl, serviceKey);
-          await admin
-            .from("user_ai_keys")
-            .update({ last_error: `${status}` })
-            .eq("user_id", authedUserId!);
-        } catch (_) { /* swallow */ }
-
-        const errCode = status === 401 || status === 403
-          ? "BYOK_KEY_INVALID"
-          : status === 429
-          ? "BYOK_KEY_QUOTA"
-          : "BYOK_KEY_INVALID";
-        return new Response(JSON.stringify({ error: errCode }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      console.error("Chat backend error:", status, t.slice(0, 300), "gemini=", usingGemini);
 
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {

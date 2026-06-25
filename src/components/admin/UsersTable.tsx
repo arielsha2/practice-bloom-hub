@@ -62,12 +62,6 @@ interface UsersTableProps {
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
   getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
-  getByokStatus: (userId: string) => {
-    status: "valid" | "error" | "missing";
-    hint: string | null;
-    lastValidatedAt: string | null;
-    lastError: string | null;
-  };
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
@@ -88,7 +82,7 @@ export function UsersTable({
   getUserCohorts,
   hasMentorAccess,
   getTrialStatus,
-  getByokStatus,
+  
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
@@ -201,14 +195,13 @@ export function UsersTable({
               <TableHead>{isRTL ? "קורסים" : "Courses"}</TableHead>
               <TableHead>{isRTL ? "תאריך הצטרפות" : "Joined"}</TableHead>
               <TableHead>{isRTL ? "התנסות חינם" : "Free Trial"}</TableHead>
-              <TableHead>{isRTL ? "מפתח AI" : "AI Key"}</TableHead>
               <TableHead>{isRTL ? "פעולות" : "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {isRTL ? "לא נמצאו משתמשים" : "No users found"}
                 </TableCell>
               </TableRow>
@@ -321,44 +314,6 @@ export function UsersTable({
                             <Gift className="w-4 h-4 me-1" />
                             {isRTL ? "אשר 7 ימי התנסות" : "Grant 8-day trial"}
                           </Button>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const byok = getByokStatus(user.id);
-                        const validatedLabel = byok.lastValidatedAt
-                          ? format(new Date(byok.lastValidatedAt), "dd/MM/yyyy HH:mm")
-                          : isRTL ? "לא אומת" : "Not validated";
-                        if (byok.status === "missing") {
-                          return (
-                            <Badge variant="secondary" className="gap-1">
-                              <KeyRound className="w-3 h-3" />
-                              {isRTL ? "ללא מפתח" : "No key"}
-                            </Badge>
-                          );
-                        }
-                        const icon = byok.status === "valid"
-                          ? <CheckCircle2 className="w-3 h-3" />
-                          : <AlertTriangle className="w-3 h-3" />;
-                        const cls = byok.status === "valid"
-                          ? "gap-1 border-green-600/40 text-green-700 dark:text-green-400"
-                          : "gap-1 border-destructive/50 text-destructive";
-                        const tip = byok.status === "valid"
-                          ? `${isRTL ? "אומת:" : "Validated:"} ${validatedLabel}`
-                          : `${isRTL ? "שגיאה:" : "Error:"} ${byok.lastError ?? "-"} · ${validatedLabel}`;
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className={cls}>
-                                  {icon}
-                                  <span dir="ltr">••••{byok.hint ?? "????"}</span>
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>{tip}</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
                         );
                       })()}
                     </TableCell>

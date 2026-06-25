@@ -6,15 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Loader2, Mail, KeyRound, Sparkles, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
 import { OtpResendButton } from "./OtpResendButton";
-import { ByokVisualGuide } from "./ByokVisualGuide";
-import { useByokClipboard, isLikelyGeminiKey } from "@/hooks/useByokClipboard";
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3;
 
 const normalizeEmail = (e: string) => e.trim().toLowerCase();
 
@@ -34,9 +32,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [byokKey, setByokKey] = useState("");
   const [busy, setBusy] = useState(false);
-  const [plan, setPlan] = useState<"free" | "paid">("free");
 
   const callFn = async (name: string, payload: unknown) => {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`;
@@ -125,7 +121,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
   };
 
 
-  // Step 3 — set password
+  // Step 3 — set password (final step; signup completes here for all plans)
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) return toast.error("הסיסמה חייבת להיות באורך של 8 תווים לפחות");
@@ -144,84 +140,11 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           .from("profiles")
           .update({ password_set: true })
           .eq("id", userId);
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("id", userId)
-          .maybeSingle();
-        const userPlan = (prof?.plan as "free" | "paid") ?? "free";
-        setPlan(userPlan);
-        trackEvent("signup_step_complete", { step: 3 });
-        if (userPlan === "paid") {
-          trackEvent("signup_step_4_shown", { plan: "paid" });
-          setStep(4);
-        } else {
-          trackEvent("signup_step_4_skipped", { plan: "free" });
-          trackEvent("signup_complete", { had_byok: false });
-          toast.success("ההרשמה הושלמה");
-          navigate("/mentor");
-        }
       }
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // Step 4 — BYOK
-  const byokLooksValid = isLikelyGeminiKey(byokKey);
-  const { arm: armByokClipboard } = useByokClipboard({
-    currentValue: byokKey,
-    onDetected: (k) => {
-      setByokKey(k);
-      toast.success("זיהינו מפתח ב-clipboard ✓");
-    },
-  });
-
-  const handleOpenAIStudio = async () => {
-    window.open("https://aistudio.google.com/apikey", "_blank", "noopener,noreferrer");
-    await armByokClipboard();
-  };
-
-  const handleSaveByok = async () => {
-    const trimmed = byokKey.trim();
-    if (!isLikelyGeminiKey(trimmed)) {
-      return toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
-    }
-    setBusy(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-user-ai-key`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token ?? ""}`,
-          },
-          body: JSON.stringify({ api_key: trimmed }),
-        },
-      );
-      const body = await resp.json().catch(() => ({}));
-      if (!resp.ok || !body?.ok) {
-        const err = body?.error;
-        if (err === "invalid_key") {
-          toast.error("ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.");
-        } else if (err === "quota_exhausted") {
-          toast.error("המכסה החודשית של המפתח נגמרה. צור/י מפתח חדש ב-Google AI Studio.");
-        } else if (err === "invalid_format") {
-          toast.error("המפתח קצר מדי. ודא/י שהעתקת את כולו.");
-        } else {
-          toast.error("לא הצלחנו לאמת את המפתח. נסה/י שוב.");
-        }
-        return;
-      }
-      trackEvent("signup_step_4_complete");
-      trackEvent("signup_complete", { had_byok: true });
-      toast.success("המפתח נשמר ✓");
+      trackEvent("signup_step_complete", { step: 3 });
+      trackEvent("signup_complete");
+      toast.success("ההרשמה הושלמה");
       navigate("/mentor");
-    } catch (e) {
-      console.error(e);
-      toast.error("שגיאת רשת");
     } finally {
       setBusy(false);
     }
@@ -235,7 +158,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   return (
     <div dir="rtl">
-      <SignupStepper current={step} showStep4={plan === "paid"} />
+      <SignupStepper current={step} showStep4={false} />
 
       {step === 1 && (
         <form onSubmit={handleSendOtp} className="space-y-4">
@@ -358,102 +281,9 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           </div>
           <Button type="submit" variant="cta" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <KeyRound className="w-4 h-4 me-2" />}
-            שמור/י והמשך/י
+            סיים/י הרשמה
           </Button>
         </form>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-5">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <KeyRound className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold">הצעד האחרון: חיבור מפתח ה-AI שלך</h3>
-            <p className="text-sm text-muted-foreground">
-              המנטור פועל על מפתח Gemini אישי וחינמי של Google. ייקח כ-2 דקות.
-            </p>
-          </div>
-
-          <ByokVisualGuide />
-
-          <div className="space-y-2">
-            <Button
-              type="button"
-              onClick={handleOpenAIStudio}
-              variant="cta"
-              size="xl"
-              className="w-full text-lg shadow-2xl ring-2 ring-accent/40 ring-offset-2 ring-offset-background"
-            >
-              <ExternalLink className="w-6 h-6 me-2" />
-              פתח/י Google AI Studio בלשונית חדשה
-            </Button>
-            <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2" dir="ltr">
-              <code className="text-xs flex-1 truncate select-all">https://aistudio.google.com/apikey</code>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText("https://aistudio.google.com/apikey");
-                    toast.success("הקישור הועתק");
-                  } catch {
-                    toast.error("ההעתקה נכשלה");
-                  }
-                }}
-                className="text-xs text-primary hover:underline whitespace-nowrap"
-              >
-                העתק/י
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground text-right">
-              אם הקישור לא נפתח — העתק/י את הכתובת והדבק/י בלשונית חדשה בדפדפן.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="byok-input" className="text-sm">הדבק/י כאן את מפתח ה-API שלך</Label>
-            <div className="relative">
-              <Input
-                id="byok-input"
-                type="text"
-                value={byokKey}
-                onChange={(e) => setByokKey(e.target.value)}
-                placeholder="הדבק/י כאן את מפתח ה-API שלך"
-                dir={byokKey ? "ltr" : "rtl"}
-                autoComplete="off"
-                spellCheck={false}
-                className={`h-12 text-base ${byokLooksValid ? "pe-10 border-green-500 focus-visible:ring-green-500" : "pe-10"}`}
-              />
-              {byokLooksValid && (
-                <CheckCircle2 className="w-5 h-5 text-green-600 absolute end-3 top-1/2 -translate-y-1/2" />
-              )}
-            </div>
-            {byokKey && !byokLooksValid && (
-              <p className="text-xs text-amber-600">
-                ודא/י שהעתקת את מפתח ה-API המלא מ-Google AI Studio ולא את ה-URL של הדף.
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-start gap-2 text-xs text-muted-foreground rounded-md bg-muted/40 p-2">
-            <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <p>המפתח שלך מוצפן ונשמר בשרת שלנו בלבד. אפשר להחליף או להסיר אותו בכל רגע.</p>
-          </div>
-
-          <Button
-            onClick={handleSaveByok}
-            disabled={busy || !byokLooksValid}
-            variant="cta"
-            size="lg"
-            className={`w-full ${byokLooksValid && !busy ? "animate-pulse" : ""}`}
-          >
-            {busy ? (
-              <><Loader2 className="w-4 h-4 me-2 animate-spin" />מאמת מול Google...</>
-            ) : (
-              <><Sparkles className="w-4 h-4 me-2" />שמור/י והשלמ/י הרשמה</>
-            )}
-          </Button>
-        </div>
       )}
     </div>
   );
