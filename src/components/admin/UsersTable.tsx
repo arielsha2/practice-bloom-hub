@@ -201,6 +201,7 @@ export function UsersTable({
               <TableHead>{isRTL ? "קורסים" : "Courses"}</TableHead>
               <TableHead>{isRTL ? "תאריך הצטרפות" : "Joined"}</TableHead>
               <TableHead>{isRTL ? "התנסות חינם" : "Free Trial"}</TableHead>
+              <TableHead>{isRTL ? "מפתח AI" : "AI Key"}</TableHead>
               <TableHead>{isRTL ? "פעולות" : "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
