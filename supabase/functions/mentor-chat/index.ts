@@ -279,6 +279,33 @@ serve(async (req) => {
       console.error("Trial enforcement: failed to load plan, defaulting to permissive:", e);
     }
 
+    // ===== Daily usage limit (soft @ 50, hard @ 80, Israel TZ UTC+3) =====
+    // Counts only user messages whose client-side timestamp falls on today
+    // (Israel time). Admins are exempt. The full conversation history is
+    // always preserved — the limit only gates new model calls.
+    let todayUserCount = 0;
+    let applySoftLimitSuffix = false;
+    if (!isAdminUser) {
+      const today = israelDateString(new Date());
+      todayUserCount = (messages as any[]).filter((m) =>
+        m?.role === "user" &&
+        typeof m?.ts === "string" &&
+        israelDateString(new Date(m.ts)) === today
+      ).length;
+      console.log("Daily limit check:", { user: authedUserId, todayUserCount, today });
+
+      if (todayUserCount > HARD_LIMIT) {
+        const reply = language === "en" ? HARD_LIMIT_REPLY_EN : HARD_LIMIT_REPLY_HE;
+        return buildFakeSseStream(reply, corsHeaders);
+      }
+      if (todayUserCount === SOFT_LIMIT) {
+        applySoftLimitSuffix = true;
+      }
+    }
+    // ===== End daily usage limit =====
+
+
+
 
     // If trial: classify the last 3 user messages — block anything that isn't pricing
     if (isTrial) {
