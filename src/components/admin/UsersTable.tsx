@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2, ArrowUpCircle } from "lucide-react";
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2, ArrowUpCircle, KeyRound, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
