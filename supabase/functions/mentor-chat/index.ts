@@ -437,6 +437,14 @@ LANGUAGE RULE (overrides everything else):
       }
     }
 
+    // Cap conversation history sent to the model at the last 20 messages.
+    // The full history is still persisted in mentor_conversations and shown
+    // in the UI — this only shrinks per-call input tokens.
+    const HISTORY_WINDOW = 20;
+    const trimmedMessages = Array.isArray(messages) && messages.length > HISTORY_WINDOW
+      ? messages.slice(-HISTORY_WINDOW)
+      : messages;
+
     const response = await fetch(endpointUrl, {
       method: "POST",
       headers: {
@@ -445,7 +453,7 @@ LANGUAGE RULE (overrides everything else):
       },
       body: JSON.stringify({
         model: effectiveModel,
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        messages: [{ role: "system", content: systemPrompt }, ...trimmedMessages],
         stream: true,
       }),
     });
