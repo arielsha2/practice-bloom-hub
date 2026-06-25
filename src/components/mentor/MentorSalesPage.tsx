@@ -27,7 +27,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
-import { MentorTestimonialsCarousel } from "@/components/mentor/MentorTestimonialsCarousel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
@@ -1013,9 +1012,6 @@ export function MentorSalesPage() {
           </motion.div>
         </Band>
       )}
-
-      {/* ============ TESTIMONIALS CAROUSEL (admin-managed) ============ */}
-      <MentorTestimonialsCarousel language={language === "en" ? "en" : "he"} />
 
       {/* ============ BETA + PRICING — CHARCOAL ============ */}
       <Band tone="charcoal">
