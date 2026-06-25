@@ -325,6 +325,44 @@ export function UsersTable({
                       })()}
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const byok = getByokStatus(user.id);
+                        const validatedLabel = byok.lastValidatedAt
+                          ? format(new Date(byok.lastValidatedAt), "dd/MM/yyyy HH:mm")
+                          : isRTL ? "לא אומת" : "Not validated";
+                        if (byok.status === "missing") {
+                          return (
+                            <Badge variant="secondary" className="gap-1">
+                              <KeyRound className="w-3 h-3" />
+                              {isRTL ? "ללא מפתח" : "No key"}
+                            </Badge>
+                          );
+                        }
+                        const icon = byok.status === "valid"
+                          ? <CheckCircle2 className="w-3 h-3" />
+                          : <AlertTriangle className="w-3 h-3" />;
+                        const cls = byok.status === "valid"
+                          ? "gap-1 border-green-600/40 text-green-700 dark:text-green-400"
+                          : "gap-1 border-destructive/50 text-destructive";
+                        const tip = byok.status === "valid"
+                          ? `${isRTL ? "אומת:" : "Validated:"} ${validatedLabel}`
+                          : `${isRTL ? "שגיאה:" : "Error:"} ${byok.lastError ?? "-"} · ${validatedLabel}`;
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className={cls}>
+                                  {icon}
+                                  <span dir="ltr">••••{byok.hint ?? "????"}</span>
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>{tip}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="sm" onClick={() => onAssignCourse(user)}>
                           <UserPlus className="w-4 h-4 me-1" />
