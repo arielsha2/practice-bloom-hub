@@ -1,41 +1,48 @@
+## שלוש משימות
 
-# בדיקת AI Gateway אחרי 4 התיקונים
+### 1. הסרת ההירו הישן + הוספת קישור התחברות
+- מסירים את ה־legacy hero בעברית מ-`src/pages/Mentor.tsx` (השורות שמרנדרות את הבלוק "המנטור לקליניקה / ליווי AI אישי / לרכישת המנטור"). הדף יתחיל ישירות ב-`MentorSalesPage`.
+- ב-`MentorSalesPage.tsx`, הוספת הקישור **"כבר רשומה? להתחברות"** (HE) / **"Already signed up? Log in"** (EN) **מתחת לכפתור ה־CTA** של ההירו (כמו בתמונה 3). כרגע הקישור באנגלית מופיע בפינה הימנית־עליונה — נעביר אותו למקום הזה גם באנגלית.
 
-בדקתי את ה-logs מהדקות האחרונות (25/06, 13:43–13:45 UTC) — תקופה שכוללת שיחת בדיקה חיה. התוצאות מאשרות שכל 4 התיקונים תופסים בייצור.
+### 2. קרוסלת עדויות + עורך עדויות באדמין
+**טבלת DB חדשה: `mentor_testimonials`**
+```
+id uuid pk
+language text ('he' | 'en')
+quote text
+author_name text nullable
+author_details text nullable
+image_url text nullable     -- אופציונלי, מ-Supabase Storage
+display_order int default 0
+is_published boolean default true
+created_at, updated_at timestamps
+```
+- RLS: קריאה לכולם (SELECT public), כתיבה רק לאדמינים (`has_role(auth.uid(),'admin')`).
+- GRANTs: `SELECT` ל-anon+authenticated; `ALL` ל-service_role+authenticated (RLS חוסם לא-אדמינים).
+- שימוש ב-bucket קיים `media` להעלאת תמונות.
 
-## מה ראיתי לכל הודעת משתמש
+**Seed**: זריעת העדויות הקיימות מ-`MentorSalesPage` (גם HE: שני הציטוטים שב-`COPY.he.proof.quotes`, וגם EN: 7 הציטוטים שב-`COPY.en.proof.cards`).
 
-דוגמה — הודעה אחת ב-13:43:26–13:43:34 (חלון של ~8 שניות, run אחד):
+**רכיב קרוסלה חדש**: `src/components/mentor/MentorTestimonialsCarousel.tsx`
+- שולף לפי שפה נוכחית, ממוין לפי `display_order`.
+- שימוש ב-`embla-carousel` הקיים בפרויקט (shadcn `carousel.tsx`).
+- מציג ציטוט גדול + שם/פרטים + תמונה עגולה אם קיימת. חיצי ניווט ונקודות.
+- מחליף את הסקשן הקיים "מהשטח / What therapists say" ב-`MentorSalesPage.tsx` (גם HE וגם EN).
 
-| קריאה | מודל | tokens in | tokens out | תפקיד |
-|---|---|---|---|---|
-| 1 | gemini-2.5-pro | 7,702 | 1,304 | mentor-chat (תשובת המנטור) |
-| 2 | gemini-2.5-flash | 1,803 | 36 | classifier (trial-topic) |
-| 3 | gemini-2.5-flash | 1,992 | 118 | mentor-analyze |
-| 4 | gemini-2.5-flash | 1,910 | 122 | mentor-score |
+**עמוד אדמין חדש**: `src/pages/MentorTestimonialsAdmin.tsx` בנתיב `/admin/testimonials`
+- כותרת **"עורך עדויות"**.
+- טאבים HE / EN.
+- טבלה עם: ציטוט, שם, סדר, פורסם, תמונה. כפתורי הוספה/עריכה/מחיקה/החלפת סדר.
+- דיאלוג עריכה: textarea לציטוט, inputים לשם ופרטים, העלאת תמונה ל-Storage, switch לפרסום, מספר סדר.
+- מקושר מ-`UsersAdmin` או מ-side-nav של האדמין שכבר קיים (אוסיף קישור איפה שהקישורים האחרים יושבים).
 
-**סה"כ: 4 קריאות, ~13,400 input tokens להודעה.**
+### 3. עדכוני אנגלית
+- אותם שינויים בדיוק לחלק האנגלי: קישור login יעבור מהפינה אל מתחת ל-CTA, הקרוסלה תשמש גם באנגלית עם הציטוטים הקיימים (אפשר להוסיף תמונות מאוחר יותר דרך האדמין).
 
-לשם השוואה למצב לפני התיקונים:
-- מ-**~15 קריאות** להודעה → ל-**4 קריאות** (-73%)
-- מ-**~40,000 input tokens** לקריאה → ל-**~7,700 לקריאה הגדולה (pro)** וכ-**~1,900 לכל flash** (-80% ב-pro, -95% ב-flash)
-- **mentor-score לא נקרא יותר מהשרת** — רק פעם אחת מהקליינט ✅
+### Technical notes
+- Carousel UI: shadcn `Carousel` (embla).
+- Image uploads: Supabase Storage bucket `media` (קיים).
+- בקרוסלה אם אין שורות ב-DB → fallback לציטוטים שב-COPY כדי לא להציג ריק.
+- לא נוגעים בלוגיקת ה-mentor-chat / paywall / trial.
 
-## אישור לכל אחד מהתיקונים
-
-1. **תיקון 1 (הסרת קריאה כפולה ל-score)** — אישור: רק קריאת score אחת לכל הודעה (לפני: 2). ✅
-2. **תיקון 2 (debounce של analyze)** — אישור: בהודעה ב-13:44:37 רואים רק flash אחד של 1,772/40 (classifier בלבד), בלי analyze/score — כלומר ה-gate חסם את ההודעה הזו (פחות מ-3 הודעות מאז הניתוח הקודם). ✅
-3. **תיקון 3 (חלון 20 הודעות ל-chat)** — אישור: input של mentor-chat ירד מ-~40k ל-~7.7k. ✅
-4. **תיקון 4 (דחיסת journeyBlock)** — מובלע בתוך תיקון 3, ה-7.7k משקפים system prompt + 20 הודעות אחרונות בלי JSON ענק של niche/self-presentation. ✅
-
-## עלות לכל הודעה (כיום)
-
-~0.10 credits להודעה (בעיקר ה-pro). לפני התיקונים: ~0.65–1.0 credits להודעה לפי דפוס ה-burst שראינו מ-`dr.ariel.shapira`. **חיסכון משוער: 85%.**
-
-## המלצה
-
-הסיום של הוראה 1 אושר. מוכן להמשיך להוראה 2 כשתשלח אותה — או, אם תרצה, אני יכול לחקור את שתי נקודות הליטוש שנותרו:
-- ה-classifier (flash 1,800 in / 36 out) רץ על *כל* הודעה — אפשר להוסיף לו debounce/cache כי הוא מוסיף ~0.0025 credits להודעה לחינם.
-- ה-system prompt של mentor-chat עדיין יושב על ~6,000 tokens לפני ההיסטוריה — מקום נוסף לקיצוץ אם נרצה לדחוס עוד.
-
-מה הלאה?
+מאשר ואני יוצא לדרך?
