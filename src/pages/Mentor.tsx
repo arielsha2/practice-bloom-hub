@@ -499,7 +499,6 @@ export default function Mentor() {
   const lastAnalyzedCountRef = useRef(0);
   const lastAnalyzedAtRef = useRef(0);
 
-
   // Realtime: when an admin (or webhook) flips this user's plan, refresh
   // useUserPlan immediately so the banner disappears and BYOK auto-opens
   // without requiring a page reload.
@@ -533,7 +532,6 @@ export default function Mentor() {
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
 
-
   const BOT_KEYS = [
     "connection-bridge",
     "niche-finder",
@@ -549,15 +547,15 @@ export default function Mentor() {
   // 12 times and 0/12 reached the bot. Always normalize before lookup.
   const HANDOFF_ALIASES: Record<string, string> = {
     "bridge-the-gap": "connection-bridge",
-    "bridge": "connection-bridge",
+    bridge: "connection-bridge",
     "conversion-call": "connection-bridge",
-    "conversion": "connection-bridge",
-    "niche": "niche-finder",
-    "pricing": "pricing-calculator",
+    conversion: "connection-bridge",
+    niche: "niche-finder",
+    pricing: "pricing-calculator",
     "self-presentation-tool": "self-presentation",
-    "presentation": "self-presentation",
-    "contacts": "contact-finder",
-    "network": "contact-finder",
+    presentation: "self-presentation",
+    contacts: "contact-finder",
+    network: "contact-finder",
   };
 
   const normalizeBotKey = (raw: string | null | undefined): string | null => {
@@ -708,16 +706,12 @@ export default function Mentor() {
           .eq("language", language)
           .maybeSingle();
         if (cancelled) return;
-        const remote = Array.isArray((data as any)?.messages)
-          ? ((data as any).messages as Msg[])
-          : [];
+        const remote = Array.isArray((data as any)?.messages) ? ((data as any).messages as Msg[]) : [];
         // Prefer remote if it is longer (cross-device continuity); otherwise
         // keep whatever localStorage already populated (avoids losing an
         // in-progress reply that hasn't been flushed yet).
         setMessages((prev) => (remote.length > prev.length ? remote : prev));
-        lastSavedRef.current = JSON.stringify(
-          remote.length > 0 ? remote : [],
-        );
+        lastSavedRef.current = JSON.stringify(remote.length > 0 ? remote : []);
       } catch (e) {
         console.warn("mentor conversation load failed", e);
       } finally {
@@ -755,19 +749,17 @@ export default function Mentor() {
           return acc + (matches ? matches.length : 0);
         }, 0);
         const currentStage = (journeyRef.current?.reflection as any)?.current ?? null;
-        const { error } = await supabase
-          .from("mentor_conversations")
-          .upsert(
-            {
-              user_id: user.id,
-              language,
-              messages: messages as any,
-              insight_count: insightCount,
-              stage: currentStage,
-              updated_at: new Date().toISOString(),
-            } as any,
-            { onConflict: "user_id,language" },
-          );
+        const { error } = await supabase.from("mentor_conversations").upsert(
+          {
+            user_id: user.id,
+            language,
+            messages: messages as any,
+            insight_count: insightCount,
+            stage: currentStage,
+            updated_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "user_id,language" },
+        );
         if (error) throw error;
         lastSavedRef.current = serialized;
       } catch (e) {
@@ -777,7 +769,6 @@ export default function Mentor() {
 
     return () => clearTimeout(t);
   }, [messages, user?.id, language]);
-
 
   // Track last-active timestamp (per user) for the returning-user welcome-back.
   useEffect(() => {
@@ -949,7 +940,9 @@ export default function Mentor() {
             tool_summaries: (j.reflection as any)?.tool_summaries ?? null,
           }
         : null;
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
@@ -1024,7 +1017,9 @@ export default function Mentor() {
             checkin_stage: (j as any).checkin_stage ?? "",
           }
         : null;
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
@@ -1043,11 +1038,7 @@ export default function Mentor() {
             // Keep the user message; append an assistant bubble with the explanation.
             setMessages((prev) => [...prev, { role: "assistant", content: explainer }]);
             setTrialRestricted(true);
-            toast.info(
-              isRTL
-                ? "בתקופת ההתנסות המנטור מתמקד בתמחור"
-                : "During trial the mentor focuses on pricing",
-            );
+            toast.info(isRTL ? "בתקופת ההתנסות המנטור מתמקד בתמחור" : "During trial the mentor focuses on pricing");
             setIsLoading(false);
             return;
           }
@@ -1132,9 +1123,8 @@ export default function Mentor() {
             lastAnalyzedAtRef.current = Date.now();
 
             const ANALYZE_WINDOW = 20;
-            const trimmedHistory = fullHistory.length > ANALYZE_WINDOW
-              ? fullHistory.slice(-ANALYZE_WINDOW)
-              : fullHistory;
+            const trimmedHistory =
+              fullHistory.length > ANALYZE_WINDOW ? fullHistory.slice(-ANALYZE_WINDOW) : fullHistory;
 
             const {
               data: { session },
@@ -1225,7 +1215,6 @@ export default function Mentor() {
     }
   };
 
-
   const showWelcome = messages.length === 0;
 
   const scrollToFullMap = () => {
@@ -1274,7 +1263,7 @@ export default function Mentor() {
                     fontSize: "clamp(0.95rem, 1.15vw, 1.05rem)",
                   }}
                 >
-                  סופרוויז׳ן רגיש לעסק, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים.
+                  לווי למטפלים, לקליניקה מלאה, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים.
                 </p>
 
                 <a
@@ -1322,10 +1311,16 @@ export default function Mentor() {
       className="min-h-screen flex flex-col bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]"
     >
       <SEOHead
-        title={isRTL ? "המנטור | ליווי AI אישי למטפלים — TherapyKeys" : "The Mentor | AI Guidance for Therapists — TherapyKeys"}
-        description={isRTL
-          ? 'מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
-          : 'An AI mentor based on Dr. Ariel Shapira\u2019s method. Personal guidance for therapists on niche, pricing, marketing and building a private practice.'}
+        title={
+          isRTL
+            ? "המנטור | ליווי AI אישי למטפלים — TherapyKeys"
+            : "The Mentor | AI Guidance for Therapists — TherapyKeys"
+        }
+        description={
+          isRTL
+            ? 'מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
+            : "An AI mentor based on Dr. Ariel Shapira\u2019s method. Personal guidance for therapists on niche, pricing, marketing and building a private practice."
+        }
         canonicalUrl={isRTL ? "/mentor" : "/en/mentor"}
       />
       <MentorTopBar />
