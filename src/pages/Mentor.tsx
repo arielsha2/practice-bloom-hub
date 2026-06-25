@@ -1248,23 +1248,12 @@ export default function Mentor() {
                   המנטור לקליניקה
                 </div>
 
-                <h2
-                  className="font-display tracking-tight mb-5 leading-[1.15]"
-                  style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)" }}
-                >
-                  ליווי AI אישי לבניית קליניקה מלאה
-                </h2>
-
-                <p
-                  className="mx-auto mb-8 leading-relaxed"
-                  style={{
-                    color: "hsl(var(--background) / 0.78)",
-                    maxWidth: "34rem",
-                    fontSize: "clamp(0.95rem, 1.15vw, 1.05rem)",
-                  }}
+                <h1
+                  className="font-display tracking-tight mb-8 leading-[1.15] mx-auto"
+                  style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)", maxWidth: "36rem" }}
                 >
                   לווי למטפלים, לקליניקה מלאה, זמין בכל זמן. גישה לתמיד, כולל כל השיפורים העתידיים.
-                </p>
+                </h1>
 
                 <a
                   href="https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab"
