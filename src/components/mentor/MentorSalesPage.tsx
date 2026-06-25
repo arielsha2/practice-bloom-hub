@@ -189,7 +189,7 @@ const COPY: any = {
       futurePriceValue: "₪1,800",
       currentPrice: "₪750",
       priceNote: "תשלום חד פעמי · כולל מע״מ · למייסדים - המצטרפים בגרסת הבטא",
-      bullets: ["גישה מלאה ", "כולל כל השיפורים העתידיים", "בעלות של פחות משני מפגשי הדרכה קלינית"],
+      bullets: ["גישה מלאה ", "כולל כל השיפורים העתידיים", "בעלות של פחות משני מפגשי הדרכה קלינית","],
       cta: "אני רוצה את המנטור  ",
       secure: "תשלום מאובטח דרך משולם",
     },
@@ -203,7 +203,7 @@ const COPY: any = {
     badge: "The Clinic Mentor",
     hero: {
       titleLine1: "You became a therapist to help people.",
-      titleLine2: "Let's make sure enough people can find you.",
+      titleLine2: "Let's make sure enough people find you.",
       body: "An AI personal guide that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
       cta: "✦  Start building my full practice  →",
       ctaNote: "One-time payment · full access · No subscription · special rate for Beta version",
