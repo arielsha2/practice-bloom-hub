@@ -497,6 +497,11 @@ export default function Mentor() {
   const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
   const [byokAutoChecked, setByokAutoChecked] = useState(false);
 
+  // Debounce gating for mentor-analyze: run only if 3+ new messages since
+  // last analysis OR 2+ minutes have passed. Prevents per-message LLM fan-out.
+  const lastAnalyzedCountRef = useRef(0);
+  const lastAnalyzedAtRef = useRef(0);
+
   // Proactively open the BYOK setup dialog for paid (non-admin) users who
   // have not yet saved a Gemini key, so they aren't confused on first load.
   useEffect(() => {
