@@ -100,7 +100,7 @@ export default function MentorTestimonialsAdmin() {
       .from("mentor_testimonials")
       .insert({
         language: lang,
-        kind: "quote",
+        kind: "text",
         body_text: "",
         author: "",
         image_url: null,
