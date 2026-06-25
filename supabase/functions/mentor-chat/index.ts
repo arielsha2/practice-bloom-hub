@@ -16,6 +16,43 @@ const TRIAL_CLASSIFIER_SHORT_WORD_LIMIT = 50;
 const trialClassifierCache = new Map<string, { intent: "pricing" | "other"; count: number }>();
 const wordCount = (s: string) => (s.trim().match(/\S+/g) ?? []).length;
 
+// ===== Daily soft/hard usage limits (Israel timezone UTC+3) =====
+const SOFT_LIMIT = 50;
+const HARD_LIMIT = 80;
+// Compute today's date in Israel TZ (UTC+3, fixed per spec) as YYYY-MM-DD.
+const israelDateString = (d: Date) =>
+  new Date(d.getTime() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+const HARD_LIMIT_REPLY_HE =
+  "דיברנו הרבה היום — וזה טוב. כדי שתוכל לעבד ולהתקדם, המנטורית תנוח עד מחר. חזור/י מחר עם מה שצץ מהשיחה של היום.";
+const HARD_LIMIT_REPLY_EN =
+  "We've talked a lot today — and that's good. To let you process and move forward, the mentor will rest until tomorrow. Come back tomorrow with whatever surfaces from today's conversation.";
+const SOFT_LIMIT_SUFFIX_HE =
+  "\n\nבסוף תשובתך להודעה הנוכחית, הוסף פסקה קצרה בסגנון שלך שמזהה שאנחנו בשיחה עמוקה ומציעה לעבור לפעולה. לדוגמה: 'שמתי לב שאנחנו כבר זמן מה בשיחה משמעותית— זה מצוין. אני מרגישה שהגיע הזמן לקחת משהו קטן ממה שדיברנו ולנסות אותו בפועל, לפני שממשיכים \"לחשוב על\". חלק מהשינוי קשור לאומץ לעבור לעשייה. אז מה דבר אחד שאפשר ליישם עוד היום?' המשך לענות לשאלות הבאות כרגיל.";
+const SOFT_LIMIT_SUFFIX_EN =
+  "\n\nAt the end of your reply to the current message, add a short paragraph in your own voice that notices we've been in a meaningful conversation for a while and gently invites a move into action. For example: 'I notice we've been in a meaningful conversation for a while now — that's great. I feel it's time to take one small thing from what we talked about and actually try it, before we keep \"thinking about\" things. Part of change is the courage to step into action. So — what's one thing you can apply today?' Keep answering follow-up questions normally.";
+
+// Build a single-chunk SSE response mimicking the OpenAI/Gemini stream
+// shape the client parser expects, so the hard-limit reply renders just
+// like a real assistant message — no client changes needed.
+const buildFakeSseStream = (text: string, corsHeaders: Record<string, string>) => {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(
+        encoder.encode(
+          `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`,
+        ),
+      );
+      controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+  });
+};
+
+
 
 const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצועית של המטפל/ת, מלווה פסיכותרפיסטים בבניית קליניקה פרטית רווחית. את חמה, אמפתית, מקצועית וחדה אסטרטגית, ומובילה את המטפל/ת בקצב שלו/ה — לא בקצב שלך. את מתנסחת תמיד **בלשון נקבה מדברת** ("אני שמעתי", "אני מציעה", "בואי נראה" / "בוא נראה" לפי המגדר של הפונה/ת — אך לעולם לא בלשון זכר על עצמך).
 
