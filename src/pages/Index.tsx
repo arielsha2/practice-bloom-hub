@@ -25,8 +25,8 @@ const Index = () => {
     url: "https://therapykeys.co.il",
     sameAs: ["https://il.linkedin.com/in/dr-ariel-shapira-phd-00703ba8"],
     knowsAbout: [
+      "ליווי מטפלים לקליניקה פרטית",
       "ייעוץ עסקי למטפלים",
-      "שיווק קליניקה פרטית",
       "פסיכולוגיה קלינית",
       "בניית עסק למטפלים",
       "therapist private practice consulting",
@@ -53,12 +53,16 @@ const Index = () => {
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen">
       <SEOHead
-        title={isRTL
-          ? 'ד"ר אריאל שפירא | פסיכולוג קליני ומלווה מטפלים לקליניקה יציבה'
-          : "Dr. Ariel Shapira | Clinical Psychologist Guiding Therapists to a Stable Practice"}
-        description={isRTL
-          ? 'ד"ר אריאל שפירא, פסיכולוג קליני, מסייע למטפלים בישראל לבנות קליניקה פרטית מצליחה בשיטת "על שפת הקליניקה", ללא פשרות על הזהות המקצועית.'
-          : "Dr. Ariel Shapira, clinical psychologist, helps therapists build a thriving private practice without compromising their professional identity."}
+        title={
+          isRTL
+            ? 'ד"ר אריאל שפירא | פסיכולוג קליני ומלווה מטפלים לקליניקה יציבה'
+            : "Dr. Ariel Shapira | Clinical Psychologist Guiding Therapists to a Stable Practice"
+        }
+        description={
+          isRTL
+            ? 'ד"ר אריאל שפירא, פסיכולוג קליני, מסייע למטפלים בישראל לבנות קליניקה פרטית מצליחה בשיטת "על שפת הקליניקה", ללא פשרות על הזהות המקצועית.'
+            : "Dr. Ariel Shapira, clinical psychologist, helps therapists build a thriving private practice without compromising their professional identity."
+        }
         canonicalUrl={isRTL ? "/" : "/en"}
         jsonLd={[personLd, serviceLd]}
       />
