@@ -429,7 +429,7 @@ const COPY: any = {
     beta: {
       eyebrow: "Beta Version",
       title: "For a limited time - a Beta version in a special price",
-      exclusive: "Exclusive to founders",
+      exclusive: "Exclusive to this Beta version",
       seats: "For a limited time",
       p1: "In exchange for the special price — we ask for your honest feedback.",
       p2: "What works, what doesn't, what's missing. It matters to us that the Mentor delivers the best possible support for therapists like you.",
