@@ -1,77 +1,39 @@
+## מטרה
 
-## מה משתנה
+להוסיף לטבלת המשתמשים באדמין עמודה שמראה לכל משתמש האם הזין מפתח Gemini תקין, כולל ה-4 ספרות האחרונות ותאריך האימות האחרון.
 
-### 1. איחוד היסטוריה — שיחה אחת רציפה לכל משתמש
+## איך זה יעבוד
 
-**המצב היום:** כל "סשן" (לפי `session_id` שנשמר ב-localStorage) יוצר שורה נפרדת ב-`mentor_conversations`. דפדפן חדש / מכשיר חדש / ניקוי קאש = שיחה חדשה מההתחלה, וההיסטוריה הישנה לא נראית בצ׳אט.
+לכל משתמש בטבלה תוצג תווית אחת מתוך שלוש:
+- **✓ תקין · ••••XXXX** (ירוק) — קיים מפתח, `last_error` ריק, ויש `last_validated_at`.
+- **⚠ שגיאה · ••••XXXX** (אדום) — קיים מפתח אבל `last_error` לא ריק (לרוב invalid/quota).
+- **— ללא מפתח** (אפור) — אין שורה ב-`user_ai_keys`.
 
-**אחרי השינוי:** שיחה אחת רציפה לכל `(user_id, language)`. גם בכניסה ממכשיר אחר — אותו רצף, ממשיך בדיוק מאיפה שהפסיק.
+ב-tooltip יוצג תאריך האימות האחרון והסיבה לשגיאה אם יש.
 
-**צעדים:**
+## שינויים טכניים
 
-- **Migration:**
-  - הוספת עמודה `language text default 'he'` ל-`mentor_conversations` (אם לא קיימת — לבדוק; כרגע אין הפרדה לפי שפה ב-DB).
-  - איחוד היסטוריה קיימת: לכל `(user_id, language)` עם מספר שורות — לאחד את כל מערכי `messages` לפי `created_at`, להוריד הודעות עוקבות זהות (dedup לפי role+content), לשמור בשורה אחת (המוקדמת) ולמחוק את היתר. סכימת `insight_count` מחדש מהמערך המאוחד.
-  - הוספת `UNIQUE (user_id, language)` אחרי האיחוד.
+1. **RLS / קריאה**: כרגע `user_ai_keys` חשוף רק לבעלים. נוסיף policy `SELECT` לאדמינים בלבד דרך `has_role(auth.uid(), 'admin')`. לא נחשוף את `encrypted_key` ל-UI — נבחר רק `user_id, key_hint, last_validated_at, last_error, updated_at`.
 
-- **קוד (`src/pages/Mentor.tsx`):**
-  - בטעינה ראשונית: לפני קריאת localStorage — לטעון את השיחה המאוחדת מ-DB לפי `(user.id, language)`. אם קיימת ב-DB → להשתמש בה כמקור האמת ולסנכרן ל-localStorage. אם רק localStorage קיים → להעלות ל-DB.
-  - הסרת לוגיקת `session_id` הנפרד למסלול השמירה. שמירה תהיה upsert על `(user_id, language)` במקום insert חדש.
-  - מחיקת המפתח `mentor-session:${language}:${user.id}` מ-localStorage (לא רלוונטי יותר).
+2. **Hook** (`src/hooks/useUsersManagement.ts`):
+   - query חדש `admin-user-ai-keys` שמושך את העמודות לעיל לכל המשתמשים.
+   - פונקציה `getByokStatus(userId)` שמחזירה `{ status: 'valid'|'error'|'missing', hint, lastValidatedAt, lastError }`.
+   - לייצא ב-return.
 
-### 2. הורדת PDF + שיתוף ידני
+3. **UI** (`src/components/admin/UsersTable.tsx`):
+   - עמודה חדשה "מפתח AI" / "AI Key" בין "התנסות חינם" ל-"פעולות".
+   - Badge עם אייקון (`CheckCircle2` / `AlertTriangle` / `KeyRound`) + ה-hint + tooltip.
+   - לא נוסיף עריכה — תצוגה בלבד.
 
-- **כפתור חדש בכותרת הצ׳אט:** "הורד שיחה" (אייקון Download) שפותח תפריט קטן: **הורד PDF** / **העתק טקסט**.
-- **PDF:** יצירת PDF בצד-לקוח עם `html2pdf.js` (html2canvas + jsPDF). הסיבה: רנדור DOM ישיר עם תמיכה מלאה ב-RTL ובעברית (Heebo כבר טעון בעמוד), בלי צורך להטמיע פונט ב-jsPDF.
-  - שם קובץ: `therapykeys-mentor-{YYYY-MM-DD}.pdf`.
-  - תוכן: כותרת ("שיחה עם המנטור — {שם המשתמש} — {תאריך}"), ולאחריה בועות הודעה (User / Mentor) עם תאריך/שעה. ללא תגי `[HANDOFF:...]` ו-`[INSIGHT]` (סינון לפני הרנדור).
-  - עיצוב: רקע לבן, צבעי המותג (Deep Purple לכותרות, Coral להדגשות), פונט Heebo, מרווחי הדפסה.
-- **שיתוף ידני:** כפתור "העתק טקסט" שמעתיק לפלאוורד את כל השיחה בפורמט פשוט (`**את/ה:** ...\n\n**המנטור:** ...`) כדי שהמשתמש יוכל להדביק בוואטסאפ/מייל.
-
-### 3. UX קטן
-
-- ב-`ResetMentorButton` להוסיף אזהרה ברורה: "פעולה זו תמחק את כל השיחה הצבורה ולא ניתן לשחזר. רוצה להוריד אותה לפני?" עם קישור ישיר לכפתור ההורדה.
-
----
-
-## פירוט טכני
-
-### Schema
-
-```sql
-ALTER TABLE public.mentor_conversations
-  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'he';
-
--- מיגרציה חד-פעמית: איחוד שורות קיימות (פונקציה PL/pgSQL שעוברת על
--- כל (user_id, language), מאחדת messages JSONB, מוחקת כפילויות עוקבות,
--- שומרת בשורה הראשונה ומוחקת את היתר).
-
-ALTER TABLE public.mentor_conversations
-  ADD CONSTRAINT mentor_conversations_user_language_unique
-  UNIQUE (user_id, language);
-```
-
-### Save loop ב-Mentor.tsx
-
-החלפת ה-insert/update הקיים ב:
-
-```text
-upsert({ user_id, language, messages, insight_count, stage },
-       { onConflict: 'user_id,language' })
-```
-
-### Load on mount
-
-לפני `useState(initial)` של messages — שאילתה חד-פעמית: `select messages from mentor_conversations where user_id=? and language=? limit 1`. אם ה-DB מכיל יותר הודעות מ-localStorage → לשטוף את localStorage עם תוכן ה-DB.
-
-### תלות חדשה
-
-`bun add html2pdf.js` (~150KB gzipped, lazy-loaded רק כשלוחצים על "הורד").
-
----
+4. **Migration** — policy אחת בלבד:
+   ```sql
+   CREATE POLICY "Admins can view all AI key metadata"
+     ON public.user_ai_keys FOR SELECT TO authenticated
+     USING (public.has_role(auth.uid(), 'admin'));
+   ```
 
 ## מה לא נכלל
 
-- ייצוא לשיתוף ציבורי בקישור (לפי הבחירה שלך — רק הורדה ידנית).
-- שיחות נפרדות מרובות (threads) — נשארת שיחה אחת ארוכה לכל משפה.
-- שינוי בשמירת השיחות של הבוטים (`bot_conversations`) — מחוץ לסקופ.
+- אין שינוי באופן שבו המנטור עצמו משתמש במפתח.
+- אין כפתור לאדמין למחוק/להחליף מפתח של משתמש (אפשר להוסיף בהמשך אם תרצה).
+- ה-`encrypted_key` נשאר חסום לחלוטין — האדמין רואה רק את ה-4 ספרות האחרונות.
