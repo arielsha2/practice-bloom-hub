@@ -1044,7 +1044,7 @@ export default function Mentor() {
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
-    const userMsg: Msg = { role: "user", content: text.trim() };
+    const userMsg: Msg = { role: "user", content: text.trim(), ts: new Date().toISOString() };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
