@@ -743,6 +743,7 @@ export type Database = {
         Row: {
           id: string
           insight_count: number
+          language: string
           messages: Json
           session_id: string
           stage: string | null
@@ -753,6 +754,7 @@ export type Database = {
         Insert: {
           id?: string
           insight_count?: number
+          language?: string
           messages?: Json
           session_id?: string
           stage?: string | null
@@ -763,6 +765,7 @@ export type Database = {
         Update: {
           id?: string
           insight_count?: number
+          language?: string
           messages?: Json
           session_id?: string
           stage?: string | null
