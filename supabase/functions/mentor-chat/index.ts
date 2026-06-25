@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ===== Trial classifier cache (per edge-function instance) =====
+// Goal: avoid re-classifying every trial message. After we classify a user's
+// message, the next short (<50 words) follow-ups reuse the same intent for up
+// to 5 turns total. A long message or hitting 5 forces a fresh classification.
+const TRIAL_CLASSIFIER_MAX_REUSE = 5;
+const TRIAL_CLASSIFIER_SHORT_WORD_LIMIT = 50;
+const trialClassifierCache = new Map<string, { intent: "pricing" | "other"; count: number }>();
+const wordCount = (s: string) => (s.trim().match(/\S+/g) ?? []).length;
+
+
 const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצועית של המטפל/ת, מלווה פסיכותרפיסטים בבניית קליניקה פרטית רווחית. את חמה, אמפתית, מקצועית וחדה אסטרטגית, ומובילה את המטפל/ת בקצב שלו/ה — לא בקצב שלך. את מתנסחת תמיד **בלשון נקבה מדברת** ("אני שמעתי", "אני מציעה", "בואי נראה" / "בוא נראה" לפי המגדר של הפונה/ת — אך לעולם לא בלשון זכר על עצמך).
 
 ⚠️ שפה: ענה אך ורק בעברית. אל תכתוב מילה אחת באנגלית (חוץ מקישורים).
@@ -247,47 +257,70 @@ serve(async (req) => {
         // hiccups.
         let intent: "pricing" | "other" = "other";
         let classifierOk = false;
-        try {
-          const classifierResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "אתה מסווג כוונות מחמיר. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות:\n" +
-                    "- 'pricing': **רק אם ההודעה האחרונה עוסקת ישירות וברורות** במחיר/תעריף/גביה/הנחות/ערך כספי/מחסום פנימי סביב כסף.\n" +
-                    "- 'other': כל השאר — נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל, אבחון כללי של הקליניקה, התחבטויות מקצועיות, הכרות ראשונית.\n" +
-                    "במקרה של ספק — החזר 'other'. אם ההודעה היא רק הכרות/פתיחה בלי הזכרת מחיר — 'other'.\n" +
-                    "החזר רק את המילה pricing או other — בלי הסבר.",
-                },
-                { role: "user", content: recentUserMessages },
-              ],
-              max_tokens: 5,
-              temperature: 0,
-            }),
-          });
-          if (classifierResp.ok) {
-            classifierOk = true;
-            const data = await classifierResp.json();
-            const raw = (data?.choices?.[0]?.message?.content ?? "").toLowerCase().trim();
-            // Strict match: only flip to 'pricing' on an unambiguous answer.
-            if (raw === "pricing" || (raw.includes("pricing") && !raw.includes("other"))) {
-              intent = "pricing";
+        let usedCache = false;
+
+        // Check cache: if last user message is short and we have a recent
+        // classification for this user, reuse it (up to MAX_REUSE turns).
+        const lastUserMsg = (messages as any[])
+          .filter((m) => m?.role === "user" && typeof m?.content === "string")
+          .slice(-1)[0]?.content ?? "";
+        const isShort = wordCount(lastUserMsg) < TRIAL_CLASSIFIER_SHORT_WORD_LIMIT;
+        const cacheKey = authedUserId ?? "anon";
+        const cached = trialClassifierCache.get(cacheKey);
+
+        if (cached && isShort && cached.count < TRIAL_CLASSIFIER_MAX_REUSE) {
+          intent = cached.intent;
+          classifierOk = true;
+          usedCache = true;
+          trialClassifierCache.set(cacheKey, { intent, count: cached.count + 1 });
+        } else {
+          try {
+            const classifierResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash-lite",
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "אתה מסווג כוונות מחמיר. סווג את ההודעות הבאות של מטפל למנטור עסקי לאחת משתי קטגוריות:\n" +
+                      "- 'pricing': **רק אם ההודעה האחרונה עוסקת ישירות וברורות** במחיר/תעריף/גביה/הנחות/ערך כספי/מחסום פנימי סביב כסף.\n" +
+                      "- 'other': כל השאר — נישה, קהל יעד, הפניות, רשת קשרים, שיווק, פרזנטציה, שיחת היכרות עם מטופלים, אתר, סושיאל, אבחון כללי של הקליניקה, התחבטויות מקצועיות, הכרות ראשונית.\n" +
+                      "במקרה של ספק — החזר 'other'. אם ההודעה היא רק הכרות/פתיחה בלי הזכרת מחיר — 'other'.\n" +
+                      "החזר רק את המילה pricing או other — בלי הסבר.",
+                  },
+                  { role: "user", content: recentUserMessages },
+                ],
+                max_tokens: 5,
+                temperature: 0,
+              }),
+            });
+            if (classifierResp.ok) {
+              classifierOk = true;
+              const data = await classifierResp.json();
+              const raw = (data?.choices?.[0]?.message?.content ?? "").toLowerCase().trim();
+              // Strict match: only flip to 'pricing' on an unambiguous answer.
+              if (raw === "pricing" || (raw.includes("pricing") && !raw.includes("other"))) {
+                intent = "pricing";
+              }
+              // Seed cache with this fresh classification.
+              trialClassifierCache.set(cacheKey, { intent, count: 1 });
+            } else {
+              console.error("Classifier non-OK status:", classifierResp.status);
+              // On failure, clear stale cache so we re-try next turn.
+              trialClassifierCache.delete(cacheKey);
             }
-          } else {
-            console.error("Classifier non-OK status:", classifierResp.status);
+          } catch (e) {
+            console.error("Classifier failed, defaulting to 'other':", e);
+            trialClassifierCache.delete(cacheKey);
           }
-        } catch (e) {
-          console.error("Classifier failed, defaulting to 'other':", e);
         }
 
-        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "user_plan=", user_plan);
+        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "usedCache:", usedCache, "user_plan=", user_plan);
         if (intent === "other") {
           return new Response(
             JSON.stringify({
@@ -301,6 +334,7 @@ serve(async (req) => {
       }
     }
     // ===== End trial enforcement =====
+
 
 
     // Load admin-editable settings (fallback to hardcoded prompts)
