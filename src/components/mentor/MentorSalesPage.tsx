@@ -166,7 +166,7 @@ const COPY: any = {
     },
     proof: {
       eyebrow: "מהשטח",
-      title: "מה קרה למטפלים שעבדו איתו.",
+      title: "מה מספרים מטפלים שעבדו איתו.",
       quotes: [
         "מטפלת אחת העלתה מחירים, וסיפרה שלראשונה הרגישה שהיא מקבלת תגמול שהיא באמת ראויה לו.",
         "מטפל אחר מצא את המנטור, התנסה, וקנה מיוזמתו. עוד לפני שהצענו.",
@@ -444,12 +444,7 @@ const COPY: any = {
       currentPriceUnit: "USD",
       currentPriceSecondary: "(₪750)",
       priceNote: "One-time payment · incl. VAT",
-      bullets: [
-        "Full access",
-        "Including all future improvements",
-        "Less than two supervision sessions",
-        ,
-      ],
+      bullets: ["Full access", "Including all future improvements", "Less than two supervision sessions", ,],
       anchor:
         "At this price, you're investing less than: one hour of private business coaching · one continuing education workshop · two months on a therapist directory",
       cta: "I want the Mentor to assist me",
