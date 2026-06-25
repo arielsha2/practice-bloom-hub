@@ -188,7 +188,7 @@ export async function updateTherapistProgress(
   return { data, error };
 }
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; ts?: string };
 
 const BENEFITS_HE = [
   { icon: Target, title: "בהירות מקצועית", desc: "תדעו בדיוק מי המטופל שלכם וכיצד לדבר אליו." },
