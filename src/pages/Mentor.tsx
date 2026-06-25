@@ -56,7 +56,7 @@ import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
-import { ByokKeyDialog } from "@/components/mentor/ByokKeyDialog";
+// BYOK removed — paid users now run on the project's server-side GEMINI_API_KEY.
 import { PaymentPendingBanner } from "@/components/mentor/PaymentPendingBanner";
 
 function MentorTopBar() {
@@ -492,51 +492,8 @@ export default function Mentor() {
     summary: string;
     kickoff: string;
   } | null>(null);
-  const [byokDialogOpen, setByokDialogOpen] = useState(false);
-  const [byokReason, setByokReason] = useState<"missing" | "invalid" | "quota">("missing");
-  const [pendingByokSend, setPendingByokSend] = useState<string | null>(null);
-  const [byokAutoChecked, setByokAutoChecked] = useState(false);
+  // (BYOK dialog removed — server-side GEMINI_API_KEY is used for paid users.)
 
-  // Debounce gating for mentor-analyze: run only if 3+ new messages since
-  // last analysis OR 2+ minutes have passed. Prevents per-message LLM fan-out.
-  const lastAnalyzedCountRef = useRef(0);
-  const lastAnalyzedAtRef = useRef(0);
-
-  // Proactively open the BYOK setup dialog for paid (non-admin) users who
-  // have not yet saved a Gemini key, so they aren't confused on first load.
-  useEffect(() => {
-    if (byokAutoChecked) return;
-    if (userPlanInfo.loading) return;
-    if (!user) return;
-    if (userPlanInfo.plan !== "paid") return;
-    let cancelled = false;
-    (async () => {
-      // Admins keep using the platform gateway — no BYOK needed.
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      if (cancelled) return;
-      if (isAdmin) {
-        setByokAutoChecked(true);
-        return;
-      }
-      const { data: keyRow } = await supabase
-        .from("user_ai_keys")
-        .select("key_hint")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (!keyRow?.key_hint) {
-        setByokReason("missing");
-        setByokDialogOpen(true);
-      }
-      setByokAutoChecked(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, userPlanInfo.loading, userPlanInfo.plan, byokAutoChecked]);
 
   // Realtime: when an admin (or webhook) flips this user's plan, refresh
   // useUserPlan immediately so the banner disappears and BYOK auto-opens
