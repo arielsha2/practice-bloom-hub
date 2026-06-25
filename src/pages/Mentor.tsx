@@ -31,7 +31,16 @@ import {
   Trophy,
   Check,
   NotebookPen,
+  Download,
+  Copy as CopyIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { downloadConversationPdf, copyConversationText } from "@/lib/mentorExport";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
