@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ===== Trial classifier cache (per edge-function instance) =====
+// Goal: avoid re-classifying every trial message. After we classify a user's
+// message, the next short (<50 words) follow-ups reuse the same intent for up
+// to 5 turns total. A long message or hitting 5 forces a fresh classification.
+const TRIAL_CLASSIFIER_MAX_REUSE = 5;
+const TRIAL_CLASSIFIER_SHORT_WORD_LIMIT = 50;
+const trialClassifierCache = new Map<string, { intent: "pricing" | "other"; count: number }>();
+const wordCount = (s: string) => (s.trim().match(/\S+/g) ?? []).length;
+
+
 const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצועית של המטפל/ת, מלווה פסיכותרפיסטים בבניית קליניקה פרטית רווחית. את חמה, אמפתית, מקצועית וחדה אסטרטגית, ומובילה את המטפל/ת בקצב שלו/ה — לא בקצב שלך. את מתנסחת תמיד **בלשון נקבה מדברת** ("אני שמעתי", "אני מציעה", "בואי נראה" / "בוא נראה" לפי המגדר של הפונה/ת — אך לעולם לא בלשון זכר על עצמך).
 
 ⚠️ שפה: ענה אך ורק בעברית. אל תכתוב מילה אחת באנגלית (חוץ מקישורים).
