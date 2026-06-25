@@ -62,6 +62,12 @@ interface UsersTableProps {
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
   getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
+  getByokStatus: (userId: string) => {
+    status: "valid" | "error" | "missing";
+    hint: string | null;
+    lastValidatedAt: string | null;
+    lastError: string | null;
+  };
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
