@@ -445,10 +445,10 @@ const COPY: any = {
       currentPriceSecondary: "(₪750)",
       priceNote: "One-time payment · incl. VAT",
       bullets: [
-        "Full access",
+        "Lifetime full access",
         "Including all future improvements",
         "Less than two supervision sessions",
-        ,
+        "Yours forever",
       ],
       anchor:
         "At this price, you're investing less than: one hour of private business coaching · one continuing education workshop · two months on a therapist directory",
