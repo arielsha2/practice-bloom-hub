@@ -111,6 +111,39 @@ export function useUsersManagement() {
     },
   });
 
+  // Fetch BYOK key metadata for all users (admin-only via RLS).
+  const { data: aiKeys = [] } = useQuery({
+    queryKey: ["admin-user-ai-keys"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_ai_keys")
+        .select("user_id, key_hint, last_validated_at, last_error, updated_at");
+      if (error) throw error;
+      return data as Array<{
+        user_id: string;
+        key_hint: string | null;
+        last_validated_at: string | null;
+        last_error: string | null;
+        updated_at: string | null;
+      }>;
+    },
+  });
+
+  type ByokStatus = "valid" | "error" | "missing";
+  const getByokStatus = (userId: string): {
+    status: ByokStatus;
+    hint: string | null;
+    lastValidatedAt: string | null;
+    lastError: string | null;
+  } => {
+    const row = aiKeys.find((k) => k.user_id === userId);
+    if (!row) return { status: "missing", hint: null, lastValidatedAt: null, lastError: null };
+    if (row.last_error) {
+      return { status: "error", hint: row.key_hint, lastValidatedAt: row.last_validated_at, lastError: row.last_error };
+    }
+    return { status: "valid", hint: row.key_hint, lastValidatedAt: row.last_validated_at, lastError: null };
+  };
+
   // Assign user to course with cohort
   const assignToCourse = useMutation({
     mutationFn: async ({
@@ -500,5 +533,6 @@ export function useUsersManagement() {
     deleteUser,
     upgradeToPaid,
     getTrialStatus,
+    getByokStatus,
   };
 }

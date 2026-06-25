@@ -47,6 +47,7 @@ export default function UsersAdmin() {
     getTrialStatus,
     deleteUser,
     upgradeToPaid,
+    getByokStatus,
   } = useUsersManagement();
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -203,6 +204,7 @@ export default function UsersAdmin() {
                 getUserCohorts={getUserCohorts}
                 hasMentorAccess={hasMentorAccess}
                 getTrialStatus={getTrialStatus}
+                getByokStatus={getByokStatus}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
