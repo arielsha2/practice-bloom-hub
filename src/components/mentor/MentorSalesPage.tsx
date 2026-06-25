@@ -25,12 +25,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
@@ -94,7 +89,7 @@ const COPY: any = {
     badge: "גרסת בטא · 20 מקומות בלבד",
     hero: {
       title: "המנטור לקליניקה",
-      subtitle: ["סופרוויז׳ן רגיש לעסק.", "לרשותך בכל זמן, בכל מקום."],
+      subtitle: ["ליווי למטפלים לקליניקה מלאה", "לרשותך בכל זמן, בכל מקום."],
       body: "ליווי AI אישי שמוביל אותך שלב אחר שלב למלא את הקליניקה במטופלים הנכונים. באותנטיות, בביטחון, ובלי להרגיש מכירתי.",
       cta: "אני רוצה להיות אחד מ־20",
       ctaNote: "גישה לתמיד · כולל כל השיפורים העתידיים",
@@ -209,8 +204,7 @@ const COPY: any = {
     hero: {
       titleLine1: "You became a therapist to help people.",
       titleLine2: "Let's make sure enough people can find you.",
-      body:
-        "An AI personal guide that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
+      body: "An AI personal guide that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
       cta: "✦  Start building my full practice  →",
       ctaNote: "One-time payment · Lifetime access · No subscription · 20 founding seats available",
       loginPrompt: "Already signed up?",
@@ -263,8 +257,7 @@ const COPY: any = {
     solution: {
       title: "What if someone held you right there?",
       p1: "Not a lecturer. Not a course. Not knowledge that sits on a shelf. Not theories — but practical guidance.",
-      p2:
-        "Someone who sits with you, asks the right questions, and leads you to the answer that already exists within you.",
+      p2: "Someone who sits with you, asks the right questions, and leads you to the answer that already exists within you.",
       p3: "Personal guidance. Focus. Precise actions.",
       p4: "Bridging the gap between your expertise and your ability to bring the right clients.",
       aiNote:
@@ -292,28 +285,23 @@ const COPY: any = {
       items: [
         {
           title: "Who you are as a therapist",
-          text:
-            "Most therapists describe themselves the same way: 'I work with anxiety, depression, and life transitions.' The Mentor guides you to find what's genuinely unique about how you work — the thing that makes a specific client think 'I want this person specifically.' This becomes the foundation for everything else.",
+          text: "Most therapists describe themselves the same way: 'I work with anxiety, depression, and life transitions.' The Mentor guides you to find what's genuinely unique about how you work — the thing that makes a specific client think 'I want this person specifically.' This becomes the foundation for everything else.",
         },
         {
           title: "What your work is worth",
-          text:
-            "A price that comes from real value — not from fear of losing the client. The Mentor helps you examine where your current fee came from and guides you to a number you can state with confidence, on the phone, without apologizing.",
+          text: "A price that comes from real value — not from fear of losing the client. The Mentor helps you examine where your current fee came from and guides you to a number you can state with confidence, on the phone, without apologizing.",
         },
         {
           title: "Where clients will come from",
-          text:
-            "Specific referral contacts — instead of shooting in all directions. The Mentor helps you identify the exact professionals who already serve your ideal client, so you can build relationships that consistently send you the right people.",
+          text: "Specific referral contacts — instead of shooting in all directions. The Mentor helps you identify the exact professionals who already serve your ideal client, so you can build relationships that consistently send you the right people.",
         },
         {
           title: "How to talk to referral contacts",
-          text:
-            "This is the stage most therapists skip — because it feels awkward. The Mentor role-plays the conversation with you, gives immediate feedback, and helps you find language that feels natural. You practice until it's not uncomfortable anymore.",
+          text: "This is the stage most therapists skip — because it feels awkward. The Mentor role-plays the conversation with you, gives immediate feedback, and helps you find language that feels natural. You practice until it's not uncomfortable anymore.",
         },
         {
           title: "How to present yourself",
-          text:
-            "The sentence that makes people want to send you clients. Not an elevator pitch. Not a tagline. The real description of your work that lands — because it's specific, true, and yours.",
+          text: "The sentence that makes people want to send you clients. Not an elevator pitch. Not a tagline. The real description of your work that lands — because it's specific, true, and yours.",
         },
       ],
       innerLabel: "And alongside all of this",
@@ -345,15 +333,13 @@ const COPY: any = {
         {
           who: "mentor",
           label: "The Mentor",
-          text:
-            "You've mentioned feeling stuck when a client asks about your fee. Let's stay there. What do you imagine the client is thinking when they ask?",
+          text: "You've mentioned feeling stuck when a client asks about your fee. Let's stay there. What do you imagine the client is thinking when they ask?",
         },
         { who: "you", label: "You", text: "That I'm too expensive. That they'll leave." },
         {
           who: "mentor",
           label: "The Mentor",
-          text:
-            "That's an important assumption to examine. Where did that belief come from — a specific experience, or more of a background fear?",
+          text: "That's an important assumption to examine. Where did that belief come from — a specific experience, or more of a background fear?",
         },
       ],
     },
@@ -394,7 +380,7 @@ const COPY: any = {
       forItems: [
         "You're a licensed or pre-licensed therapist building toward private practice",
         "You want a full caseload but don't know where to start building referrals",
-        'You\'ve tried "doing marketing" — online profiles, social media, networking emails — and it felt inauthentic or just didn\'t work',
+        "You've tried \"doing marketing\" — online profiles, social media, networking emails — and it felt inauthentic or just didn't work",
         "You know your clinical work is strong. It's the business side that feels foreign.",
         "You want guidance that respects your pace and your professional ethics",
       ],
@@ -412,38 +398,31 @@ const COPY: any = {
       items: [
         {
           q: "Is this the same as clinical supervision?",
-          a:
-            "No — and it's important to be clear about that. The Clinic Mentor is business mentoring, not clinical supervision. It won't count toward your licensure hours and it doesn't review your casework. Think of it as the business side of the supervision experience — the part your clinical supervisor probably doesn't have time or training to cover.",
+          a: "No — and it's important to be clear about that. The Clinic Mentor is business mentoring, not clinical supervision. It won't count toward your licensure hours and it doesn't review your casework. Think of it as the business side of the supervision experience — the part your clinical supervisor probably doesn't have time or training to cover.",
         },
         {
           q: "Is this confidential? What happens to my data?",
-          a:
-            "The Mentor never receives information about your clients. It works only on your business — your niche, your pricing, your referral relationships. No client data ever enters the system. Your clinical work stays entirely private.",
+          a: "The Mentor never receives information about your clients. It works only on your business — your niche, your pricing, your referral relationships. No client data ever enters the system. Your clinical work stays entirely private.",
         },
         {
           q: "I've bought courses before and never finished them. How is this different?",
-          a:
-            "A course gives you information and leaves the work to you. The Mentor gives you one action at a time and waits for you to return before moving forward. There's no module 7 gathering dust. There's just the next conversation, whenever you're ready.",
+          a: "A course gives you information and leaves the work to you. The Mentor gives you one action at a time and waits for you to return before moving forward. There's no module 7 gathering dust. There's just the next conversation, whenever you're ready.",
         },
         {
           q: "I'm not tech-savvy. Is this complicated to use?",
-          a:
-            "If you can send a text message, you can use the Mentor. It's a conversation interface — you type, it responds. No dashboards, no complex logins, no video modules to navigate.",
+          a: "If you can send a text message, you can use the Mentor. It's a conversation interface — you type, it responds. No dashboards, no complex logins, no video modules to navigate.",
         },
         {
           q: "I'm pre-licensed or still completing supervised hours. Is this relevant for me?",
-          a:
-            "Yes — especially for you. The earlier you start building these skills, the smoother the transition to private practice. Many of our founding members started while still completing their supervised hours.",
+          a: "Yes — especially for you. The earlier you start building these skills, the smoother the transition to private practice. Many of our founding members started while still completing their supervised hours.",
         },
         {
           q: "Will this work for my specialty? I work with trauma / couples / eating disorders / etc.",
-          a:
-            "The Mentor doesn't teach a generic script. It starts with your specific specialty and works outward from there. Stage 01 is entirely dedicated to articulating what makes you unique as a specialist.",
+          a: "The Mentor doesn't teach a generic script. It starts with your specific specialty and works outward from there. Stage 01 is entirely dedicated to articulating what makes you unique as a specialist.",
         },
         {
           q: "What if it doesn't work for me?",
-          a:
-            "If you complete Stage 01 and Stage 02 and feel the Mentor isn't the right guide for where you are, message Eliana directly within 14 days and we'll make it right.",
+          a: "If you complete Stage 01 and Stage 02 and feel the Mentor isn't the right guide for where you are, message Eliana directly within 14 days and we'll make it right.",
         },
       ],
     },
@@ -453,8 +432,7 @@ const COPY: any = {
       exclusive: "Exclusive to founders",
       seats: "20 seats only",
       p1: "In exchange for the special price — we ask for your honest feedback.",
-      p2:
-        "What works, what doesn't, what's missing. It matters to us that the Mentor delivers the best possible support for therapists like you.",
+      p2: "What works, what doesn't, what's missing. It matters to us that the Mentor delivers the best possible support for therapists like you.",
       warningTitle: "The Clinic Mentor is for therapists ready not just to read — but to act.",
       warningBody: "If you're ready to move — we're here.",
     },
@@ -509,11 +487,7 @@ export function MentorSalesPage() {
         {isEn && (
           <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 text-xs">
             <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
-            <Link
-              to="/auth"
-              className="underline underline-offset-2"
-              style={{ color: "rgba(250,247,242,0.9)" }}
-            >
+            <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
               {t.hero.loginLink}
             </Link>
           </div>
@@ -700,10 +674,7 @@ export function MentorSalesPage() {
       {isEn && (
         <Band tone="cream" className="!py-16">
           <motion.div {...fadeUp} className="max-w-[700px] mx-auto text-center">
-            <QuoteIcon
-              className="mx-auto mb-5"
-              style={{ color: "hsl(var(--terracotta))", width: 44, height: 44 }}
-            />
+            <QuoteIcon className="mx-auto mb-5" style={{ color: "hsl(var(--terracotta))", width: 44, height: 44 }} />
             <p
               className="font-display italic text-foreground leading-relaxed whitespace-pre-line"
               style={{ fontSize: "20px" }}
@@ -744,9 +715,7 @@ export function MentorSalesPage() {
               {t.solution.p3}
             </p>
             <p className="text-muted-foreground">{t.solution.p4}</p>
-            {isEn && (
-              <p className="italic text-muted-foreground/90 text-base md:text-lg">{t.solution.aiNote}</p>
-            )}
+            {isEn && <p className="italic text-muted-foreground/90 text-base md:text-lg">{t.solution.aiNote}</p>}
             <p className="text-2xl md:text-3xl font-display pt-3 text-primary">{t.solution.cta}</p>
           </div>
         </motion.div>
@@ -770,8 +739,6 @@ export function MentorSalesPage() {
               />
               <p className="mt-3 text-sm text-muted-foreground italic">{t.founders.caption}</p>
             </div>
-
-
 
             <div>
               <h3 className="font-display text-2xl md:text-3xl text-foreground mb-5 leading-snug">
@@ -894,33 +861,32 @@ export function MentorSalesPage() {
               {t.experience.sampleLabel}
             </div>
             <div className="flex flex-col gap-5">
-              {t.experience.sample.map(
-                (m: { who: string; label: string; text: string }, i: number) =>
-                  m.who === "mentor" ? (
-                    <div key={i} className="self-start max-w-[88%]">
-                      <div
-                        className="text-[11px] font-semibold mb-1.5 tracking-wide uppercase"
-                        style={{ color: "hsl(var(--terracotta))" }}
-                      >
-                        {m.label}
-                      </div>
-                      <div
-                        className="rounded-2xl rounded-tl-sm px-5 py-4 leading-relaxed"
-                        style={{ background: "#2a0614", color: "#faf7f2" }}
-                      >
-                        {m.text}
-                      </div>
+              {t.experience.sample.map((m: { who: string; label: string; text: string }, i: number) =>
+                m.who === "mentor" ? (
+                  <div key={i} className="self-start max-w-[88%]">
+                    <div
+                      className="text-[11px] font-semibold mb-1.5 tracking-wide uppercase"
+                      style={{ color: "hsl(var(--terracotta))" }}
+                    >
+                      {m.label}
                     </div>
-                  ) : (
-                    <div key={i} className="self-end max-w-[88%]">
-                      <div className="text-[11px] font-semibold mb-1.5 tracking-wide uppercase text-muted-foreground text-right">
-                        {m.label}
-                      </div>
-                      <div className="rounded-2xl rounded-tr-sm px-5 py-4 leading-relaxed bg-secondary/70 border border-border text-foreground">
-                        {m.text}
-                      </div>
+                    <div
+                      className="rounded-2xl rounded-tl-sm px-5 py-4 leading-relaxed"
+                      style={{ background: "#2a0614", color: "#faf7f2" }}
+                    >
+                      {m.text}
                     </div>
-                  ),
+                  </div>
+                ) : (
+                  <div key={i} className="self-end max-w-[88%]">
+                    <div className="text-[11px] font-semibold mb-1.5 tracking-wide uppercase text-muted-foreground text-right">
+                      {m.label}
+                    </div>
+                    <div className="rounded-2xl rounded-tr-sm px-5 py-4 leading-relaxed bg-secondary/70 border border-border text-foreground">
+                      {m.text}
+                    </div>
+                  </div>
+                ),
               )}
             </div>
           </motion.div>
@@ -951,10 +917,7 @@ export function MentorSalesPage() {
                 <p className="italic text-foreground leading-relaxed pt-8">{c.quote}</p>
                 {t.proof.placeholderName && !t.proof.placeholderName.includes("[") && (
                   <>
-                    <div
-                      className="h-px w-12 my-5"
-                      style={{ background: "hsl(var(--terracotta))" }}
-                    />
+                    <div className="h-px w-12 my-5" style={{ background: "hsl(var(--terracotta))" }} />
                     <p className="font-bold text-foreground text-sm">{t.proof.placeholderName}</p>
                     {t.proof.placeholderDetails && !t.proof.placeholderDetails.includes("[") && (
                       <p className="text-xs text-muted-foreground mt-1">{t.proof.placeholderDetails}</p>
@@ -996,10 +959,7 @@ export function MentorSalesPage() {
               <ul className="space-y-3">
                 {t.fitFor.forItems.map((item: string, i: number) => (
                   <li key={i} className="flex items-start gap-3 text-foreground leading-relaxed">
-                    <Check
-                      className="w-4 h-4 mt-1.5 shrink-0"
-                      style={{ color: "#2f8a4d" }}
-                    />
+                    <Check className="w-4 h-4 mt-1.5 shrink-0" style={{ color: "#2f8a4d" }} />
                     <span>{item}</span>
                   </li>
                 ))}
