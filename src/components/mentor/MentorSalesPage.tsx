@@ -32,7 +32,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
 const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
-const PAYMENT_URL_EN = "https://www.paypal.com/ncp/payment/W98DBBEAANPPS";
+const PAYMENT_URL_EN = "https://meshulam.co.il/s/184c5865-65a4-10bb-33f5-5c6c966d83d3";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
 
 function openPaymentFor(language: string) {
@@ -94,8 +94,6 @@ const COPY: any = {
       body: "ליווי AI אישי שמוביל אותך שלב אחר שלב למלא את הקליניקה במטופלים הנכונים. באותנטיות, בביטחון, ובלי להרגיש מכירתי.",
       cta: "אני רוצה את המנטור",
       ctaNote: "כולל כל השיפורים העתידיים",
-      loginPrompt: "כבר נרשמת?",
-      loginLink: "להתחבר",
     },
     problem: {
       eyebrow: "הפער",
@@ -169,7 +167,7 @@ const COPY: any = {
     },
     proof: {
       eyebrow: "מהשטח",
-      title: "מה מספרים מטפלים שעבדו איתו.",
+      title: "מה קרה למטפלים שעבדו איתו.",
       quotes: [
         "מטפלת אחת העלתה מחירים, וסיפרה שלראשונה הרגישה שהיא מקבלת תגמול שהיא באמת ראויה לו.",
         "מטפל אחר מצא את המנטור, התנסה, וקנה מיוזמתו. עוד לפני שהצענו.",
@@ -443,7 +441,7 @@ const COPY: any = {
       investment: "Your investment",
       futurePrice: "Regular price:",
       futurePriceValue: "$600 USD (₪1,800)",
-      currentPrice: "$249",
+      currentPrice: "$250",
       currentPriceUnit: "USD",
       currentPriceSecondary: "(₪750)",
       priceNote: "One-time payment · incl. VAT",
@@ -481,8 +479,15 @@ export function MentorSalesPage() {
         className="band band-grain relative w-full overflow-hidden"
         style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
       >
-
-
+        {/* EN-only top-right login link */}
+        {isEn && (
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 text-xs">
+            <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
+            <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
+              {t.hero.loginLink}
+            </Link>
+          </div>
+        )}
 
         <div
           className="container mx-auto px-4 max-w-4xl relative z-10 text-center"
@@ -571,23 +576,6 @@ export function MentorSalesPage() {
               }}
             >
               {t.hero.ctaNote}
-            </p>
-            <p
-              style={{
-                fontSize: "12px",
-                color: "rgba(250,247,242,0.6)",
-                marginTop: "0.6rem",
-                textAlign: "center",
-              }}
-            >
-              <span>{t.hero.loginPrompt} </span>
-              <Link
-                to="/auth"
-                className="underline underline-offset-2"
-                style={{ color: "rgba(250,247,242,0.95)" }}
-              >
-                {t.hero.loginLink}
-              </Link>
             </p>
           </motion.div>
         </div>
@@ -909,9 +897,41 @@ export function MentorSalesPage() {
           <Divider />
         </motion.div>
 
-        <motion.div {...fadeUp}>
-          <MentorTestimonialsCarousel language={language} isRTL={isRTL} />
-        </motion.div>
+        {isEn ? (
+          <motion.div {...fadeUp} className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {t.proof.cards.map((c: { quote: string; wide?: boolean }, i: number) => (
+              <div
+                key={i}
+                className={`relative rounded-2xl p-7 md:p-8 bg-card border border-border shadow-soft ${
+                  c.wide ? "md:col-span-3 md:max-w-3xl md:mx-auto" : ""
+                }`}
+              >
+                <QuoteIcon
+                  className="absolute top-5 left-5 opacity-90"
+                  style={{ color: "hsl(var(--terracotta))", width: 28, height: 28 }}
+                />
+                <p className="italic text-foreground leading-relaxed pt-8">{c.quote}</p>
+                {t.proof.placeholderName && !t.proof.placeholderName.includes("[") && (
+                  <>
+                    <div className="h-px w-12 my-5" style={{ background: "hsl(var(--terracotta))" }} />
+                    <p className="font-bold text-foreground text-sm">{t.proof.placeholderName}</p>
+                    {t.proof.placeholderDetails && !t.proof.placeholderDetails.includes("[") && (
+                      <p className="text-xs text-muted-foreground mt-1">{t.proof.placeholderDetails}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div {...fadeUp} className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {t.proof.quotes.map((q: string, i: number) => (
+              <div key={i} className="relative rounded-2xl p-8 border border-background/15 bg-background/[0.06]">
+                <p className="pull-quote relative text-background leading-relaxed text-lg">{q}</p>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </Band>
 
       {/* ============ EN — IS THIS FOR YOU (cream) ============ */}
@@ -988,6 +1008,9 @@ export function MentorSalesPage() {
           </motion.div>
         </Band>
       )}
+
+      {/* ============ TESTIMONIALS CAROUSEL (admin-managed) ============ */}
+      <MentorTestimonialsCarousel language={language === "en" ? "en" : "he"} />
 
       {/* ============ BETA + PRICING — CHARCOAL ============ */}
       <Band tone="charcoal">
