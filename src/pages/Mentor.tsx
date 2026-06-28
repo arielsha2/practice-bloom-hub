@@ -58,6 +58,10 @@ import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
 import { MentorNotebookPanel } from "@/components/mentor/MentorNotebookPanel";
 // BYOK removed — paid users now run on the project's server-side GEMINI_API_KEY.
 import { PaymentPendingBanner } from "@/components/mentor/PaymentPendingBanner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useHandoffManager } from "@/hooks/useHandoffManager";
+import { HandoffFailureBanner } from "@/components/mentor/HandoffFailureBanner";
+import { MobileBotSheet } from "@/components/mentor/MobileBotSheet";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -531,6 +535,16 @@ export default function Mentor() {
 
   const chatCardRef = useRef<HTMLDivElement>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const mobileIframeRef = useRef<HTMLIFrameElement>(null);
+  const isMobile = useIsMobile();
+
+  const handoff = useHandoffManager({
+    isMobile,
+    conversationId: null,
+    onActivate: (key: string) => setActiveBotKey(key),
+    iframeRef: isMobile ? mobileIframeRef : iframeRef,
+  });
 
   const BOT_KEYS = [
     "connection-bridge",
@@ -998,6 +1012,9 @@ export default function Mentor() {
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
+    // If a recent handoff never opened, mark it as failed and surface the
+    // retry banner. Must run before we start the new mentor turn.
+    handoff.notifyUserSentMentorMessage();
     const userMsg: Msg = { role: "user", content: text.trim(), ts: new Date().toISOString() };
     const next = [...messages, userMsg];
     setMessages(next);
@@ -1092,10 +1109,7 @@ export default function Mentor() {
             ? `עוברים לכלי: ${BOT_LABELS[handoffKey] ?? handoffKey}…`
             : `Switching to: ${BOT_LABELS[handoffKey] ?? handoffKey}…`,
         );
-        setTimeout(() => {
-          setActiveBotKey(handoffKey);
-          chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 1200);
+        handoff.triggerHandoff(handoffKey, "auto-tag");
       }
     } catch (e) {
       console.error(e);
@@ -1273,10 +1287,7 @@ export default function Mentor() {
             {/* Sidebar (desktop only) */}
             <aside className="hidden lg:flex flex-col gap-4 sticky top-20">
               <JourneyRail
-                onOpenBot={(botKey) => {
-                  setActiveBotKey(botKey);
-                  chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+                onOpenBot={(botKey) => handoff.triggerHandoff(botKey, "map")}
               />
               <SidebarAccordions benefits={benefits} outcomes={outcomes} />
             </aside>
@@ -1351,7 +1362,10 @@ export default function Mentor() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setActiveBotKey(null)}
+                      onClick={() => {
+                        setActiveBotKey(null);
+                        handoff.resetForClose();
+                      }}
                       className="gap-1.5 text-accent-foreground hover:bg-accent/30"
                     >
                       {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -1466,12 +1480,22 @@ export default function Mentor() {
                 </div>
 
                 {/* Body */}
-                {activeBotKey ? (
+                {activeBotKey && !isMobile ? (
                   <iframe
+                    ref={iframeRef}
                     src={`/ai-assistants/${activeBotKey}?kickoff=1&from=mentor`}
                     className="flex-1 w-full border-0 bg-mentor-bg"
                     title={isRTL ? "כלי AI" : "AI tool"}
+                    onLoad={handoff.handleIframeLoad}
                   />
+                ) : activeBotKey && isMobile ? (
+                  // On mobile the iframe is rendered in MobileBotSheet (full-screen).
+                  // Show a lightweight placeholder so the chat card keeps its height.
+                  <div className="flex-1 w-full flex items-center justify-center bg-mentor-bg text-sm text-muted-foreground p-6 text-center">
+                    {isRTL
+                      ? "הכלי נפתח במסך מלא. סגרי אותו כדי לחזור לאליענה."
+                      : "The tool is open full-screen. Close it to return to Eliana."}
+                  </div>
                 ) : (
                   <>
                     <div ref={messagesViewportRef} className="flex-1 px-4 md:px-5 py-5 overflow-y-auto">
@@ -1552,7 +1576,7 @@ export default function Mentor() {
                                       <AssistantMarkdown
                                         content={m.content}
                                         animate={animate}
-                                        onBotLink={(botKey) => setActiveBotKey(botKey)}
+                                        onBotLink={(botKey) => handoff.triggerHandoff(botKey, "message-link")}
                                         extractBotKey={extractBotKey}
                                       />
                                     )}
@@ -1601,7 +1625,17 @@ export default function Mentor() {
                       </div>
                     </div>
 
-                    {/* Handoff fallback banner — shows when mentor named a tool but auto-handoff didn't trigger */}
+                    {/* Failure banner — shows when an auto-handoff fired but the iframe never loaded */}
+                    {handoff.state.failedKey && (
+                      <HandoffFailureBanner
+                        botLabel={BOT_LABELS[handoff.state.failedKey] ?? handoff.state.failedKey}
+                        isRTL={isRTL}
+                        onRetry={handoff.retry}
+                        onDismiss={handoff.dismissFailure}
+                      />
+                    )}
+
+                    {/* Suggested-tool banner — shows when mentor named a tool but auto-handoff didn't trigger */}
                     {suggestedBotKey && (
                       <div className="border-t border-mentor-border/60 px-3 md:px-4 py-2.5 bg-mentor-accent/5">
                         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 flex-wrap">
@@ -1612,10 +1646,7 @@ export default function Mentor() {
                           </p>
                           <Button
                             size="sm"
-                            onClick={() => {
-                              setActiveBotKey(suggestedBotKey);
-                              chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                            }}
+                            onClick={() => handoff.triggerHandoff(suggestedBotKey, "suggested-banner")}
                             className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground text-xs h-8 px-3 flex-shrink-0"
                           >
                             {isRTL ? "פתח את הכלי" : "Open the tool"}
@@ -1669,10 +1700,7 @@ export default function Mentor() {
               {/* Mobile accordions */}
               <div className="lg:hidden mt-5 space-y-4">
                 <JourneyRail
-                  onOpenBot={(botKey) => {
-                    setActiveBotKey(botKey);
-                    chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
+                  onOpenBot={(botKey) => handoff.triggerHandoff(botKey, "map")}
                 />
                 <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
               </div>
@@ -1694,10 +1722,7 @@ export default function Mentor() {
             </p>
           </div>
           <JourneyMap
-            onOpenBot={(botKey) => {
-              setActiveBotKey(botKey);
-              chatCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
+            onOpenBot={(botKey) => handoff.triggerHandoff(botKey, "map")}
           />
           <FinalCelebration />
         </section>
