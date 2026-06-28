@@ -62,16 +62,20 @@ interface UsersTableProps {
   getUserCohorts: (userId: string) => Cohort[];
   hasMentorAccess: (userId: string) => boolean;
   getTrialStatus: (userId: string) => { status: TrialStatus; endsAt: Date | null };
+  isEmailConfirmed?: (userId: string) => boolean;
   onAssignCourse: (user: UserProfile) => void;
   onRemoveFromCourse: (enrollmentId: string) => void;
   onChangeRole: (user: UserProfile) => void;
   onGrantFreeTrial: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
   onUpgradeToPaid: (user: UserProfile) => void;
+  onVerifyEmail?: (user: UserProfile) => void;
   isGrantingTrial?: boolean;
   isDeletingUser?: boolean;
   isUpgradingToPaid?: boolean;
+  isVerifyingEmail?: boolean;
 }
+
 
 export function UsersTable({
   users,
