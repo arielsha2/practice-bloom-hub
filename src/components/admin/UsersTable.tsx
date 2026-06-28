@@ -86,17 +86,20 @@ export function UsersTable({
   getUserCohorts,
   hasMentorAccess,
   getTrialStatus,
-  
+  isEmailConfirmed,
   onAssignCourse,
   onRemoveFromCourse,
   onChangeRole,
   onGrantFreeTrial,
   onDeleteUser,
   onUpgradeToPaid,
+  onVerifyEmail,
   isGrantingTrial,
   isDeletingUser,
   isUpgradingToPaid,
+  isVerifyingEmail,
 }: UsersTableProps) {
+
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [cohortFilter, setCohortFilter] = useState<string>("all");
