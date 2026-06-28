@@ -206,7 +206,7 @@ export default function UsersAdmin() {
                 getUserCohorts={getUserCohorts}
                 hasMentorAccess={hasMentorAccess}
                 getTrialStatus={getTrialStatus}
-                
+                isEmailConfirmed={isEmailConfirmed}
                 onAssignCourse={handleAssignCourse}
                 onRemoveFromCourse={handleRemoveFromCourse}
                 onChangeRole={handleChangeRole}
@@ -216,7 +216,10 @@ export default function UsersAdmin() {
                 isDeletingUser={deleteUser.isPending}
                 onUpgradeToPaid={(u) => upgradeToPaid.mutate({ userId: u.id })}
                 isUpgradingToPaid={upgradeToPaid.isPending}
+                onVerifyEmail={(u) => verifyEmail.mutate({ userId: u.id })}
+                isVerifyingEmail={verifyEmail.isPending}
               />
+
 
               <PendingUsersTable
                 pendingEnrollments={pendingEnrollments}
