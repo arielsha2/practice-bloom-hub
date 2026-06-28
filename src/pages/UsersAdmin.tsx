@@ -47,8 +47,10 @@ export default function UsersAdmin() {
     getTrialStatus,
     deleteUser,
     upgradeToPaid,
-    
+    isEmailConfirmed,
+    verifyEmail,
   } = useUsersManagement();
+
 
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
