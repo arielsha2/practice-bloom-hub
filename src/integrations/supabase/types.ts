@@ -775,6 +775,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_handoff_events: {
+        Row: {
+          bot_key: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          source: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          bot_key: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          source: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          bot_key?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          source?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentor_notebooks: {
         Row: {
           content: string
