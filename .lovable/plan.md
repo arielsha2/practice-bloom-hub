@@ -1,113 +1,50 @@
-## מטרה
 
-החזרת אפשרות התנסות חינם במנטור — הפעם **יום אחד בלבד** וממוקדת אך ורק בנושא **תמחור**. כניסה עצמית לכל מי שנרשם, ואפשרות לאדמין להוסיף ידנית מתוך ניהול המשתמשים.
+## `HandoffManager` אחיד — בלי האוברלי
 
----
+### עיקרון
+כל 6 נקודות ההפעלה של `setActiveBotKey` ב-`Mentor.tsx` עוברות דרך פונקציה אחת: `triggerHandoff(botKey, source)`. שום קומפוננטה לא קוראת ל-`setActiveBotKey` ישירות יותר.
 
-## מה כבר קיים (לא נוגעים)
+### נקודות החלפה ב-`Mentor.tsx`
+| שורה | מקור (`source`) |
+|---|---|
+| 1087-1099 | `auto-tag` (זיהוי תג HANDOFF בסטרים) |
+| 1277-1278 | `map` (סיידבר דסקטופ) |
+| 1555 | `message-link` (קליק על קישור-בוט בהודעה) |
+| 1616-1617 | `suggested-banner` (הבאנר הקיים "המנטור רוצה להעביר אותך") |
+| 1673-1674 | `map` (אקורדיון מובייל) |
+| 1697-1699 | `map` (מפת המסע המלאה) |
 
-- המנטור יודע לזהות משתמש בניסיון ולהגביל אותו לכלי `pricing-calculator` בלבד (system prompt חזק, גם בעברית וגם באנגלית).
-- `useUserPlan` + `useBotAccess` כבר מבחינים בין `paid`, `trialActive`, ו-`mentor-only`.
-- בטבלת `profiles` יש כבר `trial_start_date` ו-`trial_reminder_sent_at`.
-- בדשבורד אדמין יש כפתור "הענק התנסות" (`grantFreeTrial`) ב-UsersTable.
-- פונקציית edge `send-trial-reminders` קיימת.
+### מבנה
+**Hook חדש** `src/hooks/useHandoffManager.ts`:
+- `triggerHandoff(botKey, source)` — מעדכן `lastHandoffAt`, קורא ל-`onActivate(botKey)`, פותח Sheet במובייל, גולל ל-iframe (`scrollIntoView({block:'center'})`) בדסקטופ, שולח לוג `emitted`.
+- `handleIframeLoad()` — נקרא מ-`onLoad` של ה-iframe; מסמן `iframeLoaded=true`, שולח לוג `opened`.
+- `notifyUserSentMentorMessage()` — נקרא מתוך `send()` ב-`Mentor.tsx` בתחילת כל הודעה למנטור; אם נשלח handoff בתוך 60ש׳ ו-`iframeLoaded===false` → לוג `failed` + מציג באנר.
+- `retry()` / `dismissFailure()` — לפעולות הבאנר.
 
----
+**קומפוננטות חדשות:**
+- `src/components/mentor/HandoffFailureBanner.tsx` — באנר אדום מעל ה-Composer: "נראה שלא הצלחת להגיע ל[שם]. [פתחי שוב] [X]". מובחן ויזואלית מה-`suggestedBotKey` הקיים.
+- `src/components/mentor/MobileBotSheet.tsx` — `<Sheet side="bottom" h-[100dvh]>` שעוטף את ה-iframe; מוצג רק במובייל (`useIsMobile() === true`).
 
-## השינויים
+**Edge function חדש** `supabase/functions/mentor-handoff-log/index.ts` — POST `{bot_key, source, status, conversation_id}`, מאמת JWT, ומכניס שורה ל-`mentor_handoff_events` עם service-role.
 
-### 1. משך ההתנסות: 8 ימים → 24 שעות
+**שינויים ב-`Mentor.tsx`:**
+- `iframeRef = useRef<HTMLIFrameElement>(null)` + `onLoad={handleIframeLoad}` על ה-iframe בשורה 1469.
+- במובייל: רנדור `<MobileBotSheet>` במקום ה-iframe ה-inline (`useIsMobile()` קובע).
+- ה-iframe inline בדסקטופ נשאר אבל מקבל `ref={iframeRef}` ו-`onLoad`.
+- בתחילת `send()` קריאה ל-`notifyUserSentMentorMessage()`.
+- מחיקת ה-`setTimeout(1200ms)` ושל ה-toast המקורי.
+- מחיקת `chatCardRef.scrollIntoView` משש המקומות (עובר ל-Manager שגולל ל-`iframeRef`).
+- רנדור `<HandoffFailureBanner>` כשיש `state.failedKey`.
 
-**קובץ:** מיגרציית SQL.
-- עדכון פונקציה `public.get_user_access` — להחליף `interval '8 days'` ב-`interval '1 day'` (גם בחישוב `trial_active` וגם ב-`trial_ends_at`).
+### מה לא משתנה
+- `detectHandoff`, `normalizeBotKey`, `HANDOFF_ALIASES`, `BOT_KEYS` — לא נוגעים.
+- חוזה ה-iframe (URL `/ai-assistants/:key?kickoff=1&from=mentor`) — לא משתנה. `BotChat.tsx` לא יודע על ה-Manager.
+- הפרומפט של `mentor-chat` — לא נוגע. אם הלוג יראה שעדיין יש חזרות מיותרות על `HANDOFF` באותה שיחה, נטפל בזה בצעד נפרד.
+- **ללא אוברלי 800ms** — כפי שביקשת. נחזור לזה אם הלוג יראה שעדיין מפספסים.
 
-**קובץ:** `src/hooks/useUsersManagement.ts` (תצוגת סטטוס לאדמין)
-- בפונקציה `getTrialStatus` להחליף `8 * 24 * 60 * 60 * 1000` ל-`24 * 60 * 60 * 1000`.
-
-**קבצים:** `src/pages/Mentor.tsx`, `supabase/functions/mentor-chat/index.ts`
-- בהודעת ה"מה אני יכולה לעזור" וב-system prompt: לעדכן את המילים "8 ימים" / "8-day trial" ל"יום אחד" / "24-hour trial".
-
-### 2. הפעלת ההתנסות אוטומטית בהרשמה
-
-**קובץ:** מיגרציה — עדכון הטריגר `handle_new_user`.
-- כיום הוא קובע `trial_start_date = NULL` (מאז שכיבית את ההתנסות).
-- נחזיר: `trial_start_date = now()` למשתמש חדש, רק אם אין לו כבר רשומת `student_enrollments` בתשלום.
-- כך כל הרשמה עצמית מקבלת אוטומטית 24 שעות גישה.
-
-### 3. כפתור CTA לעצמאיים על עמוד המכירה
-
-**קובץ:** `src/components/mentor/MentorSalesPage.tsx`
-- מתחת לכפתורי "רכישת המנטור" (HE + EN) להוסיף שורת קישור משנית: **"רוצה להתנסות 24 שעות חינם בנושא תמחור? התחבר/י כאן"** → `/auth?mode=signup` (או הלינק הקיים להרשמה).
-- בעברית: "התנסות חינם — 24 שעות, מיקוד בתמחור".
-- באנגלית: "Try free for 24 hours — pricing focus".
-- אסתטיקה צנועה (link/secondary button), לא מתחרה בכפתור התשלום.
-
-### 4. כפתור אדמין "הענק התנסות" — נשאר כפי שהוא
-
-הכפתור קיים ועובד דרך `grantFreeTrial` — מגדיר `trial_start_date = now()`. אחרי שינוי משך ההתנסות בנקודה 1, אותו כפתור אוטומטית מעניק 24 שעות.
-
-טקסט הכפתור / טולטיפ יתעדכן: "הענק התנסות 24 שעות (תמחור)" / "Grant 24h trial (pricing)".
-
-### 5. ניקוי קופי "8 ימים" בכל מקום
-
-חיפוש גלובלי על "8 ימים", "8 days", "8-day" — עדכון לכל אזכור (Mentor.tsx, mentor-chat system prompt, אימייל תזכורת ב-`send-trial-reminders` אם רלוונטי).
-
-### 6. תזכורת תפוגה (אופציונלי, לאישור)
-
-`send-trial-reminders` כיום בנוי ל-8 ימים. אפשרויות:
-- **א.** להשבית את התזכורת לגמרי — 24 שעות זה קצר מדי, אין טעם.
-- **ב.** לשלוח תזכורת אחת ~3 שעות לפני תפוגה.
-- **ג.** להשאיר כמו שהוא ולא להפעיל cron.
-
-הצעתי: **א** — לא מפעילים cron, ההתנסות קצרה ולא דורשת תזכורת.
+### בסיס הנתונים
+טבלה `mentor_handoff_events` כבר נוצרה (`emitted` / `opened` / `failed`, עם RLS לקריאה לבעלים+אדמין, INSERT דרך service-role בלבד).
 
 ---
 
-## מה משתמש יחווה
-
-**משתמש חדש שנרשם דרך כפתור "התנסות חינם":**
-1. הרשמה רגילה (OTP) →
-2. נכנס ל-`/mentor` →
-3. המנטור פוגש בברכה קצרה, שואל 2-3 שאלות היכרות, ומכוון מהר אל מחשבון התמחור →
-4. כל ניסיון לגעת בנושא שאינו תמחור — המנטור מאשר את הצורך, מציין שזה זמין בגרסה המלאה, ומחזיר לתמחור →
-5. אחרי 24 שעות — ההתנסות פגה, ה-CTA מציע רכישה.
-
-**אדמין שמוסיף משתמש ידנית:**
-- בטבלת המשתמשים → כפתור "הענק התנסות 24 שעות" שכבר קיים.
-
----
-
-## פרטים טכניים (לעיון)
-
-**שינוי במיגרציה (טיוטה):**
-```sql
-CREATE OR REPLACE FUNCTION public.get_user_access(_user_id uuid)
-RETURNS TABLE(plan text, trial_active boolean, has_paid boolean, trial_ends_at timestamptz)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
-  SELECT
-    p.plan,
-    (p.plan = 'free' AND p.trial_start_date IS NOT NULL
-       AND now() < p.trial_start_date + interval '1 day') AS trial_active,
-    (p.plan = 'paid' OR public.has_role(_user_id, 'admin')) AS has_paid,
-    CASE WHEN p.trial_start_date IS NOT NULL
-         THEN p.trial_start_date + interval '1 day'
-         ELSE NULL END AS trial_ends_at
-  FROM public.profiles p WHERE p.id = _user_id
-$$;
-
-CREATE OR REPLACE FUNCTION public.handle_new_user() ... -- מחזיר trial_start_date = now()
-```
-
-**קבצים שיתעדכנו:**
-- `src/components/mentor/MentorSalesPage.tsx` — CTA חדש להתנסות
-- `src/pages/Mentor.tsx` — קופי "8 ימים" → "24 שעות"
-- `src/hooks/useUsersManagement.ts` — חישוב סטטוס trial
-- `src/components/admin/UsersTable.tsx` — טקסט הכפתור והבאדג'
-- `supabase/functions/mentor-chat/index.ts` — system prompt: "8 ימים" → "24 שעות"
-- מיגרציה אחת: `get_user_access` + `handle_new_user`
-
----
-
-## שאלה לפני הביצוע
-
-האם להשבית את ה-cron של תזכורות תפוגה (`send-trial-reminders`)? בהתנסות של 24 שעות אין הרבה זמן לתזכורת — הצעתי להשבית.
+מאשר לבנות את שאר הקבצים?
