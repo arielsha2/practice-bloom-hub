@@ -579,6 +579,15 @@ export function MentorSalesPage() {
             >
               {t.hero.ctaNote}
             </p>
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <Link
+                to="/auth"
+                className="underline underline-offset-4 hover:opacity-90 transition"
+                style={{ color: "rgba(250,247,242,0.85)", fontSize: "14px" }}
+              >
+                {t.hero.trialCta} →
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
