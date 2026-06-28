@@ -211,6 +211,7 @@ const COPY: any = {
       body: "An AI personal supervision that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
       cta: "✦  Start building my full practice  →",
       ctaNote: "One-time payment · full access · No subscription · special rate for Beta version",
+      trialCta: "Try free for 24 hours — pricing focus",
       loginPrompt: "Already signed up?",
       loginLink: "Log in",
     },
