@@ -483,11 +483,37 @@ export function useUsersManagement() {
     },
   });
 
+  // Manually confirm a user's email (for users stuck on unconfirmed signups).
+  const verifyEmail = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-verify-user-email", {
+        body: { userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-unconfirmed-emails"] });
+      toast({
+        title: isRTL ? "הצלחה" : "Success",
+        description: isRTL ? "המייל אומת ידנית" : "Email manually verified",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? "שגיאה" : "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get trial status for a user
   const getTrialStatus = (userId: string): { status: TrialStatus; endsAt: Date | null } => {
     const user = users.find((u) => u.id === userId) as UserProfile | undefined;
     if (!user) return { status: "none", endsAt: null };
     if (user.plan === "paid") return { status: "paid", endsAt: null };
+
     if (!user.trial_start_date) return { status: "none", endsAt: null };
     const endsAt = new Date(new Date(user.trial_start_date).getTime() + 24 * 60 * 60 * 1000);
     return { status: endsAt > new Date() ? "active" : "expired", endsAt };
