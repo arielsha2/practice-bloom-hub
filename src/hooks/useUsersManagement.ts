@@ -385,7 +385,7 @@ export function useUsersManagement() {
     return cohort ? (isRTL ? cohort.name_he : cohort.name_en) : null;
   };
 
-  // Grant the 8-day free mentor trial (resets the trial window)
+  // Grant the 24-hour free mentor trial (resets the trial window)
   const grantFreeTrial = useMutation({
     mutationFn: async ({ userId }: { userId: string }) => {
       const { error } = await supabase
@@ -403,7 +403,7 @@ export function useUsersManagement() {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast({
         title: isRTL ? "הצלחה" : "Success",
-        description: isRTL ? "אושרו 7 ימי התנסות חינם במנטור" : "8-day free mentor trial granted",
+        description: isRTL ? "אושרו 24 שעות התנסות חינם במנטור (תמחור)" : "24-hour free mentor trial granted (pricing)",
       });
     },
     onError: (error: Error) => {
@@ -475,7 +475,7 @@ export function useUsersManagement() {
     if (!user) return { status: "none", endsAt: null };
     if (user.plan === "paid") return { status: "paid", endsAt: null };
     if (!user.trial_start_date) return { status: "none", endsAt: null };
-    const endsAt = new Date(new Date(user.trial_start_date).getTime() + 8 * 24 * 60 * 60 * 1000);
+    const endsAt = new Date(new Date(user.trial_start_date).getTime() + 24 * 60 * 60 * 1000);
     return { status: endsAt > new Date() ? "active" : "expired", endsAt };
   };
 

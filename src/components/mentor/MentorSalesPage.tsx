@@ -94,6 +94,9 @@ const COPY: any = {
       body: "ליווי AI אישי שמוביל אותך שלב אחר שלב למלא את הקליניקה במטופלים הנכונים. באותנטיות, בביטחון, ובלי להרגיש מכירתי.",
       cta: "אני רוצה את המנטור",
       ctaNote: "כולל כל השיפורים העתידיים",
+      trialCta: "להתנסות חינם — 24 שעות, מיקוד בתמחור",
+      loginPrompt: "כבר נרשמת?",
+      loginLink: "התחבר/י",
     },
     problem: {
       eyebrow: "הפער",
@@ -208,6 +211,7 @@ const COPY: any = {
       body: "An AI personal supervision that leads you step by step — identifying your niche, setting your fee, and building referral relationships. Authentically. At your own pace.",
       cta: "✦  Start building my full practice  →",
       ctaNote: "One-time payment · full access · No subscription · special rate for Beta version",
+      trialCta: "Try free for 24 hours — pricing focus",
       loginPrompt: "Already signed up?",
       loginLink: "Log in",
     },
@@ -479,15 +483,13 @@ export function MentorSalesPage() {
         className="band band-grain relative w-full overflow-hidden"
         style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
       >
-        {/* EN-only top-right login link */}
-        {isEn && (
-          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 text-xs">
-            <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
-            <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
-              {t.hero.loginLink}
-            </Link>
-          </div>
-        )}
+        {/* Top-right login link (both languages) */}
+        <div className={`absolute top-4 ${isRTL ? "left-4 md:left-6" : "right-4 md:right-6"} md:top-6 z-20 text-xs`}>
+          <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
+          <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
+            {t.hero.loginLink}
+          </Link>
+        </div>
 
         <div
           className="container mx-auto px-4 max-w-4xl relative z-10 text-center"
@@ -577,6 +579,15 @@ export function MentorSalesPage() {
             >
               {t.hero.ctaNote}
             </p>
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <Link
+                to="/auth"
+                className="underline underline-offset-4 hover:opacity-90 transition"
+                style={{ color: "rgba(250,247,242,0.85)", fontSize: "14px" }}
+              >
+                {t.hero.trialCta} →
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
