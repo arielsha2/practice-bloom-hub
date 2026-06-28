@@ -307,15 +307,30 @@ serve(async (req) => {
 
 
 
-    // If trial: classify the last 3 user messages — block anything that isn't pricing
+    // If trial: classify the last 3 user messages — block anything that isn't pricing.
+    // BUT: if we're already in a pricing conversation (by stage or by keyword match
+    // in the recent thread), bypass the classifier entirely. This prevents a loop
+    // where a follow-up like "I think it helps them" gets mis-classified as off-topic
+    // mid-discussion and locks the user out.
     if (isTrial) {
+      const recentMsgs = (messages as any[]).slice(-6);
       const recentUserMessages = (messages as any[])
         .filter((m) => m?.role === "user" && typeof m?.content === "string")
         .slice(-3)
         .map((m) => m.content)
         .join("\n---\n");
 
-      if (recentUserMessages.trim().length > 0) {
+      // Pricing-context keywords (HE+EN). If any recent message — user OR assistant —
+      // mentions pricing, OR the journey stage is already 'pricing', we treat the
+      // whole exchange as on-topic.
+      const PRICING_RE = /(מחיר|תמחור|תעריף|גובה|גובה\s*מחיר|לגבות|הנחה|שקלים|שקל\b|₪|price|pricing|rate|fee|charge|discount|calculator|מחשבון)/i;
+      const stage = String(journey_context?.current_stage ?? "").toLowerCase();
+      const recentBlob = recentMsgs
+        .map((m: any) => (typeof m?.content === "string" ? m.content : ""))
+        .join("\n");
+      const inPricingContext = stage === "pricing" || PRICING_RE.test(recentBlob);
+
+      if (recentUserMessages.trim().length > 0 && !inPricingContext) {
         // Default to 'other' on failure — fail closed during trial so users
         // can't accidentally bypass the pricing-only scope when the classifier
         // hiccups.
@@ -384,7 +399,7 @@ serve(async (req) => {
           }
         }
 
-        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "usedCache:", usedCache, "user_plan=", user_plan);
+        console.log("Trial classify result:", intent, "classifierOk:", classifierOk, "usedCache:", usedCache, "inPricingContext:", inPricingContext, "stage:", stage, "user_plan=", user_plan);
         if (intent === "other") {
           return new Response(
             JSON.stringify({
@@ -395,8 +410,13 @@ serve(async (req) => {
             { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
           );
         }
+      } else if (inPricingContext) {
+        console.log("Trial classifier bypassed — already in pricing context. stage:", stage);
+        // Refresh cache so subsequent short messages also bypass naturally.
+        trialClassifierCache.set(authedUserId ?? "anon", { intent: "pricing", count: 1 });
       }
     }
+
     // ===== End trial enforcement =====
 
 
