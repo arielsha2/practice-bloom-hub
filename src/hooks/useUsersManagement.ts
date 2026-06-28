@@ -475,7 +475,7 @@ export function useUsersManagement() {
     if (!user) return { status: "none", endsAt: null };
     if (user.plan === "paid") return { status: "paid", endsAt: null };
     if (!user.trial_start_date) return { status: "none", endsAt: null };
-    const endsAt = new Date(new Date(user.trial_start_date).getTime() + 8 * 24 * 60 * 60 * 1000);
+    const endsAt = new Date(new Date(user.trial_start_date).getTime() + 24 * 60 * 60 * 1000);
     return { status: endsAt > new Date() ? "active" : "expired", endsAt };
   };
 
