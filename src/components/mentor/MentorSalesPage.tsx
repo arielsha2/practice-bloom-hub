@@ -483,15 +483,13 @@ export function MentorSalesPage() {
         className="band band-grain relative w-full overflow-hidden"
         style={{ backgroundColor: "#2a0614", color: "hsl(var(--background))" }}
       >
-        {/* EN-only top-right login link */}
-        {isEn && (
-          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 text-xs">
-            <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
-            <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
-              {t.hero.loginLink}
-            </Link>
-          </div>
-        )}
+        {/* Top-right login link (both languages) */}
+        <div className={`absolute top-4 ${isRTL ? "left-4 md:left-6" : "right-4 md:right-6"} md:top-6 z-20 text-xs`}>
+          <span style={{ color: "rgba(250,247,242,0.55)" }}>{t.hero.loginPrompt} </span>
+          <Link to="/auth" className="underline underline-offset-2" style={{ color: "rgba(250,247,242,0.9)" }}>
+            {t.hero.loginLink}
+          </Link>
+        </div>
 
         <div
           className="container mx-auto px-4 max-w-4xl relative z-10 text-center"
