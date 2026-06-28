@@ -1736,6 +1736,22 @@ export default function Mentor() {
         <WebsiteComingSoonCard />
       </div>
       {user && <MentorNotebookPanel />}
+      {/* Mobile full-screen sheet hosting the active bot iframe. */}
+      <MobileBotSheet
+        open={isMobile && !!activeBotKey && handoff.mobileSheetOpen}
+        onOpenChange={(open) => {
+          handoff.setMobileSheetOpen(open);
+          if (!open) {
+            setActiveBotKey(null);
+            handoff.resetForClose();
+          }
+        }}
+        botKey={activeBotKey}
+        botLabel={activeBotKey ? (BOT_LABELS[activeBotKey] ?? activeBotKey) : ""}
+        isRTL={isRTL}
+        onIframeLoad={handoff.handleIframeLoad}
+        ref={mobileIframeRef}
+      />
       {/* BYOK dialog and "Manage AI key" button removed — server uses GEMINI_API_KEY. */}
       <Footer />
     </div>
