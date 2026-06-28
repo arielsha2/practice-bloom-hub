@@ -1,48 +1,113 @@
-## שלוש משימות
+## מטרה
 
-### 1. הסרת ההירו הישן + הוספת קישור התחברות
-- מסירים את ה־legacy hero בעברית מ-`src/pages/Mentor.tsx` (השורות שמרנדרות את הבלוק "המנטור לקליניקה / ליווי AI אישי / לרכישת המנטור"). הדף יתחיל ישירות ב-`MentorSalesPage`.
-- ב-`MentorSalesPage.tsx`, הוספת הקישור **"כבר רשומה? להתחברות"** (HE) / **"Already signed up? Log in"** (EN) **מתחת לכפתור ה־CTA** של ההירו (כמו בתמונה 3). כרגע הקישור באנגלית מופיע בפינה הימנית־עליונה — נעביר אותו למקום הזה גם באנגלית.
+החזרת אפשרות התנסות חינם במנטור — הפעם **יום אחד בלבד** וממוקדת אך ורק בנושא **תמחור**. כניסה עצמית לכל מי שנרשם, ואפשרות לאדמין להוסיף ידנית מתוך ניהול המשתמשים.
 
-### 2. קרוסלת עדויות + עורך עדויות באדמין
-**טבלת DB חדשה: `mentor_testimonials`**
+---
+
+## מה כבר קיים (לא נוגעים)
+
+- המנטור יודע לזהות משתמש בניסיון ולהגביל אותו לכלי `pricing-calculator` בלבד (system prompt חזק, גם בעברית וגם באנגלית).
+- `useUserPlan` + `useBotAccess` כבר מבחינים בין `paid`, `trialActive`, ו-`mentor-only`.
+- בטבלת `profiles` יש כבר `trial_start_date` ו-`trial_reminder_sent_at`.
+- בדשבורד אדמין יש כפתור "הענק התנסות" (`grantFreeTrial`) ב-UsersTable.
+- פונקציית edge `send-trial-reminders` קיימת.
+
+---
+
+## השינויים
+
+### 1. משך ההתנסות: 8 ימים → 24 שעות
+
+**קובץ:** מיגרציית SQL.
+- עדכון פונקציה `public.get_user_access` — להחליף `interval '8 days'` ב-`interval '1 day'` (גם בחישוב `trial_active` וגם ב-`trial_ends_at`).
+
+**קובץ:** `src/hooks/useUsersManagement.ts` (תצוגת סטטוס לאדמין)
+- בפונקציה `getTrialStatus` להחליף `8 * 24 * 60 * 60 * 1000` ל-`24 * 60 * 60 * 1000`.
+
+**קבצים:** `src/pages/Mentor.tsx`, `supabase/functions/mentor-chat/index.ts`
+- בהודעת ה"מה אני יכולה לעזור" וב-system prompt: לעדכן את המילים "8 ימים" / "8-day trial" ל"יום אחד" / "24-hour trial".
+
+### 2. הפעלת ההתנסות אוטומטית בהרשמה
+
+**קובץ:** מיגרציה — עדכון הטריגר `handle_new_user`.
+- כיום הוא קובע `trial_start_date = NULL` (מאז שכיבית את ההתנסות).
+- נחזיר: `trial_start_date = now()` למשתמש חדש, רק אם אין לו כבר רשומת `student_enrollments` בתשלום.
+- כך כל הרשמה עצמית מקבלת אוטומטית 24 שעות גישה.
+
+### 3. כפתור CTA לעצמאיים על עמוד המכירה
+
+**קובץ:** `src/components/mentor/MentorSalesPage.tsx`
+- מתחת לכפתורי "רכישת המנטור" (HE + EN) להוסיף שורת קישור משנית: **"רוצה להתנסות 24 שעות חינם בנושא תמחור? התחבר/י כאן"** → `/auth?mode=signup` (או הלינק הקיים להרשמה).
+- בעברית: "התנסות חינם — 24 שעות, מיקוד בתמחור".
+- באנגלית: "Try free for 24 hours — pricing focus".
+- אסתטיקה צנועה (link/secondary button), לא מתחרה בכפתור התשלום.
+
+### 4. כפתור אדמין "הענק התנסות" — נשאר כפי שהוא
+
+הכפתור קיים ועובד דרך `grantFreeTrial` — מגדיר `trial_start_date = now()`. אחרי שינוי משך ההתנסות בנקודה 1, אותו כפתור אוטומטית מעניק 24 שעות.
+
+טקסט הכפתור / טולטיפ יתעדכן: "הענק התנסות 24 שעות (תמחור)" / "Grant 24h trial (pricing)".
+
+### 5. ניקוי קופי "8 ימים" בכל מקום
+
+חיפוש גלובלי על "8 ימים", "8 days", "8-day" — עדכון לכל אזכור (Mentor.tsx, mentor-chat system prompt, אימייל תזכורת ב-`send-trial-reminders` אם רלוונטי).
+
+### 6. תזכורת תפוגה (אופציונלי, לאישור)
+
+`send-trial-reminders` כיום בנוי ל-8 ימים. אפשרויות:
+- **א.** להשבית את התזכורת לגמרי — 24 שעות זה קצר מדי, אין טעם.
+- **ב.** לשלוח תזכורת אחת ~3 שעות לפני תפוגה.
+- **ג.** להשאיר כמו שהוא ולא להפעיל cron.
+
+הצעתי: **א** — לא מפעילים cron, ההתנסות קצרה ולא דורשת תזכורת.
+
+---
+
+## מה משתמש יחווה
+
+**משתמש חדש שנרשם דרך כפתור "התנסות חינם":**
+1. הרשמה רגילה (OTP) →
+2. נכנס ל-`/mentor` →
+3. המנטור פוגש בברכה קצרה, שואל 2-3 שאלות היכרות, ומכוון מהר אל מחשבון התמחור →
+4. כל ניסיון לגעת בנושא שאינו תמחור — המנטור מאשר את הצורך, מציין שזה זמין בגרסה המלאה, ומחזיר לתמחור →
+5. אחרי 24 שעות — ההתנסות פגה, ה-CTA מציע רכישה.
+
+**אדמין שמוסיף משתמש ידנית:**
+- בטבלת המשתמשים → כפתור "הענק התנסות 24 שעות" שכבר קיים.
+
+---
+
+## פרטים טכניים (לעיון)
+
+**שינוי במיגרציה (טיוטה):**
+```sql
+CREATE OR REPLACE FUNCTION public.get_user_access(_user_id uuid)
+RETURNS TABLE(plan text, trial_active boolean, has_paid boolean, trial_ends_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+  SELECT
+    p.plan,
+    (p.plan = 'free' AND p.trial_start_date IS NOT NULL
+       AND now() < p.trial_start_date + interval '1 day') AS trial_active,
+    (p.plan = 'paid' OR public.has_role(_user_id, 'admin')) AS has_paid,
+    CASE WHEN p.trial_start_date IS NOT NULL
+         THEN p.trial_start_date + interval '1 day'
+         ELSE NULL END AS trial_ends_at
+  FROM public.profiles p WHERE p.id = _user_id
+$$;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user() ... -- מחזיר trial_start_date = now()
 ```
-id uuid pk
-language text ('he' | 'en')
-quote text
-author_name text nullable
-author_details text nullable
-image_url text nullable     -- אופציונלי, מ-Supabase Storage
-display_order int default 0
-is_published boolean default true
-created_at, updated_at timestamps
-```
-- RLS: קריאה לכולם (SELECT public), כתיבה רק לאדמינים (`has_role(auth.uid(),'admin')`).
-- GRANTs: `SELECT` ל-anon+authenticated; `ALL` ל-service_role+authenticated (RLS חוסם לא-אדמינים).
-- שימוש ב-bucket קיים `media` להעלאת תמונות.
 
-**Seed**: זריעת העדויות הקיימות מ-`MentorSalesPage` (גם HE: שני הציטוטים שב-`COPY.he.proof.quotes`, וגם EN: 7 הציטוטים שב-`COPY.en.proof.cards`).
+**קבצים שיתעדכנו:**
+- `src/components/mentor/MentorSalesPage.tsx` — CTA חדש להתנסות
+- `src/pages/Mentor.tsx` — קופי "8 ימים" → "24 שעות"
+- `src/hooks/useUsersManagement.ts` — חישוב סטטוס trial
+- `src/components/admin/UsersTable.tsx` — טקסט הכפתור והבאדג'
+- `supabase/functions/mentor-chat/index.ts` — system prompt: "8 ימים" → "24 שעות"
+- מיגרציה אחת: `get_user_access` + `handle_new_user`
 
-**רכיב קרוסלה חדש**: `src/components/mentor/MentorTestimonialsCarousel.tsx`
-- שולף לפי שפה נוכחית, ממוין לפי `display_order`.
-- שימוש ב-`embla-carousel` הקיים בפרויקט (shadcn `carousel.tsx`).
-- מציג ציטוט גדול + שם/פרטים + תמונה עגולה אם קיימת. חיצי ניווט ונקודות.
-- מחליף את הסקשן הקיים "מהשטח / What therapists say" ב-`MentorSalesPage.tsx` (גם HE וגם EN).
+---
 
-**עמוד אדמין חדש**: `src/pages/MentorTestimonialsAdmin.tsx` בנתיב `/admin/testimonials`
-- כותרת **"עורך עדויות"**.
-- טאבים HE / EN.
-- טבלה עם: ציטוט, שם, סדר, פורסם, תמונה. כפתורי הוספה/עריכה/מחיקה/החלפת סדר.
-- דיאלוג עריכה: textarea לציטוט, inputים לשם ופרטים, העלאת תמונה ל-Storage, switch לפרסום, מספר סדר.
-- מקושר מ-`UsersAdmin` או מ-side-nav של האדמין שכבר קיים (אוסיף קישור איפה שהקישורים האחרים יושבים).
+## שאלה לפני הביצוע
 
-### 3. עדכוני אנגלית
-- אותם שינויים בדיוק לחלק האנגלי: קישור login יעבור מהפינה אל מתחת ל-CTA, הקרוסלה תשמש גם באנגלית עם הציטוטים הקיימים (אפשר להוסיף תמונות מאוחר יותר דרך האדמין).
-
-### Technical notes
-- Carousel UI: shadcn `Carousel` (embla).
-- Image uploads: Supabase Storage bucket `media` (קיים).
-- בקרוסלה אם אין שורות ב-DB → fallback לציטוטים שב-COPY כדי לא להציג ריק.
-- לא נוגעים בלוגיקת ה-mentor-chat / paywall / trial.
-
-מאשר ואני יוצא לדרך?
+האם להשבית את ה-cron של תזכורות תפוגה (`send-trial-reminders`)? בהתנסות של 24 שעות אין הרבה זמן לתזכורת — הצעתי להשבית.
