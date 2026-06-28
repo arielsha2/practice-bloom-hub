@@ -236,6 +236,40 @@ export function UsersTable({
                       </div>
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const confirmed = isEmailConfirmed ? isEmailConfirmed(user.id) : true;
+                        if (confirmed) {
+                          return (
+                            <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-600">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {isRTL ? "מאומת" : "Verified"}
+                            </Badge>
+                          );
+                        }
+                        return (
+                          <div className="flex flex-wrap items-center gap-1">
+                            <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-600">
+                              <AlertTriangle className="w-3 h-3" />
+                              {isRTL ? "לא מאומת" : "Not verified"}
+                            </Badge>
+                            {onVerifyEmail && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                disabled={isVerifyingEmail}
+                                onClick={() => onVerifyEmail(user)}
+                              >
+                                <KeyRound className="w-3.5 h-3.5 me-1" />
+                                {isRTL ? "אמת ידנית" : "Verify"}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
+
+                    <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {userCohorts.length === 0 ? (
                           <span className="text-muted-foreground text-sm">{isRTL ? "ללא מחזור" : "No cohort"}</span>
