@@ -312,7 +312,7 @@ export function UsersTable({
                             disabled={isGrantingTrial}
                           >
                             <Gift className="w-4 h-4 me-1" />
-                            {isRTL ? "אשר 7 ימי התנסות" : "Grant 8-day trial"}
+                            {isRTL ? "הענק 24ש' התנסות (תמחור)" : "Grant 24h trial (pricing)"}
                           </Button>
                         );
                       })()}
