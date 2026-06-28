@@ -198,6 +198,7 @@ export function UsersTable({
               <TableHead>{isRTL ? "מייל" : "Email"}</TableHead>
               <TableHead>{isRTL ? "שם" : "Name"}</TableHead>
               <TableHead>{isRTL ? "תפקיד" : "Role"}</TableHead>
+              <TableHead>{isRTL ? "מייל מאומת?" : "Email verified?"}</TableHead>
               <TableHead>{isRTL ? "מחזורים" : "Cohorts"}</TableHead>
               <TableHead>{isRTL ? "קורסים" : "Courses"}</TableHead>
               <TableHead>{isRTL ? "תאריך הצטרפות" : "Joined"}</TableHead>
@@ -208,10 +209,11 @@ export function UsersTable({
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   {isRTL ? "לא נמצאו משתמשים" : "No users found"}
                 </TableCell>
               </TableRow>
+
             ) : (
               filteredUsers.map((user) => {
                 const userEnrollments = getUserEnrollments(user.id);
