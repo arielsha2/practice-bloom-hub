@@ -543,6 +543,9 @@ export function useUsersManagement() {
     deleteUser,
     upgradeToPaid,
     getTrialStatus,
+    isEmailConfirmed,
+    verifyEmail,
+
   };
 }
 
