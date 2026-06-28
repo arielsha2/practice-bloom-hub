@@ -1052,13 +1052,20 @@ export default function Mentor() {
             const explainer = isRTL
               ? "זה צורך אמיתי וחשוב — ואני שמחה שאת/ה מזהה אותו 💛\n\nבגרסת ההתנסות (24 שעות) העזרה שלי מתמקדת ב**תמחור** בלבד. את שאר המרכיבים — נישה, הצגה עצמית, רשת הפניות, שיחת המרה — נפתח יחד בגרסה המלאה.\n\nבינתיים, אם זה מתאים, בואי נעבוד על התמחור: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — או ספר/י לי מה המחיר שאת/ה גובה היום לפגישה, ואיך הוא מרגיש לך?"
               : "That's a real and important need — and I'm glad you're noticing it 💛\n\nDuring the 24-hour trial my help is focused on **pricing** only. The rest of the components — niche, self-presentation, referral network, conversion call — we'll open together in the full version.\n\nIn the meantime, if it fits, let's work on pricing: [Pricing Calculator](https://therapykeys.co.il/ai-assistants/pricing-calculator) — or tell me, what price are you charging today per session, and how does it feel?";
-            // Keep the user message; append an assistant bubble with the explanation.
-            setMessages((prev) => [...prev, { role: "assistant", content: explainer }]);
+            // Don't append the same canned explainer twice in a row — surface
+            // a toast instead, so the user isn't stuck in a loop of identical
+            // bubbles when the classifier mis-flags a follow-up.
+            const lastAssistant = [...next].reverse().find((m) => m.role === "assistant");
+            const alreadyShown = lastAssistant?.content?.trim() === explainer.trim();
+            if (!alreadyShown) {
+              setMessages((prev) => [...prev, { role: "assistant", content: explainer }]);
+            }
             setTrialRestricted(true);
-            toast.info(isRTL ? "בתקופת ההתנסות המנטור מתמקד בתמחור" : "During trial the mentor focuses on pricing");
+            toast.info(isRTL ? "בתקופת ההתנסות המנטור מתמקד בתמחור — נסי לשאול שאלה על מחיר/תעריף" : "During trial the mentor focuses on pricing — try asking about price/rate");
             setIsLoading(false);
             return;
           }
+
         }
         // (BYOK error codes removed — paid users now use the server key.)
         if (resp.status === 429)
