@@ -113,6 +113,20 @@ export function useUsersManagement() {
 
   // (BYOK status removed — paid users now use the server's GEMINI_API_KEY.)
 
+  // Fetch the set of users whose email_confirmed_at is NULL (admin-only RPC).
+  const { data: unconfirmedRows = [] } = useQuery({
+    queryKey: ["admin-unconfirmed-emails"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_unconfirmed_user_ids");
+      if (error) throw error;
+      return (data ?? []) as Array<{ user_id: string }>;
+    },
+  });
+  const unconfirmedEmailUserIds = new Set(unconfirmedRows.map((r) => r.user_id));
+  const isEmailConfirmed = (userId: string) => !unconfirmedEmailUserIds.has(userId);
+
+
+
 
   // Assign user to course with cohort
   const assignToCourse = useMutation({
