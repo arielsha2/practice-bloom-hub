@@ -113,6 +113,20 @@ export function useUsersManagement() {
 
   // (BYOK status removed — paid users now use the server's GEMINI_API_KEY.)
 
+  // Fetch the set of users whose email_confirmed_at is NULL (admin-only RPC).
+  const { data: unconfirmedRows = [] } = useQuery({
+    queryKey: ["admin-unconfirmed-emails"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_unconfirmed_user_ids");
+      if (error) throw error;
+      return (data ?? []) as Array<{ user_id: string }>;
+    },
+  });
+  const unconfirmedEmailUserIds = new Set(unconfirmedRows.map((r) => r.user_id));
+  const isEmailConfirmed = (userId: string) => !unconfirmedEmailUserIds.has(userId);
+
+
+
 
   // Assign user to course with cohort
   const assignToCourse = useMutation({
@@ -469,11 +483,37 @@ export function useUsersManagement() {
     },
   });
 
+  // Manually confirm a user's email (for users stuck on unconfirmed signups).
+  const verifyEmail = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-verify-user-email", {
+        body: { userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-unconfirmed-emails"] });
+      toast({
+        title: isRTL ? "הצלחה" : "Success",
+        description: isRTL ? "המייל אומת ידנית" : "Email manually verified",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: isRTL ? "שגיאה" : "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get trial status for a user
   const getTrialStatus = (userId: string): { status: TrialStatus; endsAt: Date | null } => {
     const user = users.find((u) => u.id === userId) as UserProfile | undefined;
     if (!user) return { status: "none", endsAt: null };
     if (user.plan === "paid") return { status: "paid", endsAt: null };
+
     if (!user.trial_start_date) return { status: "none", endsAt: null };
     const endsAt = new Date(new Date(user.trial_start_date).getTime() + 24 * 60 * 60 * 1000);
     return { status: endsAt > new Date() ? "active" : "expired", endsAt };
@@ -503,6 +543,9 @@ export function useUsersManagement() {
     deleteUser,
     upgradeToPaid,
     getTrialStatus,
+    isEmailConfirmed,
+    verifyEmail,
+
   };
 }
 

@@ -1521,6 +1521,12 @@ export type Database = {
       }
     }
     Functions: {
+      admin_list_unconfirmed_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_user_access: {
         Args: { _user_id: string }
         Returns: {
