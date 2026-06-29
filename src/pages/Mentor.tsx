@@ -796,7 +796,6 @@ export default function Mentor() {
       setPendingReturn(null);
       lastSavedRef.current = "";
       conversationLoadedRef.current = false;
-      welcomeBackTriedRef.current = false;
       try {
         localStorage.removeItem(`mentor-chat:he`);
         localStorage.removeItem(`mentor-chat:en`);
