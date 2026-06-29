@@ -784,6 +784,29 @@ export default function Mentor() {
     return () => clearTimeout(t);
   }, [messages, user?.id, language]);
 
+  // Admin reset: wipe in-memory chat state immediately so the UI reflects the
+  // DB delete done by useResetMentorJourney (otherwise the save effect would
+  // re-upsert the stale state and the chat would "return" from the same point).
+  useEffect(() => {
+    const onReset = () => {
+      setMessages([]);
+      setInput("");
+      setActiveBotKey(null);
+      setTrialRestricted(false);
+      setPendingReturn(null);
+      lastSavedRef.current = "";
+      conversationLoadedRef.current = false;
+      try {
+        localStorage.removeItem(`mentor-chat:he`);
+        localStorage.removeItem(`mentor-chat:en`);
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("mentor-chat-reset", onReset);
+    return () => window.removeEventListener("mentor-chat-reset", onReset);
+  }, []);
+
   // Track last-active timestamp (per user) for the returning-user welcome-back.
   useEffect(() => {
     if (!user?.id || messages.length === 0) return;

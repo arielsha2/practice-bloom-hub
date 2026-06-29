@@ -32,29 +32,33 @@ export function useResetMentorJourney() {
         await supabase.from("bot_messages").delete().in("conversation_id", convIds);
       }
 
-      // 2. Delete conversations, memory, and journey row in parallel.
-      const [convRes, memRes, journeyRes] = await Promise.all([
+      // 2. Delete conversations, memory, journey row, AND unified mentor chat.
+      const [convRes, memRes, journeyRes, mentorConvRes] = await Promise.all([
         supabase.from("bot_conversations").delete().eq("user_id", user.id),
         supabase.from("bot_user_memory").delete().eq("user_id", user.id),
         supabase.from("therapist_journeys").delete().eq("user_id", user.id),
+        supabase.from("mentor_conversations").delete().eq("user_id", user.id),
       ]);
 
-      const err = convRes.error || memRes.error || journeyRes.error;
+      const err = convRes.error || memRes.error || journeyRes.error || mentorConvRes.error;
       if (err) {
         console.error("Reset mentor error:", err);
         toast.error("שגיאה באיפוס: " + err.message);
         return false;
       }
 
-      // 3. Clear local mentor chat cache (both languages).
+      // 3. Clear local mentor chat cache (both languages) + last-active + welcome-back flags.
       try {
         localStorage.removeItem("mentor-chat:he");
         localStorage.removeItem("mentor-chat:en");
+        localStorage.removeItem(`mentor-last-active:${user.id}`);
+        sessionStorage.removeItem(`mentor-welcomeback-shown:${user.id}`);
       } catch {
         // ignore
       }
 
-      // 4. Notify listeners (e.g. useTherapistJourney) to refresh.
+      // 4. Notify listeners (Mentor page clears in-memory messages; journey hook refreshes).
+      window.dispatchEvent(new CustomEvent("mentor-chat-reset"));
       window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
 
       toast.success("המסע אופס בהצלחה — אפשר להתחיל מחדש");
