@@ -194,9 +194,24 @@ const BotChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isKickoff, authLoading, botLoading, user, activeConversationId, messages.length, chatLoading, botKey, isRTL]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages.
+  // IMPORTANT: do not use Element.scrollIntoView here — when BotChat runs inside
+  // an iframe (the Mentor embeds it), scrollIntoView bubbles to the parent
+  // document and scrolls the Mentor page on every message. Instead, scroll the
+  // Radix ScrollArea viewport directly so the effect is contained.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const end = messagesEndRef.current;
+    if (!end) return;
+    const viewport = end.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    requestAnimationFrame(() => {
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      } else {
+        // Fallback: keep scroll local to this element's nearest scrollable
+        // ancestor and avoid propagating to the parent frame.
+        end.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
   }, [messages]);
 
   // Show error toast
