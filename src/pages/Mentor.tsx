@@ -1085,7 +1085,12 @@ export default function Mentor() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: authHeaders,
-        body: JSON.stringify({ messages: next, language, journey_context }),
+        body: JSON.stringify({
+          messages: next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next,
+          language,
+          journey_context,
+        }),
+
       });
 
       if (!resp.ok || !resp.body) {
