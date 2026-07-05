@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-// BYOK removed — paid users now run on the server-side GEMINI_API_KEY secret.
+// Paid users prefer the server-side GEMINI_API_KEY when configured, with a
+// Lovable AI Gateway fallback so missing Gemini configuration never blocks chat.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -523,8 +524,8 @@ LANGUAGE RULE (overrides everything else):
 
     // ===== Server-side Gemini key for paying (non-admin) users =====
     // Admins and free/trial users continue on the platform's Lovable AI Gateway.
-    // Paid users call Google's Gemini OpenAI-compatible endpoint directly
-    // with the project's GEMINI_API_KEY secret — billed to the project owner.
+    // Paid users call Google's Gemini OpenAI-compatible endpoint directly when
+    // GEMINI_API_KEY exists; otherwise they safely fall back to Lovable AI.
     let endpointUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     let bearerKey = LOVABLE_API_KEY;
     let effectiveModel = modelToUse;
@@ -533,17 +534,14 @@ LANGUAGE RULE (overrides everything else):
     if (user_plan === "paid" && !isAdminUser) {
       const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
       if (!GEMINI_API_KEY) {
-        console.error("GEMINI_API_KEY not configured but a paid user reached mentor-chat");
-        return new Response(
-          JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        console.warn("GEMINI_API_KEY not configured for paid mentor-chat user; falling back to Lovable AI Gateway");
+      } else {
+        endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+        bearerKey = GEMINI_API_KEY;
+        // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
+        effectiveModel = effectiveModel.replace(/^google\//, "");
+        usingGemini = true;
       }
-      endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-      bearerKey = GEMINI_API_KEY;
-      // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
-      effectiveModel = effectiveModel.replace(/^google\//, "");
-      usingGemini = true;
     }
 
     // Cap conversation history sent to the model at the last 20 messages.
