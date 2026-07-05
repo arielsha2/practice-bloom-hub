@@ -702,12 +702,21 @@ export default function Mentor() {
       if (messages.length === 0) {
         localStorage.removeItem(storageKey);
       } else {
-        localStorage.setItem(storageKey, JSON.stringify(messages));
+        const capped =
+          messages.length > MAX_HISTORY_LOCAL ? messages.slice(-MAX_HISTORY_LOCAL) : messages;
+        localStorage.setItem(storageKey, JSON.stringify(capped));
       }
     } catch {
-      // ignore
+      // Quota exceeded or storage unavailable — drop the mirror silently so
+      // the chat keeps working. In-memory state is unaffected.
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {
+        // ignore
+      }
     }
   }, [messages, storageKey]);
+
 
   // Unified-conversation model: a single row per (user_id, language) in
   // mentor_conversations. On mount, hydrate from DB if it has more messages
