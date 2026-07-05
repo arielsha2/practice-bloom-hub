@@ -455,6 +455,14 @@ function AssistantMarkdown({
 const WELCOME_BACK_THRESHOLD_HOURS = 12;
 const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
 
+// History caps — prevent runaway conversations from breaking the chat.
+// The backend already trims to 20 messages before calling the model
+// (HISTORY_WINDOW in supabase/functions/mentor-chat/index.ts).
+const MAX_HISTORY_SENT = 40; // what we send to edge functions per request
+const MAX_HISTORY_PERSIST = 500; // what we save to mentor_conversations.messages
+const MAX_HISTORY_LOCAL = 200; // what we mirror to localStorage
+
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
