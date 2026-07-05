@@ -745,6 +745,7 @@ export type Database = {
           insight_count: number
           language: string
           messages: Json
+          messages_archive: Json | null
           session_id: string
           stage: string | null
           started_at: string
@@ -756,6 +757,7 @@ export type Database = {
           insight_count?: number
           language?: string
           messages?: Json
+          messages_archive?: Json | null
           session_id?: string
           stage?: string | null
           started_at?: string
@@ -767,6 +769,7 @@ export type Database = {
           insight_count?: number
           language?: string
           messages?: Json
+          messages_archive?: Json | null
           session_id?: string
           stage?: string | null
           started_at?: string
