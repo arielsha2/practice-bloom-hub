@@ -455,6 +455,14 @@ function AssistantMarkdown({
 const WELCOME_BACK_THRESHOLD_HOURS = 12;
 const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
 
+// History caps — prevent runaway conversations from breaking the chat.
+// The backend already trims to 20 messages before calling the model
+// (HISTORY_WINDOW in supabase/functions/mentor-chat/index.ts).
+const MAX_HISTORY_SENT = 40; // what we send to edge functions per request
+const MAX_HISTORY_PERSIST = 500; // what we save to mentor_conversations.messages
+const MAX_HISTORY_LOCAL = 200; // what we mirror to localStorage
+
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
@@ -694,12 +702,21 @@ export default function Mentor() {
       if (messages.length === 0) {
         localStorage.removeItem(storageKey);
       } else {
-        localStorage.setItem(storageKey, JSON.stringify(messages));
+        const capped =
+          messages.length > MAX_HISTORY_LOCAL ? messages.slice(-MAX_HISTORY_LOCAL) : messages;
+        localStorage.setItem(storageKey, JSON.stringify(capped));
       }
     } catch {
-      // ignore
+      // Quota exceeded or storage unavailable — drop the mirror silently so
+      // the chat keeps working. In-memory state is unaffected.
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {
+        // ignore
+      }
     }
   }, [messages, storageKey]);
+
 
   // Unified-conversation model: a single row per (user_id, language) in
   // mentor_conversations. On mount, hydrate from DB if it has more messages
@@ -767,7 +784,10 @@ export default function Mentor() {
           {
             user_id: user.id,
             language,
-            messages: messages as any,
+            messages: (messages.length > MAX_HISTORY_PERSIST
+              ? messages.slice(-MAX_HISTORY_PERSIST)
+              : messages) as any,
+
             insight_count: insightCount,
             stage: currentStage,
             updated_at: new Date().toISOString(),
@@ -1065,7 +1085,12 @@ export default function Mentor() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: authHeaders,
-        body: JSON.stringify({ messages: next, language, journey_context }),
+        body: JSON.stringify({
+          messages: next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next,
+          language,
+          journey_context,
+        }),
+
       });
 
       if (!resp.ok || !resp.body) {
