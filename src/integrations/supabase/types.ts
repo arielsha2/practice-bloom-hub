@@ -1551,6 +1551,7 @@ export type Database = {
         Args: { _course_key: string; _user_id: string }
         Returns: boolean
       }
+      is_mentor_trial_open: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "course_member" | "mentor"

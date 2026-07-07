@@ -29,6 +29,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
 import { MentorTestimonialsCarousel } from "@/components/mentor/MentorTestimonialsCarousel";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useMentorTrialOpen } from "@/hooks/useMentorTrialOpen";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
 const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
@@ -473,8 +474,10 @@ const fadeUp = {
 export function MentorSalesPage() {
   useRevealOnScroll();
   const { language, isRTL } = useLanguage();
+  const { trialOpen } = useMentorTrialOpen();
   const t = COPY[language];
   const isEn = language === "en";
+
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} lang={language} className="bg-background text-foreground">
@@ -579,15 +582,17 @@ export function MentorSalesPage() {
             >
               {t.hero.ctaNote}
             </p>
-            <div style={{ marginTop: "1rem", textAlign: "center" }}>
-              <Link
-                to="/auth"
-                className="underline underline-offset-4 hover:opacity-90 transition"
-                style={{ color: "rgba(250,247,242,0.85)", fontSize: "14px" }}
-              >
-                {t.hero.trialCta} →
-              </Link>
-            </div>
+            {trialOpen && (
+              <div style={{ marginTop: "1rem", textAlign: "center" }}>
+                <Link
+                  to="/auth"
+                  className="underline underline-offset-4 hover:opacity-90 transition"
+                  style={{ color: "rgba(250,247,242,0.85)", fontSize: "14px" }}
+                >
+                  {t.hero.trialCta} →
+                </Link>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
