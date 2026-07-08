@@ -498,6 +498,14 @@ export default function Mentor() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const [trialRestricted, setTrialRestricted] = useState(false);
+  const [deepMode, setDeepMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("mentor-deep-mode") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("mentor-deep-mode", deepMode ? "1" : "0");
+  }, [deepMode]);
   const [pendingReturn, setPendingReturn] = useState<{
     botKey: string;
     toolName: string;
@@ -1089,6 +1097,7 @@ export default function Mentor() {
           messages: next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next,
           language,
           journey_context,
+          deep_mode: deepMode,
         }),
 
       });
@@ -1747,10 +1756,26 @@ export default function Mentor() {
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
+                      <div className="max-w-3xl mx-auto mt-2 flex justify-end">
+                        <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={deepMode}
+                            onChange={(e) => setDeepMode(e.target.checked)}
+                            className="h-3 w-3 accent-mentor-accent cursor-pointer"
+                          />
+                          <span>
+                            {isRTL
+                              ? "מודל עמוק (עלול להיות איטי יותר)"
+                              : "Deep model (may be slower)"}
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   </>
                 )}
               </div>
+
 
               {/* Mobile accordions */}
               <div className="lg:hidden mt-5 space-y-4">
