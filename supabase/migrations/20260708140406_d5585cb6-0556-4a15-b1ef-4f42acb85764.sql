@@ -1,0 +1,1 @@
+UPDATE public.mentor_ai_settings SET model = 'google/gemini-2.5-flash', updated_at = now() WHERE model = 'google/gemini-2.5-pro';
