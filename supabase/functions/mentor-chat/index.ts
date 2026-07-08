@@ -235,7 +235,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language, journey_context, returning_user } = await req.json();
+    const { messages, language, journey_context, returning_user, deep_mode } = await req.json();
     console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "returning_user:", JSON.stringify(returning_user ?? null));
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -445,6 +445,13 @@ serve(async (req) => {
       }
     } catch (e) {
       console.error("Failed to load mentor settings:", e);
+    }
+
+    // Optional per-request "deep" mode: user opted into a slower, deeper model
+    // from the composer UI. Overrides the admin-configured default model.
+    if (deep_mode === true) {
+      modelToUse = "google/gemini-2.5-pro";
+      console.log("Deep mode requested — switching model to", modelToUse);
     }
 
     const baseSystemPrompt = language === "en"
