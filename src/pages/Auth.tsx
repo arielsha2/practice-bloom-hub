@@ -403,7 +403,7 @@ export default function Auth() {
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      מייל + קוד
+                      {isRTL ? "מייל + קוד" : "Email + code"}
                     </button>
                   </div>
                 )}
