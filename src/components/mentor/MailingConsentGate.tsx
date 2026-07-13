@@ -21,8 +21,7 @@ const COPY = {
     namePlaceholder: "השם שלך",
     errorName: "נא למלא שם מלא",
     errorConsent: "חובה לאשר הצטרפות לרשימת התפוצה כדי להמשיך",
-    consent:
-      'אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.',
+    consent: 'אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.',
     consentNote: "* אישור זה הוא תנאי לשימוש במנטור. אם תסגור/י את החלון תוחזר/י למסך הבית.",
     submit: "המשך למנטור",
     close: "לא כרגע — חזרה למסך הבית",
@@ -31,14 +30,15 @@ const COPY = {
   en: {
     title: "One quick step before we start",
     description:
-      'To start working with the mentor, we\'d love to get to know you and add you to the "Al Sfat HaClinica" mailing list — we\'ll send tips, updates, and content to help you in your clinic.',
+      "To start working with the mentor, we'd love to get to know you and add you to the \"Therapy Keys\" mailing list — we'll send tips, updates, and content to help you in your clinic.",
     nameLabel: "Full name",
     namePlaceholder: "Your name",
     errorName: "Please enter your full name",
     errorConsent: "You must agree to join the mailing list to continue",
     consent:
-      'I agree to receive content, tips, and updates by email from "Al Sfat HaClinica". You can unsubscribe at any time.',
-    consentNote: "* This consent is required to use the mentor. If you close the window you\'ll be returned to the home page.",
+      'I agree to receive content, tips, and updates by email from "Therapy Keys". You can unsubscribe at any time.',
+    consentNote:
+      "* This consent is required to use the mentor. If you close the window you\'ll be returned to the home page.",
     submit: "Continue to mentor",
     close: "Not now — back to home",
     success: "Thanks! You can start working with the mentor",
@@ -126,7 +126,12 @@ export function MailingConsentGate() {
   const marginIcon = isRTL ? "ml-2" : "mr-2";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose();
+      }}
+    >
       <DialogContent dir={dir} className="max-w-md">
         <DialogHeader>
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
@@ -150,11 +155,7 @@ export function MailingConsentGate() {
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <Checkbox
-              checked={consent}
-              onCheckedChange={(v) => setConsent(v === true)}
-              className="mt-0.5"
-            />
+            <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
             <span className="text-sm text-foreground leading-relaxed">
               {t.consent}
               <span className="block text-xs text-muted-foreground mt-1">{t.consentNote}</span>
@@ -162,21 +163,11 @@ export function MailingConsentGate() {
           </label>
 
           <div className="flex flex-col gap-2">
-            <Button
-              onClick={submit}
-              disabled={saving || !consent || !name.trim()}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={submit} disabled={saving || !consent || !name.trim()} className="w-full" size="lg">
               {saving ? <Loader2 className={`w-4 h-4 animate-spin ${marginIcon}`} /> : null}
               {t.submit}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleClose}
-              className="w-full text-muted-foreground"
-            >
+            <Button type="button" variant="ghost" onClick={handleClose} className="w-full text-muted-foreground">
               {t.close}
             </Button>
           </div>
