@@ -423,12 +423,12 @@ export default function Auth() {
                           autoComplete="email"
                         />
                         <p className="text-xs text-muted-foreground">
-                          נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות.
+                          {isRTL ? "נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות." : "We'll send a 6-digit one-time code to this address."}
                         </p>
                       </div>
                       <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Mail className="w-4 h-4 me-2" />}
-                        שלח/י לי קוד
+                        {isRTL ? "שלח/י לי קוד" : "Send me a code"}
                       </Button>
                     </form>
                   ) : (
