@@ -333,8 +333,8 @@ export default function Auth() {
       dir={isRTL ? "rtl" : "ltr"}
     >
       <SEOHead
-        title="התחברות | TherapyKeys"
-        description="כניסה לאזור האישי בפלטפורמת TherapyKeys."
+        title={isRTL ? "התחברות | TherapyKeys" : "Sign in | TherapyKeys"}
+        description={isRTL ? "כניסה לאזור האישי בפלטפורמת TherapyKeys." : "Sign in to your personal area on TherapyKeys."}
         canonicalUrl="/auth"
         noindex
       />
