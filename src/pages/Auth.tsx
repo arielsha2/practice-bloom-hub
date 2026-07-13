@@ -16,10 +16,12 @@ import { toast } from "sonner";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { SEOHead } from "@/components/SEOHead";
-import { CheckCircle, User, UserPlus, Mail, KeyRound } from "lucide-react";
+import { CheckCircle, User, UserPlus, Mail, KeyRound, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 import { SignupFlow } from "@/components/auth/SignupFlow";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { OtpResendButton } from "@/components/auth/OtpResendButton";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
 type ResetStatus = "idle" | "loading" | "ready" | "error";
