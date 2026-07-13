@@ -389,7 +389,7 @@ export default function Auth() {
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      מייל + סיסמה
+                      {isRTL ? "מייל + סיסמה" : "Email + password"}
                     </button>
                     <button
                       type="button"
