@@ -155,7 +155,7 @@ export default function Auth() {
           // distinguish between "email not found" and "wrong password" — that would
           // enable user enumeration. We show a single message and offer reset as the
           // path for users who signed up via magic link and have no password yet.
-          toast.error("פרטים שגויים. אם נרשמת בעבר ללא סיסמה — אפס/י סיסמה למטה.");
+          toast.error(isRTL ? "פרטים שגויים. אם נרשמת בעבר ללא סיסמה — אפס/י סיסמה למטה." : "Invalid credentials. If you signed up without a password, reset it below.");
         } else {
           trackEvent("form_submission", { form: "login", location: "auth_page" });
           // Check if password_set is false — incomplete signup, route to step 3
