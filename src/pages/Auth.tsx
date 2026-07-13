@@ -580,7 +580,7 @@ export default function Auth() {
                 )}
 
 
-                {mode === "login" && (
+                {mode === "login" && loginMethod === "password" && (
                   <div className="mt-4 text-center">
                     <button
                       type="button"
