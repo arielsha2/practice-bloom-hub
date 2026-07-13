@@ -231,29 +231,29 @@ export default function Auth() {
   const handleSendLoginCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const normalized = normalizeEmail(email);
-    if (!normalized) return toast.error("נא להזין כתובת אימייל");
+    if (!normalized) return toast.error(isRTL ? "נא להזין כתובת אימייל" : "Please enter an email address");
     setIsSubmitting(true);
     const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
     setIsSubmitting(false);
     if (!ok) {
-      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
-      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+      if (status === 429) return toast.error(isRTL ? `נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות` : `Try again in ${body?.retry_after ?? 60} seconds`);
+      return toast.error(isRTL ? "לא הצלחנו לשלוח את הקוד. נסה/י שוב." : "We couldn't send the code. Please try again.");
     }
     setEmail(normalized);
     setCodeStep("otp");
-    toast.success("שלחנו לך קוד למייל");
+    toast.success(isRTL ? "שלחנו לך קוד למייל" : "We sent a code to your email");
   };
 
   const handleVerifyLoginCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
+    if (otp.length !== 6) return toast.error(isRTL ? "הזן/י את כל 6 הספרות" : "Enter all 6 digits");
     setIsSubmitting(true);
     const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
     if (!ok || !body?.token_hash) {
       setIsSubmitting(false);
-      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
-      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
-      return toast.error("הקוד שגוי");
+      if (body?.error === "expired") return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "Code expired — send a new code");
+      if (body?.error === "too_many_attempts") return toast.error(isRTL ? "יותר מדי ניסיונות — שלח/י קוד חדש" : "Too many attempts — send a new code");
+      return toast.error(isRTL ? "הקוד שגוי" : "Invalid code");
     }
     const { error: verifyErr } = await supabase.auth.verifyOtp({
       type: "magiclink",
@@ -261,7 +261,7 @@ export default function Auth() {
     });
     setIsSubmitting(false);
     if (verifyErr) {
-      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
+      return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "Login failed. Please try again.");
     }
     trackEvent("form_submission", { form: "login_code", location: "auth_page" });
     toast.success(t("auth.loginSuccess"));
@@ -271,10 +271,10 @@ export default function Auth() {
   const resendLoginCode = async () => {
     const { ok } = await callFn("signup-send-otp", { email });
     if (!ok) {
-      toast.error("השליחה נכשלה");
+      toast.error(isRTL ? "השליחה נכשלה" : "Failed to send");
       throw new Error("send failed");
     }
-    toast.success("שלחנו קוד חדש למייל");
+    toast.success(isRTL ? "שלחנו קוד חדש למייל" : "We sent a new code to your email");
   };
 
   const getTitle = () => {
