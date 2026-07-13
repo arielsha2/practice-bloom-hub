@@ -74,5 +74,5 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 Developed by:
 
 Dr. Ariel Shapira - Clinical Psychologist and Expert in Marketing for Therapists.
-Founder of על שפת הקליניקה (Al Sfat HaKlinika).
+Founder of על שפת הקליניקה (Therapy Keys).
 Helping therapists build and grow their private practice through authentic marketing and AI tools.
