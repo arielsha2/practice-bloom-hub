@@ -45,6 +45,11 @@ export default function Auth() {
   const [resetSent, setResetSent] = useState(false);
   const [resetStatus, setResetStatus] = useState<ResetStatus>("idle");
 
+  // Login method: password or email code (OTP)
+  const [loginMethod, setLoginMethod] = useState<"password" | "code">("password");
+  const [codeStep, setCodeStep] = useState<"email" | "otp">("email");
+  const [otp, setOtp] = useState("");
+
   // Resume incomplete signup (session exists but no password yet).
   // We detect this from profiles.password_set and route into the SignupFlow's
   // password step, so the user never gets stranded after a step-3 network failure.
