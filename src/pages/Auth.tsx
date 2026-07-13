@@ -374,6 +374,106 @@ export default function Auth() {
               </div>
             ) : (
               <>
+                {mode === "login" && (
+                  <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginMethod("password");
+                        setCodeStep("email");
+                        setOtp("");
+                      }}
+                      className={`rounded-md py-2 transition-colors ${
+                        loginMethod === "password"
+                          ? "bg-background shadow-sm font-semibold text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      מייל + סיסמה
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginMethod("code");
+                        setPassword("");
+                      }}
+                      className={`rounded-md py-2 transition-colors ${
+                        loginMethod === "code"
+                          ? "bg-background shadow-sm font-semibold text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      מייל + קוד
+                    </button>
+                  </div>
+                )}
+
+                {mode === "login" && loginMethod === "code" ? (
+                  codeStep === "email" ? (
+                    <form onSubmit={handleSendLoginCode} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email-code">{t("auth.email")}</Label>
+                        <Input
+                          id="email-code"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="email@example.com"
+                          required
+                          autoComplete="email"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות.
+                        </p>
+                      </div>
+                      <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Mail className="w-4 h-4 me-2" />}
+                        שלח/י לי קוד
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyLoginCode} className="space-y-4 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={otp}
+                          onChange={setOtp}
+                          inputMode="numeric"
+                          autoFocus
+                          onComplete={() => handleVerifyLoginCode()}
+                          containerClassName="dir-ltr"
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting || otp.length !== 6}>
+                        {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
+                        אמת/י והתחבר/י
+                      </Button>
+                      <OtpResendButton onResend={resendLoginCode} disabled={isSubmitting} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodeStep("email");
+                          setOtp("");
+                        }}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        מייל שגוי? התחל/י מחדש
+                      </button>
+                    </form>
+                  )
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {(mode === "login" || mode === "forgot") && (
                     <div className="space-y-2">
@@ -477,6 +577,8 @@ export default function Auth() {
                     </Button>
                   )}
                 </form>
+                )}
+
 
                 {mode === "login" && (
                   <div className="mt-4 text-center">
