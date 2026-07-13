@@ -458,7 +458,7 @@ export default function Auth() {
                       </div>
                       <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting || otp.length !== 6}>
                         {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
-                        אמת/י והתחבר/י
+                        {isRTL ? "אמת/י והתחבר/י" : "Verify and sign in"}
                       </Button>
                       <OtpResendButton onResend={resendLoginCode} disabled={isSubmitting} />
                       <button
@@ -469,7 +469,7 @@ export default function Auth() {
                         }}
                         className="text-xs text-muted-foreground hover:text-primary"
                       >
-                        מייל שגוי? התחל/י מחדש
+                        {isRTL ? "מייל שגוי? התחל/י מחדש" : "Wrong email? Start over"}
                       </button>
                     </form>
                   )
