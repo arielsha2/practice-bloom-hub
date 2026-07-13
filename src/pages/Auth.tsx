@@ -278,12 +278,12 @@ export default function Auth() {
   };
 
   const getTitle = () => {
-    if (resumePasswordSetup) return "השלמת ההרשמה";
+    if (resumePasswordSetup) return isRTL ? "השלמת ההרשמה" : "Complete your signup";
     switch (mode) {
       case "login":
         return t("auth.loginTitle");
       case "signup":
-        return "הרשמה למנטור";
+        return isRTL ? "הרשמה למנטור" : "Sign up for the Mentor";
       case "forgot":
         return t("auth.forgotTitle");
       case "reset":
@@ -292,12 +292,12 @@ export default function Auth() {
   };
 
   const getSubtitle = () => {
-    if (resumePasswordSetup) return "נשארה רק בחירת סיסמה כדי לסיים.";
+    if (resumePasswordSetup) return isRTL ? "נשארה רק בחירת סיסמה כדי לסיים." : "Just choose a password to finish.";
     switch (mode) {
       case "login":
         return t("auth.loginSubtitle");
       case "signup":
-        return "4 שלבים פשוטים: מייל → אימות → סיסמה → חיבור AI";
+        return isRTL ? "4 שלבים פשוטים: מייל → אימות → סיסמה → חיבור AI" : "4 simple steps: email → verify → password → AI connection";
       case "forgot":
         return t("auth.forgotSubtitle");
       case "reset":
