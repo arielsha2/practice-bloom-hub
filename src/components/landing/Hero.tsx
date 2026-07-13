@@ -105,7 +105,7 @@ export function Hero() {
             <div className="relative w-full max-w-lg">
               <img
                 src={heroFoundersImg}
-                alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Al Sfat HaClinica"}
+                alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Therapy Keys"}
                 className="w-full h-auto rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
                 width={1024}
                 height={1024}
@@ -123,7 +123,7 @@ export function Hero() {
         <DialogContent className="sm:max-w-md" dir={isRTL ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle className={`text-2xl font-display ${isRTL ? "text-right" : ""}`}>
-              {isRTL ? 'הצטרפו לקהילת "על שפת הקליניקה"' : 'Join the "Al Sfat HaClinica" community'}
+              {isRTL ? 'הצטרפו לקהילת "על שפת הקליניקה"' : 'Join the "Therapy Keys" community'}
             </DialogTitle>
             <DialogDescription className={isRTL ? "text-right" : ""}>
               {isRTL ? "בחרו את הדרך המועדפת עליכם להישאר בקשר" : "Choose your preferred way to stay in touch"}
