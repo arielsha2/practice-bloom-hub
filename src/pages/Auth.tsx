@@ -434,7 +434,7 @@ export default function Auth() {
                   ) : (
                     <form onSubmit={handleVerifyLoginCode} className="space-y-4 text-center">
                       <p className="text-sm text-muted-foreground">
-                        שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+                        {isRTL ? <>שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span></> : <>We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span></>}
                       </p>
                       <div className="flex justify-center">
                         <InputOTP
