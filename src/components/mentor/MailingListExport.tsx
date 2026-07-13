@@ -56,18 +56,21 @@ async function fetchRows(): Promise<Row[]> {
   });
 }
 
+type Filter = "all" | "used" | "unused";
+
 export function MailingListExport() {
-  const [loading, setLoading] = useState(false);
-  const [counts, setCounts] = useState<{ total: number; consented: number; legacy: number } | null>(null);
+  const [loading, setLoading] = useState<Filter | null>(null);
+  const [counts, setCounts] = useState<{ total: number; used: number; unused: number; consented: number } | null>(null);
 
   async function loadCounts() {
     try {
       const rows = await fetchRows();
-      const consented = rows.filter((r) => r.mailing_list_consent).length;
+      const used = rows.filter((r) => r.used_mentor).length;
       setCounts({
         total: rows.length,
-        consented,
-        legacy: rows.length - consented,
+        used,
+        unused: rows.length - used,
+        consented: rows.filter((r) => r.mailing_list_consent).length,
       });
     } catch {
       // ignore — surfaced at download
@@ -79,10 +82,14 @@ export function MailingListExport() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function download() {
-    setLoading(true);
+  async function download(filter: Filter) {
+    setLoading(filter);
     try {
-      const rows = await fetchRows();
+      const allRows = await fetchRows();
+      const rows =
+        filter === "used" ? allRows.filter((r) => r.used_mentor)
+        : filter === "unused" ? allRows.filter((r) => !r.used_mentor)
+        : allRows;
       const header = ["שם", "אימייל", "אישר דיוור", "תאריך אישור", "השתמש במנטור", "תאריך הרשמה"];
       const lines = [header.join(",")];
       for (const r of rows) {
@@ -100,7 +107,8 @@ export function MailingListExport() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `mailing-list-${new Date().toISOString().slice(0, 10)}.csv`;
+      const suffix = filter === "used" ? "used-mentor" : filter === "unused" ? "not-used-mentor" : "all";
+      a.download = `mailing-list-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -109,9 +117,20 @@ export function MailingListExport() {
     } catch (err: any) {
       toast.error(err?.message || "שגיאה בהורדת הרשימה");
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
+
+  const btn = (filter: Filter, label: string, variant: "default" | "outline" = "outline") => (
+    <Button onClick={() => download(filter)} disabled={loading !== null} size="lg" variant={variant}>
+      {loading === filter ? (
+        <Loader2 className="w-4 h-4 animate-spin ml-2" />
+      ) : (
+        <Download className="w-4 h-4 ml-2" />
+      )}
+      {label}
+    </Button>
+  );
 
   return (
     <Card>
@@ -120,23 +139,20 @@ export function MailingListExport() {
           <Mail className="w-5 h-5" /> רשימת תפוצה — "על שפת הקליניקה"
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          כל המשתמשים שנרשמו לאתר (כולם מקבלים אוטומטית גישה למנטור). הקובץ כולל עמודה שמציינת האם המשתמש אישר דיוור והאם פתח שיחה עם המנטור.
+          כל המשתמשים שנרשמו לאתר (כולם מקבלים אוטומטית גישה למנטור). ניתן להוריד את הרשימה המלאה, או להפריד בין מי שהתחיל בפועל שיחה עם המנטור לבין מי שנרשם ולא השתמש.
           {counts && (
             <span className="block mt-1 text-foreground font-medium">
-              סה״כ {counts.total} · אישרו דיוור: {counts.consented} · ללא אישור דיוור: {counts.legacy}
+              סה״כ {counts.total} · השתמשו במנטור: {counts.used} · לא השתמשו: {counts.unused} · אישרו דיוור: {counts.consented}
             </span>
           )}
         </div>
-        <Button onClick={download} disabled={loading} size="lg">
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin ml-2" />
-          ) : (
-            <Download className="w-4 h-4 ml-2" />
-          )}
-          הורד CSV
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {btn("all", `הורד הכל${counts ? ` (${counts.total})` : ""}`, "default")}
+          {btn("used", `השתמשו במנטור${counts ? ` (${counts.used})` : ""}`)}
+          {btn("unused", `לא השתמשו${counts ? ` (${counts.unused})` : ""}`)}
+        </div>
       </CardContent>
     </Card>
   );
