@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.mentor-chat]
 verify_jwt = false
 
+[functions.mentor-summary]
+verify_jwt = false
+
 [functions.admin-insights]
 verify_jwt = false
 
