@@ -41,6 +41,11 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { downloadConversationPdf, copyConversationText } from "@/lib/mentorExport";
+import {
+  generateMentorSummary,
+  downloadSummaryPdf,
+  copySummaryText,
+} from "@/lib/mentorSummary";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useHasMentorAccess } from "@/hooks/useHasMentorAccess";
@@ -1525,6 +1530,58 @@ export default function Mentor() {
                         >
                           <CopyIcon className="w-4 h-4 me-2" />
                           {isRTL ? "העתק כטקסט (לוואטסאפ/מייל)" : "Copy as text (WhatsApp/email)"}
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            const toastId = toast.loading(
+                              isRTL ? "מכינה סיכום ודגשים לפעולה…" : "Preparing summary & action items…",
+                            );
+                            try {
+                              const summary = await generateMentorSummary(messages, { isRTL });
+                              await downloadSummaryPdf(summary, {
+                                isRTL,
+                                displayName: user?.email ?? null,
+                              });
+                              toast.success(
+                                isRTL ? "הסיכום ירד למחשב/נייד" : "Summary downloaded",
+                                { id: toastId },
+                              );
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(
+                                isRTL ? "הפקת הסיכום נכשלה" : "Summary failed",
+                                { id: toastId },
+                              );
+                            }
+                          }}
+                        >
+                          <Download className="w-4 h-4 me-2" />
+                          {isRTL ? "סיכום ודגשים לפעולה (PDF)" : "Summary & action items (PDF)"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            const toastId = toast.loading(
+                              isRTL ? "מכינה סיכום…" : "Preparing summary…",
+                            );
+                            try {
+                              const summary = await generateMentorSummary(messages, { isRTL });
+                              await copySummaryText(summary, { isRTL });
+                              toast.success(
+                                isRTL ? "הסיכום הועתק ללוח" : "Summary copied",
+                                { id: toastId },
+                              );
+                            } catch (e) {
+                              console.error(e);
+                              toast.error(
+                                isRTL ? "הפקת הסיכום נכשלה" : "Summary failed",
+                                { id: toastId },
+                              );
+                            }
+                          }}
+                        >
+                          <CopyIcon className="w-4 h-4 me-2" />
+                          {isRTL ? "העתק סיכום ודגשים" : "Copy summary & actions"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
