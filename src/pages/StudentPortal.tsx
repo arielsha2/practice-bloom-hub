@@ -173,8 +173,16 @@ export default function StudentPortal() {
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <SEOHead
-        title={`${courseName ? courseName + ' | ' : ''}פורטל הסטודנטים | TherapyKeys`}
-        description={`הפורטל הלימודי של תוכנית "נקודת המפנה" — שיעורים, חומרים, מטלות ושאלות ותשובות.${courseName ? ' קורס: ' + courseName + '.' : ''}`}
+        title={
+          isRTL
+            ? `${courseName ? courseName + ' | ' : ''}פורטל הסטודנטים | TherapyKeys`
+            : `${courseName ? courseName + ' | ' : ''}Student Portal | TherapyKeys`
+        }
+        description={
+          isRTL
+            ? `הפורטל הלימודי של תוכנית "נקודת המפנה" — שיעורים, חומרים, מטלות ושאלות ותשובות.${courseName ? ' קורס: ' + courseName + '.' : ''}`
+            : `The learning portal for the "Turning Point" program — lessons, materials, assignments and Q&A.${courseName ? ' Course: ' + courseName + '.' : ''}`
+        }
         canonicalUrl="/portal"
         noindex
       />
