@@ -155,7 +155,7 @@ export default function Auth() {
           // distinguish between "email not found" and "wrong password" — that would
           // enable user enumeration. We show a single message and offer reset as the
           // path for users who signed up via magic link and have no password yet.
-          toast.error("פרטים שגויים. אם נרשמת בעבר ללא סיסמה — אפס/י סיסמה למטה.");
+          toast.error(isRTL ? "פרטים שגויים. אם נרשמת בעבר ללא סיסמה — אפס/י סיסמה למטה." : "Invalid credentials. If you signed up without a password, reset it below.");
         } else {
           trackEvent("form_submission", { form: "login", location: "auth_page" });
           // Check if password_set is false — incomplete signup, route to step 3
@@ -231,29 +231,29 @@ export default function Auth() {
   const handleSendLoginCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const normalized = normalizeEmail(email);
-    if (!normalized) return toast.error("נא להזין כתובת אימייל");
+    if (!normalized) return toast.error(isRTL ? "נא להזין כתובת אימייל" : "Please enter an email address");
     setIsSubmitting(true);
     const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
     setIsSubmitting(false);
     if (!ok) {
-      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
-      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+      if (status === 429) return toast.error(isRTL ? `נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות` : `Try again in ${body?.retry_after ?? 60} seconds`);
+      return toast.error(isRTL ? "לא הצלחנו לשלוח את הקוד. נסה/י שוב." : "We couldn't send the code. Please try again.");
     }
     setEmail(normalized);
     setCodeStep("otp");
-    toast.success("שלחנו לך קוד למייל");
+    toast.success(isRTL ? "שלחנו לך קוד למייל" : "We sent a code to your email");
   };
 
   const handleVerifyLoginCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
+    if (otp.length !== 6) return toast.error(isRTL ? "הזן/י את כל 6 הספרות" : "Enter all 6 digits");
     setIsSubmitting(true);
     const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
     if (!ok || !body?.token_hash) {
       setIsSubmitting(false);
-      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
-      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
-      return toast.error("הקוד שגוי");
+      if (body?.error === "expired") return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "Code expired — send a new code");
+      if (body?.error === "too_many_attempts") return toast.error(isRTL ? "יותר מדי ניסיונות — שלח/י קוד חדש" : "Too many attempts — send a new code");
+      return toast.error(isRTL ? "הקוד שגוי" : "Invalid code");
     }
     const { error: verifyErr } = await supabase.auth.verifyOtp({
       type: "magiclink",
@@ -261,7 +261,7 @@ export default function Auth() {
     });
     setIsSubmitting(false);
     if (verifyErr) {
-      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
+      return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "Login failed. Please try again.");
     }
     trackEvent("form_submission", { form: "login_code", location: "auth_page" });
     toast.success(t("auth.loginSuccess"));
@@ -271,19 +271,19 @@ export default function Auth() {
   const resendLoginCode = async () => {
     const { ok } = await callFn("signup-send-otp", { email });
     if (!ok) {
-      toast.error("השליחה נכשלה");
+      toast.error(isRTL ? "השליחה נכשלה" : "Failed to send");
       throw new Error("send failed");
     }
-    toast.success("שלחנו קוד חדש למייל");
+    toast.success(isRTL ? "שלחנו קוד חדש למייל" : "We sent a new code to your email");
   };
 
   const getTitle = () => {
-    if (resumePasswordSetup) return "השלמת ההרשמה";
+    if (resumePasswordSetup) return isRTL ? "השלמת ההרשמה" : "Complete your signup";
     switch (mode) {
       case "login":
         return t("auth.loginTitle");
       case "signup":
-        return "הרשמה למנטור";
+        return isRTL ? "הרשמה למנטור" : "Sign up for the Mentor";
       case "forgot":
         return t("auth.forgotTitle");
       case "reset":
@@ -292,12 +292,12 @@ export default function Auth() {
   };
 
   const getSubtitle = () => {
-    if (resumePasswordSetup) return "נשארה רק בחירת סיסמה כדי לסיים.";
+    if (resumePasswordSetup) return isRTL ? "נשארה רק בחירת סיסמה כדי לסיים." : "Just choose a password to finish.";
     switch (mode) {
       case "login":
         return t("auth.loginSubtitle");
       case "signup":
-        return "4 שלבים פשוטים: מייל → אימות → סיסמה → חיבור AI";
+        return isRTL ? "4 שלבים פשוטים: מייל → אימות → סיסמה → חיבור AI" : "4 simple steps: email → verify → password → AI connection";
       case "forgot":
         return t("auth.forgotSubtitle");
       case "reset":
@@ -333,8 +333,8 @@ export default function Auth() {
       dir={isRTL ? "rtl" : "ltr"}
     >
       <SEOHead
-        title="התחברות | TherapyKeys"
-        description="כניסה לאזור האישי בפלטפורמת TherapyKeys."
+        title={isRTL ? "התחברות | TherapyKeys" : "Sign in | TherapyKeys"}
+        description={isRTL ? "כניסה לאזור האישי בפלטפורמת TherapyKeys." : "Sign in to your personal area on TherapyKeys."}
         canonicalUrl="/auth"
         noindex
       />
@@ -389,7 +389,7 @@ export default function Auth() {
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      מייל + סיסמה
+                      {isRTL ? "מייל + סיסמה" : "Email + password"}
                     </button>
                     <button
                       type="button"
@@ -403,7 +403,7 @@ export default function Auth() {
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      מייל + קוד
+                      {isRTL ? "מייל + קוד" : "Email + code"}
                     </button>
                   </div>
                 )}
@@ -423,18 +423,18 @@ export default function Auth() {
                           autoComplete="email"
                         />
                         <p className="text-xs text-muted-foreground">
-                          נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות.
+                          {isRTL ? "נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות." : "We'll send a 6-digit one-time code to this address."}
                         </p>
                       </div>
                       <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Mail className="w-4 h-4 me-2" />}
-                        שלח/י לי קוד
+                        {isRTL ? "שלח/י לי קוד" : "Send me a code"}
                       </Button>
                     </form>
                   ) : (
                     <form onSubmit={handleVerifyLoginCode} className="space-y-4 text-center">
                       <p className="text-sm text-muted-foreground">
-                        שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+                        {isRTL ? <>שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span></> : <>We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span></>}
                       </p>
                       <div className="flex justify-center">
                         <InputOTP
@@ -458,7 +458,7 @@ export default function Auth() {
                       </div>
                       <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting || otp.length !== 6}>
                         {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
-                        אמת/י והתחבר/י
+                        {isRTL ? "אמת/י והתחבר/י" : "Verify and sign in"}
                       </Button>
                       <OtpResendButton onResend={resendLoginCode} disabled={isSubmitting} />
                       <button
@@ -469,7 +469,7 @@ export default function Auth() {
                         }}
                         className="text-xs text-muted-foreground hover:text-primary"
                       >
-                        מייל שגוי? התחל/י מחדש
+                        {isRTL ? "מייל שגוי? התחל/י מחדש" : "Wrong email? Start over"}
                       </button>
                     </form>
                   )
