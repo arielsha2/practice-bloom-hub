@@ -16,10 +16,12 @@ import { toast } from "sonner";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { SEOHead } from "@/components/SEOHead";
-import { CheckCircle, User, UserPlus, Mail, KeyRound } from "lucide-react";
+import { CheckCircle, User, UserPlus, Mail, KeyRound, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 import { SignupFlow } from "@/components/auth/SignupFlow";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { OtpResendButton } from "@/components/auth/OtpResendButton";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
 type ResetStatus = "idle" | "loading" | "ready" | "error";
@@ -42,6 +44,11 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetStatus, setResetStatus] = useState<ResetStatus>("idle");
+
+  // Login method: password or email code (OTP)
+  const [loginMethod, setLoginMethod] = useState<"password" | "code">("password");
+  const [codeStep, setCodeStep] = useState<"email" | "otp">("email");
+  const [otp, setOtp] = useState("");
 
   // Resume incomplete signup (session exists but no password yet).
   // We detect this from profiles.password_set and route into the SignupFlow's
@@ -207,6 +214,69 @@ export default function Auth() {
     }
   };
 
+  const callFn = async (fnName: string, payload: unknown) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    const body = await resp.json().catch(() => ({}));
+    return { ok: resp.ok, status: resp.status, body } as const;
+  };
+
+  const handleSendLoginCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const normalized = normalizeEmail(email);
+    if (!normalized) return toast.error("נא להזין כתובת אימייל");
+    setIsSubmitting(true);
+    const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
+    setIsSubmitting(false);
+    if (!ok) {
+      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
+      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+    }
+    setEmail(normalized);
+    setCodeStep("otp");
+    toast.success("שלחנו לך קוד למייל");
+  };
+
+  const handleVerifyLoginCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
+    setIsSubmitting(true);
+    const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
+    if (!ok || !body?.token_hash) {
+      setIsSubmitting(false);
+      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
+      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
+      return toast.error("הקוד שגוי");
+    }
+    const { error: verifyErr } = await supabase.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: body.token_hash,
+    });
+    setIsSubmitting(false);
+    if (verifyErr) {
+      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
+    }
+    trackEvent("form_submission", { form: "login_code", location: "auth_page" });
+    toast.success(t("auth.loginSuccess"));
+    navigate("/dashboard");
+  };
+
+  const resendLoginCode = async () => {
+    const { ok } = await callFn("signup-send-otp", { email });
+    if (!ok) {
+      toast.error("השליחה נכשלה");
+      throw new Error("send failed");
+    }
+    toast.success("שלחנו קוד חדש למייל");
+  };
+
   const getTitle = () => {
     if (resumePasswordSetup) return "השלמת ההרשמה";
     switch (mode) {
@@ -304,6 +374,106 @@ export default function Auth() {
               </div>
             ) : (
               <>
+                {mode === "login" && (
+                  <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginMethod("password");
+                        setCodeStep("email");
+                        setOtp("");
+                      }}
+                      className={`rounded-md py-2 transition-colors ${
+                        loginMethod === "password"
+                          ? "bg-background shadow-sm font-semibold text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      מייל + סיסמה
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginMethod("code");
+                        setPassword("");
+                      }}
+                      className={`rounded-md py-2 transition-colors ${
+                        loginMethod === "code"
+                          ? "bg-background shadow-sm font-semibold text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      מייל + קוד
+                    </button>
+                  </div>
+                )}
+
+                {mode === "login" && loginMethod === "code" ? (
+                  codeStep === "email" ? (
+                    <form onSubmit={handleSendLoginCode} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email-code">{t("auth.email")}</Label>
+                        <Input
+                          id="email-code"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="email@example.com"
+                          required
+                          autoComplete="email"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          נשלח לכתובת זו קוד חד-פעמי בן 6 ספרות.
+                        </p>
+                      </div>
+                      <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Mail className="w-4 h-4 me-2" />}
+                        שלח/י לי קוד
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyLoginCode} className="space-y-4 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={otp}
+                          onChange={setOtp}
+                          inputMode="numeric"
+                          autoFocus
+                          onComplete={() => handleVerifyLoginCode()}
+                          containerClassName="dir-ltr"
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting || otp.length !== 6}>
+                        {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
+                        אמת/י והתחבר/י
+                      </Button>
+                      <OtpResendButton onResend={resendLoginCode} disabled={isSubmitting} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodeStep("email");
+                          setOtp("");
+                        }}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        מייל שגוי? התחל/י מחדש
+                      </button>
+                    </form>
+                  )
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {(mode === "login" || mode === "forgot") && (
                     <div className="space-y-2">
@@ -407,8 +577,10 @@ export default function Auth() {
                     </Button>
                   )}
                 </form>
+                )}
 
-                {mode === "login" && (
+
+                {mode === "login" && loginMethod === "password" && (
                   <div className="mt-4 text-center">
                     <button
                       type="button"
