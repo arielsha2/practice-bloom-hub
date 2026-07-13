@@ -214,6 +214,69 @@ export default function Auth() {
     }
   };
 
+  const callFn = async (fnName: string, payload: unknown) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    const body = await resp.json().catch(() => ({}));
+    return { ok: resp.ok, status: resp.status, body } as const;
+  };
+
+  const handleSendLoginCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const normalized = normalizeEmail(email);
+    if (!normalized) return toast.error("נא להזין כתובת אימייל");
+    setIsSubmitting(true);
+    const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
+    setIsSubmitting(false);
+    if (!ok) {
+      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
+      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+    }
+    setEmail(normalized);
+    setCodeStep("otp");
+    toast.success("שלחנו לך קוד למייל");
+  };
+
+  const handleVerifyLoginCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
+    setIsSubmitting(true);
+    const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
+    if (!ok || !body?.token_hash) {
+      setIsSubmitting(false);
+      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
+      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
+      return toast.error("הקוד שגוי");
+    }
+    const { error: verifyErr } = await supabase.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: body.token_hash,
+    });
+    setIsSubmitting(false);
+    if (verifyErr) {
+      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
+    }
+    trackEvent("form_submission", { form: "login_code", location: "auth_page" });
+    toast.success(t("auth.loginSuccess"));
+    navigate("/dashboard");
+  };
+
+  const resendLoginCode = async () => {
+    const { ok } = await callFn("signup-send-otp", { email });
+    if (!ok) {
+      toast.error("השליחה נכשלה");
+      throw new Error("send failed");
+    }
+    toast.success("שלחנו קוד חדש למייל");
+  };
+
   const getTitle = () => {
     if (resumePasswordSetup) return "השלמת ההרשמה";
     switch (mode) {
