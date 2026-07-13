@@ -54,8 +54,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     "hero.title": "Build Your Practice Your Way – With Purpose and Business Success",
     "hero.subtitle":
-      'Join the therapist community of "Al Sfat HaClinica" and discover how to build a stable business without compromising your values and unique voice.',
-    "hero.cta": 'Join the "Al Sfat HaClinica" community',
+      'Join the therapist community of "Therapy Keys" and discover how to build a stable business without compromising your values and unique voice.',
+    "hero.cta": 'Join the "Therapy Keys" community',
     "hero.videoPlaceholder": "Watch Introduction Video",
 
     // Founders
