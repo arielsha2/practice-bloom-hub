@@ -512,6 +512,7 @@ export default function Mentor() {
     }
   });
   const [input, setInput] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<MentorAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const [trialRestricted, setTrialRestricted] = useState(false);
