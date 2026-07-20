@@ -619,9 +619,9 @@ LANGUAGE RULE (overrides everything else):
     // The full history is still persisted in mentor_conversations and shown
     // in the UI — this only shrinks per-call input tokens.
     const HISTORY_WINDOW = 20;
-    const trimmedMessages = Array.isArray(messages) && messages.length > HISTORY_WINDOW
-      ? messages.slice(-HISTORY_WINDOW)
-      : messages;
+    const trimmedMessages = Array.isArray(normalizedMessages) && normalizedMessages.length > HISTORY_WINDOW
+      ? normalizedMessages.slice(-HISTORY_WINDOW)
+      : normalizedMessages;
 
     const response = await fetch(endpointUrl, {
       method: "POST",
