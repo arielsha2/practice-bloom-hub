@@ -831,9 +831,9 @@ export default function Mentor() {
           {
             user_id: user.id,
             language,
-            messages: (messages.length > MAX_HISTORY_PERSIST
-              ? messages.slice(-MAX_HISTORY_PERSIST)
-              : messages) as any,
+            messages: stripHeavyAttachments(
+              messages.length > MAX_HISTORY_PERSIST ? messages.slice(-MAX_HISTORY_PERSIST) : messages,
+            ) as any,
 
             insight_count: insightCount,
             stage: currentStage,
