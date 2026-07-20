@@ -723,6 +723,26 @@ export default function Mentor() {
     });
   }, [messages, isLoading]);
 
+  // Strip heavy attachment fields (base64 images, extracted text) before
+  // persisting. Chip metadata (name/kind/size/storage_path) stays so we can
+  // still render the attachment bubble + provide a signed-URL download.
+  const stripHeavyAttachments = (arr: Msg[]): Msg[] =>
+    arr.map((m) => {
+      if (!m.attachments?.length) return m;
+      return {
+        ...m,
+        attachments: m.attachments.map((a) => ({
+          id: a.id,
+          name: a.name,
+          mime: a.mime,
+          kind: a.kind,
+          size: a.size,
+          storage_path: a.storage_path,
+          truncated: a.truncated,
+        })),
+      };
+    });
+
   useEffect(() => {
     try {
       if (messages.length === 0) {
@@ -730,7 +750,7 @@ export default function Mentor() {
       } else {
         const capped =
           messages.length > MAX_HISTORY_LOCAL ? messages.slice(-MAX_HISTORY_LOCAL) : messages;
-        localStorage.setItem(storageKey, JSON.stringify(capped));
+        localStorage.setItem(storageKey, JSON.stringify(stripHeavyAttachments(capped)));
       }
     } catch {
       // Quota exceeded or storage unavailable — drop the mirror silently so
@@ -742,6 +762,7 @@ export default function Mentor() {
       }
     }
   }, [messages, storageKey]);
+
 
 
   // Unified-conversation model: a single row per (user_id, language) in
