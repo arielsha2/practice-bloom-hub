@@ -1846,6 +1846,15 @@ export default function Mentor() {
 
                     {/* Composer */}
                     <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
+                      {user?.id && (
+                        <MentorAttachmentPicker
+                          userId={user.id}
+                          isRTL={isRTL}
+                          disabled={isLoading}
+                          attachments={pendingAttachments}
+                          onChange={setPendingAttachments}
+                        />
+                      )}
                       <div className="flex gap-2 items-end max-w-3xl mx-auto">
                         <Textarea
                           value={input}
@@ -1853,7 +1862,7 @@ export default function Mentor() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
-                              send(input);
+                              send(input, pendingAttachments);
                             }
                           }}
                           placeholder={isRTL ? "התשובה שלך תופיע פה" : "Your reply appears here"}
@@ -1866,6 +1875,7 @@ export default function Mentor() {
                             onClick={() => {
                               setMessages([]);
                               setInput("");
+                              setPendingAttachments([]);
                             }}
                             className="flex-shrink-0 text-muted-foreground text-xs h-[48px] px-3"
                           >
@@ -1873,14 +1883,15 @@ export default function Mentor() {
                           </Button>
                         )}
                         <Button
-                          onClick={() => send(input)}
-                          disabled={!input.trim() || isLoading}
+                          onClick={() => send(input, pendingAttachments)}
+                          disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
                           size="icon"
                           className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
                         >
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
+
                       <div className="max-w-3xl mx-auto mt-2 flex justify-end">
                         <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
                           <input
