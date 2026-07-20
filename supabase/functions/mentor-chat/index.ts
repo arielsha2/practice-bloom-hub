@@ -380,10 +380,19 @@ serve(async (req) => {
     if (isTrial) {
       const recentMsgs = (messages as any[]).slice(-6);
       const recentUserMessages = (messages as any[])
-        .filter((m) => m?.role === "user" && typeof m?.content === "string")
+        .filter((m) => m?.role === "user")
         .slice(-3)
-        .map((m) => m.content)
+        .map((m) => {
+          const base = typeof m?.content === "string" ? m.content : "";
+          const atts: any[] = Array.isArray(m?.attachments) ? m.attachments : [];
+          const extra = atts
+            .map((a) => a?.extracted_text || a?.name || "")
+            .filter(Boolean)
+            .join("\n");
+          return [base, extra].filter(Boolean).join("\n");
+        })
         .join("\n---\n");
+
 
       // Pricing-context keywords (HE+EN). If any recent message — user OR assistant —
       // mentions pricing, OR the journey stage is already 'pricing', we treat the
