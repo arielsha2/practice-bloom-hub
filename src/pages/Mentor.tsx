@@ -67,6 +67,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useHandoffManager } from "@/hooks/useHandoffManager";
 import { HandoffFailureBanner } from "@/components/mentor/HandoffFailureBanner";
 import { MobileBotSheet } from "@/components/mentor/MobileBotSheet";
+import { MentorAttachmentPicker } from "@/components/mentor/MentorAttachmentPicker";
+import {
+  type MentorAttachment,
+  getMentorAttachmentSignedUrl,
+  formatBytes,
+} from "@/lib/mentorAttachments";
+import { FileText, Image as ImageIcon, File as FileIcon } from "lucide-react";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
