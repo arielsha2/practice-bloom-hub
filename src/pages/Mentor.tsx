@@ -67,6 +67,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useHandoffManager } from "@/hooks/useHandoffManager";
 import { HandoffFailureBanner } from "@/components/mentor/HandoffFailureBanner";
 import { MobileBotSheet } from "@/components/mentor/MobileBotSheet";
+import { MentorAttachmentPicker } from "@/components/mentor/MentorAttachmentPicker";
+import {
+  type MentorAttachment,
+  getMentorAttachmentSignedUrl,
+  formatBytes,
+} from "@/lib/mentorAttachments";
+import { FileText, Image as ImageIcon, File as FileIcon } from "lucide-react";
 
 function MentorTopBar() {
   const { isRTL } = useLanguage();
@@ -197,7 +204,12 @@ export async function updateTherapistProgress(
   return { data, error };
 }
 
-type Msg = { role: "user" | "assistant"; content: string; ts?: string };
+type Msg = {
+  role: "user" | "assistant";
+  content: string;
+  ts?: string;
+  attachments?: MentorAttachment[];
+};
 
 const BENEFITS_HE = [
   { icon: Target, title: "בהירות מקצועית", desc: "תדעו בדיוק מי המטופל שלכם וכיצד לדבר אליו." },
@@ -468,6 +480,42 @@ const MAX_HISTORY_PERSIST = 500; // what we save to mentor_conversations.message
 const MAX_HISTORY_LOCAL = 200; // what we mirror to localStorage
 
 
+function MentorAttachmentChip({
+  attachment,
+  isRTL,
+}: {
+  attachment: MentorAttachment;
+  isRTL: boolean;
+}) {
+  const Icon = attachment.kind === "image" ? ImageIcon : attachment.kind === "pdf" || attachment.kind === "docx" ? FileText : FileIcon;
+  const handleClick = async () => {
+    if (!attachment.storage_path) return;
+    try {
+      const url = await getMentorAttachmentSignedUrl(attachment.storage_path);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      // ignore
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={!attachment.storage_path}
+      dir={isRTL ? "rtl" : "ltr"}
+      className="inline-flex items-center gap-1.5 rounded-md bg-black/10 hover:bg-black/15 disabled:hover:bg-black/10 disabled:cursor-default px-2 py-1 text-[11px] max-w-[200px]"
+      title={attachment.name}
+    >
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span className="truncate">{attachment.name}</span>
+      <span className="opacity-70 flex-shrink-0">{formatBytes(attachment.size)}</span>
+    </button>
+  );
+}
+
+
+
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
@@ -500,6 +548,7 @@ export default function Mentor() {
     }
   });
   const [input, setInput] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<MentorAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeBotKey, setActiveBotKey] = useState<string | null>(null);
   const [trialRestricted, setTrialRestricted] = useState(false);
@@ -710,6 +759,26 @@ export default function Mentor() {
     });
   }, [messages, isLoading]);
 
+  // Strip heavy attachment fields (base64 images, extracted text) before
+  // persisting. Chip metadata (name/kind/size/storage_path) stays so we can
+  // still render the attachment bubble + provide a signed-URL download.
+  const stripHeavyAttachments = (arr: Msg[]): Msg[] =>
+    arr.map((m) => {
+      if (!m.attachments?.length) return m;
+      return {
+        ...m,
+        attachments: m.attachments.map((a) => ({
+          id: a.id,
+          name: a.name,
+          mime: a.mime,
+          kind: a.kind,
+          size: a.size,
+          storage_path: a.storage_path,
+          truncated: a.truncated,
+        })),
+      };
+    });
+
   useEffect(() => {
     try {
       if (messages.length === 0) {
@@ -717,7 +786,7 @@ export default function Mentor() {
       } else {
         const capped =
           messages.length > MAX_HISTORY_LOCAL ? messages.slice(-MAX_HISTORY_LOCAL) : messages;
-        localStorage.setItem(storageKey, JSON.stringify(capped));
+        localStorage.setItem(storageKey, JSON.stringify(stripHeavyAttachments(capped)));
       }
     } catch {
       // Quota exceeded or storage unavailable — drop the mirror silently so
@@ -729,6 +798,7 @@ export default function Mentor() {
       }
     }
   }, [messages, storageKey]);
+
 
 
   // Unified-conversation model: a single row per (user_id, language) in
@@ -797,9 +867,9 @@ export default function Mentor() {
           {
             user_id: user.id,
             language,
-            messages: (messages.length > MAX_HISTORY_PERSIST
-              ? messages.slice(-MAX_HISTORY_PERSIST)
-              : messages) as any,
+            messages: stripHeavyAttachments(
+              messages.length > MAX_HISTORY_PERSIST ? messages.slice(-MAX_HISTORY_PERSIST) : messages,
+            ) as any,
 
             insight_count: insightCount,
             stage: currentStage,
@@ -1066,15 +1136,22 @@ export default function Mentor() {
     }
   };
 
-  const send = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const send = async (text: string, attachments: MentorAttachment[] = []) => {
+    const trimmed = text.trim();
+    if ((!trimmed && attachments.length === 0) || isLoading) return;
     // If a recent handoff never opened, mark it as failed and surface the
     // retry banner. Must run before we start the new mentor turn.
     handoff.notifyUserSentMentorMessage();
-    const userMsg: Msg = { role: "user", content: text.trim(), ts: new Date().toISOString() };
+    const userMsg: Msg = {
+      role: "user",
+      content: trimmed,
+      ts: new Date().toISOString(),
+      ...(attachments.length > 0 ? { attachments } : {}),
+    };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
+    setPendingAttachments([]);
     setIsLoading(true);
 
     try {
@@ -1095,15 +1172,34 @@ export default function Mentor() {
       } = await supabase.auth.getSession();
       const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
+      // Send only the last user message's attachments to the model. Earlier
+      // turns' attachments were already consumed and are not re-sent.
+      const outgoing = (next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next).map(
+        (m, idx, arr) => {
+          if (idx === arr.length - 1 && m.role === "user" && m.attachments?.length) {
+            return m; // last user message keeps its full attachments payload
+          }
+          // Strip attachments from all other messages to keep the request small
+          // (heavy fields like image_data_url and extracted_text are only for
+          // the turn where they were originally sent).
+          if (m.attachments) {
+            const { attachments: _drop, ...rest } = m as any;
+            return rest;
+          }
+          return m;
+        },
+      );
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: authHeaders,
         body: JSON.stringify({
-          messages: next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next,
+          messages: outgoing,
           language,
           journey_context,
           deep_mode: deepMode,
         }),
+
+
 
       });
 
@@ -1692,7 +1788,7 @@ export default function Mentor() {
                                     className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
                                   >
                                     {isUser ? (
-                                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                                      <ReactMarkdown>{m.content || (m.attachments?.length ? "" : "…")}</ReactMarkdown>
                                     ) : (
                                       <AssistantMarkdown
                                         content={m.content}
@@ -1702,6 +1798,14 @@ export default function Mentor() {
                                       />
                                     )}
                                   </div>
+                                  {isUser && m.attachments?.length ? (
+                                    <div className={`mt-2 flex flex-wrap gap-1.5 ${isRTL ? "justify-end" : ""}`}>
+                                      {m.attachments.map((a) => (
+                                        <MentorAttachmentChip key={a.id} attachment={a} isRTL={isRTL} />
+                                      ))}
+                                    </div>
+                                  ) : null}
+
                                   {user && cleanForNotebook && (
                                     <button
                                       type="button"
@@ -1778,6 +1882,15 @@ export default function Mentor() {
 
                     {/* Composer */}
                     <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
+                      {user?.id && (
+                        <MentorAttachmentPicker
+                          userId={user.id}
+                          isRTL={isRTL}
+                          disabled={isLoading}
+                          attachments={pendingAttachments}
+                          onChange={setPendingAttachments}
+                        />
+                      )}
                       <div className="flex gap-2 items-end max-w-3xl mx-auto">
                         <Textarea
                           value={input}
@@ -1785,7 +1898,7 @@ export default function Mentor() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
-                              send(input);
+                              send(input, pendingAttachments);
                             }
                           }}
                           placeholder={isRTL ? "התשובה שלך תופיע פה" : "Your reply appears here"}
@@ -1798,6 +1911,7 @@ export default function Mentor() {
                             onClick={() => {
                               setMessages([]);
                               setInput("");
+                              setPendingAttachments([]);
                             }}
                             className="flex-shrink-0 text-muted-foreground text-xs h-[48px] px-3"
                           >
@@ -1805,14 +1919,15 @@ export default function Mentor() {
                           </Button>
                         )}
                         <Button
-                          onClick={() => send(input)}
-                          disabled={!input.trim() || isLoading}
+                          onClick={() => send(input, pendingAttachments)}
+                          disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
                           size="icon"
                           className="h-[48px] w-[48px] flex-shrink-0 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
                         >
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
+
                       <div className="max-w-3xl mx-auto mt-2 flex justify-end">
                         <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
                           <input

@@ -244,6 +244,64 @@ serve(async (req) => {
     const { messages, language, journey_context, returning_user, deep_mode } = await req.json();
     console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "returning_user:", JSON.stringify(returning_user ?? null));
 
+    // ===== Normalize attachments =====
+    // The last user message may carry `attachments: MentorAttachment[]`.
+    // Transform it into OpenAI-compatible multipart content:
+    //   - text block(s) for user text + document excerpts + system notes
+    //   - image_url block(s) for images (data URL base64)
+    // We also produce a plain-string projection used by the trial classifier.
+    type AttIn = {
+      name: string;
+      kind: "pdf" | "docx" | "text" | "image";
+      mime?: string;
+      extracted_text?: string;
+      image_data_url?: string;
+      truncated?: boolean;
+    };
+    const normalizedMessages = Array.isArray(messages)
+      ? (messages as any[]).map((m) => {
+          const atts: AttIn[] = Array.isArray(m?.attachments) ? m.attachments : [];
+          if (!atts.length || m?.role !== "user") {
+            // Drop attachments field from non-last / non-user messages
+            const { attachments: _a, ...rest } = m ?? {};
+            return rest;
+          }
+          const parts: any[] = [];
+          const userText = typeof m.content === "string" ? m.content : "";
+          const truncatedAny = atts.some((a) => a.truncated);
+          const docBlocks: string[] = [];
+          for (const a of atts) {
+            if ((a.kind === "pdf" || a.kind === "docx" || a.kind === "text") && a.extracted_text) {
+              docBlocks.push(
+                `--- Attached ${a.kind.toUpperCase()}: ${a.name} ---\n${a.extracted_text}\n--- end of ${a.name} ---`,
+              );
+            }
+          }
+          const textPieces: string[] = [];
+          if (userText.trim()) textPieces.push(userText);
+          if (docBlocks.length) {
+            textPieces.push(
+              "[System note: The user attached the following file(s). Read them and refer to them naturally.]",
+            );
+            textPieces.push(docBlocks.join("\n\n"));
+          }
+          if (truncatedAny) {
+            textPieces.push(
+              "[System note: The attached document exceeded the maximum supported length. Only the first part of the document was provided.]",
+            );
+          }
+          if (textPieces.length) parts.push({ type: "text", text: textPieces.join("\n\n") });
+          for (const a of atts) {
+            if (a.kind === "image" && a.image_data_url) {
+              parts.push({ type: "image_url", image_url: { url: a.image_data_url } });
+            }
+          }
+          const { attachments: _a, ...rest } = m;
+          return { ...rest, content: parts.length ? parts : userText };
+        })
+      : messages;
+
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -322,10 +380,19 @@ serve(async (req) => {
     if (isTrial) {
       const recentMsgs = (messages as any[]).slice(-6);
       const recentUserMessages = (messages as any[])
-        .filter((m) => m?.role === "user" && typeof m?.content === "string")
+        .filter((m) => m?.role === "user")
         .slice(-3)
-        .map((m) => m.content)
+        .map((m) => {
+          const base = typeof m?.content === "string" ? m.content : "";
+          const atts: any[] = Array.isArray(m?.attachments) ? m.attachments : [];
+          const extra = atts
+            .map((a) => a?.extracted_text || a?.name || "")
+            .filter(Boolean)
+            .join("\n");
+          return [base, extra].filter(Boolean).join("\n");
+        })
         .join("\n---\n");
+
 
       // Pricing-context keywords (HE+EN). If any recent message — user OR assistant —
       // mentions pricing, OR the journey stage is already 'pricing', we treat the
@@ -561,9 +628,9 @@ LANGUAGE RULE (overrides everything else):
     // The full history is still persisted in mentor_conversations and shown
     // in the UI — this only shrinks per-call input tokens.
     const HISTORY_WINDOW = 20;
-    const trimmedMessages = Array.isArray(messages) && messages.length > HISTORY_WINDOW
-      ? messages.slice(-HISTORY_WINDOW)
-      : messages;
+    const trimmedMessages = Array.isArray(normalizedMessages) && normalizedMessages.length > HISTORY_WINDOW
+      ? normalizedMessages.slice(-HISTORY_WINDOW)
+      : normalizedMessages;
 
     const response = await fetch(endpointUrl, {
       method: "POST",
