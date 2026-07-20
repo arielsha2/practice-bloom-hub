@@ -1752,7 +1752,7 @@ export default function Mentor() {
                                     className={`prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-headings:my-2 ${isUser ? "prose-a:text-mentor-accent-foreground prose-a:underline" : "prose-a:text-mentor-accent"} ${isRTL ? "text-right" : "text-left"}`}
                                   >
                                     {isUser ? (
-                                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                                      <ReactMarkdown>{m.content || (m.attachments?.length ? "" : "…")}</ReactMarkdown>
                                     ) : (
                                       <AssistantMarkdown
                                         content={m.content}
@@ -1762,6 +1762,14 @@ export default function Mentor() {
                                       />
                                     )}
                                   </div>
+                                  {isUser && m.attachments?.length ? (
+                                    <div className={`mt-2 flex flex-wrap gap-1.5 ${isRTL ? "justify-end" : ""}`}>
+                                      {m.attachments.map((a) => (
+                                        <MentorAttachmentChip key={a.id} attachment={a} isRTL={isRTL} />
+                                      ))}
+                                    </div>
+                                  ) : null}
+
                                   {user && cleanForNotebook && (
                                     <button
                                       type="button"
