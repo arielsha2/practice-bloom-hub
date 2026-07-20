@@ -244,6 +244,64 @@ serve(async (req) => {
     const { messages, language, journey_context, returning_user, deep_mode } = await req.json();
     console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "returning_user:", JSON.stringify(returning_user ?? null));
 
+    // ===== Normalize attachments =====
+    // The last user message may carry `attachments: MentorAttachment[]`.
+    // Transform it into OpenAI-compatible multipart content:
+    //   - text block(s) for user text + document excerpts + system notes
+    //   - image_url block(s) for images (data URL base64)
+    // We also produce a plain-string projection used by the trial classifier.
+    type AttIn = {
+      name: string;
+      kind: "pdf" | "docx" | "text" | "image";
+      mime?: string;
+      extracted_text?: string;
+      image_data_url?: string;
+      truncated?: boolean;
+    };
+    const normalizedMessages = Array.isArray(messages)
+      ? (messages as any[]).map((m) => {
+          const atts: AttIn[] = Array.isArray(m?.attachments) ? m.attachments : [];
+          if (!atts.length || m?.role !== "user") {
+            // Drop attachments field from non-last / non-user messages
+            const { attachments: _a, ...rest } = m ?? {};
+            return rest;
+          }
+          const parts: any[] = [];
+          const userText = typeof m.content === "string" ? m.content : "";
+          const truncatedAny = atts.some((a) => a.truncated);
+          const docBlocks: string[] = [];
+          for (const a of atts) {
+            if ((a.kind === "pdf" || a.kind === "docx" || a.kind === "text") && a.extracted_text) {
+              docBlocks.push(
+                `--- Attached ${a.kind.toUpperCase()}: ${a.name} ---\n${a.extracted_text}\n--- end of ${a.name} ---`,
+              );
+            }
+          }
+          const textPieces: string[] = [];
+          if (userText.trim()) textPieces.push(userText);
+          if (docBlocks.length) {
+            textPieces.push(
+              "[System note: The user attached the following file(s). Read them and refer to them naturally.]",
+            );
+            textPieces.push(docBlocks.join("\n\n"));
+          }
+          if (truncatedAny) {
+            textPieces.push(
+              "[System note: The attached document exceeded the maximum supported length. Only the first part of the document was provided.]",
+            );
+          }
+          if (textPieces.length) parts.push({ type: "text", text: textPieces.join("\n\n") });
+          for (const a of atts) {
+            if (a.kind === "image" && a.image_data_url) {
+              parts.push({ type: "image_url", image_url: { url: a.image_data_url } });
+            }
+          }
+          const { attachments: _a, ...rest } = m;
+          return { ...rest, content: parts.length ? parts : userText };
+        })
+      : messages;
+
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
