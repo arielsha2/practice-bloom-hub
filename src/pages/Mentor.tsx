@@ -1079,15 +1079,22 @@ export default function Mentor() {
     }
   };
 
-  const send = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const send = async (text: string, attachments: MentorAttachment[] = []) => {
+    const trimmed = text.trim();
+    if ((!trimmed && attachments.length === 0) || isLoading) return;
     // If a recent handoff never opened, mark it as failed and surface the
     // retry banner. Must run before we start the new mentor turn.
     handoff.notifyUserSentMentorMessage();
-    const userMsg: Msg = { role: "user", content: text.trim(), ts: new Date().toISOString() };
+    const userMsg: Msg = {
+      role: "user",
+      content: trimmed,
+      ts: new Date().toISOString(),
+      ...(attachments.length > 0 ? { attachments } : {}),
+    };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
+    setPendingAttachments([]);
     setIsLoading(true);
 
     try {
@@ -1108,15 +1115,34 @@ export default function Mentor() {
       } = await supabase.auth.getSession();
       const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
       if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
+      // Send only the last user message's attachments to the model. Earlier
+      // turns' attachments were already consumed and are not re-sent.
+      const outgoing = (next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next).map(
+        (m, idx, arr) => {
+          if (idx === arr.length - 1 && m.role === "user" && m.attachments?.length) {
+            return m; // last user message keeps its full attachments payload
+          }
+          // Strip attachments from all other messages to keep the request small
+          // (heavy fields like image_data_url and extracted_text are only for
+          // the turn where they were originally sent).
+          if (m.attachments) {
+            const { attachments: _drop, ...rest } = m as any;
+            return rest;
+          }
+          return m;
+        },
+      );
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mentor-chat`, {
         method: "POST",
         headers: authHeaders,
         body: JSON.stringify({
-          messages: next.length > MAX_HISTORY_SENT ? next.slice(-MAX_HISTORY_SENT) : next,
+          messages: outgoing,
           language,
           journey_context,
           deep_mode: deepMode,
         }),
+
+
 
       });
 
