@@ -480,6 +480,42 @@ const MAX_HISTORY_PERSIST = 500; // what we save to mentor_conversations.message
 const MAX_HISTORY_LOCAL = 200; // what we mirror to localStorage
 
 
+function MentorAttachmentChip({
+  attachment,
+  isRTL,
+}: {
+  attachment: MentorAttachment;
+  isRTL: boolean;
+}) {
+  const Icon = attachment.kind === "image" ? ImageIcon : attachment.kind === "pdf" || attachment.kind === "docx" ? FileText : FileIcon;
+  const handleClick = async () => {
+    if (!attachment.storage_path) return;
+    try {
+      const url = await getMentorAttachmentSignedUrl(attachment.storage_path);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      // ignore
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={!attachment.storage_path}
+      dir={isRTL ? "rtl" : "ltr"}
+      className="inline-flex items-center gap-1.5 rounded-md bg-black/10 hover:bg-black/15 disabled:hover:bg-black/10 disabled:cursor-default px-2 py-1 text-[11px] max-w-[200px]"
+      title={attachment.name}
+    >
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span className="truncate">{attachment.name}</span>
+      <span className="opacity-70 flex-shrink-0">{formatBytes(attachment.size)}</span>
+    </button>
+  );
+}
+
+
+
+
 export default function Mentor() {
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();
