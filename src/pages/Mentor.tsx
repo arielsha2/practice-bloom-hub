@@ -2010,8 +2010,9 @@ export default function Mentor() {
               </div>
 
 
-              {/* Mobile accordions */}
-              <div className="lg:hidden mt-5 space-y-4">
+              {/* Mobile accordions — hidden on phones (available inside the mobile journey drawer) */}
+              <div className="hidden md:block lg:hidden mt-5 space-y-4">
+
                 <JourneyRail
                   onOpenBot={(botKey) => handoff.triggerHandoff(botKey, "map")}
                 />
