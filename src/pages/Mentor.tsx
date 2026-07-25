@@ -2098,7 +2098,57 @@ export default function Mentor() {
         ref={mobileIframeRef}
       />
       {/* BYOK dialog and "Manage AI key" button removed — server uses GEMINI_API_KEY. */}
+
+      {/* Mobile-only Journey drawer — houses "Your Journey", accordions and the full map. */}
+      <Sheet open={journeyDrawerOpen} onOpenChange={setJourneyDrawerOpen}>
+        <SheetContent
+          side={isRTL ? "right" : "left"}
+          className="w-full sm:max-w-sm md:hidden p-0 flex flex-col gap-0 overflow-hidden"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <SheetHeader className="px-5 py-4 border-b border-mentor-border/60">
+            <SheetTitle className="text-base font-serif text-foreground">
+              {isRTL ? "המסע שלך" : "Your Journey"}
+            </SheetTitle>
+            <SheetDescription className="text-xs text-muted-foreground">
+              {isRTL ? "מפת המסע, יתרונות ותוצאות." : "Journey map, benefits and outcomes."}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            <JourneyRail
+              onOpenBot={(botKey) => {
+                setJourneyDrawerOpen(false);
+                handoff.triggerHandoff(botKey, "map");
+              }}
+            />
+            <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
+            <div className="pt-2 border-t border-mentor-border/40">
+              <h3 className="text-sm font-serif font-semibold text-foreground mb-3">
+                {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
+              </h3>
+              <JourneyMap
+                onOpenBot={(botKey) => {
+                  setJourneyDrawerOpen(false);
+                  handoff.triggerHandoff(botKey, "map");
+                }}
+              />
+            </div>
+            <FinalCelebration />
+            {showPwaInstall && (
+              <Button
+                onClick={handlePwaInstall}
+                className="w-full gap-2 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+              >
+                <Smartphone className="w-4 h-4" />
+                {isRTL ? "התקן אפליקציה" : "Install app"}
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Footer />
+
     </div>
   );
 }
