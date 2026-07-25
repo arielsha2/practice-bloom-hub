@@ -2022,11 +2022,12 @@ export default function Mentor() {
           </div>
         </section>
 
-        {/* Full Journey Map below the fold */}
+        {/* Full Journey Map below the fold (hidden on phones — available inside the mobile journey drawer) */}
         <section
           id="full-journey-map"
-          className="container mx-auto px-4 py-10 md:py-14 border-t border-mentor-border/40 scroll-mt-20"
+          className="hidden md:block container mx-auto px-4 py-10 md:py-14 border-t border-mentor-border/40 scroll-mt-20"
         >
+
           <div className="max-w-5xl mx-auto mb-4 text-center">
             <h2 className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
