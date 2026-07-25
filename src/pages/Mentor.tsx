@@ -605,7 +605,7 @@ export default function Mentor() {
       localStorage.setItem("mentor-pwa-banner-dismissed", "1");
     } catch {}
   };
-
+  useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("mentor-deep-mode", deepMode ? "1" : "0");
   }, [deepMode]);
