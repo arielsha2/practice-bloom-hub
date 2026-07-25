@@ -1570,7 +1570,9 @@ export default function Mentor() {
                     activeBotKey
                       ? "border-accent/40 bg-accent/15 font-body"
                       : "border-mentor-border/60 bg-mentor-surface"
+                  }`}
                 >
+
                   {!activeBotKey && (
                     <Button
                       size="icon"
