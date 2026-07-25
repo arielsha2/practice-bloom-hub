@@ -1570,8 +1570,18 @@ export default function Mentor() {
                     activeBotKey
                       ? "border-accent/40 bg-accent/15 font-body"
                       : "border-mentor-border/60 bg-mentor-surface"
-                  }`}
                 >
+                  {!activeBotKey && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setJourneyDrawerOpen(true)}
+                      className="md:hidden -ms-2 h-9 w-9 flex-shrink-0"
+                      aria-label={isRTL ? "פתח את מפת המסע" : "Open journey map"}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  )}
                   {activeBotKey && (
                     <Button
                       size="sm"
