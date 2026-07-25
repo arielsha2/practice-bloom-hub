@@ -1969,7 +1969,10 @@ export default function Mentor() {
                     )}
 
                     {/* Composer */}
-                    <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
+                    <div
+                      className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface"
+                      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+                    >
                       {user?.id && (
                         <MentorAttachmentPicker
                           userId={user.id}
