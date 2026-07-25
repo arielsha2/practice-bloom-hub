@@ -33,7 +33,11 @@ import {
   NotebookPen,
   Download,
   Copy as CopyIcon,
+  Menu,
+  Smartphone,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { isPwaStandalone } from "@/lib/pwaUtils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -556,6 +560,51 @@ export default function Mentor() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("mentor-deep-mode") === "1";
   });
+  const [journeyDrawerOpen, setJourneyDrawerOpen] = useState(false);
+  const [pwaInstallEvent, setPwaInstallEvent] = useState<any>(null);
+  const [pwaBannerDismissed, setPwaBannerDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("mentor-pwa-banner-dismissed") === "1";
+  });
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => isPwaStandalone());
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setPwaInstallEvent(e);
+    };
+    const onInstalled = () => {
+      setPwaInstallEvent(null);
+      setIsStandalone(true);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+  const showPwaInstall = !isStandalone && !pwaBannerDismissed;
+  const handlePwaInstall = async () => {
+    if (pwaInstallEvent && typeof pwaInstallEvent.prompt === "function") {
+      pwaInstallEvent.prompt();
+      try {
+        await pwaInstallEvent.userChoice;
+      } catch {}
+      setPwaInstallEvent(null);
+    } else {
+      toast(
+        isRTL
+          ? "כדי להתקין: פתחו את תפריט הדפדפן ובחרו 'הוסף למסך הבית'"
+          : "To install: open your browser menu and choose 'Add to Home Screen'",
+      );
+    }
+  };
+  const dismissPwaBanner = () => {
+    setPwaBannerDismissed(true);
+    try {
+      localStorage.setItem("mentor-pwa-banner-dismissed", "1");
+    } catch {}
+  };
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("mentor-deep-mode", deepMode ? "1" : "0");
@@ -1437,6 +1486,33 @@ export default function Mentor() {
 
       <main className="flex-1 pt-16">
         <TrialBanner />
+        {showPwaInstall && (
+          <div className="md:hidden container mx-auto px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-mentor-accent/40 bg-mentor-accent/10 px-3 py-2.5">
+              <Smartphone className="w-5 h-5 text-mentor-accent flex-shrink-0" />
+              <p className="text-xs text-foreground/85 flex-1 leading-snug">
+                {isRTL
+                  ? "התקן את המנטור כאפליקציה למסך הבית"
+                  : "Install the Mentor as an app on your home screen"}
+              </p>
+              <Button
+                size="sm"
+                onClick={handlePwaInstall}
+                className="h-8 px-3 text-xs bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+              >
+                {isRTL ? "התקן" : "Install"}
+              </Button>
+              <button
+                onClick={dismissPwaBanner}
+                aria-label={isRTL ? "סגירה" : "Dismiss"}
+                className="text-muted-foreground hover:text-foreground text-lg leading-none px-1"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Soft intro */}
         <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
           <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
@@ -1512,9 +1588,9 @@ export default function Mentor() {
               {/* Chat card */}
               <div
                 ref={chatCardRef}
-                className="bg-card border border-mentor-border/60 rounded-3xl shadow-xl overflow-hidden flex flex-col"
-                style={{ height: "clamp(520px, 72vh, 720px)" }}
+                className="bg-card md:border md:border-mentor-border/60 md:rounded-3xl md:shadow-xl overflow-hidden flex flex-col h-[calc(100dvh-4rem)] md:h-auto md:min-h-[520px] md:max-h-[720px] md:[height:72vh]"
               >
+
                 {/* Header — visually distinct when a tool/bot is active */}
                 <div
                   className={`px-5 py-4 border-b flex items-center gap-3 transition-colors ${
@@ -1523,6 +1599,18 @@ export default function Mentor() {
                       : "border-mentor-border/60 bg-mentor-surface"
                   }`}
                 >
+
+                  {!activeBotKey && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setJourneyDrawerOpen(true)}
+                      className="md:hidden -ms-2 h-9 w-9 flex-shrink-0"
+                      aria-label={isRTL ? "פתח את מפת המסע" : "Open journey map"}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  )}
                   {activeBotKey && (
                     <Button
                       size="sm"
@@ -1881,7 +1969,10 @@ export default function Mentor() {
                     )}
 
                     {/* Composer */}
-                    <div className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface">
+                    <div
+                      className="border-t border-mentor-border/60 p-3 md:p-4 bg-mentor-surface"
+                      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+                    >
                       {user?.id && (
                         <MentorAttachmentPicker
                           userId={user.id}
@@ -1949,8 +2040,9 @@ export default function Mentor() {
               </div>
 
 
-              {/* Mobile accordions */}
-              <div className="lg:hidden mt-5 space-y-4">
+              {/* Mobile accordions — hidden on phones (available inside the mobile journey drawer) */}
+              <div className="hidden md:block lg:hidden mt-5 space-y-4">
+
                 <JourneyRail
                   onOpenBot={(botKey) => handoff.triggerHandoff(botKey, "map")}
                 />
@@ -1960,11 +2052,12 @@ export default function Mentor() {
           </div>
         </section>
 
-        {/* Full Journey Map below the fold */}
+        {/* Full Journey Map below the fold (hidden on phones — available inside the mobile journey drawer) */}
         <section
           id="full-journey-map"
-          className="container mx-auto px-4 py-10 md:py-14 border-t border-mentor-border/40 scroll-mt-20"
+          className="hidden md:block container mx-auto px-4 py-10 md:py-14 border-t border-mentor-border/40 scroll-mt-20"
         >
+
           <div className="max-w-5xl mx-auto mb-4 text-center">
             <h2 className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
@@ -2005,7 +2098,57 @@ export default function Mentor() {
         ref={mobileIframeRef}
       />
       {/* BYOK dialog and "Manage AI key" button removed — server uses GEMINI_API_KEY. */}
+
+      {/* Mobile-only Journey drawer — houses "Your Journey", accordions and the full map. */}
+      <Sheet open={journeyDrawerOpen} onOpenChange={setJourneyDrawerOpen}>
+        <SheetContent
+          side={isRTL ? "right" : "left"}
+          className="w-full sm:max-w-sm md:hidden p-0 flex flex-col gap-0 overflow-hidden"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <SheetHeader className="px-5 py-4 border-b border-mentor-border/60">
+            <SheetTitle className="text-base font-serif text-foreground">
+              {isRTL ? "המסע שלך" : "Your Journey"}
+            </SheetTitle>
+            <SheetDescription className="text-xs text-muted-foreground">
+              {isRTL ? "מפת המסע, יתרונות ותוצאות." : "Journey map, benefits and outcomes."}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            <JourneyRail
+              onOpenBot={(botKey) => {
+                setJourneyDrawerOpen(false);
+                handoff.triggerHandoff(botKey, "map");
+              }}
+            />
+            <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
+            <div className="pt-2 border-t border-mentor-border/40">
+              <h3 className="text-sm font-serif font-semibold text-foreground mb-3">
+                {isRTL ? "מפת המסע המלאה" : "The Full Journey Map"}
+              </h3>
+              <JourneyMap
+                onOpenBot={(botKey) => {
+                  setJourneyDrawerOpen(false);
+                  handoff.triggerHandoff(botKey, "map");
+                }}
+              />
+            </div>
+            <FinalCelebration />
+            {showPwaInstall && (
+              <Button
+                onClick={handlePwaInstall}
+                className="w-full gap-2 bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+              >
+                <Smartphone className="w-4 h-4" />
+                {isRTL ? "התקן אפליקציה" : "Install app"}
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Footer />
+
     </div>
   );
 }
