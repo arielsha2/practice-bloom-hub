@@ -560,7 +560,52 @@ export default function Mentor() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("mentor-deep-mode") === "1";
   });
+  const [journeyDrawerOpen, setJourneyDrawerOpen] = useState(false);
+  const [pwaInstallEvent, setPwaInstallEvent] = useState<any>(null);
+  const [pwaBannerDismissed, setPwaBannerDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("mentor-pwa-banner-dismissed") === "1";
+  });
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => isPwaStandalone());
   useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setPwaInstallEvent(e);
+    };
+    const onInstalled = () => {
+      setPwaInstallEvent(null);
+      setIsStandalone(true);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+  const showPwaInstall = !isStandalone && !pwaBannerDismissed;
+  const handlePwaInstall = async () => {
+    if (pwaInstallEvent && typeof pwaInstallEvent.prompt === "function") {
+      pwaInstallEvent.prompt();
+      try {
+        await pwaInstallEvent.userChoice;
+      } catch {}
+      setPwaInstallEvent(null);
+    } else {
+      toast(
+        isRTL
+          ? "כדי להתקין: פתחו את תפריט הדפדפן ובחרו 'הוסף למסך הבית'"
+          : "To install: open your browser menu and choose 'Add to Home Screen'",
+      );
+    }
+  };
+  const dismissPwaBanner = () => {
+    setPwaBannerDismissed(true);
+    try {
+      localStorage.setItem("mentor-pwa-banner-dismissed", "1");
+    } catch {}
+  };
+
     if (typeof window === "undefined") return;
     localStorage.setItem("mentor-deep-mode", deepMode ? "1" : "0");
   }, [deepMode]);
