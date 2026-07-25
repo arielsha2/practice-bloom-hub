@@ -1486,6 +1486,33 @@ export default function Mentor() {
 
       <main className="flex-1 pt-16">
         <TrialBanner />
+        {showPwaInstall && (
+          <div className="md:hidden container mx-auto px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-mentor-accent/40 bg-mentor-accent/10 px-3 py-2.5">
+              <Smartphone className="w-5 h-5 text-mentor-accent flex-shrink-0" />
+              <p className="text-xs text-foreground/85 flex-1 leading-snug">
+                {isRTL
+                  ? "התקן את המנטור כאפליקציה למסך הבית"
+                  : "Install the Mentor as an app on your home screen"}
+              </p>
+              <Button
+                size="sm"
+                onClick={handlePwaInstall}
+                className="h-8 px-3 text-xs bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground"
+              >
+                {isRTL ? "התקן" : "Install"}
+              </Button>
+              <button
+                onClick={dismissPwaBanner}
+                aria-label={isRTL ? "סגירה" : "Dismiss"}
+                className="text-muted-foreground hover:text-foreground text-lg leading-none px-1"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Soft intro */}
         <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
           <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
