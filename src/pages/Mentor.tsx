@@ -33,7 +33,11 @@ import {
   NotebookPen,
   Download,
   Copy as CopyIcon,
+  Menu,
+  Smartphone,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { isPwaStandalone } from "@/lib/pwaUtils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
