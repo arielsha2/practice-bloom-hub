@@ -1561,9 +1561,9 @@ export default function Mentor() {
               {/* Chat card */}
               <div
                 ref={chatCardRef}
-                className="bg-card border border-mentor-border/60 rounded-3xl shadow-xl overflow-hidden flex flex-col"
-                style={{ height: "clamp(520px, 72vh, 720px)" }}
+                className="bg-card md:border md:border-mentor-border/60 md:rounded-3xl md:shadow-xl overflow-hidden flex flex-col h-[calc(100dvh-4rem)] md:h-auto md:min-h-[520px] md:max-h-[720px] md:[height:72vh]"
               >
+
                 {/* Header — visually distinct when a tool/bot is active */}
                 <div
                   className={`px-5 py-4 border-b flex items-center gap-3 transition-colors ${
