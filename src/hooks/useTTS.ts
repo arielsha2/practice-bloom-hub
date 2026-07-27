@@ -58,6 +58,9 @@ export function useTTS(voiceId?: string): TTSControls {
 
     const controller = new AbortController();
     abortRef.current = controller;
+    // Hard cap on the whole request: if elevenlabs-tts stalls, abort so the
+    // caller can recover instead of waiting forever.
+    const fetchTimer = setTimeout(() => controller.abort(), 15000);
     setIsLoading(true);
     setDuration(null);
 
@@ -87,7 +90,12 @@ export function useTTS(voiceId?: string): TTSControls {
           totalSize += value.length;
         }
 
-        if (totalSize === 0) return;
+        // Empty body: bail out, but release the loading state first — returning
+        // here without it left the spinner up permanently.
+        if (totalSize === 0) {
+          setIsLoading(false);
+          return;
+        }
 
         const combined = new Uint8Array(totalSize);
         let offset = 0;
@@ -101,11 +109,19 @@ export function useTTS(voiceId?: string): TTSControls {
         const audio = new Audio(url);
         audioRef.current = audio;
 
-        // Wait for metadata to get duration
+        // Wait for metadata to get duration — capped. Without the cap, an audio
+        // blob whose metadata never loads leaves this promise pending forever,
+        // isLoading stuck on true, and (in voice-sync mode) the message text
+        // hidden behind the "preparing" spinner indefinitely.
         await new Promise<void>((resolve) => {
-          audio.onloadedmetadata = () => resolve();
+          const metaTimer = setTimeout(resolve, 5000);
+          const done = () => {
+            clearTimeout(metaTimer);
+            resolve();
+          };
+          audio.onloadedmetadata = done;
           // fallback if metadata already loaded
-          if (audio.readyState >= 1) resolve();
+          if (audio.readyState >= 1) done();
         });
 
         setDuration(audio.duration);
@@ -126,7 +142,13 @@ export function useTTS(voiceId?: string): TTSControls {
           cleanup();
         };
 
-        audio.play();
+        // play() returns a promise that rejects on autoplay policy or a decode
+        // failure. Unhandled, onplay never fires and isLoading stays true.
+        audio.play().catch((err) => {
+          console.warn('TTS_PLAYBACK_FAILED', err?.name ?? err);
+          setIsLoading(false);
+          setIsPlaying(false);
+        });
       })
       .catch((err) => {
         if (err.name !== 'AbortError') {
@@ -135,7 +157,8 @@ export function useTTS(voiceId?: string): TTSControls {
         setIsLoading(false);
         setIsPlaying(false);
         setDuration(null);
-      });
+      })
+      .finally(() => clearTimeout(fetchTimer));
   }, [cleanup, voiceId]);
 
   // Listen for global stop event

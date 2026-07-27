@@ -429,7 +429,7 @@ function AssistantMarkdown({
 }) {
   // Strip [HANDOFF:bot-key] and [INSIGHT] markers — they are protocol signals, not visible text
   const cleaned = (content || "")
-    .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+    .replace(/\[HANDOFF:\s*[a-z-]+\s*\]\s*/gi, "")
     .replace(/\[INSIGHT\]\s*/gi, "")
     .trim();
   const display = useTypewriter(cleaned, animate);
@@ -696,7 +696,7 @@ export default function Mentor() {
   // Return last N sentences of a text (split on Hebrew/Latin sentence terminators + newlines).
   const lastSentences = (text: string, n: number): string => {
     const parts = (text || "")
-      .replace(/\[HANDOFF:[a-z-]+\]/gi, "")
+      .replace(/\[HANDOFF:\s*[a-z-]+\s*\]/gi, "")
       .split(/(?<=[.!?。…])\s+|\n+/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
@@ -722,8 +722,14 @@ export default function Mentor() {
 
     // 1. Exact tag — normalize through aliases (LLM sometimes invents keys
     //    like "bridge-the-gap" instead of "connection-bridge").
-    const tagMatch = text.match(/\[HANDOFF:([a-z-]+)\]/i);
+    // Whitespace-tolerant: the model regularly emits "[HANDOFF: niche-finder]"
+    // with a space, which the strict pattern missed — the tag then leaked into
+    // the visible text and the handoff never fired.
+    const tagMatch = text.match(/\[HANDOFF:\s*([a-z-]+)\s*\]/i);
     if (tagMatch) {
+      if (/\[HANDOFF:\s+|\s+\]/.test(tagMatch[0])) {
+        console.warn("HANDOFF_REGEX_SPACE_MISMATCH", { rawTag: tagMatch[0] });
+      }
       const normalized = normalizeBotKey(tagMatch[1]);
       if (normalized) return normalized;
     }
@@ -1759,7 +1765,7 @@ export default function Mentor() {
                             const isUser = m.role === "user";
                             const animate = !isUser && i === lastAssistantIdx;
                             const cleanForNotebook = (m.content || "")
-                              .replace(/\[HANDOFF:[a-z-]+\]\s*/gi, "")
+                              .replace(/\[HANDOFF:\s*[a-z-]+\s*\]\s*/gi, "")
                               .replace(/\[INSIGHT\]\s*/gi, "")
                               .trim();
                             const stageDefs = isRTL ? STAGE_DEFS_HE : STAGE_DEFS_EN;

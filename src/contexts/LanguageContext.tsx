@@ -402,6 +402,28 @@ const translations: Record<Language, Record<string, string>> = {
     "voice.stop": "Stop voice",
     "voice.loading": "Loading voice...",
     "voice.notSupported": "Voice not supported on this browser",
+    "voice.preparing": "Preparing response...",
+
+    // Bot chat shell
+    "chat.back": "Back",
+    "chat.placeholder": "Your answer will appear here",
+    "chat.typing": "Typing...",
+    "chat.newConversation": "New conversation",
+    "chat.previousConversations": "Previous conversations",
+    "chat.noConversations": "No conversations yet",
+    "chat.conversationDeleted": "Conversation deleted",
+    "chat.deleteError": "Failed to delete the conversation",
+
+    // Insight dialog
+    "chat.insight.button": "Save an insight",
+    "chat.insight.title": "Insight from this conversation",
+    "chat.insight.description": "What came up for you just now? We'll keep it in your journey.",
+    "chat.insight.placeholder": "My insight...",
+    "chat.insight.hint": "One sentence is enough",
+    "chat.insight.save": "Save",
+    "chat.insight.cancel": "Cancel",
+    "chat.insight.saved": "Insight saved to your journey",
+    "chat.insight.error": "We couldn't save the insight",
   },
   he: {
     // Header
@@ -786,6 +808,28 @@ const translations: Record<Language, Record<string, string>> = {
     "voice.stop": "עצור קול",
     "voice.loading": "טוען קול...",
     "voice.notSupported": "הקול לא נתמך בדפדפן זה",
+    "voice.preparing": "מכינה תשובה...",
+
+    // Bot chat shell
+    "chat.back": "חזרה",
+    "chat.placeholder": "התשובה שלך תופיע פה",
+    "chat.typing": "מקלידה...",
+    "chat.newConversation": "שיחה חדשה",
+    "chat.previousConversations": "שיחות קודמות",
+    "chat.noConversations": "אין עדיין שיחות",
+    "chat.conversationDeleted": "השיחה נמחקה",
+    "chat.deleteError": "לא הצלחנו למחוק את השיחה",
+
+    // Insight dialog
+    "chat.insight.button": "שמירת תובנה",
+    "chat.insight.title": "תובנה מהשיחה",
+    "chat.insight.description": "מה עלה לך עכשיו? נשמור את זה במסע שלך.",
+    "chat.insight.placeholder": "התובנה שלי...",
+    "chat.insight.hint": "משפט אחד מספיק",
+    "chat.insight.save": "שמירה",
+    "chat.insight.cancel": "ביטול",
+    "chat.insight.saved": "התובנה נשמרה במסע שלך",
+    "chat.insight.error": "לא הצלחנו לשמור את התובנה",
   },
 };
 

@@ -163,8 +163,37 @@ export function TherapistHealthScores() {
           {rows.map((r) => {
             const score = r.health_score ?? 0;
             const bd = (r.score_breakdown ?? {}) as Record<string, any>;
-            const groupA = Number(bd.group_a ?? bd.language_quality ?? 0);
-            const groupC = Number(bd.group_c ?? bd.content_signals ?? 0);
+            // `??` only falls through on null/undefined, so a field holding an
+            // object or a non-numeric string still reached Number() and
+            // rendered NaN for every therapist. Coerce defensively, and accept
+            // a nested {score|value} shape while the mentor-score payload is
+            // being aligned.
+            const toScore = (v: any): number => {
+              const raw = v && typeof v === "object" ? (v.score ?? v.value) : v;
+              const n = Number(raw);
+              return Number.isFinite(n) ? n : 0;
+            };
+            // Render every group mentor-score returns, using the label and
+            // weight it ships with. Previously group_b ("דפוסי שימוש", 25% of
+            // the score — it carries the return/retention signals) was never
+            // shown at all, and the labels were hardcoded so they would drift
+            // the moment the rubric changed.
+            const groups = [
+              { key: "group_a", fallback: bd.language_quality, label: "איכות שפה", weight: 0.4 },
+              { key: "group_b", fallback: undefined, label: "דפוסי שימוש", weight: 0.25 },
+              { key: "group_c", fallback: bd.content_signals, label: "אותות תוכן", weight: 0.35 },
+            ]
+              .map((g) => {
+                const raw = bd[g.key] ?? g.fallback;
+                if (raw === undefined || raw === null) return null;
+                return {
+                  key: g.key,
+                  label: (raw && typeof raw === "object" && raw.label) || g.label,
+                  weight: (raw && typeof raw === "object" && raw.weight) || g.weight,
+                  value: toScore(raw),
+                };
+              })
+              .filter(Boolean) as { key: string; label: string; weight: number; value: number }[];
             const trend = getTrend(r.score_history, score);
             const name = r.profile?.display_name || r.profile?.email || r.user_id.slice(0, 8);
 
@@ -211,22 +240,21 @@ export function TherapistHealthScores() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1 text-xs">
-                      <span className="text-muted-foreground">איכות שפה (40%)</span>
-                      <span className="font-medium">{Math.round(groupA)}</span>
-                    </div>
-                    <Progress value={Math.min(100, groupA)} animated={false} className="h-2" />
+                {groups.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {groups.map((g) => (
+                      <div key={g.key}>
+                        <div className="flex items-center justify-between mb-1 text-xs">
+                          <span className="text-muted-foreground">
+                            {g.label} ({Math.round(g.weight * 100)}%)
+                          </span>
+                          <span className="font-medium">{Math.round(g.value)}</span>
+                        </div>
+                        <Progress value={Math.min(100, g.value)} animated={false} className="h-2" />
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1 text-xs">
-                      <span className="text-muted-foreground">סיגנלים תכניים (35%)</span>
-                      <span className="font-medium">{Math.round(groupC)}</span>
-                    </div>
-                    <Progress value={Math.min(100, groupC)} animated={false} className="h-2" />
-                  </div>
-                </div>
+                )}
 
                 <div className="flex flex-wrap gap-1 mt-3">
                   {(r.completed_stages ?? []).map((s) => (
