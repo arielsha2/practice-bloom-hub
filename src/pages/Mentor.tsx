@@ -1375,31 +1375,39 @@ export default function Mentor() {
               }),
             });
             if (analyzeResp.ok) {
-              const { completed, current, stuck_point } = await analyzeResp.json();
-              const stageMap: Record<string, number> = {
-                niche: 1,
-                pricing: 2,
-                "self-presentation": 3,
-                network: 4,
-                conversion: 5,
-              };
-              const stepNumber = stageMap[current] ?? 1;
+              const { completed, stuck_point } = await analyzeResp.json();
+              const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
               const { data: existing } = await supabase
                 .from("therapist_journeys")
-                .select("stuck_points")
+                .select("stuck_points, completed_stages, reflection")
                 .eq("user_id", auth.user.id)
                 .maybeSingle();
               const merged = [...((existing?.stuck_points as string[] | null) ?? [])];
               if (stuck_point && stuck_point.trim() && !merged.includes(stuck_point)) {
                 merged.push(stuck_point);
               }
+              // mentor-analyze reclassifies the whole conversation statelessly on every
+              // call, so its `completed` list isn't monotonic by itself — union it into
+              // what's already recorded (e.g. a real bot-extract-output completion)
+              // instead of overwriting, and derive current/step_number from that merged
+              // set instead of trusting the LLM's raw guess directly. Mirrors the merge
+              // pattern bot-extract-output already uses (supabase/functions/bot-extract-output).
+              const prevCompleted = (existing?.completed_stages as string[] | null) ?? [];
+              const completedSet = new Set(prevCompleted);
+              ((completed ?? []) as string[]).forEach((k) => {
+                if (STAGE_ORDER.includes(k)) completedSet.add(k);
+              });
+              const mergedCompleted = STAGE_ORDER.filter((k) => completedSet.has(k));
+              const currentStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? "conversion";
+              const stepNumber = STAGE_ORDER.indexOf(currentStage) + 1;
+              const baseReflection = (existing?.reflection as Record<string, any>) ?? {};
               await supabase.from("therapist_journeys").upsert(
                 {
                   user_id: auth.user.id,
                   step_number: stepNumber,
                   stuck_points: merged,
-                  completed_stages: completed ?? [],
-                  reflection: { current } as any,
+                  completed_stages: mergedCompleted,
+                  reflection: { ...baseReflection, current: currentStage } as any,
                   updated_at: new Date().toISOString(),
                 },
                 { onConflict: "user_id" },
@@ -1417,8 +1425,8 @@ export default function Mentor() {
                   body: JSON.stringify({
                     user_id: auth.user.id,
                     messages: trimmedHistory,
-                    journey_context: { completed_stages: completed, current },
-                    trigger_event: completed.length > 0 ? "stage_completed" : "stuck_point_detected",
+                    journey_context: { completed_stages: mergedCompleted, current: currentStage },
+                    trigger_event: mergedCompleted.length > 0 ? "stage_completed" : "stuck_point_detected",
                   }),
                 });
 
