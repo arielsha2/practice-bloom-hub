@@ -603,24 +603,32 @@ LANGUAGE RULE (overrides everything else):
 
 
     // ===== Server-side Gemini key for paying (non-admin) users =====
-    // Admins and free/trial users continue on the platform's Lovable AI Gateway.
-    // Paid users call Google's Gemini OpenAI-compatible endpoint directly when
-    // GEMINI_API_KEY exists; otherwise they safely fall back to Lovable AI.
-    let endpointUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
-    let bearerKey = LOVABLE_API_KEY;
-    let effectiveModel = modelToUse;
-    let usingGemini = false;
+    // Admins and free/trial users always use the Lovable AI Gateway. Paid users
+    // try Google's Gemini API directly first (when GEMINI_API_KEY exists) to
+    // save on Gateway costs — but ANY failure on that path, not just a missing
+    // key, falls back to the Lovable Gateway within the same request. A hard
+    // either/or branch here previously caused a 100% failure rate for paid
+    // users when Google rejected the configured model for this key/project
+    // (incident 2026-08-03) — this makes that class of failure invisible to
+    // the user instead of fatal.
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const tryGeminiDirect = user_plan === "paid" && !isAdminUser && !!GEMINI_API_KEY;
 
-    if (user_plan === "paid" && !isAdminUser) {
-      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-      if (!GEMINI_API_KEY) {
-        console.warn("GEMINI_API_KEY not configured for paid mentor-chat user; falling back to Lovable AI Gateway");
-      } else {
-        endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-        bearerKey = GEMINI_API_KEY;
-        // Google's OpenAI-compatible endpoint expects bare model ids (no "google/" prefix).
-        effectiveModel = effectiveModel.replace(/^google\//, "");
-        usingGemini = true;
+    async function logProviderEvent(statusCode: number | null, errorMessage: string, fallbackUsed: boolean) {
+      try {
+        const supaUrl = Deno.env.get("SUPABASE_URL");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (!supaUrl || !serviceKey) return;
+        const admin = createClient(supaUrl, serviceKey);
+        await admin.from("mentor_provider_events").insert({
+          user_id: authedUserId,
+          provider: "gemini_direct",
+          status_code: statusCode,
+          error_message: errorMessage.slice(0, 500),
+          fallback_used: fallbackUsed,
+        });
+      } catch (e) {
+        console.error("Failed to log provider event:", e);
       }
     }
 
@@ -632,23 +640,56 @@ LANGUAGE RULE (overrides everything else):
       ? normalizedMessages.slice(-HISTORY_WINDOW)
       : normalizedMessages;
 
-    const response = await fetch(endpointUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${bearerKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: effectiveModel,
+    const requestBodyFor = (model: string) =>
+      JSON.stringify({
+        model,
         messages: [{ role: "system", content: systemPrompt }, ...trimmedMessages],
         stream: true,
-      }),
-    });
+      });
+
+    let response: Response | null = null;
+
+    if (tryGeminiDirect) {
+      const geminiStart = Date.now();
+      try {
+        const geminiModel = modelToUse.replace(/^google\//, "");
+        const geminiResp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+          body: requestBodyFor(geminiModel),
+        });
+        if (geminiResp.ok) {
+          response = geminiResp;
+        } else {
+          const t = await geminiResp.text().catch(() => "");
+          console.error(JSON.stringify({
+            event: "provider_failure", provider: "gemini_direct", status: geminiResp.status,
+            message: t.slice(0, 300), fallback_used: true, latency_ms: Date.now() - geminiStart,
+          }));
+          await logProviderEvent(geminiResp.status, t.slice(0, 300), true);
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        console.error(JSON.stringify({
+          event: "provider_failure", provider: "gemini_direct", status: null,
+          message, fallback_used: true, latency_ms: Date.now() - geminiStart,
+        }));
+        await logProviderEvent(null, message, true);
+      }
+    }
+
+    if (!response) {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: requestBodyFor(modelToUse),
+      });
+    }
 
     if (!response.ok) {
       const status = response.status;
       const t = await response.text().catch(() => "");
-      console.error("Chat backend error:", status, t.slice(0, 300), "gemini=", usingGemini);
+      console.error("Chat backend error:", status, t.slice(0, 300));
 
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {

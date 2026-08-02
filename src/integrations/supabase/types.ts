@@ -808,6 +808,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_provider_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          fallback_used: boolean
+          id: string
+          provider: string
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          fallback_used?: boolean
+          id?: string
+          provider: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          fallback_used?: boolean
+          id?: string
+          provider?: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       mentor_notebooks: {
         Row: {
           content: string

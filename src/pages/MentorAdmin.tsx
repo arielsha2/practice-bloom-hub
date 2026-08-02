@@ -14,6 +14,7 @@ import { Loader2, History, Save, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { TherapistHealthScores } from "@/components/mentor/TherapistHealthScores";
+import { ProviderHealthCard } from "@/components/mentor/ProviderHealthCard";
 import { MailingListExport } from "@/components/mentor/MailingListExport";
 import { TrialAccessToggleCard } from "@/components/mentor/TrialAccessToggleCard";
 
@@ -141,6 +142,8 @@ export default function MentorAdmin() {
         </div>
 
         <TherapistHealthScores />
+
+        <ProviderHealthCard />
 
         <MailingListExport />
 
