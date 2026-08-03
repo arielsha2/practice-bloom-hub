@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Map } from "lucide-react";
+import { Loader2, Map as MapIcon } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   pricing_fear: "פחד מהעלאת מחיר",
@@ -51,7 +51,7 @@ export function StuckPointMap() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Map className="w-5 h-5 text-primary" />
+          <MapIcon className="w-5 h-5 text-primary" />
           מיפוי קשיים — כלל המטפלים
         </CardTitle>
       </CardHeader>
