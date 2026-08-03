@@ -91,6 +91,7 @@ export function FinalCelebration() {
     sections.push({ title: "אנשי קשר ורשת מקצועית", body: contactsSummary });
   }
 
+  const bridge: any = journey.connection_bridge_output ?? {};
   const conversionSummary = tools["connection-bridge"]?.summary;
   const pricingSummary = tools["pricing-calculator"]?.summary;
 
@@ -114,7 +115,28 @@ export function FinalCelebration() {
   } else if (pricingSummary) {
     sections.push({ title: "התמחור שלך", body: pricingSummary });
   }
-  if (conversionSummary) sections.push({ title: "שיחת היכרות וסגירה", body: conversionSummary });
+  // Same fallback logic as pricing/contacts: prefer the structured practice
+  // feedback (Value Exchange / Professional Authority / Action Item, per the
+  // bot's own "Bridge Model"), fall back to prose for older journeys.
+  const hasBridgeOutput =
+    bridge.next_action != null || bridge.value_exchange != null || bridge.confidence_before != null;
+  if (hasBridgeOutput) {
+    const body = [
+      bridge.contact_type && `תרגלת מול: ${bridge.contact_type}`,
+      bridge.confidence_before != null && bridge.confidence_after != null
+        ? `רמת ביטחון: ${bridge.confidence_before} ← ${bridge.confidence_after} (מתוך 10)`
+        : null,
+      bridge.value_exchange && `חילופי ערך: ${bridge.value_exchange}`,
+      bridge.professional_authority && `סמכות מקצועית: ${bridge.professional_authority}`,
+      bridge.next_action && `הצעד הבא: ${bridge.next_action}`,
+      bridge.key_improvement && `השיפור המרכזי לקראת השיחה האמיתית: ${bridge.key_improvement}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    sections.push({ title: "שיחת היכרות וסגירה", body });
+  } else if (conversionSummary) {
+    sections.push({ title: "שיחת היכרות וסגירה", body: conversionSummary });
+  }
 
   // Generate outreach text from the data we have
   const outreach = (() => {

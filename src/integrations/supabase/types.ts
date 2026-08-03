@@ -1252,6 +1252,7 @@ export type Database = {
           checkin_question: string | null
           checkin_stage: string | null
           completed_stages: string[]
+          connection_bridge_output: Json | null
           contact_finder_output: Json | null
           created_at: string
           health_score: number | null
@@ -1273,6 +1274,7 @@ export type Database = {
           checkin_question?: string | null
           checkin_stage?: string | null
           completed_stages?: string[]
+          connection_bridge_output?: Json | null
           contact_finder_output?: Json | null
           created_at?: string
           health_score?: number | null
@@ -1294,6 +1296,7 @@ export type Database = {
           checkin_question?: string | null
           checkin_stage?: string | null
           completed_stages?: string[]
+          connection_bridge_output?: Json | null
           contact_finder_output?: Json | null
           created_at?: string
           health_score?: number | null

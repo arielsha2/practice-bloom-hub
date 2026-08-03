@@ -11,6 +11,7 @@ export interface TherapistJourney {
   self_presentation_output: Record<string, unknown> | null;
   pricing_output: Record<string, unknown> | null;
   contact_finder_output: Array<Record<string, unknown>> | null;
+  connection_bridge_output: Record<string, unknown> | null;
   updated_at: string | null;
   health_score: number;
   checkin_due: boolean;
@@ -31,7 +32,7 @@ export function useTherapistJourney() {
     }
     const { data } = await supabase
       .from("therapist_journeys")
-      .select("step_number, stuck_points, reflection, updated_at, completed_stages, niche_output, self_presentation_output, pricing_output, contact_finder_output, health_score, checkin_due, checkin_question, checkin_stage")
+      .select("step_number, stuck_points, reflection, updated_at, completed_stages, niche_output, self_presentation_output, pricing_output, contact_finder_output, connection_bridge_output, health_score, checkin_due, checkin_question, checkin_stage")
       .eq("user_id", user.id)
       .maybeSingle();
     setJourney(
@@ -45,6 +46,7 @@ export function useTherapistJourney() {
             self_presentation_output: ((data as any).self_presentation_output as Record<string, unknown> | null) ?? null,
             pricing_output: ((data as any).pricing_output as Record<string, unknown> | null) ?? null,
             contact_finder_output: ((data as any).contact_finder_output as Array<Record<string, unknown>> | null) ?? null,
+            connection_bridge_output: ((data as any).connection_bridge_output as Record<string, unknown> | null) ?? null,
             updated_at: data.updated_at ?? null,
             health_score: (data as any).health_score ?? 0,
             checkin_due: (data as any).checkin_due ?? false,
