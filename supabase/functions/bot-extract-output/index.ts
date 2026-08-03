@@ -33,7 +33,67 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
 }
 השתמש רק במה שאמר המטפל בפועל. אם פרט חסר, נסח שורה כללית קצרה. אל תמציא.`,
   },
+  "pricing-calculator": {
+    column: "pricing_output",
+    system: `אתה מנתח שיחה בין בוט תמחור למטפל פסיכותרפיסט שמטרתה לקבוע תעריף.
+החזר JSON תקין בלבד, בלי טקסט נוסף, בפורמט הבא בדיוק:
+{
+  "comfort_range_low": <מספר — התעריף הנמוך ביותר בטווח הנוחות שהמטפל ציין, או null אם לא צוין>,
+  "comfort_range_high": <מספר — התעריף הגבוה ביותר בטווח הנוחות שהמטפל ציין, או null אם לא צוין>,
+  "target_clients_per_week": <מספר — כמה מטופלים בשבוע המטפל ציין שהוא רוצה, או null אם לא צוין>
+}
+השתמש רק במספרים שהמטפל אמר בפועל בשיחה. אל תחשב, אל תמציא, אל תעגל. אם מספר לא הוזכר — null.`,
+  },
+  "contact-finder": {
+    column: "contact_finder_output",
+    system: `אתה מנתח שיחה בין בוט איתור אנשי קשר למטפל פסיכותרפיסט.
+החזר JSON תקין בלבד, בלי טקסט נוסף, בפורמט הבא בדיוק:
+{
+  "contacts": [
+    { "profession": "תיאור קצר של סוג איש הקשר/הזירה שהוזכרה", "reasoning": "למה זה רלוונטי למטופל האידיאלי שלו, במשפט אחד" }
+  ]
+}
+כלול את כל סוגי אנשי הקשר/הזירות שעלו בשיחה (בדרך כלל 5-7). אל תמציא סוגים שלא הוזכרו. אל תכלול שמות פרטיים או פרטי קשר — רק סוגי תפקיד/זירה.`,
+  },
 };
+
+// Pricing and contacts need extra shaping beyond a straight parsed-JSON save:
+// pricing's recommended rate / income projection is arithmetic that must be
+// computed here, not trusted to the LLM's extraction; contacts need stable
+// ids and empty name/phone/email fields for the therapist to fill in later.
+function buildStructuredOutput(botKey: string, parsed: Record<string, unknown>): unknown {
+  if (botKey === "pricing-calculator") {
+    const low = typeof parsed.comfort_range_low === "number" ? parsed.comfort_range_low : null;
+    const high = typeof parsed.comfort_range_high === "number" ? parsed.comfort_range_high : null;
+    const targetClients = typeof parsed.target_clients_per_week === "number" ? parsed.target_clients_per_week : null;
+    const recommendedRate = high !== null ? Math.round(high * 1.1) : null;
+    const monthlyIncome =
+      recommendedRate !== null && targetClients !== null
+        ? Math.round(recommendedRate * targetClients * 4.3)
+        : null;
+    const annualIncome = monthlyIncome !== null ? monthlyIncome * 12 : null;
+    return {
+      comfort_range_low: low,
+      comfort_range_high: high,
+      target_clients_per_week: targetClients,
+      recommended_rate: recommendedRate,
+      monthly_income: monthlyIncome,
+      annual_income: annualIncome,
+    };
+  }
+  if (botKey === "contact-finder") {
+    const contactsRaw = Array.isArray((parsed as any).contacts) ? (parsed as any).contacts : [];
+    return contactsRaw.map((c: any) => ({
+      id: crypto.randomUUID(),
+      profession: typeof c?.profession === "string" ? c.profession : "",
+      reasoning: typeof c?.reasoning === "string" ? c.reasoning : "",
+      name: "",
+      phone: "",
+      email: "",
+    }));
+  }
+  return parsed;
+}
 
 // Generic prompt for any other bot — produces a short summary string
 const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למטפל פסיכותרפיסט.
@@ -179,7 +239,7 @@ Deno.serve(async (req) => {
       };
       updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
     } else {
-      updatePayload[cfg!.column] = parsed;
+      updatePayload[cfg!.column] = buildStructuredOutput(botKey, parsed);
       updatePayload.reflection = { ...baseReflection, current: nextStage };
     }
 

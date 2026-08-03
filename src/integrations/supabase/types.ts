@@ -1225,10 +1225,12 @@ export type Database = {
           checkin_question: string | null
           checkin_stage: string | null
           completed_stages: string[]
+          contact_finder_output: Json | null
           created_at: string
           health_score: number | null
           id: string
           niche_output: Json | null
+          pricing_output: Json | null
           reflection: Json
           score_breakdown: Json | null
           score_history: Json | null
@@ -1244,10 +1246,12 @@ export type Database = {
           checkin_question?: string | null
           checkin_stage?: string | null
           completed_stages?: string[]
+          contact_finder_output?: Json | null
           created_at?: string
           health_score?: number | null
           id?: string
           niche_output?: Json | null
+          pricing_output?: Json | null
           reflection?: Json
           score_breakdown?: Json | null
           score_history?: Json | null
@@ -1263,10 +1267,12 @@ export type Database = {
           checkin_question?: string | null
           checkin_stage?: string | null
           completed_stages?: string[]
+          contact_finder_output?: Json | null
           created_at?: string
           health_score?: number | null
           id?: string
           niche_output?: Json | null
+          pricing_output?: Json | null
           reflection?: Json
           score_breakdown?: Json | null
           score_history?: Json | null

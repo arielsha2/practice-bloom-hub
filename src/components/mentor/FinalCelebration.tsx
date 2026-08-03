@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard";
+import { ContactDreamTable, type DreamContact } from "@/components/mentor/ContactDreamTable";
 import { toast } from "sonner";
 
 const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
@@ -46,6 +47,8 @@ export function FinalCelebration() {
 
   const niche: any = journey.niche_output ?? {};
   const sp: any = journey.self_presentation_output ?? {};
+  const pricing: any = journey.pricing_output ?? {};
+  const dreamContacts = (journey.contact_finder_output as unknown as DreamContact[] | null) ?? null;
   const tools: any = (journey.reflection as any)?.tool_summaries ?? {};
 
   const sections: Section[] = [];
@@ -79,14 +82,38 @@ export function FinalCelebration() {
     });
   }
 
+  // Contacts got a real structured deliverable (editable table) once
+  // contact-finder started producing contact_finder_output — fall back to
+  // the old prose summary only for journeys completed before that existed.
   const contactsSummary = tools["contact-finder"]?.summary;
-  if (contactsSummary) {
+  const hasDreamContacts = !!dreamContacts && dreamContacts.length > 0;
+  if (!hasDreamContacts && contactsSummary) {
     sections.push({ title: "אנשי קשר ורשת מקצועית", body: contactsSummary });
   }
 
   const conversionSummary = tools["connection-bridge"]?.summary;
   const pricingSummary = tools["pricing-calculator"]?.summary;
-  if (pricingSummary) sections.push({ title: "התמחור שלך", body: pricingSummary });
+
+  // Same fallback logic for pricing: prefer the computed structured numbers,
+  // fall back to the old free-text summary for journeys completed earlier.
+  const hasPricingOutput =
+    pricing.recommended_rate != null || pricing.comfort_range_low != null || pricing.comfort_range_high != null;
+  if (hasPricingOutput) {
+    const body = [
+      pricing.comfort_range_low != null && pricing.comfort_range_high != null
+        ? `טווח הנוחות שלך: ${pricing.comfort_range_low}–${pricing.comfort_range_high} ש"ח`
+        : null,
+      pricing.recommended_rate != null && `התעריף המומלץ: ${pricing.recommended_rate} ש"ח`,
+      pricing.target_clients_per_week != null && `יעד: ${pricing.target_clients_per_week} מטופלים בשבוע`,
+      pricing.monthly_income != null && `הכנסה חודשית משוערת: ${Number(pricing.monthly_income).toLocaleString()} ש"ח`,
+      pricing.annual_income != null && `הכנסה שנתית משוערת: ${Number(pricing.annual_income).toLocaleString()} ש"ח`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    sections.push({ title: "התמחור שלך", body });
+  } else if (pricingSummary) {
+    sections.push({ title: "התמחור שלך", body: pricingSummary });
+  }
   if (conversionSummary) sections.push({ title: "שיחת היכרות וסגירה", body: conversionSummary });
 
   // Generate outreach text from the data we have
@@ -173,7 +200,9 @@ export function FinalCelebration() {
             </div>
           ))}
 
-          {sections.length === 0 && (
+          {hasDreamContacts && <ContactDreamTable contacts={dreamContacts as DreamContact[]} />}
+
+          {sections.length === 0 && !hasDreamContacts && (
             <p className="text-center text-sm text-muted-foreground">
               סיימת את כל התחנות. שוחח/י עם המנטור כדי לאסוף את הסיכומים שלך.
             </p>
