@@ -1375,7 +1375,7 @@ export default function Mentor() {
               }),
             });
             if (analyzeResp.ok) {
-              const { completed, stuck_point } = await analyzeResp.json();
+              const { completed, stuck_point, stuck_category } = await analyzeResp.json();
               const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
               const { data: existing } = await supabase
                 .from("therapist_journeys")
@@ -1412,6 +1412,17 @@ export default function Mentor() {
                 },
                 { onConflict: "user_id" },
               );
+              // Append-only log for the admin difficulty map — separate from the
+              // deduplicated `stuck_points` summary above, deliberately keeps every
+              // detection so recurrence and trend over time are visible later.
+              if (stuck_point && stuck_point.trim()) {
+                await supabase.from("stuck_point_events").insert({
+                  user_id: auth.user.id,
+                  stage: currentStage,
+                  category: stuck_category || "other",
+                  text: stuck_point,
+                });
+              }
               window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
 
               // Call mentor-score from client and persist score directly via RLS

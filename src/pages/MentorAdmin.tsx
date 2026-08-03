@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { TherapistHealthScores } from "@/components/mentor/TherapistHealthScores";
 import { ProviderHealthCard } from "@/components/mentor/ProviderHealthCard";
+import { StuckPointMap } from "@/components/mentor/StuckPointMap";
 import { MailingListExport } from "@/components/mentor/MailingListExport";
 import { TrialAccessToggleCard } from "@/components/mentor/TrialAccessToggleCard";
 
@@ -144,6 +145,8 @@ export default function MentorAdmin() {
         <TherapistHealthScores />
 
         <ProviderHealthCard />
+
+        <StuckPointMap />
 
         <MailingListExport />
 

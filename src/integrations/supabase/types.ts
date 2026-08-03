@@ -1139,6 +1139,33 @@ export type Database = {
         }
         Relationships: []
       }
+      stuck_point_events: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          stage: string | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          stage?: string | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          stage?: string | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_enrollments: {
         Row: {
           activated_at: string | null

@@ -19,11 +19,31 @@ const ANALYSIS_PROMPT = `אתה מנתח שיחה בין מנטור עסקי ל�
 - סמן תחנה כ"מיושמת" רק אם המטפל אמר במפורש שזה כבר עובד / קיים / טוב אצלו. ספק = לא מיושם.
 - "current" = התחנה שעליה הוא מתעסק/מדבר *כעת* (גם אם לא מיושמת). אם לא ברור — בחר את הראשונה הלא מיושמת.
 - "stuck_point" = משפט קצר (עד 80 תווים) המתאר את הקושי הנוכחי שלו, או "" אם אין.
+- "stuck_category" = רק אם יש stuck_point, סווג אותו לאחת מהקטגוריות הקבועות הבאות (בדיוק כך):
+  "pricing_fear" — פחד/חוסר ביטחון להעלות מחיר, "מי אני שאבקש יותר".
+  "unclear_niche" — קושי להגדיר נישה או קהל יעד ספציפי.
+  "no_patients_despite_marketing" — עושה הכל נכון אך עדיין אין מטופלים.
+  "self_presentation_anxiety" — קושי/חשש להציג את עצמו, פחד מיומרנות.
+  "referral_network_gap" — אין מספיק אנשי קשר/מקורות הפניה.
+  "confidence_in_value" — ספק בערך העצמי/מקצועיות.
+  "time_or_capacity" — עומס, ניהול זמן, קיבולת.
+  "other" — כל השאר.
+  אם אין stuck_point — השאר "".
 
 החזר JSON תקין בלבד, ללא טקסט נוסף, בפורמט:
-{"completed":["niche","pricing"],"current":"self-presentation","stuck_point":"לא בטוח איך להציג את עצמו באתר"}`;
+{"completed":["niche","pricing"],"current":"self-presentation","stuck_point":"לא בטוח איך להציג את עצמו באתר","stuck_category":"self_presentation_anxiety"}`;
 
 const STAGE_KEYS = ["niche", "pricing", "self-presentation", "network", "conversion"];
+const STUCK_CATEGORIES = [
+  "pricing_fear",
+  "unclear_niche",
+  "no_patients_despite_marketing",
+  "self_presentation_anxiety",
+  "referral_network_gap",
+  "confidence_in_value",
+  "time_or_capacity",
+  "other",
+];
 const PROJECT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdHFtaHp6eGJmdm9rYml3c21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NjI5ODIsImV4cCI6MjA4MjIzODk4Mn0.lVF-CCkqp0VlTjCmXbVKhYIjBrp9y7_hWacMHk7AxCE";
 
 serve(async (req) => {
@@ -68,7 +88,7 @@ serve(async (req) => {
 
     const data = await resp.json();
     const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: { completed?: string[]; current?: string; stuck_point?: string } = {};
+    let parsed: { completed?: string[]; current?: string; stuck_point?: string; stuck_category?: string } = {};
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -83,12 +103,17 @@ serve(async (req) => {
       ? parsed.current!
       : (STAGE_KEYS.find((k) => !completed.includes(k)) ?? "niche");
     const stuck_point = typeof parsed.stuck_point === "string" ? parsed.stuck_point.trim() : "";
+    // Never trust the LLM's raw category string — fall back to "other" for
+    // anything outside the fixed taxonomy so the aggregate map stays clean.
+    const stuck_category = stuck_point
+      ? (STUCK_CATEGORIES.includes(parsed.stuck_category ?? "") ? parsed.stuck_category! : "other")
+      : "";
 
     // NOTE: mentor-score is invoked from the client (src/pages/Mentor.tsx)
     // immediately after this function returns. We no longer trigger it from
     // here to avoid duplicate LLM calls (was firing ~2x per user message).
 
-    return new Response(JSON.stringify({ completed, current, stuck_point }), {
+    return new Response(JSON.stringify({ completed, current, stuck_point, stuck_category }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
