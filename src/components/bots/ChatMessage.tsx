@@ -45,9 +45,8 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   const hasCompletedRef = useRef(false);
   const wasStreamingRef = useRef(false);
   const hasAutoPlayedRef = useRef(false);
-  const voiceSyncActiveRef = useRef(false);
   const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
+
   // For buffered typing during streaming
   const targetContentRef = useRef('');
   const revealIndexRef = useRef(0);
@@ -57,8 +56,11 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
   const showVoiceButton = enableVoice && !isUser && tts.isSupported;
   const isVoiceBusy = tts.isLoading || tts.isPlaying;
 
-  // Voice-synced mode: hide text during streaming, reveal synced with audio
-  const isVoiceSyncMode = enableVoice && isLatestAssistant && !isUser;
+  // Voice-enabled latest assistant message: audio auto-plays in the background,
+  // but text always displays immediately via the normal reveal below — text
+  // visibility is never gated on TTS fetch/playback, so a slow or failed TTS
+  // call can't make the reply look stuck.
+  const isAutoVoiceMessage = enableVoice && isLatestAssistant && !isUser;
 
   // Clear typing interval helper
   const clearTypingInterval = () => {
@@ -75,65 +77,20 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     }
   };
 
-  // When TTS starts playing and we have duration, start synced text reveal
-  useEffect(() => {
-    if (!isVoiceSyncMode) return;
-
-    if (tts.isPlaying && tts.duration && tts.duration > 0 && voiceSyncActiveRef.current) {
-      const totalChars = content.length;
-      if (totalChars === 0) return;
-
-      const msPerChar = (tts.duration * 1000) / totalChars;
-      let charIndex = 0;
-
-      clearTypingInterval();
-      setIsTyping(true);
-
-      typingIntervalRef.current = setInterval(() => {
-        charIndex++;
-        if (charIndex >= totalChars) {
-          clearTypingInterval();
-          setDisplayedContent(content);
-          setIsTyping(false);
-          hasCompletedRef.current = true;
-          voiceSyncActiveRef.current = false;
-        } else {
-          setDisplayedContent(content.slice(0, charIndex));
-        }
-      }, msPerChar);
-    }
-
-    return () => clearTypingInterval();
-  }, [tts.isPlaying, tts.duration, isVoiceSyncMode, content]);
-
-  // When TTS stops (ended or manually stopped), show full text immediately
-  useEffect(() => {
-    if (!isVoiceSyncMode) return;
-
-    if (!tts.isPlaying && !tts.isLoading && voiceSyncActiveRef.current) {
-      clearTypingInterval();
-      voiceSyncActiveRef.current = false;
-      setDisplayedContent(content);
-      setIsTyping(false);
-      hasCompletedRef.current = true;
-    }
-  }, [tts.isPlaying, tts.isLoading, isVoiceSyncMode, content]);
-
-  // Auto-play voice when streaming finishes (only for latest assistant message with voice)
+  // Auto-play voice when streaming finishes (only for latest assistant message with voice).
+  // Purely a background side effect — does not touch displayedContent.
   useEffect(() => {
     if (
-      isVoiceSyncMode &&
+      isAutoVoiceMessage &&
       wasStreamingRef.current &&
       !isStreaming &&
       !hasAutoPlayedRef.current &&
       content.trim()
     ) {
       hasAutoPlayedRef.current = true;
-      voiceSyncActiveRef.current = true;
-      setDisplayedContent('');
       tts.speak(content);
     }
-  }, [isStreaming, isVoiceSyncMode, content]);
+  }, [isStreaming, isAutoVoiceMessage, content]);
 
   const handleVoiceToggle = () => {
     if (tts.isPlaying || tts.isLoading) {
@@ -145,11 +102,11 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
 
   // Buffered character-by-character reveal during streaming
   useEffect(() => {
-    if (!isStreaming || isUser || isVoiceSyncMode) return;
-    
+    if (!isStreaming || isUser) return;
+
     wasStreamingRef.current = true;
     targetContentRef.current = content;
-    
+
     // Start reveal timer if not already running
     if (!revealTimerRef.current) {
       const TYPING_SPEED = 20; // ms per character
@@ -161,13 +118,13 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
         }
       }, TYPING_SPEED);
     }
-    
+
     return () => {}; // Don't clear on every content update, only on unmount or stream end
-  }, [content, isStreaming, isUser, isVoiceSyncMode]);
+  }, [content, isStreaming, isUser]);
 
   // When streaming ends, let the reveal timer catch up then clean up
   useEffect(() => {
-    if (!isUser && wasStreamingRef.current && !isStreaming && !isVoiceSyncMode) {
+    if (!isUser && wasStreamingRef.current && !isStreaming) {
       targetContentRef.current = content;
       
       // Let the reveal timer finish catching up, then clean up
@@ -196,7 +153,7 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
         clearTimeout(safetyTimeout);
       };
     }
-  }, [isStreaming, isUser, isVoiceSyncMode, content]);
+  }, [isStreaming, isUser, content]);
 
   // Cleanup reveal timer on unmount
   useEffect(() => {
@@ -216,11 +173,6 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     // Streaming is handled by the buffered reveal above
     if (isStreaming) {
       wasStreamingRef.current = true;
-      return;
-    }
-
-    // In voice-sync mode during/after streaming: controlled by TTS sync
-    if (isVoiceSyncMode && wasStreamingRef.current && !hasCompletedRef.current) {
       return;
     }
 
@@ -256,14 +208,10 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
     } else {
       setDisplayedContent(content);
     }
-  }, [content, isStreaming, isUser, isVoiceSyncMode]);
+  }, [content, isStreaming, isUser]);
 
-  const isRevealing = isStreaming && !isVoiceSyncMode && revealIndexRef.current < targetContentRef.current.length;
+  const isRevealing = isStreaming && revealIndexRef.current < targetContentRef.current.length;
   const showCursor = isRevealing || isTyping;
-
-  // Show loading indicator during voice-sync streaming/loading phase
-  const showVoiceLoading = isVoiceSyncMode && (isStreaming || tts.isLoading) && !tts.isPlaying && !hasCompletedRef.current && wasStreamingRef.current || 
-    (isVoiceSyncMode && isStreaming);
 
   const isTool = variant === 'tool';
 
@@ -297,19 +245,12 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          {showVoiceLoading ? (
-            <div className="flex items-center gap-2 text-muted-foreground py-1" dir="rtl">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('voice.preparing') || 'מכין תשובה...'}</span>
-            </div>
-          ) : (
-            <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
-              {parseMarkdown(displayedContent)}
-              {showCursor && (
-                <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
-              )}
-            </p>
-          )}
+          <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
+            {parseMarkdown(displayedContent)}
+            {showCursor && (
+              <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />
+            )}
+          </p>
 
           {/* Voice button */}
           {showVoiceButton && !isStreaming && displayedContent && (
