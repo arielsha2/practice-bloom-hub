@@ -1298,9 +1298,11 @@ export default function Mentor() {
         : null;
       // A due check-in is asked exactly once: clear it as soon as this turn
       // has read it, so mentor-chat's "ask the check-in question" branch
-      // doesn't fire again on every subsequent message.
+      // doesn't fire again on every subsequent message. Supabase's query
+      // builder is lazy (a "thenable") — it only sends the request once
+      // awaited/`.then()`-ed, so this must be awaited, not just `void`-ed.
       if (journey_context?.checkin_due && user?.id) {
-        void supabase
+        await supabase
           .from("therapist_journeys")
           .update({ checkin_due: false, checkin_question: "", checkin_stage: "" } as any)
           .eq("user_id", user.id);
