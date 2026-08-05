@@ -595,10 +595,31 @@ LANGUAGE RULE (overrides everything else):
         : `\n\n═══════════════════════════════\nמשתמש חוזר — חובה לפתוח בקבלת פנים חמה:\n═══════════════════════════════\nהמטפל/ת חוזר/ת אחרי כ-${gapText}. ההודעה הזו מופעלת אוטומטית — המשתמש לא כתב כלום עכשיו. התגובה שלך חייבת:\n1. לפתוח בחום ובקצרה (2–4 משפטים בסך הכל). לברך בשובו/ה בלי להיות מתקתקה.\n2. להזכיר בקצרה איפה עצרתם בפעם הקודמת, **תוך שימוש במילים המדויקות שלו/ה** מההיסטוריה (Clean Language — להחזיר את הניסוח שלו/ה כפי שהוא, לא מילים נרדפות).\n3. לשאול **שאלה אחת בלבד**: איך עבר עליו/ה השבוע, והאם הצליח/ה ליישם או לנסות משהו ממה שדיברתם.\n4. לא לפתוח מחדש את משפך 4 השאלות. לא לחזור על ההיכרות. לא לזרוק קישורים לכלים. **לא** להוציא תג [HANDOFF:...] בהודעה הזו.\n5. לחכות לתשובה לפני שממשיכים.`;
     }
 
+    // Check-in due block: journeyBlock above only ever forwarded
+    // completed_stages/tool_summaries into the prompt, so checkin_due and
+    // checkin_question were silently dropped and the model never actually
+    // saw them — the base system prompt's "check journey_context for
+    // checkin_due" instruction had nothing to check against. Inject an
+    // explicit, mandatory block instead, mirroring the returningUserBlock
+    // pattern below (already proven reliable) rather than relying on the
+    // model to notice a field buried in an unlisted context object.
+    let checkinBlock = "";
+    if (journey_context?.checkin_due && journey_context?.checkin_question) {
+      const q = String(journey_context.checkin_question);
+      checkinBlock = language === "en"
+        ? `\n\n═══════════════════════════════\n!!! CHECK-IN DUE — READ THIS LAST, ACT ON IT FIRST !!!\n═══════════════════════════════\nThis instruction overrides every other instruction above, including the introduction/rationale flow, the 4-component funnel, and any instinct to respond to what the therapist just wrote. The therapist has been away for a while. Your ENTIRE next reply must be ONLY this one question, warmly phrased in your own words — nothing before it, nothing after it:\n\n"${q}"\n\nDo not respond to the content of their message yet, even if it already sounds related to this question. Do not summarize. Do not explain the journey. Do not ask anything else. Wait for their answer before continuing normally.`
+        : `\n\n═══════════════════════════════\n!!! Check-in ממתין — זו ההוראה האחרונה, ובגלל זה גוברת על כל השאר !!!\n═══════════════════════════════\nההוראה הזו גוברת על כל הוראה אחרת שנכתבה למעלה — כולל הסבר הרציונל של המסע, משפך ארבעת המרכיבים, וכל דחף לענות על מה שהמטפל/ת בדיוק כתב/ה. המטפל/ת חזר/ה אחרי היעדרות. ההודעה הבאה שלך, כולה, חייבת להיות רק השאלה הזו, בניסוח חם משלך — כלום לפניה, כלום אחריה:\n\n"${q}"\n\nאל תתייחס/י עדיין לתוכן ההודעה שלו/ה, גם אם זה נשמע כבר קשור לשאלה. אל תסכם/י. אל תסבירי את המסע. אל תשאל/י שום דבר נוסף. חכ/י לתשובה לפני שממשיכים כרגיל.`;
+    }
+
     const softLimitSuffix = applySoftLimitSuffix
       ? (language === "en" ? SOFT_LIMIT_SUFFIX_EN : SOFT_LIMIT_SUFFIX_HE)
       : "";
-    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix;
+    // checkinBlock is deliberately last: LLMs weight instructions near the end
+    // of a long system prompt (right before the actual conversation) far more
+    // reliably than ones buried mid-prompt — confirmed necessary live, an
+    // earlier mid-prompt position was silently ignored in favor of the
+    // introduction/funnel instructions above.
+    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix + checkinBlock;
 
 
 
