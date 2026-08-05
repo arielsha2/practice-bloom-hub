@@ -1141,6 +1141,24 @@ export default function Mentor() {
       await refreshJourney();
       const j = journeyRef.current;
 
+      // Wave 2.1: surface the therapist's own committed weekly experiment
+      // instead of asking the LLM to improvise a "next step" — the real
+      // commitment question already happened inside the tool conversation
+      // itself (see the bot_configurations migration), this just reads it back.
+      let latestExperiment: string | null = null;
+      if (user?.id) {
+        const { data: exp } = await supabase
+          .from("weekly_experiments")
+          .select("action_text")
+          .eq("user_id", user.id)
+          .eq("bot_key", from)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        latestExperiment = (exp as any)?.action_text ?? null;
+      }
+
       let summary = "";
       if (from === "niche-finder" && j?.niche_output) {
         const n: any = j.niche_output;
@@ -1173,9 +1191,13 @@ export default function Mentor() {
           : "No automatic summary was saved for this tool. You can tell Eliana in your own words.";
       }
 
-      const kickoff = isRTL
-        ? `חזרתי עכשיו מהכלי ${toolName}. הנה הסיכום:\n\n${summary}\n\nמה הצעד הבא לאור מה שעלה שם?`
-        : `I just came back from the ${toolName} tool. Here's the summary:\n\n${summary}\n\nWhat's the next step based on what came up there?`;
+      const kickoff = latestExperiment
+        ? isRTL
+          ? `חזרתי עכשיו מהכלי ${toolName}. הנה הסיכום:\n\n${summary}\n\nהניסוי שהתחייבתי אליו השבוע: ${latestExperiment}`
+          : `I just came back from the ${toolName} tool. Here's the summary:\n\n${summary}\n\nThe experiment I committed to this week: ${latestExperiment}`
+        : isRTL
+          ? `חזרתי עכשיו מהכלי ${toolName}. הנה הסיכום:\n\n${summary}\n\nמה הצעד הבא לאור מה שעלה שם?`
+          : `I just came back from the ${toolName} tool. Here's the summary:\n\n${summary}\n\nWhat's the next step based on what came up there?`;
 
       setPendingReturn({ botKey: from, toolName, summary, kickoff });
 

@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Every tool bot's own prompt now ends with an explicit commitment question
+// (Wave 2.1 migration 20260805170000) — these three fields extract the
+// therapist's actual answer to it, not an LLM guess at a reasonable next
+// step. Appended to every schema below so it rides along in the same JSON
+// call, no extra LLM cost.
+const WEEKLY_EXPERIMENT_FIELDS = `,
+  "weekly_experiment": "הניסוי הקטן שהמטפל/ת התחייב/ה אליו בפועל, במילים שלו/ה — לא הצעה של הבוט שלא אושרה. אם לא נשאל/לא נענה, מחרוזת ריקה.",
+  "belief_under_test": "האמונה או הפחד שמנהלים את ההתנהגות ושהניסוי בפועל בודק — לא ניחוש עסקי, אלא הפחד/האמונה עצמם, במילים של המטפל/ת (למשל 'אני מפחדת שאם אעלה מחיר אנשים יעזבו'). אם לא נאמר, מחרוזת ריקה.",
+  "expected_evidence": "איך ידעו שזה קרה — משהו קונקרטי וניתן לתיאור, כמו 'שלחתי הודעת וואטסאפ' או 'עדכנתי את המחיר באתר'. מחרוזת ריקה אם לא ברור."`;
+
 const PROMPTS: Record<string, { column: string; system: string }> = {
   "niche-finder": {
     column: "niche_output",
@@ -16,7 +26,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   "ideal_client": "תיאור המטופל האידיאלי במילים של המטפל",
   "core_pain": "הכאב הדחוף — הצוואר המדמם",
   "transformation": "התוצאה — תצפית מהפסגה",
-  "handshake_version": "אני עוזר ל..."
+  "handshake_version": "אני עוזר ל..."${WEEKLY_EXPERIMENT_FIELDS}
 }
 השתמש רק במה שאמר המטפל בפועל. אם פרט חסר, נסח שורה כללית קצרה ומכבדת. אל תמציא פרטים שאינם בשיחה.`,
   },
@@ -29,7 +39,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   "external_pain": "הביטוי בחיים — ריבים, חוסר שינה",
   "desire": "הכמיהה הכמוסה — שקט, ביטחון, חמלה",
   "result": "איך ייראו החיים אחרי הטיפול",
-  "story_version": "פסקה רגשית קצרה למודעה/פרופיל בגוף ראשון של המטפל"
+  "story_version": "פסקה רגשית קצרה למודעה/פרופיל בגוף ראשון של המטפל"${WEEKLY_EXPERIMENT_FIELDS}
 }
 השתמש רק במה שאמר המטפל בפועל. אם פרט חסר, נסח שורה כללית קצרה. אל תמציא.`,
   },
@@ -40,7 +50,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
 {
   "comfort_range_low": <מספר — התעריף הנמוך ביותר בטווח הנוחות שהמטפל ציין, או null אם לא צוין>,
   "comfort_range_high": <מספר — התעריף הגבוה ביותר בטווח הנוחות שהמטפל ציין, או null אם לא צוין>,
-  "target_clients_per_week": <מספר — כמה מטופלים בשבוע המטפל ציין שהוא רוצה, או null אם לא צוין>
+  "target_clients_per_week": <מספר — כמה מטופלים בשבוע המטפל ציין שהוא רוצה, או null אם לא צוין>${WEEKLY_EXPERIMENT_FIELDS}
 }
 השתמש רק במספרים שהמטפל אמר בפועל בשיחה. אל תחשב, אל תמציא, אל תעגל. אם מספר לא הוזכר — null.`,
   },
@@ -51,7 +61,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
 {
   "contacts": [
     { "profession": "תיאור קצר של סוג איש הקשר/הזירה שהוזכרה", "reasoning": "למה זה רלוונטי למטופל האידיאלי שלו, במשפט אחד" }
-  ]
+  ]${WEEKLY_EXPERIMENT_FIELDS}
 }
 כלול את כל סוגי אנשי הקשר/הזירות שעלו בשיחה (בדרך כלל 5-7). אל תמציא סוגים שלא הוזכרו. אל תכלול שמות פרטיים או פרטי קשר — רק סוגי תפקיד/זירה.`,
   },
@@ -67,7 +77,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   "value_exchange": "משפט קצר מתוך המשוב על חילופי הערך שהוצג בסימולציה",
   "professional_authority": "משפט קצר מתוך המשוב על הסמכות המקצועית שהוצגה",
   "next_action": "הצעד הבא הקונקרטי שסוכם (פגישת קפה, שיחת זום, וכו'), או '' אם לא הוגדר",
-  "key_improvement": "השיפור המרכזי שהוצע לקראת השיחה האמיתית"
+  "key_improvement": "השיפור המרכזי שהוצע לקראת השיחה האמיתית"${WEEKLY_EXPERIMENT_FIELDS}
 }
 השתמש רק במה שעלה בפועל בשיחה ובמשוב שניתן בשלב 4. אל תמציא. אם פרט חסר — מחרוזת ריקה או null לפי הסוג.`,
   },
@@ -115,7 +125,7 @@ function buildStructuredOutput(botKey: string, parsed: Record<string, unknown>):
 const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למטפל פסיכותרפיסט.
 החזר JSON תקין בלבד בפורמט הבא:
 {
-  "summary": "סיכום קצר בעברית, 2-4 משפטים, של מה שהמטפל גילה / החליט / תרגל בכלי. דבר בגוף ראשון של המטפל ('הבנתי ש...', 'החלטתי ש...', 'תרגלתי...'). אם אין מסקנה ברורה — תאר במשפט מה נדון."
+  "summary": "סיכום קצר בעברית, 2-4 משפטים, של מה שהמטפל גילה / החליט / תרגל בכלי. דבר בגוף ראשון של המטפל ('הבנתי ש...', 'החלטתי ש...', 'תרגלתי...'). אם אין מסקנה ברורה — תאר במשפט מה נדון."${WEEKLY_EXPERIMENT_FIELDS}
 }
 השתמש רק במה שאמר המטפל בפועל. אל תמציא.`;
 
@@ -214,6 +224,18 @@ Deno.serve(async (req) => {
       if (m) parsed = JSON.parse(m[0]);
     }
 
+    // Weekly-experiment fields (Wave 2.1) ride along in the same extraction
+    // call for every bot but belong in their own table, not in the
+    // tool-specific structured columns (niche_output/etc.) whose shape is
+    // already relied on elsewhere (FinalCelebration.tsx, Mentor.tsx's
+    // `from=` handler) — pull them out before anything else touches `parsed`.
+    const { weekly_experiment, belief_under_test, expected_evidence, ...rest } = parsed as {
+      weekly_experiment?: string;
+      belief_under_test?: string;
+      expected_evidence?: string;
+      [key: string]: unknown;
+    };
+
     // Map bot key -> journey stage key, so completing a tool auto-advances the journey
     const BOT_TO_STAGE: Record<string, string> = {
       "niche-finder": "niche",
@@ -250,12 +272,12 @@ Deno.serve(async (req) => {
     if (isGeneric) {
       const toolSummaries = (baseReflection.tool_summaries as Record<string, any>) ?? {};
       toolSummaries[botKey] = {
-        summary: parsed.summary ?? "",
+        summary: rest.summary ?? "",
         updated_at: new Date().toISOString(),
       };
       updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
     } else {
-      updatePayload[cfg!.column] = buildStructuredOutput(botKey, parsed);
+      updatePayload[cfg!.column] = buildStructuredOutput(botKey, rest);
       updatePayload.reflection = { ...baseReflection, current: nextStage };
     }
 
@@ -268,6 +290,20 @@ Deno.serve(async (req) => {
       await supabase
         .from("therapist_journeys")
         .insert({ user_id: user.id, ...updatePayload });
+    }
+
+    // Wave 2.1: record the therapist's actual commitment as a weekly
+    // experiment, captured from their real answer to the commitment
+    // question appended to this bot's prompt — not inferred here.
+    if (typeof weekly_experiment === "string" && weekly_experiment.trim()) {
+      await supabase.from("weekly_experiments").insert({
+        user_id: user.id,
+        bot_key: botKey,
+        stage: stageKey ?? nextStage,
+        action_text: weekly_experiment.trim(),
+        belief_under_test: typeof belief_under_test === "string" ? belief_under_test.trim() : "",
+        expected_evidence: typeof expected_evidence === "string" ? expected_evidence.trim() : "",
+      });
     }
 
     return new Response(JSON.stringify({ success: true, output: parsed }), {
