@@ -476,6 +476,29 @@ function AssistantMarkdown({
 const WELCOME_BACK_THRESHOLD_HOURS = 12;
 const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
 
+// Check-in: a specific, stage-relevant follow-up question (distinct from the
+// generic welcome-back above) asked once after a longer real absence, so the
+// mentor can ask about follow-through on the concrete thing the therapist
+// was working on rather than just saying hello.
+const CHECKIN_THRESHOLD_HOURS = 48;
+const CHECKIN_STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+const CHECKIN_QUESTIONS_HE: Record<string, string> = {
+  niche: "מאז שדיברנו — יצא לך להתקדם עם גיבוש הנישה שלך, או לנסח את מה שדיברנו עליו?",
+  pricing: "רציתי לשמוע — יצא לך להתקדם עם התמחור מאז שדיברנו, או שזה עוד תלוי באוויר?",
+  "self-presentation": "איך הלך עם הצגת עצמך מאז שדיברנו — יצא לך להשתמש במה שגיבשנו?",
+  network: "יצא לך ליצור קשר עם מישהו מאנשי הקשר שדיברנו עליהם?",
+  conversion: "יצא לך לקיים את שיחת ההיכרות שתרגלנו יחד?",
+};
+const CHECKIN_QUESTION_FALLBACK_HE = "מאז הפעם האחרונה שדיברנו — מה קרה אצלך בקליניקה? יש משהו שהתקדם?";
+const CHECKIN_QUESTIONS_EN: Record<string, string> = {
+  niche: "Since we last spoke — did you make progress narrowing down your niche, or try out the wording we worked on?",
+  pricing: "I wanted to check in — did you make any progress on pricing since we talked, or is it still up in the air?",
+  "self-presentation": "How did it go presenting yourself since we spoke — did you get to use what we worked on?",
+  network: "Did you get a chance to reach out to any of the contacts we talked about?",
+  conversion: "Did you get to have the introductory call we practiced?",
+};
+const CHECKIN_QUESTION_FALLBACK_EN = "Since we last talked — what's been happening at your practice? Anything move forward?";
+
 // History caps — prevent runaway conversations from breaking the chat.
 // The backend already trims to 20 messages before calling the model
 // (HISTORY_WINDOW in supabase/functions/mentor-chat/index.ts).
@@ -861,6 +884,11 @@ export default function Mentor() {
   // than localStorage (cross-device continuity). Saves are upserts.
   const conversationLoadedRef = useRef(false);
   const lastSavedRef = useRef<string>("");
+  // Last time this therapist actually sent/received a mentor message, per the
+  // server-persisted mentor_conversations row — used by the check-in effect
+  // below (more accurate than therapist_journeys.updated_at, which only moves
+  // when mentor-analyze/bot-extract-output happen to fire).
+  const lastConversationActivityRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -870,12 +898,13 @@ export default function Mentor() {
       try {
         const { data } = await supabase
           .from("mentor_conversations")
-          .select("messages")
+          .select("messages, updated_at")
           .eq("user_id", user.id)
           .eq("language", language)
           .maybeSingle();
         if (cancelled) return;
         const remote = Array.isArray((data as any)?.messages) ? ((data as any).messages as Msg[]) : [];
+        lastConversationActivityRef.current = (data as any)?.updated_at ?? null;
         // Prefer remote if it is longer (cross-device continuity); otherwise
         // keep whatever localStorage already populated (avoids losing an
         // in-progress reply that hasn't been flushed yet).
@@ -1029,6 +1058,51 @@ export default function Mentor() {
     void sendWelcomeBack(Math.round(hoursAway));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, messages.length, isLoading]);
+
+  // Check-in due: after a real absence (>= CHECKIN_THRESHOLD_HOURS since the
+  // last mentor message), mark a specific, stage-relevant question as due in
+  // therapist_journeys so mentor-chat opens the next reply with it (its
+  // system prompt already reads journey_context.checkin_due/checkin_question
+  // — this effect is the missing writer). Runs once per mount, after the
+  // conversation and journey have both loaded.
+  const checkinComputeTriedRef = useRef(false);
+  useEffect(() => {
+    if (checkinComputeTriedRef.current) return;
+    if (!user?.id) return;
+    if (!conversationLoadedRef.current) return;
+    if (!journey) return;
+    if (journey.checkin_due) return; // already pending, don't recompute
+    if ((journey.completed_stages?.length ?? 0) >= CHECKIN_STAGE_ORDER.length) return;
+
+    const lastActivity = lastConversationActivityRef.current;
+    if (!lastActivity) return; // no prior conversation to check in about
+
+    const hoursSince = (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60);
+    if (!Number.isFinite(hoursSince) || hoursSince < CHECKIN_THRESHOLD_HOURS) return;
+
+    checkinComputeTriedRef.current = true;
+
+    const currentStage =
+      (journey.reflection as any)?.current ??
+      CHECKIN_STAGE_ORDER.find((k) => !(journey.completed_stages ?? []).includes(k)) ??
+      "conversion";
+    const questions = language === "he" ? CHECKIN_QUESTIONS_HE : CHECKIN_QUESTIONS_EN;
+    const fallback = language === "he" ? CHECKIN_QUESTION_FALLBACK_HE : CHECKIN_QUESTION_FALLBACK_EN;
+    const checkinQuestion = questions[currentStage] ?? fallback;
+
+    void (async () => {
+      const { error } = await supabase
+        .from("therapist_journeys")
+        .update({
+          checkin_due: true,
+          checkin_question: checkinQuestion,
+          checkin_stage: currentStage,
+        } as any)
+        .eq("user_id", user.id);
+      if (!error) await refreshJourney();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, journey, language]);
 
   // Suggested bot for the fallback banner: last assistant message mentions
   // a formal tool name in its last 3 sentences, but detectHandoff didn't fire.
@@ -1222,6 +1296,15 @@ export default function Mentor() {
             checkin_stage: (j as any).checkin_stage ?? "",
           }
         : null;
+      // A due check-in is asked exactly once: clear it as soon as this turn
+      // has read it, so mentor-chat's "ask the check-in question" branch
+      // doesn't fire again on every subsequent message.
+      if (journey_context?.checkin_due && user?.id) {
+        void supabase
+          .from("therapist_journeys")
+          .update({ checkin_due: false, checkin_question: "", checkin_stage: "" } as any)
+          .eq("user_id", user.id);
+      }
       const {
         data: { session },
       } = await supabase.auth.getSession();
