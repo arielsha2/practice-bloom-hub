@@ -592,7 +592,7 @@ export function MentorSalesPage() {
             {trialOpen && (
               <div style={{ marginTop: "1rem", textAlign: "center" }}>
                 <Link
-                  to="/auth"
+                  to="/auth?mode=signup"
                   className="underline underline-offset-4 hover:opacity-90 transition"
                   style={{ color: "rgba(250,247,242,0.85)", fontSize: "14px" }}
                 >

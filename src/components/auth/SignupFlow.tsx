@@ -211,6 +211,9 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
           <p className="text-sm text-muted-foreground">
             שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
           </p>
+          <p className="text-xs text-muted-foreground">
+            לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים — לפעמים זה לוקח דקה-שתיים.
+          </p>
           <div className="flex justify-center">
             <InputOTP
               maxLength={6}

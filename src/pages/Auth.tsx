@@ -297,7 +297,7 @@ export default function Auth() {
       case "login":
         return t("auth.loginSubtitle");
       case "signup":
-        return isRTL ? "4 שלבים פשוטים: מייל → אימות → סיסמה → חיבור AI" : "4 simple steps: email → verify → password → AI connection";
+        return isRTL ? "3 שלבים פשוטים: מייל → אימות → סיסמה" : "3 simple steps: email → verify → password";
       case "forgot":
         return t("auth.forgotSubtitle");
       case "reset":
@@ -435,6 +435,9 @@ export default function Auth() {
                     <form onSubmit={handleVerifyLoginCode} className="space-y-4 text-center">
                       <p className="text-sm text-muted-foreground">
                         {isRTL ? <>שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span></> : <>We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span></>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isRTL ? "לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים." : "Don't see it? Worth checking your spam/promotions folder."}
                       </p>
                       <div className="flex justify-center">
                         <InputOTP

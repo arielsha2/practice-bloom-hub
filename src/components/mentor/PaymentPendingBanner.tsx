@@ -13,9 +13,10 @@ export function PaymentPendingBanner() {
       <div className="flex items-start gap-3">
         <Clock className="w-5 h-5 mt-0.5 flex-shrink-0" />
         <div className="flex-1">
-          <h3 className="font-semibold text-sm mb-1">הרשמתך הושלמה — גישתך למנטור ממתינה לאישור תשלום</h3>
+          <h3 className="font-semibold text-sm mb-1">ההרשמה הושלמה — עדיין אין לך גישה פעילה למנטור</h3>
           <p className="text-sm leading-relaxed">
-            לאחר אישור התשלום הגישה תיפתח אוטומטית — אין צורך לרענן את הדף.
+            אם שילמת/ה לאחרונה, אישור התשלום עשוי לקחת כמה דקות והגישה תיפתח אוטומטית — אין צורך לרענן את הדף.
+            אם עוד לא רכשת גישה, אפשר לעשות זאת למטה.
           </p>
           <a
             href={MENTOR_SALES_URL}
