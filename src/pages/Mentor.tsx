@@ -1507,7 +1507,8 @@ export default function Mentor() {
               }),
             });
             if (analyzeResp.ok) {
-              const { completed, stuck_point, stuck_category } = await analyzeResp.json();
+              const { completed, stuck_point, stuck_category, experiment_status, experiment_learning } =
+                await analyzeResp.json();
               const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
               const { data: existing } = await supabase
                 .from("therapist_journeys")
@@ -1554,6 +1555,32 @@ export default function Mentor() {
                   category: stuck_category || "other",
                   text: stuck_point,
                 });
+              }
+              // Wave 2.3: the therapist just reported back on their weekly
+              // experiment (Wave 2.1/2.2) somewhere in this analyzed window.
+              // Re-derive "latest pending experiment" the same way the
+              // check-in-due effect does — no explicit link is stored, and
+              // none should be needed, since nothing creates a new pending
+              // experiment while a check-in is in flight.
+              if (experiment_status) {
+                const { data: pendingExperiment } = await supabase
+                  .from("weekly_experiments")
+                  .select("id")
+                  .eq("user_id", auth.user.id)
+                  .eq("status", "pending")
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                if ((pendingExperiment as any)?.id) {
+                  await supabase
+                    .from("weekly_experiments")
+                    .update({
+                      status: experiment_status,
+                      learning: experiment_learning || "",
+                      resolved_at: new Date().toISOString(),
+                    } as any)
+                    .eq("id", (pendingExperiment as any).id);
+                }
               }
               window.dispatchEvent(new CustomEvent("therapist-journey-updated"));
 

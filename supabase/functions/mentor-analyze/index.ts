@@ -30,8 +30,12 @@ const ANALYSIS_PROMPT = `אתה מנתח שיחה בין מנטור עסקי ל�
   "other" — כל השאר.
   אם אין stuck_point — השאר "".
 
+בנוסף, חפש בשיחה הודעה מהמנטור שמתחילה במבנה "לפני כמה ימים אמרת... יצא לך לנסות את זה? מה קרה?" (שאלת מעקב על ניסוי שבועי שהמטפל התחייב אליו) ואת התגובה של המטפל אליה, אם יש:
+- "experiment_status" — "done" אם המטפל דיווח שניסה/עשה את הניסוי (גם אם התוצאה הייתה מעורבת), "skipped" אם דיווח שלא הספיק/לא ניסה, או "" אם אין כזו הודעה בשיחה או שהתשובה לא ברורה.
+- "experiment_learning" — אם experiment_status אינו ריק, משפט קצר במילים של המטפל על מה שקרה או מה שהוא למד מהניסיון (גם אם זה פשוט "שניים הסכימו, אחת אמרה שזה יקר"). אחרת "".
+
 החזר JSON תקין בלבד, ללא טקסט נוסף, בפורמט:
-{"completed":["niche","pricing"],"current":"self-presentation","stuck_point":"לא בטוח איך להציג את עצמו באתר","stuck_category":"self_presentation_anxiety"}`;
+{"completed":["niche","pricing"],"current":"self-presentation","stuck_point":"לא בטוח איך להציג את עצמו באתר","stuck_category":"self_presentation_anxiety","experiment_status":"","experiment_learning":""}`;
 
 const STAGE_KEYS = ["niche", "pricing", "self-presentation", "network", "conversion"];
 const STUCK_CATEGORIES = [
@@ -88,7 +92,14 @@ serve(async (req) => {
 
     const data = await resp.json();
     const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: { completed?: string[]; current?: string; stuck_point?: string; stuck_category?: string } = {};
+    let parsed: {
+      completed?: string[];
+      current?: string;
+      stuck_point?: string;
+      stuck_category?: string;
+      experiment_status?: string;
+      experiment_learning?: string;
+    } = {};
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -108,14 +119,26 @@ serve(async (req) => {
     const stuck_category = stuck_point
       ? (STUCK_CATEGORIES.includes(parsed.stuck_category ?? "") ? parsed.stuck_category! : "other")
       : "";
+    // Wave 2.3: never trust the raw status string either — only "done" or
+    // "skipped" mean anything downstream (a weekly_experiments status
+    // transition); anything else collapses to "" (no report found/unclear),
+    // same defensive pattern as stuck_category above.
+    const experiment_status =
+      parsed.experiment_status === "done" || parsed.experiment_status === "skipped"
+        ? parsed.experiment_status
+        : "";
+    const experiment_learning = experiment_status && typeof parsed.experiment_learning === "string"
+      ? parsed.experiment_learning.trim()
+      : "";
 
     // NOTE: mentor-score is invoked from the client (src/pages/Mentor.tsx)
     // immediately after this function returns. We no longer trigger it from
     // here to avoid duplicate LLM calls (was firing ~2x per user message).
 
-    return new Response(JSON.stringify({ completed, current, stuck_point, stuck_category }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ completed, current, stuck_point, stuck_category, experiment_status, experiment_learning }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("mentor-analyze error", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }), {
