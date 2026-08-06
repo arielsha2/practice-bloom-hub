@@ -1086,11 +1086,36 @@ export default function Mentor() {
       (journey.reflection as any)?.current ??
       CHECKIN_STAGE_ORDER.find((k) => !(journey.completed_stages ?? []).includes(k)) ??
       "conversion";
-    const questions = language === "he" ? CHECKIN_QUESTIONS_HE : CHECKIN_QUESTIONS_EN;
-    const fallback = language === "he" ? CHECKIN_QUESTION_FALLBACK_HE : CHECKIN_QUESTION_FALLBACK_EN;
-    const checkinQuestion = questions[currentStage] ?? fallback;
 
     void (async () => {
+      // Wave 2.2: prefer following up on the therapist's own specific
+      // commitment (Wave 2.1's weekly_experiments) over a generic
+      // stage-based question — "did you get to try the thing you said
+      // you'd try" beats "how's your niche going" every time. Falls back
+      // to the old stage question when there's no pending experiment yet
+      // (e.g. check-in fires before the therapist has visited any tool).
+      const { data: pendingExperiment } = await supabase
+        .from("weekly_experiments")
+        .select("action_text")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let checkinQuestion: string;
+      if ((pendingExperiment as any)?.action_text) {
+        const actionText = (pendingExperiment as any).action_text as string;
+        checkinQuestion =
+          language === "he"
+            ? `לפני כמה ימים אמרת: "${actionText}". יצא לך לנסות את זה? מה קרה?`
+            : `A few days ago you said: "${actionText}". Did you get to try it? What happened?`;
+      } else {
+        const questions = language === "he" ? CHECKIN_QUESTIONS_HE : CHECKIN_QUESTIONS_EN;
+        const fallback = language === "he" ? CHECKIN_QUESTION_FALLBACK_HE : CHECKIN_QUESTION_FALLBACK_EN;
+        checkinQuestion = questions[currentStage] ?? fallback;
+      }
+
       const { error } = await supabase
         .from("therapist_journeys")
         .update({
