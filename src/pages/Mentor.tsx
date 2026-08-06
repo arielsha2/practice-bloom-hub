@@ -1096,7 +1096,7 @@ export default function Mentor() {
       // (e.g. check-in fires before the therapist has visited any tool).
       const { data: pendingExperiment } = await supabase
         .from("weekly_experiments")
-        .select("action_text")
+        .select("action_text, belief_under_test")
         .eq("user_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false })
@@ -1106,10 +1106,21 @@ export default function Mentor() {
       let checkinQuestion: string;
       if ((pendingExperiment as any)?.action_text) {
         const actionText = (pendingExperiment as any).action_text as string;
+        const belief = (pendingExperiment as any).belief_under_test as string | null;
+        // Wave 2.4: fold the original fear/belief into the question itself
+        // (rather than a separate lookup later) so it's already in the
+        // conversation by the time the therapist answers — mentor-chat's
+        // identity-reframing instruction can then reference it directly
+        // ("you were afraid X, and you did it anyway") without needing any
+        // new plumbing to fetch it.
         checkinQuestion =
-          language === "he"
-            ? `לפני כמה ימים אמרת: "${actionText}". יצא לך לנסות את זה? מה קרה?`
-            : `A few days ago you said: "${actionText}". Did you get to try it? What happened?`;
+          belief && belief.trim()
+            ? language === "he"
+              ? `לפני כמה ימים אמרת שאת/ה מתכוונ/ת ל: "${actionText}" — וגם ציינת את החשש: "${belief}". יצא לך לנסות את זה בסוף? מה קרה?`
+              : `A few days ago you said you'd try: "${actionText}" — and you also mentioned this worry: "${belief}". Did you get to try it? What happened?`
+            : language === "he"
+              ? `לפני כמה ימים אמרת: "${actionText}". יצא לך לנסות את זה? מה קרה?`
+              : `A few days ago you said: "${actionText}". Did you get to try it? What happened?`;
       } else {
         const questions = language === "he" ? CHECKIN_QUESTIONS_HE : CHECKIN_QUESTIONS_EN;
         const fallback = language === "he" ? CHECKIN_QUESTION_FALLBACK_HE : CHECKIN_QUESTION_FALLBACK_EN;
