@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Compass, Tag, User, Users, Sparkles, Trophy, Check, AlertCircle, MapPin } from "lucide-react";
+import { Compass, Tag, User, Users, Sparkles, Trophy, Check, AlertCircle, MapPin, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
@@ -66,13 +66,24 @@ const STAGES: Stage[] = [
   {
     key: "conversion",
     icon: Sparkles,
-    titleHe: "שיחת היכרות מנצחת",
-    titleEn: "Winning First Call",
-    descHe: "להפוך פנייה למטופל.",
-    descEn: "Turn inquiry into client.",
-    hintHe: "לדעת בדיוק מה לומר בשיחת ההיכרות הראשונה כדי שהמטופל יגיד כן",
-    hintEn: "Know exactly what to say in the first call so the client says yes",
+    titleHe: "קשרי הפניות",
+    titleEn: "Referral Relationships",
+    descHe: "מפנייה מקצועית לשיתוף פעולה.",
+    descEn: "From outreach to partnership.",
+    hintHe: "לדעת לפנות לאיש מקצוע חדש ולבנות איתו קשר מקצועי שמוביל להפניות הדדיות",
+    hintEn: "Know how to reach out to a new professional and build a relationship that leads to mutual referrals",
     botKey: "connection-bridge",
+  },
+  {
+    key: "intake",
+    icon: Phone,
+    titleHe: "שיחת הטלפון הראשונה",
+    titleEn: "The First Phone Call",
+    descHe: "מפנייה לפגישה.",
+    descEn: "Inquiry to booking.",
+    hintHe: "לדעת לנהל את שיחת ההיכרות הראשונה עם מטופל פוטנציאלי כך שהיא תוביל לפגישה קבועה",
+    hintEn: "Know how to run the first call with a prospective patient so it leads to a booked session",
+    botKey: "first-call-practice",
   },
 ];
 
@@ -156,8 +167,8 @@ export function JourneyMap({ onOpenBot }: JourneyMapProps) {
               ? `${completedCount} מתוך ${STAGES.length} תחנות מאחוריכם${activeStage ? ', אתם נמצאים כעת ב"' + activeStage.titleHe + '"' : ""}.`
               : `${completedCount} of ${STAGES.length} stations behind you${activeStage ? `, currently at "${activeStage.titleEn}"` : ""}.`
             : isRTL
-              ? "המסע מהתלבטות לקליניקה משגשגת, חמש תחנות, שביל אחד."
-              : "From doubt to a thriving practice, five stations, one path."}
+              ? "המסע מהתלבטות לקליניקה משגשגת, שש תחנות, שביל אחד."
+              : "From doubt to a thriving practice, six stations, one path."}
         </p>
       </div>
 

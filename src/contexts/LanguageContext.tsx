@@ -109,6 +109,9 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.contacts.title": "Contact Finder Bot",
     "bots.contacts.desc":
       "Identify potential contacts for your niche and build a professional, authentic outreach strategy",
+    "bots.firstcall.title": "First Call Practice Bot",
+    "bots.firstcall.desc":
+      "Practice the first phone call with a prospective patient and learn to turn it into a booked first session",
     "bots.cta": "Try Now",
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
@@ -116,6 +119,10 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.profile": "Profile",
     "stepper.simulation": "Simulation",
     "stepper.feedback": "Feedback",
+    "stepper.firstCallIntake": "Intake",
+    "stepper.firstCallPersona": "Persona",
+    "stepper.firstCallSimulation": "Simulation",
+    "stepper.firstCallFeedback": "Feedback",
 
     // Difficulty selector
     "difficulty.title": "Choose Difficulty Level",
@@ -519,6 +526,8 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.presentation.desc": "בנו הצגה עצמית מקצועית שמדברת בשפת הלקוח — לשימוש בשיחות, מפגשים ומודעות",
     "bots.contacts.title": "מציאת אנשי קשר",
     "bots.contacts.desc": "זהו אנשי קשר פוטנציאליים לנישה שלכם ובנו אסטרטגיית פנייה מקצועית ואותנטית",
+    "bots.firstcall.title": "תרגול שיחת הטלפון הראשונה",
+    "bots.firstcall.desc": "תרגלו את שיחת ההיכרות הראשונה עם מטופל פוטנציאלי ולמדו להפוך אותה לפגישה ראשונה קבועה",
     "bots.cta": "נסו עכשיו",
     "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
     "bots.teaserLink": "למידע נוסף",
@@ -526,6 +535,10 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.profile": "פרופיל",
     "stepper.simulation": "סימולציה",
     "stepper.feedback": "משוב",
+    "stepper.firstCallIntake": "בירור",
+    "stepper.firstCallPersona": "פרסונה",
+    "stepper.firstCallSimulation": "סימולציה",
+    "stepper.firstCallFeedback": "משוב",
 
     // Difficulty selector
     "difficulty.title": "בחרו רמת קושי לסימולציה",

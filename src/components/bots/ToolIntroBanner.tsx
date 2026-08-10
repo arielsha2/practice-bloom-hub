@@ -16,8 +16,8 @@ const BOT_INTROS: Record<string, { he: string; en: string }> = {
     en: 'To create marketing content that speaks in your voice.',
   },
   'connection-bridge': {
-    he: 'לתרגול שיחה ראשונה עם מטופל פוטנציאלי.',
-    en: 'To practice a first conversation with a potential patient.',
+    he: 'לתרגול פנייה ובניית קשר עם איש מקצוע מפנה — לא מטופל.',
+    en: 'To practice reaching out and building a relationship with a referring colleague — not a patient.',
   },
   'contact-finder': {
     he: 'למציאת אנשי קשר מקצועיים רלוונטיים לקליניקה שלך.',
@@ -26,6 +26,10 @@ const BOT_INTROS: Record<string, { he: string; en: string }> = {
   'self-presentation': {
     he: 'לניסוח הצגה עצמית בהירה ומדויקת.',
     en: 'To craft a clear and accurate self-presentation.',
+  },
+  'first-call-practice': {
+    he: 'לתרגול שיחת הטלפון הראשונה עם מטופל פוטנציאלי, מהבירור ועד לקביעת פגישה.',
+    en: 'To practice the first phone call with a prospective patient, from intake to booking.',
   },
 };
 

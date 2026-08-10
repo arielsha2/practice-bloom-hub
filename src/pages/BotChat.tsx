@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Compass, Map, PenTool, Handshake, Users } from 'lucide-react';
+import { Compass, Map, PenTool, Handshake, Users, Phone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBotConfiguration } from '@/hooks/useBotConfigurations';
@@ -15,6 +15,7 @@ import { TypingIndicator } from '@/components/bots/TypingIndicator';
 import { ToolIntroBanner } from '@/components/bots/ToolIntroBanner';
 import { ConversationSidebar } from '@/components/bots/ConversationSidebar';
 import { ConnectionBridgeStepper } from '@/components/bots/ConnectionBridgeStepper';
+import { FirstCallStepper } from '@/components/bots/FirstCallStepper';
 import { DifficultySelector } from '@/components/bots/DifficultySelector';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
@@ -34,7 +35,11 @@ const botIcons: Record<string, React.ReactNode> = {
   'content-creator': <PenTool className="w-5 h-5 text-primary" />,
   'connection-bridge': <Handshake className="w-5 h-5 text-primary" />,
   'contact-finder': <Users className="w-5 h-5 text-primary" />,
+  'first-call-practice': <Phone className="w-5 h-5 text-primary" />,
 };
+
+// Bots that use the [STAGE:N] marker mechanic + stage stepper UI + stage-gated voice.
+const STAGE_MARKER_BOTS = new Set(['connection-bridge', 'first-call-practice']);
 
 // Bots that are publicly accessible without authentication (with expiry dates)
 const PUBLIC_BOTS: Record<string, string> = {
@@ -132,9 +137,9 @@ const BotChat = () => {
     return () => clearTimeout(timeoutId);
   }, [savedMessages, activeConversationId, loadMessages, clearMessages, messages]);
 
-  // Parse stage markers from messages for connection-bridge bot
+  // Parse stage markers from messages for stage-marker bots
   useEffect(() => {
-    if (botKey !== 'connection-bridge') return;
+    if (!STAGE_MARKER_BOTS.has(botKey || '')) return;
     // Find the last assistant message with a stage marker
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
@@ -184,8 +189,8 @@ const BotChat = () => {
     if (!user && !isPublicBot(botKey)) return;
     if (activeConversationId) return;
     if (messages.length > 0 || chatLoading) return;
-    // Don't kickoff connection-bridge until a difficulty is picked
-    if (botKey === 'connection-bridge') return;
+    // Don't kickoff stage-marker bots until a difficulty is picked
+    if (STAGE_MARKER_BOTS.has(botKey || '')) return;
     kickoffSentRef.current = true;
     const kickoffPrompt = isRTL
       ? '[KICKOFF] המנטור הפנתה אותי אליך עכשיו. אל תציג/י את עצמך מחדש, אל תזכיר/י את אליענה ואל תפתח/י בברכת שלום בשמה. פתח/י ישירות בשאלה הראשונה הממוקדת שלך כדי להתחיל לעבוד יחד. אל תזכיר/י את ההודעה הזו.'
@@ -296,7 +301,7 @@ const BotChat = () => {
   // Show welcome message if no messages and bot has welcome message
   const welcomeMessage = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
   const showWelcome = messages.length === 0 && welcomeMessage;
-  const showDifficultySelector = botKey === 'connection-bridge' && messages.length === 0 && !activeConversationId;
+  const showDifficultySelector = STAGE_MARKER_BOTS.has(botKey || '') && messages.length === 0 && !activeConversationId;
 
   const handleReturnToMentor = async () => {
     if (!user || !botKey) {
@@ -325,7 +330,7 @@ const BotChat = () => {
   const handleSend = (content: string) => {
     // Stop any playing TTS before sending new message
     window.dispatchEvent(new Event('stopAllTTS'));
-    if (botKey === 'connection-bridge' && messages.length === 0 && selectedDifficulty) {
+    if (STAGE_MARKER_BOTS.has(botKey || '') && messages.length === 0 && selectedDifficulty) {
       sendMessage(content, `[DIFFICULTY:${selectedDifficulty}]`);
     } else {
       sendMessage(content);
@@ -402,15 +407,18 @@ const BotChat = () => {
           <ToolIntroBanner botKey={botKey || ''} botName={botName} isRTL={isRTL} />
         )}
 
-        {/* Connection Bridge Stepper */}
+        {/* Stage stepper */}
         {botKey === 'connection-bridge' && (
           <ConnectionBridgeStepper currentStage={currentStage} />
+        )}
+        {botKey === 'first-call-practice' && (
+          <FirstCallStepper currentStage={currentStage} />
         )}
 
         {/* Messages Area */}
         <ScrollArea className="flex-1 p-4">
           <div className="max-w-3xl mx-auto space-y-4">
-            {/* Difficulty selector for connection-bridge */}
+            {/* Difficulty selector for stage-marker bots */}
             {showDifficultySelector && (
               <DifficultySelector
                 selected={selectedDifficulty}
@@ -439,7 +447,7 @@ const BotChat = () => {
                     role={msg.role}
                     content={stripStageMarker(msg.content)}
                     isStreaming={msg.isStreaming}
-                    enableVoice={botKey === 'connection-bridge' && currentStage >= 3}
+                    enableVoice={STAGE_MARKER_BOTS.has(botKey || '') && currentStage >= 3}
                     isLatestAssistant={isLatestAssistant}
                     variant="tool"
                   />

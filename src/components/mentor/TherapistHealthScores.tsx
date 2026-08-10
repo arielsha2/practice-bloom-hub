@@ -23,7 +23,7 @@ interface ProfileRow {
   display_name: string | null;
 }
 
-const ALL_STAGES = ["niche", "self_presentation", "connection_bridge", "contact_finder", "pricing"];
+const ALL_STAGES = ["niche", "self_presentation", "connection_bridge", "contact_finder", "pricing", "intake"];
 
 function scoreColor(score: number) {
   if (score <= 40) return "bg-amber-400/90 text-amber-950";
@@ -125,7 +125,7 @@ export function TherapistHealthScores() {
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">השלימו את כל 5 השלבים</p>
+              <p className="text-sm text-muted-foreground">השלימו את כל 6 השלבים</p>
               <p className="text-3xl font-bold mt-1 text-success">{completedAll}</p>
               <p className="text-xs text-muted-foreground mt-1">מתוך {total}</p>
             </div>

@@ -35,6 +35,7 @@ import {
   Copy as CopyIcon,
   Menu,
   Smartphone,
+  Phone,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { isPwaStandalone } from "@/lib/pwaUtils";
@@ -269,7 +270,8 @@ const STAGE_DEFS_HE = [
   { key: "pricing", label: "תמחור", botKey: "pricing-calculator", Icon: Tag },
   { key: "self-presentation", label: "הצגה עצמית", botKey: "self-presentation", Icon: UserIcon },
   { key: "network", label: "רשת קשרים", botKey: "contact-finder", Icon: Users },
-  { key: "conversion", label: "שיחת המרה", botKey: "connection-bridge", Icon: Sparkles },
+  { key: "conversion", label: "קשרי הפניות", botKey: "connection-bridge", Icon: Sparkles },
+  { key: "intake", label: "שיחת הטלפון הראשונה", botKey: "first-call-practice", Icon: Phone },
 ];
 
 const STAGE_DEFS_EN = [
@@ -277,7 +279,8 @@ const STAGE_DEFS_EN = [
   { key: "pricing", label: "Pricing", botKey: "pricing-calculator", Icon: Tag },
   { key: "self-presentation", label: "Self Presentation", botKey: "self-presentation", Icon: UserIcon },
   { key: "network", label: "Network", botKey: "contact-finder", Icon: Users },
-  { key: "conversion", label: "Conversion Call", botKey: "connection-bridge", Icon: Sparkles },
+  { key: "conversion", label: "Referral Relationships", botKey: "connection-bridge", Icon: Sparkles },
+  { key: "intake", label: "First Call", botKey: "first-call-practice", Icon: Phone },
 ];
 
 function JourneyRail({ onOpenBot }: { onOpenBot: (botKey: string) => void }) {
@@ -481,13 +484,14 @@ const MIN_MESSAGES_FOR_WELCOME_BACK = 4;
 // mentor can ask about follow-through on the concrete thing the therapist
 // was working on rather than just saying hello.
 const CHECKIN_THRESHOLD_HOURS = 48;
-const CHECKIN_STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+const CHECKIN_STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion", "intake"];
 const CHECKIN_QUESTIONS_HE: Record<string, string> = {
   niche: "מאז שדיברנו — יצא לך להתקדם עם גיבוש הנישה שלך, או לנסח את מה שדיברנו עליו?",
   pricing: "רציתי לשמוע — יצא לך להתקדם עם התמחור מאז שדיברנו, או שזה עוד תלוי באוויר?",
   "self-presentation": "איך הלך עם הצגת עצמך מאז שדיברנו — יצא לך להשתמש במה שגיבשנו?",
   network: "יצא לך ליצור קשר עם מישהו מאנשי הקשר שדיברנו עליהם?",
-  conversion: "יצא לך לקיים את שיחת ההיכרות שתרגלנו יחד?",
+  conversion: "יצא לך ליצור או לחזק קשר עם איש מקצוע שיכול להפנות אליך מטופלים?",
+  intake: "יצא לך לקיים שיחת טלפון ראשונה עם מטופל פוטנציאלי מאז שדיברנו?",
 };
 const CHECKIN_QUESTION_FALLBACK_HE = "מאז הפעם האחרונה שדיברנו — מה קרה אצלך בקליניקה? יש משהו שהתקדם?";
 const CHECKIN_QUESTIONS_EN: Record<string, string> = {
@@ -495,7 +499,8 @@ const CHECKIN_QUESTIONS_EN: Record<string, string> = {
   pricing: "I wanted to check in — did you make any progress on pricing since we talked, or is it still up in the air?",
   "self-presentation": "How did it go presenting yourself since we spoke — did you get to use what we worked on?",
   network: "Did you get a chance to reach out to any of the contacts we talked about?",
-  conversion: "Did you get to have the introductory call we practiced?",
+  conversion: "Did you get to build or strengthen a relationship with a referring colleague?",
+  intake: "Did you get to have a first call with a prospective patient since we spoke?",
 };
 const CHECKIN_QUESTION_FALLBACK_EN = "Since we last talked — what's been happening at your practice? Anything move forward?";
 
@@ -696,6 +701,7 @@ export default function Mentor() {
     "pricing-calculator",
     "strategy-planner",
     "content-creator",
+    "first-call-practice",
   ];
 
   // Aliases the LLM occasionally hallucinates → canonical bot key.
@@ -712,6 +718,10 @@ export default function Mentor() {
     presentation: "self-presentation",
     contacts: "contact-finder",
     network: "contact-finder",
+    "first-call": "first-call-practice",
+    "phone-call": "first-call-practice",
+    intake: "first-call-practice",
+    "intake-call": "first-call-practice",
   };
 
   const normalizeBotKey = (raw: string | null | undefined): string | null => {
@@ -730,24 +740,28 @@ export default function Mentor() {
     return null;
   };
 
-  // Display labels for the five user-facing tools.
+  // Display labels for the six user-facing tools.
   const BOT_LABELS: Record<string, string> = {
     "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
     "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
     "self-presentation": isRTL ? "הצגה עצמית" : "Self Presentation",
     "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
-    "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
+    "connection-bridge": isRTL ? "קשרי הפניות" : "Referral Relationships",
+    "first-call-practice": isRTL ? "תרגול שיחת הטלפון הראשונה" : "First Call Practice",
   };
 
   // Formal names/aliases used to detect tool mentions. Intentionally avoids
   // bare casual words like "נישה" or "מחיר" so a sentence like
-  // "דיברנו על נישה אתמול" does NOT match.
+  // "דיברנו על נישה אתמול" does NOT match. "שיחת היכרות" belongs only to
+  // first-call-practice (the patient-facing intake call) — connection-bridge
+  // is about referral colleagues, not patients, so it must not share that phrase.
   const BOT_ALIASES: Record<string, RegExp[]> = {
     "niche-finder": [/Niche\s*Finder/i, /מציאת\s*נישה/],
     "pricing-calculator": [/Pricing\s*Calculator/i, /\bPricing\b/i, /תמחור/],
     "self-presentation": [/Self[-\s]*Presentation/i, /הצגה\s*עצמית/],
     "contact-finder": [/Contact\s*Finder/i, /רשת\s*קשרים/],
-    "connection-bridge": [/Connection\s*Bridge/i, /שיחת\s*המרה/, /שיחת\s*היכרות/],
+    "connection-bridge": [/Connection\s*Bridge/i, /גשר\s*הקשר/, /קשרי\s*הפניות/],
+    "first-call-practice": [/First\s*Call\s*Practice/i, /תרגול\s*שיחת\s*הטלפון/, /שיחת\s*הטלפון\s*הראשונה/, /שיחת\s*היכרות/],
   };
 
   // Transition phrases — mentor signalling an actual handoff (not a casual mention).
@@ -1085,7 +1099,7 @@ export default function Mentor() {
     const currentStage =
       (journey.reflection as any)?.current ??
       CHECKIN_STAGE_ORDER.find((k) => !(journey.completed_stages ?? []).includes(k)) ??
-      "conversion";
+      CHECKIN_STAGE_ORDER[CHECKIN_STAGE_ORDER.length - 1];
 
     void (async () => {
       // Wave 2.2: prefer following up on the therapist's own specific
@@ -1170,6 +1184,7 @@ export default function Mentor() {
       "contact-finder": "Contact Finder",
       "strategy-planner": "Strategy Planner",
       "content-creator": "Content Creator",
+      "first-call-practice": "First Call Practice",
     };
     const toolName = BOT_NAMES_HE[from] ?? from;
 
@@ -1520,7 +1535,7 @@ export default function Mentor() {
             if (analyzeResp.ok) {
               const { completed, stuck_point, stuck_category, experiment_status, experiment_learning } =
                 await analyzeResp.json();
-              const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+              const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion", "intake"];
               const { data: existing } = await supabase
                 .from("therapist_journeys")
                 .select("stuck_points, completed_stages, reflection")
@@ -1542,7 +1557,7 @@ export default function Mentor() {
                 if (STAGE_ORDER.includes(k)) completedSet.add(k);
               });
               const mergedCompleted = STAGE_ORDER.filter((k) => completedSet.has(k));
-              const currentStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? "conversion";
+              const currentStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? STAGE_ORDER[STAGE_ORDER.length - 1];
               const stepNumber = STAGE_ORDER.indexOf(currentStage) + 1;
               const baseReflection = (existing?.reflection as Record<string, any>) ?? {};
               await supabase.from("therapist_journeys").upsert(

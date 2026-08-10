@@ -81,6 +81,24 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
 }
 השתמש רק במה שעלה בפועל בשיחה ובמשוב שניתן בשלב 4. אל תמציא. אם פרט חסר — מחרוזת ריקה או null לפי הסוג.`,
   },
+  "first-call-practice": {
+    column: "first_call_practice_output",
+    system: `אתה מנתח שיחה בין בוט "תרגול שיחת הטלפון הראשונה" למטפל פסיכותרפיסט.
+השיחה עוברת 4 שלבים: בירור הקשר ואמונה מגבילה, בניית פרסונת מטופל, סימולציית שיחת טלפון ראשונה (הבוט משחק את המטופל), ומשוב מובנה לפי מודל ארבעת האמונים.
+החזר JSON תקין בלבד, בלי טקסט נוסף, בפורמט הבא בדיוק:
+{
+  "presenting_concern": "הקושי המרכזי שהוצג בפרסונת המטופל שתורגלה",
+  "confidence_before": <מספר 1-10 שהמטפל דיווח לפני התרגול, או null אם לא נשאל/לא ענה>,
+  "confidence_after": <מספר 1-10 שהמטפל דיווח אחרי התרגול, או null אם לא נשאל/לא ענה>,
+  "last_state_reached": "המצב האחרון מתוך עשרת מצבי השיחה שהמטפל/ת הגיע/ה אליו בפועל: Opening/Understanding/Desired Future/Fit/Hope/Check/Practical/Decision/Booking/Closure",
+  "weakest_trust": "אמון במטפל | אמון בעצמו | אמון בהתאמה | אמון בטיפול | מחרוזת ריקה אם כל הארבעה נבנו",
+  "internal_blockers": "גורמים פנימיים מצד המטפל/ת שפגעו ביכולת לסיים בקביעת פגישה — למשל הימנעות ממחיר, דיבור יתר על עצמו, קפיצה למידע מעשי לפני שנבנתה תקווה. מחרוזת ריקה אם לא זוהה גורם כזה.",
+  "external_factors": "גורמים שקשורים למטופל הסימולטיבי עצמו ולא לביצוע המטפל/ת — למשל חוסר התאמה אמיתי, מגבלת תקציב, תזמון. מחרוזת ריקה אם לא זוהה גורם כזה.",
+  "pricing_moment": "האם המטפל/ת יזם/ה את נושא המחיר בביטחון, המתין/ה שהמטופל/ת ישאל/תשאל, או נמנע/ה ממנו לגמרי",
+  "key_improvement": "השיפור המרכזי שהוצע לתרגול הבא"${WEEKLY_EXPERIMENT_FIELDS}
+}
+השתמש רק במה שעלה בפועל בשיחה ובמשוב שניתן בשלב 4. אל תמציא. אם פרט חסר — מחרוזת ריקה או null לפי הסוג.`,
+  },
 };
 
 // Pricing and contacts need extra shaping beyond a straight parsed-JSON save:
@@ -243,9 +261,10 @@ Deno.serve(async (req) => {
       "self-presentation": "self-presentation",
       "contact-finder": "network",
       "connection-bridge": "conversion",
+      "first-call-practice": "intake",
     };
     const stageKey = BOT_TO_STAGE[botKey];
-    const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+    const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion", "intake"];
 
     // Upsert into therapist_journeys
     const { data: existing } = await supabase
@@ -258,7 +277,7 @@ Deno.serve(async (req) => {
     const completedSet = new Set(prevCompleted);
     if (stageKey) completedSet.add(stageKey);
     const newCompleted = STAGE_ORDER.filter((k) => completedSet.has(k));
-    const nextStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? "conversion";
+    const nextStage = STAGE_ORDER.find((k) => !completedSet.has(k)) ?? STAGE_ORDER[STAGE_ORDER.length - 1];
     const nextStepNumber = STAGE_ORDER.indexOf(nextStage) + 1;
 
     const baseReflection = (existing?.reflection as Record<string, any>) ?? {};

@@ -10,7 +10,7 @@ import { WebsiteComingSoonCard } from "@/components/mentor/WebsiteComingSoonCard
 import { ContactDreamTable, type DreamContact } from "@/components/mentor/ContactDreamTable";
 import { toast } from "sonner";
 
-const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion"];
+const STAGE_ORDER = ["niche", "pricing", "self-presentation", "network", "conversion", "intake"];
 
 interface Section {
   title: string;
@@ -133,9 +133,35 @@ export function FinalCelebration() {
     ]
       .filter(Boolean)
       .join("\n");
-    sections.push({ title: "שיחת היכרות וסגירה", body });
+    sections.push({ title: "קשרי הפניות", body });
   } else if (conversionSummary) {
-    sections.push({ title: "שיחת היכרות וסגירה", body: conversionSummary });
+    sections.push({ title: "קשרי הפניות", body: conversionSummary });
+  }
+
+  // Same fallback logic once more: prefer the structured practice feedback
+  // (four-trusts diagnostic, per the bot's own rubric) for first-call-practice.
+  const firstCall: any = journey.first_call_practice_output ?? {};
+  const firstCallSummary = tools["first-call-practice"]?.summary;
+  const hasFirstCallOutput =
+    firstCall.last_state_reached != null || firstCall.confidence_before != null || firstCall.weakest_trust != null;
+  if (hasFirstCallOutput) {
+    const body = [
+      firstCall.presenting_concern && `הקושי שתורגל: ${firstCall.presenting_concern}`,
+      firstCall.confidence_before != null && firstCall.confidence_after != null
+        ? `רמת ביטחון: ${firstCall.confidence_before} ← ${firstCall.confidence_after} (מתוך 10)`
+        : null,
+      firstCall.last_state_reached && `המצב האחרון שהושג בשיחה: ${firstCall.last_state_reached}`,
+      firstCall.weakest_trust && `האמון החלש ביותר: ${firstCall.weakest_trust}`,
+      firstCall.internal_blockers && `נקודות לשיפור אצלך: ${firstCall.internal_blockers}`,
+      firstCall.external_factors && `גורמים חיצוניים שעלו: ${firstCall.external_factors}`,
+      firstCall.pricing_moment && `איך עבר רגע המחיר: ${firstCall.pricing_moment}`,
+      firstCall.key_improvement && `השיפור המרכזי לתרגול הבא: ${firstCall.key_improvement}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    sections.push({ title: "שיחת הטלפון הראשונה", body });
+  } else if (firstCallSummary) {
+    sections.push({ title: "שיחת הטלפון הראשונה", body: firstCallSummary });
   }
 
   // Generate outreach text from the data we have
