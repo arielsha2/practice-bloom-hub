@@ -112,6 +112,9 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.firstcall.title": "First Call Practice Bot",
     "bots.firstcall.desc":
       "Practice the first phone call with a prospective patient and learn to turn it into a booked first session",
+    "bots.diagnosis.title": "The Diagnosis",
+    "bots.diagnosis.desc":
+      "A short, free conversation that pinpoints exactly what's holding back your clinic's growth today",
     "bots.cta": "Try Now",
     "bots.teaser": "Want to discover our digital assistants?",
     "bots.teaserLink": "Learn more",
@@ -123,6 +126,10 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.firstCallPersona": "Persona",
     "stepper.firstCallSimulation": "Simulation",
     "stepper.firstCallFeedback": "Feedback",
+    "stepper.diagnosisOpening": "Opening",
+    "stepper.diagnosisExploration": "Exploration",
+    "stepper.diagnosisResult": "Diagnosis",
+    "stepper.diagnosisNextStep": "Next Step",
 
     // Difficulty selector
     "difficulty.title": "Choose Difficulty Level",
@@ -528,6 +535,8 @@ const translations: Record<Language, Record<string, string>> = {
     "bots.contacts.desc": "זהו אנשי קשר פוטנציאליים לנישה שלכם ובנו אסטרטגיית פנייה מקצועית ואותנטית",
     "bots.firstcall.title": "תרגול שיחת הטלפון הראשונה",
     "bots.firstcall.desc": "תרגלו את שיחת ההיכרות הראשונה עם מטופל פוטנציאלי ולמדו להפוך אותה לפגישה ראשונה קבועה",
+    "bots.diagnosis.title": "האבחון",
+    "bots.diagnosis.desc": "שיחה קצרה וחינמית שמזהה בדיוק מה עוצר היום את הגדילה של הקליניקה שלכם",
     "bots.cta": "נסו עכשיו",
     "bots.teaser": "רוצים לגלות את העוזרים הדיגיטליים שלנו?",
     "bots.teaserLink": "למידע נוסף",
@@ -539,6 +548,10 @@ const translations: Record<Language, Record<string, string>> = {
     "stepper.firstCallPersona": "פרסונה",
     "stepper.firstCallSimulation": "סימולציה",
     "stepper.firstCallFeedback": "משוב",
+    "stepper.diagnosisOpening": "פתיחה",
+    "stepper.diagnosisExploration": "חקירה",
+    "stepper.diagnosisResult": "אבחון",
+    "stepper.diagnosisNextStep": "צעד הבא",
 
     // Difficulty selector
     "difficulty.title": "בחרו רמת קושי לסימולציה",

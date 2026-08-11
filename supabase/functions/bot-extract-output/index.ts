@@ -99,13 +99,90 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
 }
 השתמש רק במה שעלה בפועל בשיחה ובמשוב שניתן בשלב 4. אל תמציא. אם פרט חסר — מחרוזת ריקה או null לפי הסוג.`,
   },
+  "practice-diagnosis": {
+    column: "diagnosis_output",
+    system: `אתה מנתח שיחה בין בוט "האבחון" למטפל פסיכותרפיסט. השיחה עוברת 4 שלבים: פתיחה, חקירה אדפטיבית (מיקום קישור שבור במשפך + השערת מנגנון התנהגותי), אבחון במבנה "אהא", והמלצת צעד הבא.
+החזר JSON תקין בלבד, בלי טקסט נוסף, בפורמט הבא בדיוק:
+{
+  "presenting_theory": "מה המטפל/ת חשב/ה שהבעיה, במילים שלו/ה, לפני האבחון",
+  "evidence_summary": "העובדות/הנתונים הקונקרטיים שעלו בשיחה (כולל מספרים אם ניתנו) — לא התיאוריה של המטפל/ת, מה שבאמת קרה",
+  "bottleneck_stage": "reach | inquiry_to_conversation | conversation_to_booking | booking_to_followthrough | unclear",
+  "behavioral_mechanism": "ההסבר הספציפי, ברמת ההתנהגות, למה הקישור הזה נשבר — לא רק שם קטגוריה, אלא מה בפועל קורה או לא קורה",
+  "stuck_category": "pricing_fear | unclear_niche | no_patients_despite_marketing | self_presentation_anxiety | referral_network_gap | confidence_in_value | time_or_capacity | other",
+  "evidence_quote": "ציטוט קצר מדברי המטפל/ת שתומך באבחון",
+  "diagnosis_summary": "משפט ה'אהא' — חיבור בין מה שהמטפל/ת חשב/ה לבין מה שבאמת מתברר",
+  "not_the_priority": "משפט קצר על מה שבמכוון לא נפתר עכשיו, גם אם עלה בשיחה",
+  "recommended_tool": "בדיוק אחד מהערכים הבאים, מילה במילה, לפי הכלי שהוזכר בפועל בשלב 4 של השיחה: niche-finder | pricing-calculator | self-presentation | contact-finder | connection-bridge | first-call-practice",
+  "engagement_depth": "shallow | moderate | deep"
+}
+השתמש רק במה שעלה בפועל בשיחה. אל תמציא. אם פרט חסר — מחרוזת ריקה לפי הסוג. שים לב במיוחד ל-recommended_tool: זה תמיד bot_key עם מקפים (למשל first-call-practice), לעולם לא עם קווים תחתונים ולא שם הבוט "האבחון" עצמו.`,
+  },
 };
+
+// Same fixed 8 values as mentor-analyze's STUCK_CATEGORIES — duplicated here
+// (separate Deno function, no shared module) rather than redefined, so the
+// practice-diagnosis bot's classification stays comparable to the rest of
+// the system (admin bottleneck aggregation, mentor-analyze's own output).
+const STUCK_CATEGORIES = [
+  "pricing_fear",
+  "unclear_niche",
+  "no_patients_despite_marketing",
+  "self_presentation_anxiety",
+  "referral_network_gap",
+  "confidence_in_value",
+  "time_or_capacity",
+  "other",
+];
+const BOTTLENECK_STAGES = [
+  "reach",
+  "inquiry_to_conversation",
+  "conversation_to_booking",
+  "booking_to_followthrough",
+  "unclear",
+];
+// Real bot_key values practice-diagnosis can recommend. Observed live: the LLM
+// returned "first_call_practice" (underscores) instead of the actual key
+// "first-call-practice" — normalize common variants rather than trust the
+// raw string, same reasoning as HANDOFF_ALIASES in Mentor.tsx.
+const RECOMMENDABLE_TOOLS = [
+  "niche-finder",
+  "pricing-calculator",
+  "self-presentation",
+  "contact-finder",
+  "connection-bridge",
+  "first-call-practice",
+];
+function normalizeRecommendedTool(raw: unknown): string {
+  const s = String(raw ?? "").trim().toLowerCase().replace(/_/g, "-");
+  if (RECOMMENDABLE_TOOLS.includes(s)) return s;
+  if (s.includes("first") && s.includes("call")) return "first-call-practice";
+  if (s.includes("pricing")) return "pricing-calculator";
+  if (s.includes("niche")) return "niche-finder";
+  if (s.includes("presentation")) return "self-presentation";
+  if (s.includes("contact")) return "contact-finder";
+  if (s.includes("connection") || s.includes("bridge")) return "connection-bridge";
+  return "niche-finder"; // safest generic starting point when unrecognized
+}
 
 // Pricing and contacts need extra shaping beyond a straight parsed-JSON save:
 // pricing's recommended rate / income projection is arithmetic that must be
 // computed here, not trusted to the LLM's extraction; contacts need stable
 // ids and empty name/phone/email fields for the therapist to fill in later.
+// practice-diagnosis needs its two fixed-enum fields validated server-side
+// rather than trusting the LLM's raw string, same defensive pattern as
+// mentor-analyze's stuck_category.
 function buildStructuredOutput(botKey: string, parsed: Record<string, unknown>): unknown {
+  if (botKey === "practice-diagnosis") {
+    const p = parsed as Record<string, unknown>;
+    const stuckCategory = STUCK_CATEGORIES.includes(p.stuck_category as string)
+      ? p.stuck_category
+      : "other";
+    const bottleneckStage = BOTTLENECK_STAGES.includes(p.bottleneck_stage as string)
+      ? p.bottleneck_stage
+      : "unclear";
+    const recommendedTool = normalizeRecommendedTool(p.recommended_tool);
+    return { ...p, stuck_category: stuckCategory, bottleneck_stage: bottleneckStage, recommended_tool: recommendedTool };
+  }
   if (botKey === "pricing-calculator") {
     const low = typeof parsed.comfort_range_low === "number" ? parsed.comfort_range_low : null;
     const high = typeof parsed.comfort_range_high === "number" ? parsed.comfort_range_high : null;

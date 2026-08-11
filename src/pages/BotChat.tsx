@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Compass, Map, PenTool, Handshake, Users, Phone } from 'lucide-react';
+import { Compass, Map, PenTool, Handshake, Users, Phone, Stethoscope } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBotConfiguration } from '@/hooks/useBotConfigurations';
@@ -16,6 +16,7 @@ import { ToolIntroBanner } from '@/components/bots/ToolIntroBanner';
 import { ConversationSidebar } from '@/components/bots/ConversationSidebar';
 import { ConnectionBridgeStepper } from '@/components/bots/ConnectionBridgeStepper';
 import { FirstCallStepper } from '@/components/bots/FirstCallStepper';
+import { DiagnosisStepper } from '@/components/bots/DiagnosisStepper';
 import { DifficultySelector } from '@/components/bots/DifficultySelector';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
@@ -36,10 +37,17 @@ const botIcons: Record<string, React.ReactNode> = {
   'connection-bridge': <Handshake className="w-5 h-5 text-primary" />,
   'contact-finder': <Users className="w-5 h-5 text-primary" />,
   'first-call-practice': <Phone className="w-5 h-5 text-primary" />,
+  'practice-diagnosis': <Stethoscope className="w-5 h-5 text-primary" />,
 };
 
 // Bots that use the [STAGE:N] marker mechanic + stage stepper UI + stage-gated voice.
-const STAGE_MARKER_BOTS = new Set(['connection-bridge', 'first-call-practice']);
+const STAGE_MARKER_BOTS = new Set(['connection-bridge', 'first-call-practice', 'practice-diagnosis']);
+
+// Subset of STAGE_MARKER_BOTS that also offer a roleplay-difficulty selector.
+// practice-diagnosis is a diagnostic interview, not a difficulty-adjustable
+// simulation, so it's deliberately excluded here even though it shares the
+// stage-marker mechanic above.
+const DIFFICULTY_SELECTOR_BOTS = new Set(['connection-bridge', 'first-call-practice']);
 
 // Bots that are publicly accessible without authentication (with expiry dates)
 const PUBLIC_BOTS: Record<string, string> = {
@@ -301,7 +309,7 @@ const BotChat = () => {
   // Show welcome message if no messages and bot has welcome message
   const welcomeMessage = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
   const showWelcome = messages.length === 0 && welcomeMessage;
-  const showDifficultySelector = STAGE_MARKER_BOTS.has(botKey || '') && messages.length === 0 && !activeConversationId;
+  const showDifficultySelector = DIFFICULTY_SELECTOR_BOTS.has(botKey || '') && messages.length === 0 && !activeConversationId;
 
   const handleReturnToMentor = async () => {
     if (!user || !botKey) {
@@ -330,7 +338,7 @@ const BotChat = () => {
   const handleSend = (content: string) => {
     // Stop any playing TTS before sending new message
     window.dispatchEvent(new Event('stopAllTTS'));
-    if (STAGE_MARKER_BOTS.has(botKey || '') && messages.length === 0 && selectedDifficulty) {
+    if (DIFFICULTY_SELECTOR_BOTS.has(botKey || '') && messages.length === 0 && selectedDifficulty) {
       sendMessage(content, `[DIFFICULTY:${selectedDifficulty}]`);
     } else {
       sendMessage(content);
@@ -413,6 +421,9 @@ const BotChat = () => {
         )}
         {botKey === 'first-call-practice' && (
           <FirstCallStepper currentStage={currentStage} />
+        )}
+        {botKey === 'practice-diagnosis' && (
+          <DiagnosisStepper currentStage={currentStage} />
         )}
 
         {/* Messages Area */}

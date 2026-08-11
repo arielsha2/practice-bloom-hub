@@ -50,7 +50,11 @@ export function useUserPlan() {
   };
 }
 
-const FREE_TIER_ALLOWED = new Set(["pricing-calculator"]);
+// Was ["pricing-calculator"] — replaced per the 2026-08-12 decision that the
+// free trial's entry point is the diagnostic conversation, not a standalone
+// tool. Dormant today (trialActive is false site-wide while the trial is
+// closed); takes effect once the trial reopens.
+const FREE_TIER_ALLOWED = new Set(["practice-diagnosis"]);
 
 export type BotAccess = "allowed" | "locked" | "mentor-only";
 

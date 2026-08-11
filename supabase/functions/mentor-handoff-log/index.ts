@@ -26,6 +26,7 @@ const VALID_BOT_KEYS = new Set([
   "strategy-planner",
   "content-creator",
   "first-call-practice",
+  "practice-diagnosis",
 ]);
 
 Deno.serve(async (req) => {

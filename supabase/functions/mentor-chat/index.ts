@@ -131,9 +131,9 @@ const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצוע�
 ═══════════════════════════════
 פרוטוקול העברה לכלי (חובה — קריטי):
 ═══════════════════════════════
-כאשר את/ה מחליטה להעביר את המטפל לכלי ספציפי (Niche Finder, Pricing Calculator, Self Presentation, Contact Finder, Connection Bridge, First Call Practice) — חייב/ת לעשות שתי פעולות:
+כאשר את/ה מחליטה להעביר את המטפל לכלי ספציפי (Niche Finder, Pricing Calculator, Self Presentation, Contact Finder, Connection Bridge, First Call Practice, האבחון) — חייב/ת לעשות שתי פעולות:
 1. לכתוב משפט קצר וחם של מעבר ("אני מעבירה אותך עכשיו ל-Niche Finder, שם נחדד את הנישה שלך").
-2. **לסיים את ההודעה בשורה נפרדת לחלוטין** עם התג: \`[HANDOFF:bot-key]\` כאשר bot-key הוא אחד מ: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`.
+2. **לסיים את ההודעה בשורה נפרדת לחלוטין** עם התג: \`[HANDOFF:bot-key]\` כאשר bot-key הוא אחד מ: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`.
 
 דוגמה:
 > נשמע לי שהדבר הראשון שיעזור לך זה לחדד את הנישה. אני מעבירה אותך עכשיו לכלי שבנינו במיוחד לזה.
@@ -146,7 +146,7 @@ const SYSTEM_PROMPT_HE = `את "אליענה" — המנטורית המקצוע�
 • כל מעבר לכלי חייב להסתיים בשורה \`[HANDOFF:bot-key]\` — גם אם כבר הופיע לינק מרקדאון בהודעה.
 • אסור לכתוב "אני מעבירה אותך" / "אני שולחת אותך" / "בואי נעבור ל…" בלי שורת \`[HANDOFF:bot-key]\` מיד אחריה בשורה נפרדת.
 • אם הזכרת שם של כלי במשמעות של מעבר עכשיו — חייב להופיע התג. בלי יוצא מן הכלל.
-• 🚫 **מפתחות חוקיים — בלבד**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`. אסור בהחלט להמציא מפתחות כמו \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\` או כל וריאציה אחרת. כלי "שיחת המרה" / "Connection Bridge" → תמיד \`connection-bridge\` (במקף אחד), לעולם לא \`bridge-the-gap\`. כלי "תרגול שיחת הטלפון הראשונה" הוא תמיד \`first-call-practice\`, לעולם לא \`intake\` או \`first-call\`.
+• 🚫 **מפתחות חוקיים — בלבד**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`. אסור בהחלט להמציא מפתחות כמו \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`diagnosis\` או כל וריאציה אחרת. כלי "שיחת המרה" / "Connection Bridge" → תמיד \`connection-bridge\` (במקף אחד), לעולם לא \`bridge-the-gap\`. כלי "תרגול שיחת הטלפון הראשונה" הוא תמיד \`first-call-practice\`, לעולם לא \`intake\` או \`first-call\`. כלי "האבחון" הוא תמיד \`practice-diagnosis\`, לעולם לא \`diagnosis\` או \`diagnostic\`.
 
 ═══════════════════════════════
 זיהוי תזוזה אמיתית — תג [INSIGHT]:
@@ -213,9 +213,9 @@ Tone and additional principles:
 ═══════════════════════════════
 Handoff protocol (mandatory — critical):
 ═══════════════════════════════
-When you decide to transfer the therapist to a specific tool (Niche Finder, Pricing Calculator, Self Presentation, Contact Finder, Connection Bridge, First Call Practice) — you MUST do two things:
+When you decide to transfer the therapist to a specific tool (Niche Finder, Pricing Calculator, Self Presentation, Contact Finder, Connection Bridge, First Call Practice, The Diagnosis) — you MUST do two things:
 1. Write a short warm transfer sentence ("I'm sending you over to Niche Finder now, where we'll sharpen your niche").
-2. **End the message on its own separate line** with the tag: \`[HANDOFF:bot-key]\` where bot-key is one of: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`.
+2. **End the message on its own separate line** with the tag: \`[HANDOFF:bot-key]\` where bot-key is one of: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`.
 
 Example:
 > It sounds like the first thing that will help you is sharpening your niche. I'm sending you to the dedicated tool now.
@@ -228,7 +228,7 @@ Example:
 • Every handoff to a tool must end with \`[HANDOFF:bot-key]\` on its own line — even if a markdown link already appeared in the message.
 • Never write "I'm sending you to" / "I'm transferring you to" / "let's move to…" without \`[HANDOFF:bot-key]\` immediately after on its own line.
 • If you mentioned a tool name in the meaning of switching now — the tag MUST appear. No exceptions.
-• 🚫 **Valid keys — ONLY**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`. Never invent keys such as \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\` or any variation. The "Connection Bridge" / conversion-call tool is always \`connection-bridge\` (single hyphen), never \`bridge-the-gap\`. The "First Call Practice" tool is always \`first-call-practice\`, never \`intake\` or \`first-call\`.
+• 🚫 **Valid keys — ONLY**: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`. Never invent keys such as \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`diagnosis\` or any variation. The "Connection Bridge" / conversion-call tool is always \`connection-bridge\` (single hyphen), never \`bridge-the-gap\`. The "First Call Practice" tool is always \`first-call-practice\`, never \`intake\` or \`first-call\`. The "Diagnosis" tool is always \`practice-diagnosis\`, never \`diagnosis\` or \`diagnostic\`.
 
 ═══════════════════════════════
 Detecting a genuine shift — [INSIGHT] tag:
@@ -535,8 +535,8 @@ serve(async (req) => {
     // overrode the prompt via mentor_ai_settings. The model has been observed
     // emitting [HANDOFF:bridge-the-gap] (invalid key, 100% failure rate).
     const handoffGuardrail = language === "en"
-      ? `\n\n═══════════════════════════════\nHANDOFF KEY VALIDATION (hard rule, overrides any other guidance):\n═══════════════════════════════\nThe ONLY valid bot keys are exactly: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`.\n\nNever, under any circumstance, emit any other key inside [HANDOFF:...]. Specifically forbidden: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, \`intake\`, \`first-call\`, or any variation. The "Connection Bridge" / conversion-call tool is ALWAYS \`connection-bridge\` (single hyphen between the two words). The "First Call Practice" tool is ALWAYS \`first-call-practice\`. If unsure — do not emit a HANDOFF tag at all.`
-      : `\n\n═══════════════════════════════\nאימות מפתח HANDOFF (כלל קשיח — גובר על כל הנחיה אחרת):\n═══════════════════════════════\nהמפתחות החוקיים היחידים הם, מילה במילה: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`.\n\nאסור בהחלט, בשום מצב, להוציא מפתח אחר בתוך [HANDOFF:...]. אסורים במפורש: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, \`intake\`, \`first-call\`, או כל וריאציה אחרת. הכלי "Connection Bridge" / "שיחת המרה" הוא תמיד \`connection-bridge\` (מקף יחיד בין שתי המילים). הכלי "תרגול שיחת הטלפון הראשונה" הוא תמיד \`first-call-practice\`. אם יש ספק — אל תוציא תג HANDOFF בכלל.`;
+      ? `\n\n═══════════════════════════════\nHANDOFF KEY VALIDATION (hard rule, overrides any other guidance):\n═══════════════════════════════\nThe ONLY valid bot keys are exactly: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`.\n\nNever, under any circumstance, emit any other key inside [HANDOFF:...]. Specifically forbidden: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, \`intake\`, \`first-call\`, \`diagnosis\`, \`diagnostic\`, or any variation. The "Connection Bridge" / conversion-call tool is ALWAYS \`connection-bridge\` (single hyphen between the two words). The "First Call Practice" tool is ALWAYS \`first-call-practice\`. The "Diagnosis" tool is ALWAYS \`practice-diagnosis\`. If unsure — do not emit a HANDOFF tag at all.`
+      : `\n\n═══════════════════════════════\nאימות מפתח HANDOFF (כלל קשיח — גובר על כל הנחיה אחרת):\n═══════════════════════════════\nהמפתחות החוקיים היחידים הם, מילה במילה: \`niche-finder\`, \`pricing-calculator\`, \`self-presentation\`, \`contact-finder\`, \`connection-bridge\`, \`first-call-practice\`, \`practice-diagnosis\`.\n\nאסור בהחלט, בשום מצב, להוציא מפתח אחר בתוך [HANDOFF:...]. אסורים במפורש: \`bridge-the-gap\`, \`conversion-call\`, \`niche\`, \`pricing\`, \`presentation\`, \`network\`, \`contacts\`, \`bridge\`, \`intake\`, \`first-call\`, \`diagnosis\`, \`diagnostic\`, או כל וריאציה אחרת. הכלי "Connection Bridge" / "שיחת המרה" הוא תמיד \`connection-bridge\` (מקף יחיד בין שתי המילים). הכלי "תרגול שיחת הטלפון הראשונה" הוא תמיד \`first-call-practice\`. הכלי "האבחון" הוא תמיד \`practice-diagnosis\`. אם יש ספק — אל תוציא תג HANDOFF בכלל.`;
 
     // Build journey context block — prefer compact tool summaries over raw JSON
     // outputs to keep system-prompt tokens small. If a summary doesn't exist

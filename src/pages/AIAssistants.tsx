@@ -3,7 +3,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
-import { Compass, Map, PenTool, Calculator, Bot, Handshake, Mic, Users, PhoneCall } from 'lucide-react';
+import { Compass, Map, PenTool, Calculator, Bot, Handshake, Mic, Users, PhoneCall, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TrialBanner } from '@/components/access/TrialBanner';
 
@@ -16,6 +16,7 @@ const botData = [
   { key: 'presentation', icon: Mic },
   { key: 'contacts', icon: Users },
   { key: 'firstcall', icon: PhoneCall },
+  { key: 'diagnosis', icon: Stethoscope },
 ];
 
 const botKeyMapping: Record<string, string> = {
@@ -27,6 +28,7 @@ const botKeyMapping: Record<string, string> = {
   'presentation': 'self-presentation',
   'contacts': 'contact-finder',
   'firstcall': 'first-call-practice',
+  'diagnosis': 'practice-diagnosis',
 };
 
 const AIAssistants = () => {

@@ -31,6 +31,10 @@ const BOT_INTROS: Record<string, { he: string; en: string }> = {
     he: 'לתרגול שיחת הטלפון הראשונה עם מטופל פוטנציאלי, מהבירור ועד לקביעת פגישה.',
     en: 'To practice the first phone call with a prospective patient, from intake to booking.',
   },
+  'practice-diagnosis': {
+    he: 'לאבחון קצר וממוקד של מה שבאמת עוצר את גדילת הקליניקה שלך היום.',
+    en: 'For a short, focused diagnosis of what\'s really holding back your clinic\'s growth today.',
+  },
 };
 
 interface ToolIntroBannerProps {

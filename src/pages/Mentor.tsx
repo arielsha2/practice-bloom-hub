@@ -702,6 +702,7 @@ export default function Mentor() {
     "strategy-planner",
     "content-creator",
     "first-call-practice",
+    "practice-diagnosis",
   ];
 
   // Aliases the LLM occasionally hallucinates → canonical bot key.
@@ -722,6 +723,9 @@ export default function Mentor() {
     "phone-call": "first-call-practice",
     intake: "first-call-practice",
     "intake-call": "first-call-practice",
+    diagnosis: "practice-diagnosis",
+    diagnostic: "practice-diagnosis",
+    "practice-diagnostic": "practice-diagnosis",
   };
 
   const normalizeBotKey = (raw: string | null | undefined): string | null => {
@@ -740,7 +744,7 @@ export default function Mentor() {
     return null;
   };
 
-  // Display labels for the six user-facing tools.
+  // Display labels for the seven user-facing tools.
   const BOT_LABELS: Record<string, string> = {
     "niche-finder": isRTL ? "מציאת נישה" : "Niche Finder",
     "pricing-calculator": isRTL ? "תמחור" : "Pricing Calculator",
@@ -748,6 +752,7 @@ export default function Mentor() {
     "contact-finder": isRTL ? "רשת קשרים" : "Contact Finder",
     "connection-bridge": isRTL ? "קשרי הפניות" : "Referral Relationships",
     "first-call-practice": isRTL ? "תרגול שיחת הטלפון הראשונה" : "First Call Practice",
+    "practice-diagnosis": isRTL ? "האבחון" : "The Diagnosis",
   };
 
   // Formal names/aliases used to detect tool mentions. Intentionally avoids
@@ -762,6 +767,7 @@ export default function Mentor() {
     "contact-finder": [/Contact\s*Finder/i, /רשת\s*קשרים/],
     "connection-bridge": [/Connection\s*Bridge/i, /גשר\s*הקשר/, /קשרי\s*הפניות/],
     "first-call-practice": [/First\s*Call\s*Practice/i, /תרגול\s*שיחת\s*הטלפון/, /שיחת\s*הטלפון\s*הראשונה/, /שיחת\s*היכרות/],
+    "practice-diagnosis": [/The\s*Diagnosis/i, /Diagnos(is|tic)/i, /האבחון/],
   };
 
   // Transition phrases — mentor signalling an actual handoff (not a casual mention).
@@ -1185,6 +1191,7 @@ export default function Mentor() {
       "strategy-planner": "Strategy Planner",
       "content-creator": "Content Creator",
       "first-call-practice": "First Call Practice",
+      "practice-diagnosis": "The Diagnosis",
     };
     const toolName = BOT_NAMES_HE[from] ?? from;
 
