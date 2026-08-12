@@ -13,6 +13,13 @@ export type MentorSummary = {
   next_focus?: string;
 };
 
+// Lets a caller render its own labeled sections instead of the fixed
+// goals/key_points/action_items/next_focus slots above — e.g. the diagnosis
+// result dialog, whose content doesn't map cleanly onto those generic names.
+// Optional everywhere it's accepted below; omitting it keeps today's exact
+// behavior for existing callers (Mentor.tsx's "My chat" dropdown).
+export type SummarySection = { label: string; content: string | string[] };
+
 export async function generateMentorSummary(
   messages: SummaryMsg[],
   opts: { isRTL: boolean },
@@ -27,8 +34,24 @@ export async function generateMentorSummary(
 export function summaryToText(
   summary: MentorSummary,
   opts: { isRTL: boolean },
+  customSections?: SummarySection[],
 ): string {
   const isHe = opts.isRTL;
+  const list = (arr?: string[]) =>
+    (arr ?? []).map((s, i) => `${i + 1}. ${s}`).join("\n");
+
+  if (customSections?.length) {
+    const parts: string[] = [];
+    if (summary.title) parts.push(`**${summary.title}**`);
+    for (const { label, content } of customSections) {
+      if (!content || (Array.isArray(content) && content.length === 0)) continue;
+      const body = Array.isArray(content) ? list(content) : content;
+      parts.push(`**${label}:**\n${body}`);
+    }
+    return parts.join("\n\n");
+  }
+
+  // Unchanged from before customSections existed — exact original behavior.
   const L = {
     title: isHe ? "סיכום השיחה" : "Conversation Summary",
     goals: isHe ? "מטרות החלק הזה" : "Goals of this part",
@@ -36,9 +59,6 @@ export function summaryToText(
     actions: isHe ? "דגשים לפעולה" : "Action highlights",
     next: isHe ? "מוקד להמשך" : "Next focus",
   };
-  const list = (arr?: string[]) =>
-    (arr ?? []).map((s, i) => `${i + 1}. ${s}`).join("\n");
-
   const parts: string[] = [];
   parts.push(`**${L.title}${summary.title ? `: ${summary.title}` : ""}**`);
   if (summary.goals?.length) parts.push(`**${L.goals}:**\n${list(summary.goals)}`);
@@ -51,13 +71,15 @@ export function summaryToText(
 export async function copySummaryText(
   summary: MentorSummary,
   opts: { isRTL: boolean },
+  customSections?: SummarySection[],
 ): Promise<void> {
-  await navigator.clipboard.writeText(summaryToText(summary, opts));
+  await navigator.clipboard.writeText(summaryToText(summary, opts, customSections));
 }
 
 export async function downloadSummaryPdf(
   summary: MentorSummary,
   opts: { isRTL: boolean; displayName?: string | null },
+  custom?: { heading?: string; fileNamePrefix?: string; sections?: SummarySection[] },
 ): Promise<void> {
   const { default: html2pdf } = await import("html2pdf.js");
 
@@ -70,10 +92,10 @@ export async function downloadSummaryPdf(
     month: "long",
     day: "numeric",
   });
-  const fileName = `therapykeys-mentor-summary-${today.toISOString().slice(0, 10)}.pdf`;
+  const fileName = `${custom?.fileNamePrefix ?? "therapykeys-mentor-summary"}-${today.toISOString().slice(0, 10)}.pdf`;
 
   const L = {
-    heading: isHe ? "סיכום שיחה עם המנטור" : "Mentor Conversation Summary",
+    heading: custom?.heading ?? (isHe ? "סיכום שיחה עם המנטור" : "Mentor Conversation Summary"),
     subtitle: isHe ? `נשמר ב-${dateStr}` : `Saved on ${dateStr}`,
     goals: isHe ? "מטרות החלק הזה בשיחה" : "Goals of this part",
     key: isHe ? "נקודות מרכזיות שעלו" : "Key points that emerged",
@@ -99,6 +121,19 @@ export async function downloadSummaryPdf(
       </div>`;
   };
 
+  // Custom sections render as plain paragraph blocks (string content) or the
+  // same numbered-list style as the legacy sections (array content) — kept
+  // deliberately simple rather than adding a second visual treatment.
+  const customSection = (label: string, content: string | string[]) => {
+    if (Array.isArray(content)) return section(label, content);
+    if (!content) return "";
+    return `
+      <div style="margin:0 0 18px 0;">
+        <div style="font-size:14px;font-weight:700;color:#58005a;margin-bottom:8px;text-align:${align};">${escapeHtml(label)}</div>
+        <div style="font-size:13px;color:#1f1233;line-height:1.7;text-align:${align};">${escapeHtml(content)}</div>
+      </div>`;
+  };
+
   const nextBlock = summary.next_focus
     ? `
       <div style="margin:6px 0 0 0;padding:14px 16px;background:#f5f2ff;border:1px solid #e3dafc;border-radius:14px;text-align:${align};">
@@ -110,6 +145,14 @@ export async function downloadSummaryPdf(
   const titleLine = summary.title
     ? `<div style="font-size:14px;color:#6b5b7a;margin-top:4px;text-align:${align};">${escapeHtml(summary.title)}</div>`
     : "";
+
+  const bodyHtml = custom?.sections?.length
+    ? custom.sections.map((s) => customSection(s.label, s.content)).join("")
+    : `
+    ${section(L.goals, summary.goals)}
+    ${section(L.key, summary.key_points)}
+    ${section(L.actions, summary.action_items)}
+    ${nextBlock}`;
 
   const container = document.createElement("div");
   container.setAttribute("dir", dir);
@@ -127,10 +170,7 @@ export async function downloadSummaryPdf(
       ${titleLine}
       <div style="font-size:12px;color:#6b5b7a;margin-top:4px;">${escapeHtml(L.subtitle)}</div>
     </div>
-    ${section(L.goals, summary.goals)}
-    ${section(L.key, summary.key_points)}
-    ${section(L.actions, summary.action_items)}
-    ${nextBlock}
+    ${bodyHtml}
     <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e3dafc;font-size:11px;color:#9c8bb0;text-align:${align};">
       TherapyKeys · therapykeys.co.il
     </div>

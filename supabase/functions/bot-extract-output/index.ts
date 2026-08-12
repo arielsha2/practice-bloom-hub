@@ -107,6 +107,7 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   "presenting_theory": "מה המטפל/ת חשב/ה שהבעיה, במילים שלו/ה, לפני האבחון",
   "evidence_summary": "העובדות/הנתונים הקונקרטיים שעלו בשיחה (כולל מספרים אם ניתנו) — לא התיאוריה של המטפל/ת, מה שבאמת קרה",
   "bottleneck_stage": "reach | inquiry_to_conversation | conversation_to_booking | booking_to_followthrough | unclear",
+  "bottleneck_description": "משפט אחד בשפה פשוטה שמתאר את הקישור הספציפי שבאמת שבור (מקביל למה שנאמר בפועל בשלב 3 סעיף 3 של השיחה) — לא שם הקטגוריה הטכני, אלא תיאור אנושי וקונקרטי",
   "behavioral_mechanism": "ההסבר הספציפי, ברמת ההתנהגות, למה הקישור הזה נשבר — לא רק שם קטגוריה, אלא מה בפועל קורה או לא קורה",
   "stuck_category": "pricing_fear | unclear_niche | no_patients_despite_marketing | self_presentation_anxiety | referral_network_gap | confidence_in_value | time_or_capacity | other",
   "evidence_quote": "ציטוט קצר מדברי המטפל/ת שתומך באבחון",
@@ -162,6 +163,46 @@ function normalizeRecommendedTool(raw: unknown): string {
   if (s.includes("contact")) return "contact-finder";
   if (s.includes("connection") || s.includes("bridge")) return "connection-bridge";
   return "niche-finder"; // safest generic starting point when unrecognized
+}
+
+// Hebrew labels for the diagnosis-to-Mentor handoff summary below. Deliberately
+// separate from any frontend label map (src/pages/BotChat.tsx etc.) — this one's
+// job is just making the tool_summaries text readable to the Mentor LLM, not
+// display in the browser, and the two live in different runtimes.
+const TOOL_LABELS_HE: Record<string, string> = {
+  "niche-finder": "מציאת הנישה",
+  "pricing-calculator": "מחשבון התמחור",
+  "self-presentation": "הצגה עצמית",
+  "contact-finder": "מציאת אנשי קשר להפניות",
+  "connection-bridge": "גשר הקשר",
+  "first-call-practice": "תרגול שיחת הטלפון הראשונה",
+};
+
+// Builds the compact string written into reflection.tool_summaries["practice-diagnosis"]
+// so mentor-chat's journeyBlock can brief Eliana on the diagnosis (see Fix 2 in the plan).
+// Fields are appended in priority order and the whole thing is capped at 400 chars to
+// match journeyBlock's own truncation — ordering here matters more than completeness,
+// so the load-bearing facts (the reframe + the recommended tool) survive any cut.
+function buildDiagnosisMentorSummary(p: Record<string, unknown>): string {
+  const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+  const toolLabel = TOOL_LABELS_HE[str(p.recommended_tool)] ?? str(p.recommended_tool);
+  const parts = [
+    str(p.diagnosis_summary) && `אבחון: ${str(p.diagnosis_summary)}`,
+    toolLabel && `הצעד הבא המומלץ: ${toolLabel}`,
+    str(p.bottleneck_description) && `צוואר הבקבוק: ${str(p.bottleneck_description)}`,
+    str(p.presenting_theory) && `המטפל/ת חשב/ה שהבעיה: ${str(p.presenting_theory)}`,
+    str(p.behavioral_mechanism) && `מה קורה בפועל: ${str(p.behavioral_mechanism)}`,
+    str(p.evidence_summary) && `עדות: ${str(p.evidence_summary)}`,
+    str(p.not_the_priority) && `לא לעסוק כרגע ב: ${str(p.not_the_priority)}`,
+  ].filter(Boolean) as string[];
+
+  let out = "";
+  for (const part of parts) {
+    const candidate = out ? `${out} ${part}.` : `${part}.`;
+    if (candidate.length > 400) break;
+    out = candidate;
+  }
+  return out;
 }
 
 // Pricing and contacts need extra shaping beyond a straight parsed-JSON save:
@@ -373,8 +414,21 @@ Deno.serve(async (req) => {
       };
       updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
     } else {
-      updatePayload[cfg!.column] = buildStructuredOutput(botKey, rest);
-      updatePayload.reflection = { ...baseReflection, current: nextStage };
+      const structured = buildStructuredOutput(botKey, rest);
+      updatePayload[cfg!.column] = structured;
+      if (botKey === "practice-diagnosis") {
+        // Feed the diagnosis into the Mentor's context (Fix 2) — same
+        // tool_summaries channel journeyBlock in mentor-chat already reads
+        // for every other bot, so no changes needed there.
+        const toolSummaries = (baseReflection.tool_summaries as Record<string, any>) ?? {};
+        toolSummaries[botKey] = {
+          summary: buildDiagnosisMentorSummary(structured as Record<string, unknown>),
+          updated_at: new Date().toISOString(),
+        };
+        updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
+      } else {
+        updatePayload.reflection = { ...baseReflection, current: nextStage };
+      }
     }
 
     if (existing) {

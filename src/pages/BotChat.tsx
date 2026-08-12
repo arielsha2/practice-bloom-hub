@@ -20,6 +20,8 @@ import { DiagnosisStepper } from '@/components/bots/DiagnosisStepper';
 import { DifficultySelector } from '@/components/bots/DifficultySelector';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
+import { DiagnosisResultDialog, type DiagnosisResult } from '@/components/bots/DiagnosisResultDialog';
+import { trackEvent } from '@/lib/analytics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -78,6 +80,9 @@ const BotChat = () => {
   const isStreamingRef = useRef(false);
   const [currentStage, setCurrentStage] = useState(1);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+  const [showDiagnosisDialog, setShowDiagnosisDialog] = useState(false);
+  const diagnosisConversationCompletedRef = useRef(false);
 
   // Data fetching
   const { data: botConfig, isLoading: botLoading } = useBotConfiguration(botKey || '');
@@ -154,7 +159,16 @@ const BotChat = () => {
       if (msg.role === 'assistant') {
         const match = msg.content.match(/\[STAGE:(\d)\]/);
         if (match) {
-          setCurrentStage(parseInt(match[1], 10));
+          const stage = parseInt(match[1], 10);
+          setCurrentStage(stage);
+          if (
+            botKey === 'practice-diagnosis' &&
+            stage >= 4 &&
+            !diagnosisConversationCompletedRef.current
+          ) {
+            diagnosisConversationCompletedRef.current = true;
+            trackEvent('diagnosis_conversation_completed', {});
+          }
           break;
         }
       }
@@ -320,15 +334,46 @@ const BotChat = () => {
     try {
       // If we have a conversation with at least one assistant reply, extract a summary
       const hasContent = messages.filter((m) => m.role === 'assistant').length >= 1 && activeConversationId;
+      let extractSucceeded = false;
       if (hasContent) {
         try {
           await supabase.functions.invoke('bot-extract-output', {
             body: { botKey, conversationId: activeConversationId },
           });
+          extractSucceeded = true;
         } catch (e) {
           console.warn('extract failed, continuing to mentor', e);
         }
       }
+
+      // practice-diagnosis gets a result dialog instead of an immediate
+      // navigate — re-fetch the just-written diagnosis_output from the DB
+      // rather than trusting bot-extract-output's HTTP response, since that
+      // response returns the raw pre-normalization values.
+      if (botKey === 'practice-diagnosis' && extractSucceeded) {
+        const { data: journey } = await supabase
+          .from('therapist_journeys')
+          .select('diagnosis_output')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const d = (journey as any)?.diagnosis_output as Record<string, unknown> | null | undefined;
+        if (d) {
+          setDiagnosisResult({
+            presentingTheory: String(d.presenting_theory ?? ''),
+            bottleneck: String(d.bottleneck_description ?? ''),
+            diagnosisSummary: String(d.diagnosis_summary ?? ''),
+            bottleneckStage: String(d.bottleneck_stage ?? ''),
+            evidenceSummary: String(d.evidence_summary ?? ''),
+            behavioralMechanism: String(d.behavioral_mechanism ?? ''),
+            notThePriority: String(d.not_the_priority ?? ''),
+            recommendedTool: String(d.recommended_tool ?? ''),
+          });
+          trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
+          setShowDiagnosisDialog(true);
+          return;
+        }
+      }
+
       navigate(`/mentor?from=${encodeURIComponent(botKey)}`);
     } finally {
       setReturningToMentor(false);
@@ -338,6 +383,9 @@ const BotChat = () => {
   const handleSend = (content: string) => {
     // Stop any playing TTS before sending new message
     window.dispatchEvent(new Event('stopAllTTS'));
+    if (botKey === 'practice-diagnosis' && messages.length === 0) {
+      trackEvent('diagnosis_started', {});
+    }
     if (DIFFICULTY_SELECTOR_BOTS.has(botKey || '') && messages.length === 0 && selectedDifficulty) {
       sendMessage(content, `[DIFFICULTY:${selectedDifficulty}]`);
     } else {
@@ -534,6 +582,20 @@ const BotChat = () => {
           onOpenChange={setInsightDialogOpen}
           onSave={handleSaveInsight}
           isLoading={addUserMemory.isPending}
+        />
+      )}
+
+      {diagnosisResult && (
+        <DiagnosisResultDialog
+          open={showDiagnosisDialog}
+          onOpenChange={setShowDiagnosisDialog}
+          result={diagnosisResult}
+          isRTL={isRTL}
+          displayName={user?.email ?? null}
+          onContinue={() => {
+            setShowDiagnosisDialog(false);
+            navigate(`/mentor?from=${encodeURIComponent(botKey || '')}`);
+          }}
         />
       )}
     </div>

@@ -542,6 +542,14 @@ serve(async (req) => {
     // outputs to keep system-prompt tokens small. If a summary doesn't exist
     // for a tool, skip it entirely instead of dumping the full output JSON.
     let journeyBlock = "";
+    // Live-verification (2026-08-12) found the generic "use it, don't re-ask"
+    // line above is too weak to override the base prompt's rigid 5-stage
+    // script — Eliana ignored a present practice-diagnosis summary entirely
+    // and opened with the generic stage-2 pricing question. This dedicated,
+    // mandatory block is the targeted fix the plan called for if that
+    // happened, scoped only to practice-diagnosis (the one tool whose whole
+    // point is to skip redundant discovery for the reader).
+    let diagnosisContinuityBlock = "";
     if (journey_context && typeof journey_context === "object") {
       const lines: string[] = [];
       const completed = journey_context.completed_stages;
@@ -561,6 +569,11 @@ serve(async (req) => {
       }
       if (lines.length > 0) {
         journeyBlock = `\n\n═══════════════════════════════\nמידע מהמסע של המטפל / Therapist's journey context (use it, don't re-ask):\n═══════════════════════════════\n${lines.join("\n")}`;
+      }
+
+      const diagnosisSummary = (toolSummaries as any)?.["practice-diagnosis"]?.summary;
+      if (diagnosisSummary && typeof diagnosisSummary === "string") {
+        diagnosisContinuityBlock = `\n\n═══════════════════════════════\nהמשך התנהגותי מהאבחון (חובה — לא רק אזכור, וגובר על סקריפט הפתיחה של השלב):\n═══════════════════════════════\nהמטפל/ת עבר/ה אבחון מקדים (practice-diagnosis) וקיבל/ה ממצא ספציפי (מופיע למעלה תחת "Tool \\"practice-diagnosis\\" summary"). זה נכון **גם אם** הכלי המומלץ הוא שלב 1 (נישה) או כל שלב אחר עם שאלת פתיחה/4 שאלות ליבה מוגדרות מראש למעלה — האבחון כבר שימש כשלב הגילוי, ולכן ההנחיה הזו **גוברת** על שאלת הפתיחה הרגילה של אותו שלב.\n\nאם טרם התייחסת לממצא הזה בהודעה קודמת שלך בשיחה הנוכחית: אל תשאלי את שאלת הפתיחה הגנרית או המספר-1 מ"4 שאלות הליבה" של השלב/הכלי המומלץ, ואל תפני לרשימת השאלות שם — הן כבר נענו במהות באבחון. במקום זאת, פתחי ישירות מהממצא: הזכירי בקצרה במילים שלך את מה שהתברר באבחון (לא להקריא את הטקסט כלשונו), ואז שאלי שאלת המשך אחת שבונה קדימה מהממצא הספציפי (לא שאלת רקע כללית) — כזו שמניעה action בכלי המומלץ, לא רק רפלקציה עליו.\n\nדוגמה 1 (הכלי המומלץ: תרגול שיחת הטלפון הראשונה): אל תשאלי "מאיפה מגיעים הלקוחות שלך". במקום זאת: "כבר ראינו באבחון שהפניות אצלך קיימות, אבל משהו קורה בדרך לקביעת הפגישה — בואי נתרגל בדיוק את הרגע הזה. עם איזה סוג מטופל תרצה לתרגל?"\n\nדוגמה 2 (הכלי המומלץ: מציאת הנישה, שלב 1): אל תשאלי "מה הטיפול שאתה הכי גאה בתוצאות שלו" (שאלת הפתיחה הרגילה של שלב 1) — האבחון כבר גילה שהבעיה היא פיזור בין אוכלוסיות שונות מדי, לא חוסר בהירות לגבי תוצאה טובה. במקום זאת: "באבחון התברר שאתה מקבל פניות ממגוון רחב מדי של אנשים, ולכן אף מסר לא מדבר ספציפית לאף אחד. בוא נדייק את זה — מבין כל האנשים שפנו אליך החודש, מי היה הכי 'זה בדיוק בשבילי' עבורך?"\n\nאם כבר התייחסת לממצא הזה בהודעה קודמת בשיחה הנוכחית — המשיכי כרגיל, כולל שימוש רגיל בשאלות הליבה של השלב, בלי לחזור על ההתייחסות לאבחון.`;
       }
     }
 
@@ -619,7 +632,12 @@ LANGUAGE RULE (overrides everything else):
     // reliably than ones buried mid-prompt — confirmed necessary live, an
     // earlier mid-prompt position was silently ignored in favor of the
     // introduction/funnel instructions above.
-    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix + checkinBlock;
+    // diagnosisContinuityBlock is placed last, after checkinBlock, for the same
+    // reason checkinBlock itself is last (see comment above): instructions near
+    // the end of a long system prompt get followed far more reliably than ones
+    // buried mid-prompt — confirmed live 2026-08-12, when this same instruction
+    // sitting inside journeyBlock (mid-prompt) was silently ignored.
+    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix + checkinBlock + diagnosisContinuityBlock;
 
 
 
