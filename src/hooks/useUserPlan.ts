@@ -52,8 +52,12 @@ export function useUserPlan() {
 
 // Was ["pricing-calculator"] — replaced per the 2026-08-12 decision that the
 // free trial's entry point is the diagnostic conversation, not a standalone
-// tool. Dormant today (trialActive is false site-wide while the trial is
-// closed); takes effect once the trial reopens.
+// tool.
+//
+// 2026-08-13: no longer gated on trialActive at all. The diagnosis is the
+// top-of-funnel lead magnet — any signed-up user should be able to try it
+// without needing a trial granted first (the trial toggle only governs the
+// other 6 paid tools). See useBotAccess below.
 const FREE_TIER_ALLOWED = new Set(["practice-diagnosis"]);
 
 export type BotAccess = "allowed" | "locked" | "mentor-only";
@@ -66,9 +70,7 @@ export function useBotAccess(botKey: string | undefined): {
   const plan = useUserPlan();
   if (!botKey) return { access: "locked", loading: plan.loading, plan };
   if (plan.hasPaidAccess) return { access: "allowed", loading: plan.loading, plan };
-  if (plan.trialActive && FREE_TIER_ALLOWED.has(botKey)) {
-    return { access: "allowed", loading: plan.loading, plan };
-  }
+  if (FREE_TIER_ALLOWED.has(botKey)) return { access: "allowed", loading: plan.loading, plan };
   if (plan.trialActive) return { access: "mentor-only", loading: plan.loading, plan };
   return { access: "locked", loading: plan.loading, plan };
 }
