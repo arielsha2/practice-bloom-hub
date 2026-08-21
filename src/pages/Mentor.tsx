@@ -555,7 +555,7 @@ export default function Mentor() {
   const queryClient = useQueryClient();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const userPlanInfo = useUserPlan();
-  const { journey, refresh: refreshJourney } = useTherapistJourney();
+  const { journey, loading: journeyLoading, refresh: refreshJourney } = useTherapistJourney();
   const journeyRef = useRef(journey);
   useEffect(() => {
     journeyRef.current = journey;
@@ -1666,8 +1666,14 @@ export default function Mentor() {
     document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Paywall — full sales page (trial users get through and see the mentor)
-  if (!accessLoading && hasAccess === false && !userPlanInfo.trialActive) {
+  // Paywall — full sales page (trial users, and anyone who's completed the
+  // free diagnosis, get through and see the mentor instead of the generic
+  // pitch — the whole point of the diagnosis is that Eliana can turn its
+  // finding into a specific upgrade pitch, which can't happen if they never
+  // reach her chat. Gated on journeyLoading too so a free user with a real
+  // completed diagnosis doesn't flash the sales page before that loads.
+  const hasCompletedDiagnosis = !!(journey?.reflection as any)?.tool_summaries?.["practice-diagnosis"];
+  if (!accessLoading && !journeyLoading && hasAccess === false && !userPlanInfo.trialActive && !hasCompletedDiagnosis) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
