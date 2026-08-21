@@ -555,7 +555,7 @@ export default function Mentor() {
   const queryClient = useQueryClient();
   const { hasAccess, loading: accessLoading } = useHasMentorAccess();
   const userPlanInfo = useUserPlan();
-  const { journey, loading: journeyLoading, refresh: refreshJourney } = useTherapistJourney();
+  const { journey, refresh: refreshJourney } = useTherapistJourney();
   const journeyRef = useRef(journey);
   useEffect(() => {
     journeyRef.current = journey;
@@ -1666,14 +1666,13 @@ export default function Mentor() {
     document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Paywall — full sales page (trial users, and anyone who's completed the
-  // free diagnosis, get through and see the mentor instead of the generic
-  // pitch — the whole point of the diagnosis is that Eliana can turn its
-  // finding into a specific upgrade pitch, which can't happen if they never
-  // reach her chat. Gated on journeyLoading too so a free user with a real
-  // completed diagnosis doesn't flash the sales page before that loads.
-  const hasCompletedDiagnosis = !!(journey?.reflection as any)?.tool_summaries?.["practice-diagnosis"];
-  if (!accessLoading && !journeyLoading && hasAccess === false && !userPlanInfo.trialActive && !hasCompletedDiagnosis) {
+  // Paywall — the generic sales page is now only for logged-out visitors.
+  // Any signed-up user without paid access reaches Eliana instead, since her
+  // prompt already knows to invite a free user into the diagnosis (or, if
+  // they've already done it, to turn that finding into a specific upgrade
+  // pitch) — a better front door than a static page for exactly the users
+  // today's work is trying to reach.
+  if (!accessLoading && hasAccess === false && !user) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
         <MentorTopBar />
