@@ -60,6 +60,28 @@ export function useUserPlan() {
 // other 6 paid tools). See useBotAccess below.
 const FREE_TIER_ALLOWED = new Set(["practice-diagnosis"]);
 
+// Per-tool entitlements from the discounted single-tool purchase (the Grow
+// payment flow) — separate from the all-or-nothing `plan` flag on profiles,
+// since someone can own exactly one recommended tool without owning the
+// full Mentor. Granted server-side by grow-payment-webhook.
+function useSingleToolAccess() {
+  const { user } = useAuth();
+  const q = useQuery<Set<string>>({
+    queryKey: ["single-tool-access", user?.id],
+    enabled: !!user?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_tool_access")
+        .select("bot_key")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.bot_key as string));
+    },
+  });
+  return { grantedTools: q.data ?? new Set<string>(), loading: q.isLoading };
+}
+
 export type BotAccess = "allowed" | "locked" | "mentor-only";
 
 export function useBotAccess(botKey: string | undefined): {
@@ -68,9 +90,12 @@ export function useBotAccess(botKey: string | undefined): {
   plan: UserPlanInfo;
 } {
   const plan = useUserPlan();
-  if (!botKey) return { access: "locked", loading: plan.loading, plan };
-  if (plan.hasPaidAccess) return { access: "allowed", loading: plan.loading, plan };
-  if (FREE_TIER_ALLOWED.has(botKey)) return { access: "allowed", loading: plan.loading, plan };
-  if (plan.trialActive) return { access: "mentor-only", loading: plan.loading, plan };
-  return { access: "locked", loading: plan.loading, plan };
+  const singleTool = useSingleToolAccess();
+  const loading = plan.loading || singleTool.loading;
+  if (!botKey) return { access: "locked", loading, plan };
+  if (plan.hasPaidAccess) return { access: "allowed", loading, plan };
+  if (FREE_TIER_ALLOWED.has(botKey)) return { access: "allowed", loading, plan };
+  if (singleTool.grantedTools.has(botKey)) return { access: "allowed", loading, plan };
+  if (plan.trialActive) return { access: "mentor-only", loading, plan };
+  return { access: "locked", loading, plan };
 }
