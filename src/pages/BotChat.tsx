@@ -369,6 +369,7 @@ const BotChat = () => {
             notThePriority: String(d.not_the_priority ?? ''),
             pathForward: String(d.path_forward ?? ''),
             recommendedTool: String(d.recommended_tool ?? ''),
+            areaMap: Array.isArray(d.area_map) ? (d.area_map as DiagnosisResult['areaMap']) : [],
           });
           trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
           setShowDiagnosisDialog(true);

@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, ArrowLeft } from 'lucide-react';
+import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -15,6 +15,13 @@ import {
   type SummarySection,
 } from '@/lib/mentorSummary';
 import { trackEvent } from '@/lib/analytics';
+
+export type AreaStatus = 'priority' | 'strong' | 'stable' | 'not_assessed';
+export interface AreaMapEntry {
+  area: string;
+  status: AreaStatus;
+  note: string;
+}
 
 // Structured result of the practice-diagnosis conversation, read directly
 // from therapist_journeys.diagnosis_output — deliberately its own type
@@ -32,6 +39,7 @@ export interface DiagnosisResult {
   notThePriority: string;
   pathForward: string;
   recommendedTool: string;
+  areaMap: AreaMapEntry[];
 }
 
 // Single source of truth for how each recommended tool is labeled in the
@@ -50,9 +58,25 @@ function toolMeta(botKey: string) {
   return RECOMMENDED_TOOL_META[botKey] ?? { label: botKey, actionLabel: 'להמשיך למנטור' };
 }
 
+const AREA_STATUS_META: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
+  priority: { label: 'הכי דחוף', Icon: Target },
+  strong: { label: 'חזק אצלך', Icon: Check },
+  stable: { label: 'נראה יציב', Icon: Minus },
+  not_assessed: { label: 'לא נבדק בשיחה', Icon: CircleDashed },
+};
+
+function areaMapToText(areaMap: AreaMapEntry[]): string[] {
+  return areaMap.map((e) => {
+    const label = toolMeta(e.area).label;
+    const status = AREA_STATUS_META[e.status]?.label ?? e.status;
+    return e.note ? `${label} — ${status}: ${e.note}` : `${label} — ${status}`;
+  });
+}
+
 function buildSections(result: DiagnosisResult): SummarySection[] {
   return [
     { label: 'מה חשבת שעוצר אותך', content: result.presentingTheory },
+    { label: 'מפת שישה האזורים', content: areaMapToText(result.areaMap) },
     { label: 'מה כן עובד אצלך', content: result.whatIsWorking },
     { label: 'מה נראה שבאמת עוצר כרגע את הצמיחה', content: result.diagnosisSummary },
     { label: 'למה הגענו למסקנה הזו', content: result.evidenceSummary },
@@ -139,6 +163,41 @@ export function DiagnosisResultDialog({
                 {isRTL ? 'מה חשבת שעוצר אותך' : "What you thought was stopping you"}
               </p>
               <p className="text-sm text-foreground/80">{result.presentingTheory}</p>
+            </div>
+          )}
+
+          {result.areaMap?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">
+                {isRTL ? 'עברנו על שישה אזורים בקליניקה שלך' : "We covered six areas of your practice"}
+              </p>
+              <div className="space-y-1.5">
+                {result.areaMap.map((entry) => {
+                  const { label } = toolMeta(entry.area);
+                  const statusMeta = AREA_STATUS_META[entry.status];
+                  const Icon = statusMeta.Icon;
+                  const isPriority = entry.status === 'priority';
+                  return (
+                    <div
+                      key={entry.area}
+                      className={`flex items-start gap-2 rounded-md px-2.5 py-2 ${
+                        isPriority ? 'bg-accent/5 border border-accent/20' : ''
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isPriority ? 'text-accent' : 'text-muted-foreground'}`} />
+                      <div className="min-w-0">
+                        <p className={`text-sm ${isPriority ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>
+                          {label}
+                          <span className={`mr-1.5 text-xs ${isPriority ? 'text-accent' : 'text-muted-foreground'}`}>
+                            · {statusMeta.label}
+                          </span>
+                        </p>
+                        {entry.note && <p className="text-xs text-muted-foreground mt-0.5">{entry.note}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

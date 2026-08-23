@@ -135,9 +135,10 @@ const PROMPTS: Record<string, { column: string; system: string }> = {
   "not_the_priority": "משפט קצר על מה שבמכוון לא נפתר עכשיו, גם אם עלה בשיחה",
   "path_forward": "פסקה קצרה (2-3 משפטים, לא יותר) בקול של אליענה, שמגשרת בין הממצא לצעד הבא: שמה בקצרה מה כדאי לעשות כדי לפתור בדיוק את זה, נותנת תקווה/מוטיבציה קונקרטית לגבי מה זה יפתח עבור הקליניקה (לא הבטחה גורפת — משהו שנשען על מה שעלה בשיחה עצמה), ומזמינה להתחיל. לא לחזור מילה במילה על diagnosis_summary — זו ההזמנה, לא האבחנה.",
   "recommended_tool": "בדיוק אחד מהערכים הבאים, מילה במילה, לפי הכלי שהוזכר בפועל בשלב 4 של השיחה: niche-finder | pricing-calculator | self-presentation | contact-finder | connection-bridge | first-call-practice",
+  "area_map": "מערך של בדיוק 6 אובייקטים, אחד לכל אחד משישה האזורים (בדיוק המפתחות: niche-finder, pricing-calculator, self-presentation, contact-finder, connection-bridge, first-call-practice — כל אחד פעם אחת, לא יותר ולא פחות). כל אובייקט: {area, status, note}. status הוא בדיוק אחד מ: priority (האזור שהומלץ ב-recommended_tool — בדיוק אחד מהשישה מקבל את זה) | strong (עלתה עדות ברורה שזה עובד טוב) | stable (לא עלה חשש, אבל גם לא נבדק לעומק) | not_assessed (לא עלה כלל בשיחה). note הוא משפט קצר אחד לכל אזור, בקול טיפולי — עבור ה-priority, note מסביר בקצרה למה דווקא זה הכי דחוף (כולל אם הוא חוסם אזורים אחרים); עבור אזור strong, note מזכיר בקצרה את העדות; עבור stable/not_assessed, note קצר ופשוט (למשל 'לא עלה כאן, אבל שום דבר לא הצביע על בעיה').",
   "engagement_depth": "shallow | moderate | deep"
 }
-השתמש רק במה שעלה בפועל בשיחה. אל תמציא. אם פרט חסר — מחרוזת ריקה לפי הסוג. שים לב במיוחד ל-recommended_tool: זה תמיד bot_key עם מקפים (למשל first-call-practice), לעולם לא עם קווים תחתונים ולא שם הבוט "האבחון" עצמו.`,
+השתמש רק במה שעלה בפועל בשיחה. אל תמציא. אם פרט חסר — מחרוזת ריקה לפי הסוג. שים לב במיוחד ל-recommended_tool: זה תמיד bot_key עם מקפים (למשל first-call-practice), לעולם לא עם קווים תחתונים ולא שם הבוט "האבחון" עצמו. שים לב גם ש-area_map הוא תמיד מערך בגודל 6 בדיוק — אם משהו לא עלה בשיחה כלל, זה עדיין אובייקט עם status "not_assessed", לא שדה חסר.`,
   },
 };
 
@@ -174,6 +175,39 @@ const RECOMMENDABLE_TOOLS = [
   "connection-bridge",
   "first-call-practice",
 ];
+const AREA_MAP_STATUSES = ["priority", "strong", "stable", "not_assessed"];
+
+// Same "system computes, LLM only phrases" defense as normalizeRecommendedTool
+// below: the model's raw area_map array might have the wrong length, a
+// mis-keyed area, an invalid status, or (most likely to actually happen)
+// disagree with recommended_tool about which area is the priority one. Rather
+// than trust the array's shape, rebuild it from the 6 known areas and force
+// exactly one "priority" entry — the one matching the already-normalized
+// recommended_tool, which is the actual source of truth used everywhere else
+// (the dialog CTA, path_forward, tool_summaries). A model-flagged priority
+// entry that disagrees is demoted to "strong" rather than dropped, so its
+// note isn't lost.
+function normalizeAreaMap(raw: unknown, recommendedTool: string): Array<{ area: string; status: string; note: string }> {
+  const byArea = new Map<string, { status: string; note: string }>();
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== "object") continue;
+      const e = entry as Record<string, unknown>;
+      const area = normalizeRecommendedTool(e.area);
+      if (!RECOMMENDABLE_TOOLS.includes(area) || byArea.has(area)) continue;
+      const status = AREA_MAP_STATUSES.includes(e.status as string) ? (e.status as string) : "not_assessed";
+      const note = typeof e.note === "string" ? e.note.trim() : "";
+      byArea.set(area, { status, note });
+    }
+  }
+  return RECOMMENDABLE_TOOLS.map((area) => {
+    const entry = byArea.get(area);
+    const isPriority = area === recommendedTool;
+    const status = isPriority ? "priority" : entry?.status === "priority" ? "strong" : (entry?.status ?? "not_assessed");
+    return { area, status, note: entry?.note ?? "" };
+  });
+}
+
 function normalizeRecommendedTool(raw: unknown): string {
   const s = String(raw ?? "").trim().toLowerCase().replace(/_/g, "-");
   if (RECOMMENDABLE_TOOLS.includes(s)) return s;
@@ -243,7 +277,8 @@ function buildStructuredOutput(botKey: string, parsed: Record<string, unknown>):
       ? p.bottleneck_stage
       : "unclear";
     const recommendedTool = normalizeRecommendedTool(p.recommended_tool);
-    return { ...p, stuck_category: stuckCategory, bottleneck_stage: bottleneckStage, recommended_tool: recommendedTool };
+    const areaMap = normalizeAreaMap(p.area_map, recommendedTool);
+    return { ...p, stuck_category: stuckCategory, bottleneck_stage: bottleneckStage, recommended_tool: recommendedTool, area_map: areaMap };
   }
   if (botKey === "pricing-calculator") {
     const low = typeof parsed.comfort_range_low === "number" ? parsed.comfort_range_low : null;
