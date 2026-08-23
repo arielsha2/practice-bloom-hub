@@ -23,12 +23,14 @@ import { trackEvent } from '@/lib/analytics';
 // to the opposite of a generic "next_focus").
 export interface DiagnosisResult {
   presentingTheory: string;
+  whatIsWorking: string;
   bottleneck: string;
   diagnosisSummary: string;
   bottleneckStage: string;
   evidenceSummary: string;
   behavioralMechanism: string;
   notThePriority: string;
+  pathForward: string;
   recommendedTool: string;
 }
 
@@ -51,11 +53,12 @@ function toolMeta(botKey: string) {
 function buildSections(result: DiagnosisResult): SummarySection[] {
   return [
     { label: 'מה חשבת שעוצר אותך', content: result.presentingTheory },
+    { label: 'מה כן עובד אצלך', content: result.whatIsWorking },
     { label: 'מה נראה שבאמת עוצר כרגע את הצמיחה', content: result.diagnosisSummary },
     { label: 'למה הגענו למסקנה הזו', content: result.evidenceSummary },
     { label: 'מה קורה בפועל', content: [result.bottleneck, result.behavioralMechanism].filter(Boolean).join(' ') },
     { label: 'מה לא הייתי מנסה לפתור כרגע', content: result.notThePriority },
-    { label: 'הצעד הבא', content: toolMeta(result.recommendedTool).label },
+    { label: 'איך ממשיכים מכאן', content: result.pathForward },
   ].filter((s) => s.content && (Array.isArray(s.content) ? s.content.length > 0 : s.content.trim().length > 0));
 }
 
@@ -139,6 +142,15 @@ export function DiagnosisResultDialog({
             </div>
           )}
 
+          {result.whatIsWorking && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-1">
+                {isRTL ? 'מה כן עובד אצלך' : "What's already working"}
+              </p>
+              <p className="text-sm text-foreground/80">{result.whatIsWorking}</p>
+            </div>
+          )}
+
           {result.diagnosisSummary && (
             <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
               <p className="text-xs font-semibold text-accent mb-1">
@@ -174,6 +186,12 @@ export function DiagnosisResultDialog({
                 {isRTL ? 'מה לא הייתי מנסה לפתור כרגע' : "What I wouldn't try to fix right now"}
               </p>
               <p className="text-sm text-foreground/80">{result.notThePriority}</p>
+            </div>
+          )}
+
+          {result.pathForward && (
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-sm text-foreground/90 leading-relaxed">{result.pathForward}</p>
             </div>
           )}
         </div>

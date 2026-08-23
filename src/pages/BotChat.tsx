@@ -360,12 +360,14 @@ const BotChat = () => {
         if (d) {
           setDiagnosisResult({
             presentingTheory: String(d.presenting_theory ?? ''),
+            whatIsWorking: String(d.what_is_working ?? ''),
             bottleneck: String(d.bottleneck_description ?? ''),
             diagnosisSummary: String(d.diagnosis_summary ?? ''),
             bottleneckStage: String(d.bottleneck_stage ?? ''),
             evidenceSummary: String(d.evidence_summary ?? ''),
             behavioralMechanism: String(d.behavioral_mechanism ?? ''),
             notThePriority: String(d.not_the_priority ?? ''),
+            pathForward: String(d.path_forward ?? ''),
             recommendedTool: String(d.recommended_tool ?? ''),
           });
           trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
