@@ -290,6 +290,7 @@ export default function Auth() {
       case "login":
         return t("auth.loginTitle");
       case "signup":
+        if (diagnosisRedirect) return isRTL ? "הרשמה לאבחון החינמי" : "Sign up for the free diagnosis";
         return isRTL ? "הרשמה למנטור" : "Sign up for the Mentor";
       case "forgot":
         return t("auth.forgotTitle");
@@ -304,6 +305,7 @@ export default function Auth() {
       case "login":
         return t("auth.loginSubtitle");
       case "signup":
+        if (diagnosisRedirect) return isRTL ? "2 שלבים פשוטים: מייל → קוד אימות, ומתחילים" : "2 simple steps: email → verification code, then start";
         return isRTL ? "3 שלבים פשוטים: מייל → אימות → סיסמה" : "3 simple steps: email → verify → password";
       case "forgot":
         return t("auth.forgotSubtitle");

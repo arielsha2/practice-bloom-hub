@@ -220,7 +220,9 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
             />
             <span className="text-sm leading-relaxed text-right">
               אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.
-              <span className="block text-xs text-muted-foreground mt-1">* אישור זה הוא תנאי לשימוש במנטור.</span>
+              <span className="block text-xs text-muted-foreground mt-1">
+                * אישור זה הוא תנאי {skipPassword ? "להתנסות באבחון" : "לשימוש במנטור"}.
+              </span>
             </span>
           </label>
           <Button type="submit" variant="cta" className="w-full" disabled={busy}>
