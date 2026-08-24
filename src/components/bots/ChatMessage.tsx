@@ -39,7 +39,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestAssistant, variant = 'mentor' }: ChatMessageProps) {
   const isUser = role === 'user';
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [displayedContent, setDisplayedContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const hasCompletedRef = useRef(false);
@@ -221,9 +221,9 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
         'flex gap-3 p-4 rounded-lg transition-all animate-fade-in',
         isUser
           ? isTool
-            ? 'bg-accent/10 mr-0 ml-8'
-            : 'bg-primary/10 mr-0 ml-8'
-          : 'bg-card border border-border/50 ml-0 mr-8'
+            ? 'bg-accent/10 me-0 ms-8'
+            : 'bg-primary/10 me-0 ms-8'
+          : 'bg-card border border-border/50 ms-0 me-8'
       )}
     >
       {/* Avatar */}
@@ -245,7 +245,13 @@ export function ChatMessage({ role, content, isStreaming, enableVoice, isLatestA
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words text-right flex-1" dir="rtl">
+          <p
+            className={cn(
+              'text-foreground leading-relaxed whitespace-pre-wrap break-words flex-1',
+              isRTL ? 'text-right' : 'text-left',
+            )}
+            dir={isRTL ? 'rtl' : 'ltr'}
+          >
             {parseMarkdown(displayedContent)}
             {showCursor && (
               <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1" />

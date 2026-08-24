@@ -45,7 +45,7 @@ export interface DiagnosisResult {
 // Single source of truth for how each recommended tool is labeled in the
 // UI — both the display label and the need-phrased CTA action text read
 // from here, so they can't drift out of sync with each other over time.
-const RECOMMENDED_TOOL_META: Record<string, { label: string; actionLabel: string }> = {
+const RECOMMENDED_TOOL_META_HE: Record<string, { label: string; actionLabel: string }> = {
   'niche-finder': { label: 'מציאת הנישה', actionLabel: 'להתחיל לעבוד על הנישה שלי' },
   'pricing-calculator': { label: 'מחשבון התמחור', actionLabel: 'להתחיל לעבוד על התמחור שלי' },
   'self-presentation': { label: 'הצגה עצמית', actionLabel: 'להתחיל לעבוד על ההצגה העצמית שלי' },
@@ -53,9 +53,18 @@ const RECOMMENDED_TOOL_META: Record<string, { label: string; actionLabel: string
   'connection-bridge': { label: 'גשר הקשר', actionLabel: 'להתחיל לעבוד על קשרי ההפניות שלי' },
   'first-call-practice': { label: 'תרגול שיחת הטלפון הראשונה', actionLabel: 'להתחיל לעבוד על שיחת הטלפון הראשונה' },
 };
+const RECOMMENDED_TOOL_META_EN: Record<string, { label: string; actionLabel: string }> = {
+  'niche-finder': { label: 'Finding your niche', actionLabel: 'Start working on my niche' },
+  'pricing-calculator': { label: 'The pricing calculator', actionLabel: 'Start working on my pricing' },
+  'self-presentation': { label: 'Self-presentation', actionLabel: 'Start working on my self-presentation' },
+  'contact-finder': { label: 'Finding referral contacts', actionLabel: 'Start working on my referral network' },
+  'connection-bridge': { label: 'The connection bridge', actionLabel: 'Start working on my referral relationships' },
+  'first-call-practice': { label: 'First-call practice', actionLabel: 'Start working on my first phone call' },
+};
 
-function toolMeta(botKey: string) {
-  return RECOMMENDED_TOOL_META[botKey] ?? { label: botKey, actionLabel: 'להמשיך למנטור' };
+function toolMeta(botKey: string, isRTL: boolean) {
+  const table = isRTL ? RECOMMENDED_TOOL_META_HE : RECOMMENDED_TOOL_META_EN;
+  return table[botKey] ?? { label: botKey, actionLabel: isRTL ? 'להמשיך למנטור' : 'Continue to the Mentor' };
 }
 
 // The two purchase paths offered to anyone without full paid access once
@@ -70,32 +79,55 @@ const SINGLE_TOOL_PAYMENT_URL = 'https://pay.grow.link/NzkyMDE~68a43deedc01abb7f
 const FULL_MENTOR_PRICE_ILS = 750;
 const FULL_MENTOR_PAYMENT_URL = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
 
-const AREA_STATUS_META: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
+const AREA_STATUS_META_HE: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
   priority: { label: 'הכי דחוף', Icon: Target },
   strong: { label: 'חזק אצלך', Icon: Check },
   stable: { label: 'נראה יציב', Icon: Minus },
   not_assessed: { label: 'לא נבדק בשיחה', Icon: CircleDashed },
 };
+const AREA_STATUS_META_EN: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
+  priority: { label: 'Most urgent', Icon: Target },
+  strong: { label: 'Strong for you', Icon: Check },
+  stable: { label: 'Seems stable', Icon: Minus },
+  not_assessed: { label: "Didn't come up", Icon: CircleDashed },
+};
 
-function areaMapToText(areaMap: AreaMapEntry[]): string[] {
+function areaStatusMeta(status: AreaStatus, isRTL: boolean) {
+  return (isRTL ? AREA_STATUS_META_HE : AREA_STATUS_META_EN)[status];
+}
+
+function areaMapToText(areaMap: AreaMapEntry[], isRTL: boolean): string[] {
   return areaMap.map((e) => {
-    const label = toolMeta(e.area).label;
-    const status = AREA_STATUS_META[e.status]?.label ?? e.status;
+    const label = toolMeta(e.area, isRTL).label;
+    const status = areaStatusMeta(e.status, isRTL)?.label ?? e.status;
     return e.note ? `${label} — ${status}: ${e.note}` : `${label} — ${status}`;
   });
 }
 
-function buildSections(result: DiagnosisResult): SummarySection[] {
-  return [
-    { label: 'מה חשבת שעוצר אותך', content: result.presentingTheory },
-    { label: 'מפת שישה האזורים', content: areaMapToText(result.areaMap) },
-    { label: 'מה כן עובד אצלך', content: result.whatIsWorking },
-    { label: 'מה נראה שבאמת עוצר כרגע את הצמיחה', content: result.diagnosisSummary },
-    { label: 'למה הגענו למסקנה הזו', content: result.evidenceSummary },
-    { label: 'מה קורה בפועל', content: [result.bottleneck, result.behavioralMechanism].filter(Boolean).join(' ') },
-    { label: 'מה לא הייתי מנסה לפתור כרגע', content: result.notThePriority },
-    { label: 'איך ממשיכים מכאן', content: result.pathForward },
-  ].filter((s) => s.content && (Array.isArray(s.content) ? s.content.length > 0 : s.content.trim().length > 0));
+function buildSections(result: DiagnosisResult, isRTL: boolean): SummarySection[] {
+  return (
+    isRTL
+      ? [
+          { label: 'מה חשבת שעוצר אותך', content: result.presentingTheory },
+          { label: 'מפת שישה האזורים', content: areaMapToText(result.areaMap, isRTL) },
+          { label: 'מה כן עובד אצלך', content: result.whatIsWorking },
+          { label: 'מה נראה שבאמת עוצר כרגע את הצמיחה', content: result.diagnosisSummary },
+          { label: 'למה הגענו למסקנה הזו', content: result.evidenceSummary },
+          { label: 'מה קורה בפועל', content: [result.bottleneck, result.behavioralMechanism].filter(Boolean).join(' ') },
+          { label: 'מה לא הייתי מנסה לפתור כרגע', content: result.notThePriority },
+          { label: 'איך ממשיכים מכאן', content: result.pathForward },
+        ]
+      : [
+          { label: 'What you thought was stopping you', content: result.presentingTheory },
+          { label: 'The six-area map', content: areaMapToText(result.areaMap, isRTL) },
+          { label: "What's already working", content: result.whatIsWorking },
+          { label: "What's actually holding back your growth", content: result.diagnosisSummary },
+          { label: 'Why we got here', content: result.evidenceSummary },
+          { label: "What's actually happening", content: [result.bottleneck, result.behavioralMechanism].filter(Boolean).join(' ') },
+          { label: "What I wouldn't try to fix right now", content: result.notThePriority },
+          { label: 'How to move forward', content: result.pathForward },
+        ]
+  ).filter((s) => s.content && (Array.isArray(s.content) ? s.content.length > 0 : s.content.trim().length > 0));
 }
 
 interface DiagnosisResultDialogProps {
@@ -130,15 +162,15 @@ export function DiagnosisResultDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const meta = toolMeta(result.recommendedTool);
-  const sections = buildSections(result);
+  const meta = toolMeta(result.recommendedTool, isRTL);
+  const sections = buildSections(result, isRTL);
 
   const handleDownload = async () => {
     try {
       await downloadSummaryPdf(
         {},
         { isRTL, displayName },
-        { heading: 'האבחון שלך', fileNamePrefix: 'therapykeys-diagnosis', sections },
+        { heading: isRTL ? 'האבחון שלך' : 'Your Diagnosis', fileNamePrefix: 'therapykeys-diagnosis', sections },
       );
       trackEvent('diagnosis_pdf_downloaded', { recommended_tool: result.recommendedTool });
     } catch (e) {
@@ -198,8 +230,8 @@ export function DiagnosisResultDialog({
               </p>
               <div className="space-y-1.5">
                 {result.areaMap.map((entry) => {
-                  const { label } = toolMeta(entry.area);
-                  const statusMeta = AREA_STATUS_META[entry.status];
+                  const { label } = toolMeta(entry.area, isRTL);
+                  const statusMeta = areaStatusMeta(entry.status, isRTL);
                   const Icon = statusMeta.Icon;
                   const isPriority = entry.status === 'priority';
                   return (
@@ -213,7 +245,7 @@ export function DiagnosisResultDialog({
                       <div className="min-w-0">
                         <p className={`text-sm ${isPriority ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>
                           {label}
-                          <span className={`mr-1.5 text-xs ${isPriority ? 'text-accent' : 'text-muted-foreground'}`}>
+                          <span className={`me-1.5 text-xs ${isPriority ? 'text-accent' : 'text-muted-foreground'}`}>
                             · {statusMeta.label}
                           </span>
                         </p>
