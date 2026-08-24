@@ -18,6 +18,9 @@ import { ProviderHealthCard } from "@/components/mentor/ProviderHealthCard";
 import { StuckPointMap } from "@/components/mentor/StuckPointMap";
 import { MailingListExport } from "@/components/mentor/MailingListExport";
 import { TrialAccessToggleCard } from "@/components/mentor/TrialAccessToggleCard";
+import { DiagnosisFunnelCard } from "@/components/mentor/DiagnosisFunnelCard";
+import { DiagnosisStatsCard } from "@/components/mentor/DiagnosisStatsCard";
+import { DiagnosisAIInsightsCard } from "@/components/mentor/DiagnosisAIInsightsCard";
 
 interface Settings {
   id?: string;
@@ -147,6 +150,12 @@ export default function MentorAdmin() {
         <ProviderHealthCard />
 
         <StuckPointMap />
+
+        <DiagnosisFunnelCard />
+
+        <DiagnosisStatsCard />
+
+        <DiagnosisAIInsightsCard />
 
         <MailingListExport />
 
