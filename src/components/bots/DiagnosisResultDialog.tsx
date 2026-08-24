@@ -75,9 +75,13 @@ function toolMeta(botKey: string, isRTL: boolean) {
 // (all six tools + Eliana). Someone who already has full access skips this
 // entirely and keeps the single "let's start" CTA below.
 const SINGLE_TOOL_PRICE_ILS = 290;
-const SINGLE_TOOL_PAYMENT_URL = 'https://pay.grow.link/NzkyMDE~68a43deedc01abb7f94a1112c32d0b6b-Mzg3NjE4Ng';
+const SINGLE_TOOL_PRICE_USD = 97;
+const SINGLE_TOOL_PAYMENT_URL_HE = 'https://pay.grow.link/NzkyMDE~68a43deedc01abb7f94a1112c32d0b6b-Mzg3NjE4Ng';
+const SINGLE_TOOL_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/6X9HVVT5D7WS4';
 const FULL_MENTOR_PRICE_ILS = 750;
-const FULL_MENTOR_PAYMENT_URL = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
+const FULL_MENTOR_PRICE_USD = 250;
+const FULL_MENTOR_PAYMENT_URL_HE = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
+const FULL_MENTOR_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN';
 
 const AREA_STATUS_META_HE: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
   priority: { label: 'הכי דחוף', Icon: Target },
@@ -198,12 +202,20 @@ export function DiagnosisResultDialog({
 
   const handleChooseSingleTool = () => {
     continuedRef.current = true;
-    trackEvent('diagnosis_single_tool_purchase_clicked', { recommended_tool: result.recommendedTool, price_ils: SINGLE_TOOL_PRICE_ILS });
+    trackEvent('diagnosis_single_tool_purchase_clicked', {
+      recommended_tool: result.recommendedTool,
+      currency: isRTL ? 'ILS' : 'USD',
+      price: isRTL ? SINGLE_TOOL_PRICE_ILS : SINGLE_TOOL_PRICE_USD,
+    });
   };
 
   const handleChooseFullMentor = () => {
     continuedRef.current = true;
-    trackEvent('diagnosis_full_mentor_purchase_clicked', { recommended_tool: result.recommendedTool, price_ils: FULL_MENTOR_PRICE_ILS });
+    trackEvent('diagnosis_full_mentor_purchase_clicked', {
+      recommended_tool: result.recommendedTool,
+      currency: isRTL ? 'ILS' : 'USD',
+      price: isRTL ? FULL_MENTOR_PRICE_ILS : FULL_MENTOR_PRICE_USD,
+    });
   };
 
   return (
@@ -330,7 +342,7 @@ export function DiagnosisResultDialog({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <a
-                  href={SINGLE_TOOL_PAYMENT_URL}
+                  href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleChooseSingleTool}
@@ -341,11 +353,11 @@ export function DiagnosisResultDialog({
                     {isRTL ? 'בדיוק הכלי שהאבחון המליץ עליו' : 'Exactly the tool the diagnosis recommended'}
                   </span>
                   <span className="text-sm font-semibold text-accent mt-1">
-                    {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `${SINGLE_TOOL_PRICE_ILS} NIS ($97)`}
+                    {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `$${SINGLE_TOOL_PRICE_USD}`}
                   </span>
                 </a>
                 <a
-                  href={FULL_MENTOR_PAYMENT_URL}
+                  href={isRTL ? FULL_MENTOR_PAYMENT_URL_HE : FULL_MENTOR_PAYMENT_URL_EN}
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleChooseFullMentor}
@@ -358,7 +370,7 @@ export function DiagnosisResultDialog({
                     {isRTL ? `כולל את ${meta.label} וגם את חמשת הכלים האחרים` : `Includes ${meta.label} plus all five other tools`}
                   </span>
                   <span className="text-sm font-semibold text-accent mt-1">
-                    {isRTL ? `₪${FULL_MENTOR_PRICE_ILS}` : `${FULL_MENTOR_PRICE_ILS} NIS`}
+                    {isRTL ? `₪${FULL_MENTOR_PRICE_ILS}` : `$${FULL_MENTOR_PRICE_USD}`}
                   </span>
                 </a>
               </div>
