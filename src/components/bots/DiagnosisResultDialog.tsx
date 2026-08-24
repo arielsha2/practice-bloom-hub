@@ -58,6 +58,18 @@ function toolMeta(botKey: string) {
   return RECOMMENDED_TOOL_META[botKey] ?? { label: botKey, actionLabel: 'להמשיך למנטור' };
 }
 
+// The two purchase paths offered to anyone without full paid access once
+// they're ready to act on the diagnosis: the one tool it actually
+// recommended (cheaper, scoped — grants only that bot_key, matched
+// server-side to this user's own diagnosis at payment time by
+// grow-payment-webhook, not by anything in this URL) or the full journey
+// (all six tools + Eliana). Someone who already has full access skips this
+// entirely and keeps the single "let's start" CTA below.
+const SINGLE_TOOL_PRICE_ILS = 290;
+const SINGLE_TOOL_PAYMENT_URL = 'https://pay.grow.link/NzkyMDE~68a43deedc01abb7f94a1112c32d0b6b-Mzg3NjE4Ng';
+const FULL_MENTOR_PRICE_ILS = 750;
+const FULL_MENTOR_PAYMENT_URL = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
+
 const AREA_STATUS_META: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
   priority: { label: 'הכי דחוף', Icon: Target },
   strong: { label: 'חזק אצלך', Icon: Check },
@@ -92,6 +104,8 @@ interface DiagnosisResultDialogProps {
   result: DiagnosisResult;
   isRTL: boolean;
   displayName?: string | null;
+  /** Full-access users keep the single "let's start" CTA — nothing to sell them. */
+  hasPaidAccess: boolean;
   onContinue: () => void;
 }
 
@@ -101,6 +115,7 @@ export function DiagnosisResultDialog({
   result,
   isRTL,
   displayName,
+  hasPaidAccess,
   onContinue,
 }: DiagnosisResultDialogProps) {
   const continuedRef = useRef(false);
@@ -147,6 +162,16 @@ export function DiagnosisResultDialog({
     continuedRef.current = true;
     trackEvent('diagnosis_continue_clicked', { recommended_tool: result.recommendedTool });
     onContinue();
+  };
+
+  const handleChooseSingleTool = () => {
+    continuedRef.current = true;
+    trackEvent('diagnosis_single_tool_purchase_clicked', { recommended_tool: result.recommendedTool, price_ils: SINGLE_TOOL_PRICE_ILS });
+  };
+
+  const handleChooseFullMentor = () => {
+    continuedRef.current = true;
+    trackEvent('diagnosis_full_mentor_purchase_clicked', { recommended_tool: result.recommendedTool, price_ils: FULL_MENTOR_PRICE_ILS });
   };
 
   return (
@@ -256,13 +281,57 @@ export function DiagnosisResultDialog({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          <Button variant="cta" className="w-full gap-1.5" onClick={handleContinue}>
-            {meta.actionLabel}
-            <ArrowLeft className={isRTL ? '' : 'rotate-180'} />
-          </Button>
-          <p className="text-xs text-center text-muted-foreground -mt-1">
-            {isRTL ? 'במסגרת המנטור' : 'within the Mentor'}
-          </p>
+          {hasPaidAccess ? (
+            <>
+              <Button variant="cta" className="w-full gap-1.5" onClick={handleContinue}>
+                {meta.actionLabel}
+                <ArrowLeft className={isRTL ? '' : 'rotate-180'} />
+              </Button>
+              <p className="text-xs text-center text-muted-foreground -mt-1">
+                {isRTL ? 'במסגרת המנטור' : 'within the Mentor'}
+              </p>
+            </>
+          ) : (
+            <div className="w-full space-y-2">
+              <p className="text-xs text-center text-muted-foreground">
+                {isRTL ? 'שתי דרכים להמשיך מכאן:' : 'Two ways to continue from here:'}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <a
+                  href={SINGLE_TOOL_PAYMENT_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={handleChooseSingleTool}
+                  className="flex flex-col gap-1 rounded-lg border border-border p-3 hover:border-accent transition-colors"
+                >
+                  <span className="text-sm font-semibold text-foreground">{meta.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {isRTL ? 'בדיוק הכלי שהאבחון המליץ עליו' : 'Exactly the tool the diagnosis recommended'}
+                  </span>
+                  <span className="text-sm font-semibold text-accent mt-1">
+                    {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `${SINGLE_TOOL_PRICE_ILS} NIS ($97)`}
+                  </span>
+                </a>
+                <a
+                  href={FULL_MENTOR_PAYMENT_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={handleChooseFullMentor}
+                  className="flex flex-col gap-1 rounded-lg border-2 border-accent/50 bg-accent/5 p-3 hover:border-accent transition-colors"
+                >
+                  <span className="text-sm font-semibold text-foreground">
+                    {isRTL ? 'המסלול המלא עם אליענה' : 'The Full Mentor Journey'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {isRTL ? `כולל את ${meta.label} וגם את חמשת הכלים האחרים` : `Includes ${meta.label} plus all five other tools`}
+                  </span>
+                  <span className="text-sm font-semibold text-accent mt-1">
+                    {isRTL ? `₪${FULL_MENTOR_PRICE_ILS}` : `${FULL_MENTOR_PRICE_ILS} NIS`}
+                  </span>
+                </a>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 pt-1">
             <Button variant="outline" className="flex-1 gap-1.5" onClick={handleDownload}>
               <Download className="w-4 h-4" />

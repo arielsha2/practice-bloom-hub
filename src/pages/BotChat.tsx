@@ -90,7 +90,7 @@ const BotChat = () => {
   const { data: savedMessages = [], isLoading: messagesLoading } = useBotMessages(activeConversationId);
   const deleteConversation = useDeleteConversation();
   const addUserMemory = useAddUserMemory();
-  const { access: planAccess, loading: planLoading } = useBotAccess(botKey);
+  const { access: planAccess, loading: planLoading, plan } = useBotAccess(botKey);
 
   // Chat hook
   const {
@@ -606,6 +606,7 @@ const BotChat = () => {
           result={diagnosisResult}
           isRTL={isRTL}
           displayName={user?.email ?? null}
+          hasPaidAccess={plan.hasPaidAccess}
           onContinue={() => {
             setShowDiagnosisDialog(false);
             navigate(`/mentor?from=${encodeURIComponent(botKey || '')}`);
