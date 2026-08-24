@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
 import { OtpResendButton } from "./OtpResendButton";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Step = 1 | 2 | 3;
 
@@ -36,6 +37,7 @@ interface SignupFlowProps {
 
 export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false }: SignupFlowProps) {
   const navigate = useNavigate();
+  const { isRTL } = useLanguage();
   const [step, setStep] = useState<Step>(startStep);
   const [email, setEmail] = useState(initialEmail);
   const [name, setName] = useState("");
@@ -63,9 +65,12 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalized = normalizeEmail(email);
-    if (!normalized) return toast.error("נא להזין כתובת אימייל");
-    if (!name.trim()) return toast.error("נא למלא שם מלא");
-    if (!mailingConsent) return toast.error("חובה לאשר הצטרפות לרשימת התפוצה כדי להמשיך");
+    if (!normalized) return toast.error(isRTL ? "נא להזין כתובת אימייל" : "Please enter an email address");
+    if (!name.trim()) return toast.error(isRTL ? "נא למלא שם מלא" : "Please enter your full name");
+    if (!mailingConsent)
+      return toast.error(
+        isRTL ? "חובה לאשר הצטרפות לרשימת התפוצה כדי להמשיך" : "You must confirm joining the mailing list to continue",
+      );
     setBusy(true);
     const { ok, status, body } = await callFn("signup-send-otp", {
       email: normalized,
@@ -74,10 +79,15 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     });
     setBusy(false);
     if (!ok) {
-      if (status === 429) return toast.error(`נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`);
+      if (status === 429)
+        return toast.error(
+          isRTL
+            ? `נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות`
+            : `Please try again in ${body?.retry_after ?? 60} seconds`,
+        );
       if (body?.error === "email_not_configured")
-        return toast.error("שירות המייל לא מוגדר — פנה/י לתמיכה");
-      return toast.error("לא הצלחנו לשלוח את הקוד. נסה/י שוב.");
+        return toast.error(isRTL ? "שירות המייל לא מוגדר — פנה/י לתמיכה" : "Email service not configured — contact support");
+      return toast.error(isRTL ? "לא הצלחנו לשלוח את הקוד. נסה/י שוב." : "We couldn't send the code. Please try again.");
     }
     setEmail(normalized);
     trackEvent("signup_step_complete", { step: 1 });
@@ -92,17 +102,25 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     });
     if (!ok) {
       trackEvent("signup_otp_failed");
-      toast.error(body?.error === "rate_limited" ? "נסה/י שוב עוד מעט" : "השליחה נכשלה");
+      toast.error(
+        body?.error === "rate_limited"
+          ? isRTL
+            ? "נסה/י שוב עוד מעט"
+            : "Please try again shortly"
+          : isRTL
+          ? "השליחה נכשלה"
+          : "Sending failed",
+      );
       throw new Error("send failed");
     }
     trackEvent("signup_otp_resent");
-    toast.success("שלחנו קוד חדש למייל");
+    toast.success(isRTL ? "שלחנו קוד חדש למייל" : "We've sent a new code to your email");
   };
 
   // Step 2 — verify OTP via our edge function and set the session
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (otp.length !== 6) return toast.error("הזן/י את כל 6 הספרות");
+    if (otp.length !== 6) return toast.error(isRTL ? "הזן/י את כל 6 הספרות" : "Enter all 6 digits");
     setBusy(true);
     const { ok, body } = await callFn("signup-verify-otp", {
       email,
@@ -113,9 +131,11 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     if (!ok || !body?.token_hash) {
       setBusy(false);
       trackEvent("signup_otp_failed");
-      if (body?.error === "expired") return toast.error("הקוד פג תוקף — שלח/י קוד חדש");
-      if (body?.error === "too_many_attempts") return toast.error("יותר מדי ניסיונות — שלח/י קוד חדש");
-      return toast.error("הקוד שגוי");
+      if (body?.error === "expired")
+        return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "The code has expired — send a new one");
+      if (body?.error === "too_many_attempts")
+        return toast.error(isRTL ? "יותר מדי ניסיונות — שלח/י קוד חדש" : "Too many attempts — send a new code");
+      return toast.error(isRTL ? "הקוד שגוי" : "Incorrect code");
     }
     // Mint a real session in the client using the token_hash from generateLink.
     const { error: verifyErr } = await supabase.auth.verifyOtp({
@@ -125,7 +145,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     setBusy(false);
     if (verifyErr) {
       console.error(verifyErr);
-      return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
+      return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "We couldn't complete sign-in. Please try again.");
     }
     trackEvent("signup_step_complete", { step: 2 });
     if (skipPassword) {
@@ -148,8 +168,9 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
   // Step 3 — set password (final step; signup completes here for all plans)
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) return toast.error("הסיסמה חייבת להיות באורך של 8 תווים לפחות");
-    if (password !== confirmPassword) return toast.error("הסיסמאות לא תואמות");
+    if (password.length < 8)
+      return toast.error(isRTL ? "הסיסמה חייבת להיות באורך של 8 תווים לפחות" : "Password must be at least 8 characters");
+    if (password !== confirmPassword) return toast.error(isRTL ? "הסיסמאות לא תואמות" : "Passwords don't match");
     setBusy(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -167,7 +188,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       }
       trackEvent("signup_step_complete", { step: 3 });
       trackEvent("signup_complete");
-      toast.success("ההרשמה הושלמה");
+      toast.success(isRTL ? "ההרשמה הושלמה" : "Signup complete");
       navigate(redirectTo);
     } finally {
       setBusy(false);
@@ -181,26 +202,26 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
   }, [step]);
 
   return (
-    <div dir="rtl">
+    <div dir={isRTL ? "rtl" : "ltr"}>
       <SignupStepper current={step} showStep4={false} skipPassword={skipPassword} />
 
       {step === 1 && (
         <form onSubmit={handleSendOtp} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="signup-name">שם מלא</Label>
+            <Label htmlFor="signup-name">{isRTL ? "שם מלא" : "Full name"}</Label>
             <Input
               id="signup-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="השם שלך"
+              placeholder={isRTL ? "השם שלך" : "Your name"}
               maxLength={100}
               required
               autoFocus
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="signup-email">כתובת אימייל</Label>
+            <Label htmlFor="signup-email">{isRTL ? "כתובת אימייל" : "Email address"}</Label>
             <Input
               id="signup-email"
               type="email"
@@ -210,7 +231,9 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
               required
               autoComplete="email"
             />
-            <p className="text-xs text-muted-foreground">נשלח לכתובת זו קוד אימות בן 6 ספרות.</p>
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? "נשלח לכתובת זו קוד אימות בן 6 ספרות." : "We'll send a 6-digit verification code to this address."}
+            </p>
           </div>
           <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-primary/20 bg-primary/5 p-3">
             <Checkbox
@@ -218,16 +241,20 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
               onCheckedChange={(v) => setMailingConsent(v === true)}
               className="mt-0.5"
             />
-            <span className="text-sm leading-relaxed text-right">
-              אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.
+            <span className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+              {isRTL
+                ? 'אני מאשר/ת לקבל במייל תכנים, טיפים ועדכונים מ"על שפת הקליניקה". אפשר להסיר את עצמך בכל עת.'
+                : 'I agree to receive emailed content, tips and updates from "Therapy Keys". You can unsubscribe anytime.'}
               <span className="block text-xs text-muted-foreground mt-1">
-                * אישור זה הוא תנאי {skipPassword ? "להתנסות באבחון" : "לשימוש במנטור"}.
+                {isRTL
+                  ? `* אישור זה הוא תנאי ${skipPassword ? "להתנסות באבחון" : "לשימוש במנטור"}.`
+                  : `* This confirmation is required to ${skipPassword ? "try the diagnosis" : "use the Mentor"}.`}
               </span>
             </span>
           </label>
           <Button type="submit" variant="cta" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Mail className="w-4 h-4 me-2" />}
-            שלח/י לי קוד אימות
+            {isRTL ? "שלח/י לי קוד אימות" : "Send me a verification code"}
           </Button>
         </form>
       )}
@@ -235,10 +262,20 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       {step === 2 && (
         <form onSubmit={handleVerifyOtp} className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
-            שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+            {isRTL ? (
+              <>
+                שלחנו קוד בן 6 ספרות ל-<span className="font-semibold text-foreground">{email}</span>
+              </>
+            ) : (
+              <>
+                We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span>
+              </>
+            )}
           </p>
           <p className="text-xs text-muted-foreground">
-            לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים — לפעמים זה לוקח דקה-שתיים.
+            {isRTL
+              ? "לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים — לפעמים זה לוקח דקה-שתיים."
+              : "Can't find the email? Check your spam/promotions folder too — it can take a minute or two."}
           </p>
           <div className="flex justify-center">
             <InputOTP
@@ -262,7 +299,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
           </div>
           <Button type="submit" variant="cta" className="w-full" disabled={busy || otp.length !== 6}>
             {busy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
-            אמת/י קוד
+            {isRTL ? "אמת/י קוד" : "Verify code"}
           </Button>
           <OtpResendButton onResend={resendOtp} disabled={busy} />
           <button
@@ -273,7 +310,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
             }}
             className="text-xs text-muted-foreground hover:text-primary"
           >
-            מייל שגוי? התחל/י מחדש
+            {isRTL ? "מייל שגוי? התחל/י מחדש" : "Wrong email? Start over"}
           </button>
         </form>
       )}
@@ -281,10 +318,10 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       {step === 3 && (
         <form onSubmit={handleSetPassword} className="space-y-4">
           <p className="text-sm text-muted-foreground text-center">
-            בחר/י סיסמה לכניסות עתידיות (לפחות 8 תווים).
+            {isRTL ? "בחר/י סיסמה לכניסות עתידיות (לפחות 8 תווים)." : "Choose a password for future sign-ins (at least 8 characters)."}
           </p>
           <div className="space-y-2">
-            <Label htmlFor="new-pass">סיסמה חדשה</Label>
+            <Label htmlFor="new-pass">{isRTL ? "סיסמה חדשה" : "New password"}</Label>
             <Input
               id="new-pass"
               type="password"
@@ -297,7 +334,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-pass">אימות סיסמה</Label>
+            <Label htmlFor="confirm-pass">{isRTL ? "אימות סיסמה" : "Confirm password"}</Label>
             <Input
               id="confirm-pass"
               type="password"
@@ -310,7 +347,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
           </div>
           <Button type="submit" variant="cta" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <KeyRound className="w-4 h-4 me-2" />}
-            סיים/י הרשמה
+            {isRTL ? "סיים/י הרשמה" : "Finish signup"}
           </Button>
         </form>
       )}

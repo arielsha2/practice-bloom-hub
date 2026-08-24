@@ -14,9 +14,10 @@ interface UseBotChatOptions {
   botKey: string;
   conversationId: string | null;
   onConversationCreated?: (conversationId: string) => void;
+  language?: "he" | "en";
 }
 
-export function useBotChat({ botKey, conversationId, onConversationCreated }: UseBotChatOptions) {
+export function useBotChat({ botKey, conversationId, onConversationCreated, language }: UseBotChatOptions) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -66,6 +67,7 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
             botKey,
             conversationId,
             message: messagePrefix ? `${messagePrefix} ${content.trim()}` : content.trim(),
+            language,
           }),
         }
       );
@@ -155,14 +157,14 @@ export function useBotChat({ botKey, conversationId, onConversationCreated }: Us
       queryClient.invalidateQueries({ queryKey: ['bot-messages', conversationId || pendingConversationId] });
     } catch (err) {
       console.error('Chat error:', err);
-      setError(err instanceof Error ? err.message : 'שגיאה בשליחת ההודעה');
+      setError(err instanceof Error ? err.message : language === 'en' ? 'Error sending the message' : 'שגיאה בשליחת ההודעה');
       
       // Remove the failed assistant message
       setMessages((prev) => prev.filter((msg) => msg.id !== assistantId));
     } finally {
       setIsLoading(false);
     }
-  }, [session, botKey, conversationId, onConversationCreated, queryClient]);
+  }, [session, botKey, conversationId, onConversationCreated, queryClient, language]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

@@ -16,6 +16,7 @@ interface ChatRequest {
   botKey: string;
   conversationId?: string;
   message: string;
+  language?: "he" | "en";
 }
 
 interface Message {
@@ -42,7 +43,8 @@ serve(async (req) => {
     }
 
     // Parse request body first to check if it's a public bot
-    const { botKey, conversationId, message }: ChatRequest = await req.json();
+    const { botKey, conversationId, message, language }: ChatRequest = await req.json();
+    const isEnglish = language === "en";
     
     const isPublicBot = PUBLIC_BOTS[botKey] && new Date() < new Date(PUBLIC_BOTS[botKey]);
 
@@ -89,7 +91,10 @@ serve(async (req) => {
     }
 
     // Build system prompt and messages array
-    let systemPrompt = botConfig.system_prompt || "You are a helpful assistant.";
+    let systemPrompt =
+      (isEnglish ? botConfig.system_prompt_en : null) ||
+      botConfig.system_prompt ||
+      "You are a helpful assistant.";
 
     // GLOBAL: hand-off protocol back to the Mentor.
     // The bot must emit [ADVANCE] on its own line at the END of its reply when:
@@ -97,7 +102,25 @@ serve(async (req) => {
     //   (b) the therapist explicitly asks to move on / advance / return to the mentor.
     // The client detects this marker, runs the summary extractor, and routes the
     // therapist back to the Mentor with the summary attached.
-systemPrompt += `
+systemPrompt += isEnglish ? `
+
+---
+Tool identity (mandatory):
+You are an independent AI tool within the TherapyKeys system. You are not Eliana and you are not the Mentor.
+- Do not open with a greeting in Eliana's name.
+- Do not reintroduce yourself as Eliana and do not mention her name.
+- If a user arrives having just been referred from the Mentor (KICKOFF) — open directly with your first focused question, without a renewed self-introduction.
+---
+
+Closing protocol (mandatory):
+When you identify that the therapist has reached a sufficient point of progress in this tool, or the therapist explicitly asks to move on / finish / go back to the mentor — end your final reply with a short, warm closing sentence, then add, on its own separate line only, the marker: [ADVANCE]
+
+Explicit triggers for adding [ADVANCE] — if the therapist writes one of these phrases, always end with the marker:
+"thanks", "we're done", "that's enough", "back to mentor", "i want to go back", "that was enough for me",
+"done", "finished", "thank you", "that's enough", "back to mentor", "i'm done".
+
+Never use this marker in any other situation. Never mention the marker in visible text.
+---` : `
 
 ---
 זהות הכלי (חובה):
@@ -133,7 +156,7 @@ systemPrompt += `
           .insert({
             user_id: user!.id,
             bot_key: botKey,
-            title: "שיחה חדשה",
+            title: isEnglish ? "New conversation" : "שיחה חדשה",
           })
           .select()
           .single();
@@ -162,7 +185,9 @@ systemPrompt += `
         const memorySection = userMemories
           .map((m: any) => `- ${m.value}`)
           .join("\n");
-        systemPrompt += `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
+        systemPrompt += isEnglish
+          ? `\n\n---\nInformation gathered about the user (use this to give a personalized response):\n${memorySection}\n---`
+          : `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
       }
 
       // 4. Load conversation history (last 20 messages)
@@ -310,7 +335,7 @@ systemPrompt += `
 
           // 9. Generate title for new conversations
           if (isNewConversation && message.length > 10) {
-            generateConversationTitle(supabase, currentConversationId!, message, lovableApiKey);
+            generateConversationTitle(supabase, currentConversationId!, message, lovableApiKey, isEnglish);
           }
         }
 
@@ -345,7 +370,8 @@ async function generateConversationTitle(
   supabase: any,
   conversationId: string,
   userMessage: string,
-  apiKey: string
+  apiKey: string,
+  isEnglish: boolean
 ) {
   try {
     const titleResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -359,7 +385,9 @@ async function generateConversationTitle(
         messages: [
           {
             role: "system",
-            content: "בהתבסס על ההודעה הבאה, תן כותרת קצרה בעברית (3-5 מילים) לשיחה. תן רק את הכותרת, ללא גרשיים או הסברים.",
+            content: isEnglish
+              ? "Based on the following message, give a short English title (3-5 words) for the conversation. Return only the title, no quotes or explanations."
+              : "בהתבסס על ההודעה הבאה, תן כותרת קצרה בעברית (3-5 מילים) לשיחה. תן רק את הכותרת, ללא גרשיים או הסברים.",
           },
           { role: "user", content: userMessage },
         ],

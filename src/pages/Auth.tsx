@@ -39,7 +39,12 @@ export default function Auth() {
   // instead of the generic /dashboard — see SignupFlow's skipPassword prop
   // for the new-visitor half of this.
   const nextParam = searchParams.get("next");
-  const diagnosisRedirect = nextParam === "diagnosis" ? "/ai-assistants/practice-diagnosis" : null;
+  const diagnosisRedirect =
+    nextParam === "diagnosis"
+      ? isRTL
+        ? "/ai-assistants/practice-diagnosis"
+        : "/en/ai-assistants/practice-diagnosis"
+      : null;
 
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
@@ -365,7 +370,7 @@ export default function Auth() {
               <SignupFlow
                 startStep={resumePasswordSetup ? 3 : 1}
                 initialEmail={resumePasswordSetup?.email ?? ""}
-                redirectTo={diagnosisRedirect ?? "/mentor"}
+                redirectTo={diagnosisRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
                 skipPassword={!!diagnosisRedirect && !resumePasswordSetup}
               />
             ) : mode === "forgot" && resetSent ? (

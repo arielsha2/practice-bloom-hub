@@ -106,6 +106,7 @@ const BotChat = () => {
     onConversationCreated: (newId) => {
       setActiveConversationId(newId);
     },
+    language,
   });
 
   // Track streaming state in ref
@@ -327,7 +328,7 @@ const BotChat = () => {
 
   const handleReturnToMentor = async () => {
     if (!user || !botKey) {
-      navigate('/mentor');
+      navigate(isRTL ? '/mentor' : '/en/mentor');
       return;
     }
     setReturningToMentor(true);
@@ -344,7 +345,7 @@ const BotChat = () => {
           // for practice-diagnosis meant silently showing a stale diagnosis
           // from a previous run instead of surfacing the failure.
           const { error } = await supabase.functions.invoke('bot-extract-output', {
-            body: { botKey, conversationId: activeConversationId },
+            body: { botKey, conversationId: activeConversationId, language },
           });
           if (error) throw error;
           extractSucceeded = true;
@@ -384,7 +385,7 @@ const BotChat = () => {
         }
       }
 
-      navigate(`/mentor?from=${encodeURIComponent(botKey)}`);
+      navigate(`${isRTL ? '/mentor' : '/en/mentor'}?from=${encodeURIComponent(botKey)}`);
     } finally {
       setReturningToMentor(false);
     }
@@ -560,7 +561,7 @@ const BotChat = () => {
                         try {
                           const { data, error } = await supabase.functions.invoke(
                             "bot-extract-output",
-                            { body: { botKey, conversationId: activeConversationId } }
+                            { body: { botKey, conversationId: activeConversationId, language } }
                           );
                           if (error) throw error;
                           toast.success("הניסוח נשמר במסע שלך");
@@ -609,7 +610,7 @@ const BotChat = () => {
           hasPaidAccess={plan.hasPaidAccess}
           onContinue={() => {
             setShowDiagnosisDialog(false);
-            navigate(`/mentor?from=${encodeURIComponent(botKey || '')}`);
+            navigate(`${isRTL ? '/mentor' : '/en/mentor'}?from=${encodeURIComponent(botKey || '')}`);
           }}
         />
       )}

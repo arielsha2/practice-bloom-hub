@@ -57,10 +57,12 @@ const App = () => (
               <Route path="/en" element={<Index />} />
               <Route path="/ai-assistants" element={<AIAssistants />} />
               <Route path="/ai-assistants/:botKey" element={<BotChat />} />
+              <Route path="/en/ai-assistants/:botKey" element={<BotChat />} />
               <Route path="/contents" element={<Contents />} />
               <Route path="/contents/admin" element={<ContentsAdmin />} />
               <Route path="/contents/:id" element={<ContentDetail />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/en/auth" element={<Auth />} />
               <Route path="/portal" element={<StudentPortal />} />
               <Route path="/portal/:tab" element={<StudentPortal />} />
               <Route path="/portal/lesson/:id" element={<LessonDetail />} />

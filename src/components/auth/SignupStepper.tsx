@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SignupStepperProps {
   current: 1 | 2 | 3 | 4;
@@ -7,14 +8,17 @@ interface SignupStepperProps {
   skipPassword?: boolean;
 }
 
-const LABELS = ["מייל", "אימות", "סיסמה", "מפתח AI"] as const;
+const LABELS_HE = ["מייל", "אימות", "סיסמה", "מפתח AI"] as const;
+const LABELS_EN = ["Email", "Verify", "Password", "AI Key"] as const;
 
 export function SignupStepper({ current, showStep4, skipPassword }: SignupStepperProps) {
+  const { isRTL } = useLanguage();
+  const LABELS = isRTL ? LABELS_HE : LABELS_EN;
   const steps = skipPassword ? 2 : showStep4 ? 4 : 3;
   return (
     <ol
       className="flex items-center justify-center gap-2 mb-6"
-      aria-label="שלבי ההרשמה"
+      aria-label={isRTL ? "שלבי ההרשמה" : "Signup steps"}
     >
       {Array.from({ length: steps }, (_, i) => i + 1).map((n) => {
         const isDone = n < current;
