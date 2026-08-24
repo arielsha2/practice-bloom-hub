@@ -337,9 +337,16 @@ const BotChat = () => {
       let extractSucceeded = false;
       if (hasContent) {
         try {
-          await supabase.functions.invoke('bot-extract-output', {
+          // supabase-js does NOT throw for a non-2xx function response — it
+          // resolves with { data, error } — so this needs an explicit check.
+          // Without it, extractSucceeded was true even when extraction had
+          // actually failed (e.g. the LLM returning malformed JSON), which
+          // for practice-diagnosis meant silently showing a stale diagnosis
+          // from a previous run instead of surfacing the failure.
+          const { error } = await supabase.functions.invoke('bot-extract-output', {
             body: { botKey, conversationId: activeConversationId },
           });
+          if (error) throw error;
           extractSucceeded = true;
         } catch (e) {
           console.warn('extract failed, continuing to mentor', e);
@@ -456,7 +463,11 @@ const BotChat = () => {
           botIcon={botIcon}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton
-          onReturnToMentor={user && isEmbedded ? handleReturnToMentor : undefined}
+          onReturnToMentor={
+            user && (isEmbedded || (botKey === 'practice-diagnosis' && currentStage >= 4))
+              ? handleReturnToMentor
+              : undefined
+          }
           isReturningToMentor={returningToMentor}
           isToolMode={isEmbedded}
         />
