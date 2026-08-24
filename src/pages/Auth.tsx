@@ -34,6 +34,13 @@ export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // ?next=diagnosis lets the free-diagnosis marketing hook send both brand
+  // new and already-logged-in visitors straight into the conversation
+  // instead of the generic /dashboard — see SignupFlow's skipPassword prop
+  // for the new-visitor half of this.
+  const nextParam = searchParams.get("next");
+  const diagnosisRedirect = nextParam === "diagnosis" ? "/ai-assistants/practice-diagnosis" : null;
+
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
     ["login", "signup", "forgot", "reset"].includes(initialMode) ? initialMode : "login",
@@ -139,9 +146,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user && !loading && mode !== "reset" && !resumePasswordSetup) {
-      navigate("/dashboard");
+      navigate(diagnosisRedirect ?? "/dashboard");
     }
-  }, [user, loading, navigate, mode, resumePasswordSetup]);
+  }, [user, loading, navigate, mode, resumePasswordSetup, diagnosisRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -356,6 +363,8 @@ export default function Auth() {
               <SignupFlow
                 startStep={resumePasswordSetup ? 3 : 1}
                 initialEmail={resumePasswordSetup?.email ?? ""}
+                redirectTo={diagnosisRedirect ?? "/mentor"}
+                skipPassword={!!diagnosisRedirect && !resumePasswordSetup}
               />
             ) : mode === "forgot" && resetSent ? (
               <div className="text-center space-y-4">

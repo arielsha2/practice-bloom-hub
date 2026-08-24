@@ -3,12 +3,14 @@ import { Check } from "lucide-react";
 interface SignupStepperProps {
   current: 1 | 2 | 3 | 4;
   showStep4: boolean;
+  /** Diagnosis entry point skips password setup entirely (see SignupFlow) — just email + verify. */
+  skipPassword?: boolean;
 }
 
 const LABELS = ["מייל", "אימות", "סיסמה", "מפתח AI"] as const;
 
-export function SignupStepper({ current, showStep4 }: SignupStepperProps) {
-  const steps = showStep4 ? 4 : 3;
+export function SignupStepper({ current, showStep4, skipPassword }: SignupStepperProps) {
+  const steps = skipPassword ? 2 : showStep4 ? 4 : 3;
   return (
     <ol
       className="flex items-center justify-center gap-2 mb-6"

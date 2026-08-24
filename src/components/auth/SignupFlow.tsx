@@ -21,9 +21,20 @@ interface SignupFlowProps {
   startStep?: Step;
   /** Existing email when resuming (won't be editable). */
   initialEmail?: string;
+  /** Where to land once signup is actually done — /mentor by default. */
+  redirectTo?: string;
+  /**
+   * Skip step 3 (password) entirely — used by the diagnosis entry point so a
+   * new visitor goes straight from "enter your details" to the conversation
+   * instead of being stopped by a mandatory password screen. Safe to skip:
+   * verifyOtp already mints a real session (see handleVerifyOtp below), and
+   * OTP-based login ("מייל + קוד") already exists as a way to return later
+   * without ever needing a password at all.
+   */
+  skipPassword?: boolean;
 }
 
-export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps) {
+export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false }: SignupFlowProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(startStep);
   const [email, setEmail] = useState(initialEmail);
@@ -117,6 +128,19 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       return toast.error("לא הצלחנו להשלים את ההתחברות. נסה/י שוב.");
     }
     trackEvent("signup_step_complete", { step: 2 });
+    if (skipPassword) {
+      // Mark signup as "done" (no password, OTP login covers returning here)
+      // so Auth.tsx's resume-incomplete-signup check doesn't nag this user
+      // for a password next time they land on /auth — that check only looks
+      // at password_set, it has no way to know skipping was intentional.
+      const { data: auth } = await supabase.auth.getUser();
+      if (auth.user?.id) {
+        await supabase.from("profiles").update({ password_set: true }).eq("id", auth.user.id);
+      }
+      trackEvent("signup_complete", { skipped_password: true });
+      navigate(redirectTo);
+      return;
+    }
     setStep(3);
   };
 
@@ -144,7 +168,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
       trackEvent("signup_step_complete", { step: 3 });
       trackEvent("signup_complete");
       toast.success("ההרשמה הושלמה");
-      navigate("/mentor");
+      navigate(redirectTo);
     } finally {
       setBusy(false);
     }
@@ -158,7 +182,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "" }: SignupFlowProps
 
   return (
     <div dir="rtl">
-      <SignupStepper current={step} showStep4={false} />
+      <SignupStepper current={step} showStep4={false} skipPassword={skipPassword} />
 
       {step === 1 && (
         <form onSubmit={handleSendOtp} className="space-y-4">
