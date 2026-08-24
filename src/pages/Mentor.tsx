@@ -1270,6 +1270,19 @@ export default function Mentor() {
     if (!pendingReturn) return;
     const kickoff = pendingReturn.kickoff;
     setPendingReturn(null);
+    // The pending-return card (tall, scrolled into view on its own while
+    // present) disappears the instant this fires, which can shift the whole
+    // page's scroll position away from the chat — the internal
+    // messagesViewportRef auto-scroll effect only scrolls *within* the chat
+    // widget, not the page to the widget itself. Confirmed live: the kickoff
+    // + Eliana's diagnosis-aware reply were both saved correctly, but a user
+    // reported it looked like "nothing happened, just the old conversation"
+    // — they were almost certainly looking at wherever the page landed after
+    // the card collapsed, not at the chat. Bring the widget into view
+    // explicitly so the new exchange is what's actually on screen.
+    requestAnimationFrame(() => {
+      messagesViewportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     setTimeout(() => {
       send(kickoff);
     }, 50);
