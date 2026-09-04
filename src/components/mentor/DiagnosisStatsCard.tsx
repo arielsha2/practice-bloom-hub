@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, BarChart3 } from "lucide-react";
+import type { AnalyticsPeriod } from "@/hooks/useAdminAnalytics";
+import { periodToSince } from "@/lib/analyticsPeriod";
 
 // Same fixed 8 values as mentor-analyze/practice-diagnosis's stuck_category —
 // duplicated here rather than imported (this is a React app, not a shared
@@ -66,7 +68,13 @@ function Bars({ rows, total }: { rows: Tally[]; total: number }) {
   );
 }
 
-export function DiagnosisStatsCard() {
+interface DiagnosisStatsCardProps {
+  /** Omit for all-time totals (e.g. on /admin/mentor); pass to scope the
+   * breakdowns to the same rolling window as the rest of /admin/analytics. */
+  period?: AnalyticsPeriod;
+}
+
+export function DiagnosisStatsCard({ period }: DiagnosisStatsCardProps = {}) {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [byCategory, setByCategory] = useState<Tally[]>([]);
@@ -75,15 +83,26 @@ export function DiagnosisStatsCard() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [period]);
 
   async function load() {
     setLoading(true);
+    const since = period ? periodToSince(period) : null;
     const { data } = await supabase
       .from("therapist_journeys")
-      .select("diagnosis_output")
+      .select("diagnosis_output, reflection")
       .not("diagnosis_output", "is", null);
-    const rows = (data ?? []).map((r: any) => r.diagnosis_output).filter(Boolean);
+    // Scoped client-side against reflection.tool_summaries's own completion
+    // timestamp, same reasoning as DiagnosisFunnelCard — the journey row's
+    // updated_at isn't specific to when the diagnosis itself completed.
+    const rows = (data ?? [])
+      .filter((r: any) => {
+        if (!since) return true;
+        const completedAt = r.reflection?.tool_summaries?.["practice-diagnosis"]?.updated_at;
+        return typeof completedAt === "string" && completedAt >= since;
+      })
+      .map((r: any) => r.diagnosis_output)
+      .filter(Boolean);
 
     const categories = rows.map((d: any) => d.stuck_category).filter(Boolean);
     const stages = rows.map((d: any) => d.bottleneck_stage).filter(Boolean);

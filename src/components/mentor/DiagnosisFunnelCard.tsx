@@ -2,36 +2,58 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Stethoscope } from "lucide-react";
+import type { AnalyticsPeriod } from "@/hooks/useAdminAnalytics";
+import { periodToSince } from "@/lib/analyticsPeriod";
 
-export function DiagnosisFunnelCard() {
+interface DiagnosisFunnelCardProps {
+  /** Omit for all-time totals (e.g. on /admin/mentor); pass to scope both
+   * numbers to the same rolling window as the rest of /admin/analytics. */
+  period?: AnalyticsPeriod;
+}
+
+export function DiagnosisFunnelCard({ period }: DiagnosisFunnelCardProps = {}) {
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(0);
   const [completed, setCompleted] = useState(0);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [period]);
 
   async function load() {
     setLoading(true);
+    const since = period ? periodToSince(period) : null;
+
     // "started" counts distinct therapists, not raw conversation rows — a
     // therapist who retried the diagnosis a few times is one person, not
     // three. head:true row-counts don't dedupe, so this fetches the column
     // and dedupes client-side (fine at this scale, same approach StuckPointMap
     // already uses for its own tally).
-    const [{ data: conversations }, { count: completedCount }] = await Promise.all([
-      supabase
-        .from("bot_conversations")
-        .select("user_id")
-        .eq("bot_key", "practice-diagnosis"),
-      supabase
-        .from("therapist_journeys")
-        .select("id", { count: "exact", head: true })
-        .not("diagnosis_output", "is", null),
-    ]);
+    let convQuery = supabase.from("bot_conversations").select("user_id").eq("bot_key", "practice-diagnosis");
+    if (since) convQuery = convQuery.gte("created_at", since);
+
+    // "completed" needs the diagnosis's own completion timestamp, not the
+    // journey row's updated_at (which moves whenever ANY tool on that
+    // journey is touched, not just the diagnosis) — that timestamp lives in
+    // reflection.tool_summaries["practice-diagnosis"].updated_at, written by
+    // bot-extract-output. Fetched unfiltered and scoped client-side since
+    // it's a JSONB path, not a column Postgres can .gte() directly.
+    const journeyQuery = supabase
+      .from("therapist_journeys")
+      .select("reflection")
+      .not("diagnosis_output", "is", null);
+
+    const [{ data: conversations }, { data: journeys }] = await Promise.all([convQuery, journeyQuery]);
+
     const distinctStarters = new Set((conversations ?? []).map((c: any) => c.user_id)).size;
+    const completedCount = (journeys ?? []).filter((j: any) => {
+      if (!since) return true;
+      const completedAt = j.reflection?.tool_summaries?.["practice-diagnosis"]?.updated_at;
+      return typeof completedAt === "string" && completedAt >= since;
+    }).length;
+
     setStarted(distinctStarters);
-    setCompleted(completedCount ?? 0);
+    setCompleted(completedCount);
     setLoading(false);
   }
 

@@ -65,16 +65,14 @@ export default function AdminAnalytics() {
               <MentorConversationsSection period={period} />
 
               <div>
-                <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
-                  <h2 className="text-xl font-serif font-semibold text-foreground">האבחון (ClinicScan)</h2>
-                  <p className="text-xs text-muted-foreground">נתונים מצטברים מכל הזמנים — לא מסוננים לפי טווח התאריכים שנבחר למעלה</p>
-                </div>
+                <h2 className="text-xl font-serif font-semibold text-foreground mb-3">האבחון (ClinicScan)</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <DiagnosisFunnelCard />
-                  <DiagnosisStatsCard />
+                  <DiagnosisFunnelCard period={period} />
+                  <DiagnosisStatsCard period={period} />
                 </div>
                 <div className="mt-4">
                   <DiagnosisAIInsightsCard />
+                  <p className="text-xs text-muted-foreground mt-2">הניתוח המעמיק למעלה מבוסס תמיד על כל האבחונים מכל הזמנים, ולא על טווח התאריכים שנבחר.</p>
                 </div>
               </div>
 
