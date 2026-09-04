@@ -14,6 +14,9 @@ import { SignupsChart } from '@/components/admin/analytics/SignupsChart';
 import { BotUsageChart } from '@/components/admin/analytics/BotUsageChart';
 import { LookerEmbed } from '@/components/admin/analytics/LookerEmbed';
 import { MentorConversationsSection } from '@/components/admin/analytics/MentorConversationsSection';
+import { DiagnosisFunnelCard } from '@/components/mentor/DiagnosisFunnelCard';
+import { DiagnosisStatsCard } from '@/components/mentor/DiagnosisStatsCard';
+import { DiagnosisAIInsightsCard } from '@/components/mentor/DiagnosisAIInsightsCard';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -60,6 +63,20 @@ export default function AdminAnalytics() {
               <KPICards data={data} />
 
               <MentorConversationsSection period={period} />
+
+              <div>
+                <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
+                  <h2 className="text-xl font-serif font-semibold text-foreground">האבחון (ClinicScan)</h2>
+                  <p className="text-xs text-muted-foreground">נתונים מצטברים מכל הזמנים — לא מסוננים לפי טווח התאריכים שנבחר למעלה</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <DiagnosisFunnelCard />
+                  <DiagnosisStatsCard />
+                </div>
+                <div className="mt-4">
+                  <DiagnosisAIInsightsCard />
+                </div>
+              </div>
 
 
 
