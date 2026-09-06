@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed } from 'lucide-react';
+import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -15,6 +15,7 @@ import {
   type SummarySection,
 } from '@/lib/mentorSummary';
 import { trackEvent } from '@/lib/analytics';
+import { supabase } from '@/integrations/supabase/client';
 
 export type AreaStatus = 'priority' | 'strong' | 'stable' | 'not_assessed';
 export interface AreaMapEntry {
@@ -200,6 +201,30 @@ export function DiagnosisResultDialog({
     onContinue();
   };
 
+  // Records the click into diagnosis_purchase_intents so admins get an actual
+  // list of who clicked "buy" (name/email/which option), not just an
+  // anonymous GA4 count — a same-day personal follow-up on a hot lead like
+  // this is worth far more than a report someone checks weeks later.
+  // Fire-and-forget: a failure here should never block the actual purchase
+  // link from opening.
+  const recordPurchaseIntent = async (purchaseType: 'single_tool' | 'full_mentor') => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      await supabase.from('diagnosis_purchase_intents').insert({
+        user_id: user.id,
+        email: user.email ?? null,
+        full_name: displayName ?? null,
+        recommended_tool: result.recommendedTool,
+        purchase_type: purchaseType,
+        language: isRTL ? 'he' : 'en',
+      });
+    } catch (e) {
+      console.error('failed to record purchase intent', e);
+    }
+  };
+
   const handleChooseSingleTool = () => {
     continuedRef.current = true;
     trackEvent('diagnosis_single_tool_purchase_clicked', {
@@ -207,6 +232,7 @@ export function DiagnosisResultDialog({
       currency: isRTL ? 'ILS' : 'USD',
       price: isRTL ? SINGLE_TOOL_PRICE_ILS : SINGLE_TOOL_PRICE_USD,
     });
+    void recordPurchaseIntent('single_tool');
   };
 
   const handleChooseFullMentor = () => {
@@ -216,6 +242,7 @@ export function DiagnosisResultDialog({
       currency: isRTL ? 'ILS' : 'USD',
       price: isRTL ? FULL_MENTOR_PRICE_ILS : FULL_MENTOR_PRICE_USD,
     });
+    void recordPurchaseIntent('full_mentor');
   };
 
   return (
@@ -322,6 +349,17 @@ export function DiagnosisResultDialog({
               <p className="text-sm text-foreground/90 leading-relaxed">{result.pathForward}</p>
             </div>
           )}
+
+          {!hasPaidAccess && (
+            <div className="rounded-lg border border-border bg-muted/20 p-3 flex gap-2">
+              <Quote className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground/80 leading-relaxed italic">
+                {isRTL
+                  ? 'מטפלים שעברו את המנטור המלא מספרים שהוא נתן להם ידע וביטחון אמיתי לקחת את הצעדים המשמעותיים בקליניקה שלהם.'
+                  : "Therapists who completed the full Mentor say it gave them real knowledge and confidence to take the significant steps in their practice."}
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
@@ -336,44 +374,47 @@ export function DiagnosisResultDialog({
               </p>
             </>
           ) : (
-            <div className="w-full space-y-2">
-              <p className="text-xs text-center text-muted-foreground">
-                {isRTL ? 'שתי דרכים להמשיך מכאן:' : 'Two ways to continue from here:'}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="w-full space-y-2.5">
+              <div className="flex items-center gap-1.5 justify-center text-xs font-medium text-accent">
+                <Sparkles className="w-3.5 h-3.5" />
+                {isRTL
+                  ? 'בונוס למי שמתחיל/ה תוך 48 שעות: שיחת ייעוץ קצרה איתי, אישית'
+                  : 'Bonus for starting within 48 hours: a short personal call with me'}
+              </div>
+
+              <Button variant="cta" className="w-full h-auto py-2.5" asChild>
                 <a
                   href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleChooseSingleTool}
-                  className="flex flex-col gap-1 rounded-lg border border-border p-3 hover:border-accent transition-colors"
+                  className="flex flex-col items-center leading-tight gap-0.5"
                 >
-                  <span className="text-sm font-semibold text-foreground">{meta.label}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span>
+                    {isRTL ? `להתחיל עם ${meta.label}` : `Start with ${meta.label}`} — {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `$${SINGLE_TOOL_PRICE_USD}`}
+                  </span>
+                  <span className="text-xs font-normal opacity-85">
                     {isRTL ? 'בדיוק הכלי שהאבחון המליץ עליו' : 'Exactly the tool the diagnosis recommended'}
                   </span>
-                  <span className="text-sm font-semibold text-accent mt-1">
-                    {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `$${SINGLE_TOOL_PRICE_USD}`}
-                  </span>
                 </a>
-                <a
-                  href={isRTL ? FULL_MENTOR_PAYMENT_URL_HE : FULL_MENTOR_PAYMENT_URL_EN}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={handleChooseFullMentor}
-                  className="flex flex-col gap-1 rounded-lg border-2 border-accent/50 bg-accent/5 p-3 hover:border-accent transition-colors"
-                >
-                  <span className="text-sm font-semibold text-foreground">
-                    {isRTL ? 'המסלול המלא עם אליענה' : 'The Full Mentor Journey'}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {isRTL ? `כולל את ${meta.label} וגם את חמשת הכלים האחרים` : `Includes ${meta.label} plus all five other tools`}
-                  </span>
-                  <span className="text-sm font-semibold text-accent mt-1">
-                    {isRTL ? `₪${FULL_MENTOR_PRICE_ILS}` : `$${FULL_MENTOR_PRICE_USD}`}
-                  </span>
-                </a>
+              </Button>
+
+              <div className="flex items-center gap-1.5 justify-center text-xs text-muted-foreground">
+                <ShieldCheck className="w-3.5 h-3.5 text-accent" />
+                {isRTL ? 'לא מתאים לך? החזר כספי מלא, ללא שאלות.' : "Not a fit? Full refund, no questions asked."}
               </div>
+
+              <a
+                href={isRTL ? FULL_MENTOR_PAYMENT_URL_HE : FULL_MENTOR_PAYMENT_URL_EN}
+                target="_blank"
+                rel="noreferrer"
+                onClick={handleChooseFullMentor}
+                className="block text-center text-xs text-muted-foreground hover:text-accent underline underline-offset-2 pt-1"
+              >
+                {isRTL
+                  ? `או, קבלו את כל המסע המלא עם אליענה (כולל ${meta.label} וחמישה כלים נוספים) — ₪${FULL_MENTOR_PRICE_ILS}`
+                  : `Or get the full journey with Eliana (${meta.label} plus five more tools) — $${FULL_MENTOR_PRICE_USD}`}
+              </a>
             </div>
           )}
           <div className="flex gap-2 pt-1">
