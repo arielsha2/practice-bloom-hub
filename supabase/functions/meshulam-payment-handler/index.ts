@@ -11,7 +11,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const secret = req.headers.get('x-internal-secret')
+    // Grow's webhook config UI has no way to attach a custom header — it can
+    // only call a URL (optionally with query params). The webhook here was
+    // long configured with ?secret=... in the URL, which this code never
+    // actually checked (header-only), so every call silently 401'd since the
+    // webhook was set up. Accept either, same defensive pattern already used
+    // by grow-payment-webhook.
+    const url = new URL(req.url)
+    const secret = req.headers.get('x-internal-secret') ?? url.searchParams.get('secret')
     if (secret !== Deno.env.get('INTERNAL_WEBHOOK_SECRET')) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
