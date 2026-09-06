@@ -32,7 +32,11 @@ Deno.serve(async (req) => {
 
   try {
     const expected = Deno.env.get("MESHULAM_WEBHOOK_SECRET");
-    const got = req.headers.get("x-meshulam-secret");
+    // Grow's webhook config UI can't attach custom headers, only a URL —
+    // accept the secret from either, same defensive pattern used by
+    // grow-payment-webhook and meshulam-payment-handler for the same reason.
+    const url = new URL(req.url);
+    const got = req.headers.get("x-meshulam-secret") ?? url.searchParams.get("secret");
     if (!expected || !got || got !== expected) {
       console.warn("meshulam-webhook: bad secret");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
