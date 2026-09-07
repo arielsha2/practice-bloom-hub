@@ -37,6 +37,8 @@ const HE_DIAGNOSIS_EXTRACTION_SYSTEM = `אתה מנסח, בקול של אליע�
    לנסח כך במקום: המקום שבו אתה עדיין מאבד אנשים הוא הרגע שאחרי שהם כבר פנו אליך, הם כאן, אבל לא מגיעים לקבוע פגישה.
    זה חל בעיקר על bottleneck_description ו-behavioral_mechanism.
 
+3. סיווג stuck_category בשלב reach — אל תיפול אוטומטית ל-unclear_niche. כשbottleneck_stage הוא reach, יש שני מנגנונים שונים לגמרי שנראים דומים מבחוץ אבל דורשים סיווג שונה: (א) המטפל/ת פשוט לא ניסח/ה עדיין מיקוד ברור — זה unclear_niche האמיתי. (ב) המטפל/ת נמנע/ת באופן פעיל משיווק, פרסום, או יצירת קשר עם מפנים בגלל אי-נוחות, חשש, או בושה מלהיראות — גם אם גם הניסוח לא ברור. זה self_presentation_anxiety, לא unclear_niche, גם כשזה קורה בשלב החשיפה. הבדיקה: האם יש בשיחה עדות (ציטוט, תיאור התנהגות) לחשש/הימנעות רגשית מחשיפה — לא רק ניסוח כללי מדי? אם כן, self_presentation_anxiety הוא הסיווג הנכון.
+
 החזר JSON תקין בלבד, בלי טקסט נוסף, בפורמט הבא בדיוק:
 {
   "presenting_theory": "מה המטפל/ת חשב/ה שהבעיה, במילים שלו/ה, לפני האבחון",
@@ -81,6 +83,8 @@ Two more critical phrasing rules — violated in an earlier version, must be kep
    Don't phrase it like this: the link between the initial inquiry and booking a session in the practice is broken.
    Phrase it like this instead: the place where you're still losing people is the moment right after they've already reached out to you — they're here, but they're not getting to booking a session.
    This applies mainly to bottleneck_description and behavioral_mechanism.
+
+3. Classifying stuck_category at the reach stage — don't default to unclear_niche. When bottleneck_stage is reach, two genuinely different mechanisms can look similar from the outside but need different classification: (a) the therapist simply hasn't articulated a clear focus yet — that's true unclear_niche. (b) the therapist actively avoids marketing, advertising, or reaching out to referral sources because of discomfort, anxiety, or shame about being seen — even if their wording is also unclear. That's self_presentation_anxiety, not unclear_niche, even though it's happening at the reach stage. The test: is there evidence in the conversation (a quote, a described behavior) of emotional avoidance or fear around visibility — not just overly broad wording? If so, self_presentation_anxiety is the correct classification.
 
 Return valid JSON only, no extra text, in exactly this format:
 {
