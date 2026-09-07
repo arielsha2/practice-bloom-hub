@@ -382,6 +382,40 @@ function buildStructuredOutput(botKey: string, parsed: Record<string, unknown>):
   return parsed;
 }
 
+// Lead-scoring signals for practice-diagnosis (Wave: sales follow-up). Raw
+// component signals are stored alongside the composite so the weighting can
+// be recalibrated later once real purchases exist to validate against —
+// composite_score_v1 was built with zero conversions to learn from, so it's
+// a heuristic starting point, not a validated model. Word-splitting on
+// whitespace is fine for both Hebrew and English. English lists are thin
+// (most volume so far is Hebrew) — expand once there's more English data.
+const URGENCY_PHRASES_HE = ["כבר חודשים", "כבר שנה", "כבר שנים", "לא יכולה להמשיך", "לא יכול להמשיך", "נואשת", "נואש", "מותשת", "מותש", "אין לי ברירה", "חייבת", "חייב", "דחוף"];
+const EMOTIONAL_WORDS_HE = ["מתוסכלת", "מתוסכל", "עצוב", "עצובה", "כואב", "כואבת", "מפחיד", "מפחידה", "חרדה", "בודדה", "בודד", "נורא", "קשה לי", "תקועה", "תקוע"];
+const URGENCY_PHRASES_EN = ["for months", "for years", "can't keep going", "can't continue like this", "desperate", "exhausted", "no choice", "have to", "urgent"];
+const EMOTIONAL_WORDS_EN = ["frustrated", "frustrating", "sad", "painful", "scary", "scared", "anxious", "anxiety", "lonely", "isolated", "terrible", "stuck", "hard for me"];
+
+function computeLeadSignals(userMessages: string[], isEnglish: boolean) {
+  const text = userMessages.join(" ");
+  const numbersMentioned = (text.match(/\d+/g) ?? []).length;
+  const wordCounts = userMessages.map((m) => m.trim().split(/\s+/).filter(Boolean).length);
+  const avgWords = wordCounts.length ? wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length : 0;
+  const lower = isEnglish ? text.toLowerCase() : text;
+  const urgencyList = isEnglish ? URGENCY_PHRASES_EN : URGENCY_PHRASES_HE;
+  const emotionalList = isEnglish ? EMOTIONAL_WORDS_EN : EMOTIONAL_WORDS_HE;
+  const countMatches = (list: string[]) => list.reduce((sum, p) => sum + (lower.split(isEnglish ? p.toLowerCase() : p).length - 1), 0);
+  const urgencyCount = countMatches(urgencyList);
+  const emotionalCount = countMatches(emotionalList);
+  const compositeV1 = numbersMentioned * 2 + avgWords / 5 + urgencyCount * 5 + emotionalCount * 3;
+  return {
+    user_message_count: userMessages.length,
+    avg_user_message_words: Math.round(avgWords * 10) / 10,
+    numbers_mentioned_count: numbersMentioned,
+    urgency_phrase_count: urgencyCount,
+    emotional_intensity_count: emotionalCount,
+    composite_score_v1: Math.round(compositeV1 * 10) / 10,
+  };
+}
+
 // Generic prompt for any other bot — produces a short summary string
 const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למטפל פסיכותרפיסט.
 החזר JSON תקין בלבד בפורמט הבא:
@@ -575,6 +609,16 @@ Deno.serve(async (req) => {
       await supabase
         .from("therapist_journeys")
         .insert({ user_id: user.id, ...updatePayload });
+    }
+
+    if (botKey === "practice-diagnosis") {
+      const userMessages = msgs.filter((m: any) => m.role === "user").map((m: any) => m.content as string);
+      const signals = computeLeadSignals(userMessages, isEnglish);
+      const { error: signalsErr } = await supabase.from("diagnosis_lead_signals").upsert(
+        { user_id: user.id, conversation_id: conversationId, email: user.email ?? null, ...signals },
+        { onConflict: "user_id" },
+      );
+      if (signalsErr) console.error("lead signals upsert error:", signalsErr);
     }
 
     // Wave 2.1: record the therapist's actual commitment as a weekly

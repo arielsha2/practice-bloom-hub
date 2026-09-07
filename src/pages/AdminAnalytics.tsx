@@ -18,6 +18,7 @@ import { DiagnosisFunnelCard } from '@/components/mentor/DiagnosisFunnelCard';
 import { DiagnosisStatsCard } from '@/components/mentor/DiagnosisStatsCard';
 import { DiagnosisAIInsightsCard } from '@/components/mentor/DiagnosisAIInsightsCard';
 import { DiagnosisPurchaseIntentsCard } from '@/components/mentor/DiagnosisPurchaseIntentsCard';
+import { DiagnosisLeadScoreCard } from '@/components/mentor/DiagnosisLeadScoreCard';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -73,6 +74,9 @@ export default function AdminAnalytics() {
                 </div>
                 <div className="mt-4">
                   <DiagnosisPurchaseIntentsCard />
+                </div>
+                <div className="mt-4">
+                  <DiagnosisLeadScoreCard />
                 </div>
                 <div className="mt-4">
                   <DiagnosisAIInsightsCard />
