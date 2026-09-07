@@ -42,7 +42,7 @@ const HE_DIAGNOSIS_EXTRACTION_SYSTEM = `אתה מנסח, בקול של אליע�
   "presenting_theory": "מה המטפל/ת חשב/ה שהבעיה, במילים שלו/ה, לפני האבחון",
   "what_is_working": "מה כן עובד טוב אצל המטפל/ת בתהליך הבאת המטופלים — לא מחמאה גנרית, אלא עוגן קונקרטי במה שעלה בפועל בשיחה (למשל שהאתר מייצר פניות, שיש רשת קשרים קיימת, שהמסר ברור לחלק מהאנשים). זו הנקודה שבה מתחילים — אימות של מה שכבר נכון, לפני שעוברים לחסם.",
   "evidence_summary": "העובדות/הנתונים הקונקרטיים שעלו בשיחה (כולל מספרים אם ניתנו) — לא התיאוריה של המטפל/ת, מה שבאמת קרה. תיאור אנושי, לא רשימת נתונים יבשה.",
-  "bottleneck_stage": "reach | inquiry_to_conversation | conversation_to_booking | booking_to_followthrough | unclear",
+  "bottleneck_stage": "reach | inquiry_to_booking | booking_to_followthrough | unclear",
   "bottleneck_description": "משפט אחד בשפה אנושית וקונקרטית שמתאר את הרגע הספציפי שבו אנשים עוד נמצאים איתו/ה אבל לא מגיעים הלאה (מקביל למה שנאמר בפועל בשלב 3 סעיף 3 של השיחה) — ראה כלל ניסוח 2 למעלה: לתאר רגע בין אנשים, לא רכיב שנשבר.",
   "behavioral_mechanism": "ההסבר הספציפי, ברמת ההתנהגות, למה זה קורה — מה בפועל המטפל/ת עושה או לא עושה ברגע הזה. ראה כלל ניסוח 2 למעלה.",
   "stuck_category": "pricing_fear | unclear_niche | no_patients_despite_marketing | self_presentation_anxiety | referral_network_gap | confidence_in_value | time_or_capacity | other",
@@ -87,7 +87,7 @@ Return valid JSON only, no extra text, in exactly this format:
   "presenting_theory": "what the therapist thought the problem was, in their own words, before the diagnosis",
   "what_is_working": "what's actually working well for the therapist in bringing in patients — not a generic compliment, but a concrete anchor in what actually came up in the conversation (e.g. the website generates inquiries, there's an existing referral network, the message is clear to some people). This is where you start — validating what's already true, before moving to the blocker.",
   "evidence_summary": "the concrete facts/data that came up in the conversation (including numbers if given) — not the therapist's theory, what actually happened. A human description, not a dry list of data.",
-  "bottleneck_stage": "reach | inquiry_to_conversation | conversation_to_booking | booking_to_followthrough | unclear",
+  "bottleneck_stage": "reach | inquiry_to_booking | booking_to_followthrough | unclear",
   "bottleneck_description": "one sentence in human, concrete language describing the specific moment where people are still with them but don't move further (mirrors what was actually said in stage 3 item 3 of the conversation) — see phrasing rule 2 above: describe a moment between people, not a broken component.",
   "behavioral_mechanism": "the specific, behavior-level explanation for why this happens — what the therapist actually does or doesn't do in that moment. See phrasing rule 2 above.",
   "stuck_category": "pricing_fear | unclear_niche | no_patients_despite_marketing | self_presentation_anxiety | referral_network_gap | confidence_in_value | time_or_capacity | other",
@@ -203,10 +203,16 @@ const STUCK_CATEGORIES = [
   "time_or_capacity",
   "other",
 ];
+// Was 5 stages (reach/inquiry/conversation/booking/follow-through). Merged
+// inquiry_to_conversation + conversation_to_booking into inquiry_to_booking:
+// for an independent therapist those are the same link in practice (a first
+// message already is the start of the conversation), and real transcript
+// review showed the model wasn't distinguishing them reliably anyway —
+// matches the standard "booking rate" stage in professional sales funnels
+// for appointment-based service businesses, not two separate stages.
 const BOTTLENECK_STAGES = [
   "reach",
-  "inquiry_to_conversation",
-  "conversation_to_booking",
+  "inquiry_to_booking",
   "booking_to_followthrough",
   "unclear",
 ];

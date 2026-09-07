@@ -22,8 +22,7 @@ const STUCK_CATEGORY_LABELS: Record<string, string> = {
 
 const BOTTLENECK_STAGE_LABELS: Record<string, string> = {
   reach: "לא מגיעים אליו בכלל (חשיפה)",
-  inquiry_to_conversation: "פונים, אבל לא מגיעים לשיחה",
-  conversation_to_booking: "יש שיחה, אבל לא נקבעת פגישה",
+  inquiry_to_booking: "פונים, אבל לא נקבעת פגישה",
   booking_to_followthrough: "נקבעת פגישה, אבל לא מגיעים אליה",
   unclear: "לא ברור",
 };
