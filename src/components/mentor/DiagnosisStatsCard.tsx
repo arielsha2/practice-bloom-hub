@@ -27,6 +27,11 @@ const BOTTLENECK_STAGE_LABELS: Record<string, string> = {
   unclear: "לא ברור",
 };
 
+// Chronological order of the funnel itself (reach → booking → follow-through),
+// not sorted by count — the whole point of this view is "where in the
+// sequence does it break," so the order has to mirror the real-world sequence.
+const STAGE_ORDER = ["reach", "inquiry_to_booking", "booking_to_followthrough", "unclear"] as const;
+
 const AREA_LABELS: Record<string, string> = {
   "niche-finder": "נישה ובידול",
   "pricing-calculator": "תמחור",
@@ -73,12 +78,18 @@ interface DiagnosisStatsCardProps {
   period?: AnalyticsPeriod;
 }
 
+type StageBreakdown = {
+  key: string;
+  label: string;
+  count: number;
+  causes: Tally[];
+};
+
 export function DiagnosisStatsCard({ period }: DiagnosisStatsCardProps = {}) {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [byCategory, setByCategory] = useState<Tally[]>([]);
-  const [byStage, setByStage] = useState<Tally[]>([]);
   const [byArea, setByArea] = useState<Tally[]>([]);
+  const [stageBreakdown, setStageBreakdown] = useState<StageBreakdown[]>([]);
 
   useEffect(() => {
     void load();
@@ -103,14 +114,26 @@ export function DiagnosisStatsCard({ period }: DiagnosisStatsCardProps = {}) {
       .map((r: any) => r.diagnosis_output)
       .filter(Boolean);
 
-    const categories = rows.map((d: any) => d.stuck_category).filter(Boolean);
-    const stages = rows.map((d: any) => d.bottleneck_stage).filter(Boolean);
     const priorityAreas = rows
       .map((d: any) => d.recommended_tool)
       .filter(Boolean);
 
-    setByCategory(tally(categories, STUCK_CATEGORY_LABELS));
-    setByStage(tally(stages, BOTTLENECK_STAGE_LABELS));
+    // Chronological funnel-stage view: for each stage in real-world order,
+    // how many therapists are stuck there, and — within just that stage —
+    // what's actually causing the block. This is what tells the story of
+    // *where* practices fail and *why*, instead of two disconnected lists.
+    const breakdown = STAGE_ORDER.map((stageKey) => {
+      const rowsAtStage = rows.filter((d: any) => d.bottleneck_stage === stageKey);
+      const causes = rowsAtStage.map((d: any) => d.stuck_category).filter(Boolean);
+      return {
+        key: stageKey,
+        label: BOTTLENECK_STAGE_LABELS[stageKey],
+        count: rowsAtStage.length,
+        causes: tally(causes, STUCK_CATEGORY_LABELS),
+      };
+    });
+
+    setStageBreakdown(breakdown);
     setByArea(tally(priorityAreas, AREA_LABELS));
     setTotal(rows.length);
     setLoading(false);
@@ -138,17 +161,41 @@ export function DiagnosisStatsCard({ period }: DiagnosisStatsCardProps = {}) {
         ) : (
           <div className="space-y-6">
             <p className="text-xs text-muted-foreground">מבוסס על {total} אבחונים — מדגם קטן, לפרש בזהירות.</p>
+
+            <div>
+              <p className="text-xs font-semibold text-foreground mb-3">
+                איפה בתהליך (חשיפה ← פגישה ← המשך טיפול) נופלים המטפלים, ומה הסיבה המרכזית בכל שלב
+              </p>
+              <div className="space-y-4">
+                {stageBreakdown.map((stage, i) => {
+                  const pctOfTotal = total > 0 ? Math.round((stage.count / total) * 100) : 0;
+                  return (
+                    <div key={stage.key} className="border-r-2 border-muted pr-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          {i + 1}. {stage.label}
+                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {stage.count} · {pctOfTotal}% מכלל האבחונים
+                        </span>
+                      </div>
+                      {stage.count === 0 ? (
+                        <p className="text-xs text-muted-foreground mt-1">אין מקרים בשלב זה.</p>
+                      ) : (
+                        <div className="mt-2 pr-2">
+                          <p className="text-[11px] text-muted-foreground mb-1.5">הסיבה המרכזית לחסימה בשלב הזה:</p>
+                          <Bars rows={stage.causes} total={stage.count} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <p className="text-xs font-semibold text-foreground mb-2">הכלי שהומלץ (החסם הכי דחוף שנמצא)</p>
               <Bars rows={byArea} total={total} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground mb-2">איפה במשפך נמצא החסם</p>
-              <Bars rows={byStage} total={total} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground mb-2">סיווג הקושי</p>
-              <Bars rows={byCategory} total={total} />
             </div>
           </div>
         )}
