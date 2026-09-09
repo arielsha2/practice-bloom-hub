@@ -9,6 +9,7 @@ import { toast } from "sonner";
 export function DiagnosisAIInsightsCard() {
   const [insight, setInsight] = useState("");
   const [sampleSize, setSampleSize] = useState(0);
+  const [mentorSampleSize, setMentorSampleSize] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -18,6 +19,7 @@ export function DiagnosisAIInsightsCard() {
       if (error) throw error;
       setInsight(data?.insight ?? "");
       setSampleSize(data?.sample_size ?? 0);
+      setMentorSampleSize(data?.mentor_sample_size ?? 0);
     } catch (e) {
       console.error(e);
       toast.error("ניתוח הקשיים נכשל");
@@ -47,7 +49,9 @@ export function DiagnosisAIInsightsCard() {
           <p className="text-sm text-muted-foreground">מנתח את הדפוסים...</p>
         ) : insight ? (
           <>
-            <p className="text-xs text-muted-foreground mb-3">מבוסס על {sampleSize} אבחונים — מדגם קטן, לפרש בזהירות.</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              מבוסס על {sampleSize} אבחונים + {mentorSampleSize} שיחות מנטור מלאות — מדגם קטן, לפרש בזהירות.
+            </p>
             <div className="prose prose-sm max-w-none dark:prose-invert" dir="rtl">
               <ReactMarkdown>{insight}</ReactMarkdown>
             </div>
