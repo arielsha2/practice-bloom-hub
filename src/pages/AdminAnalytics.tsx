@@ -19,6 +19,7 @@ import { DiagnosisStatsCard } from '@/components/mentor/DiagnosisStatsCard';
 import { DiagnosisAIInsightsCard } from '@/components/mentor/DiagnosisAIInsightsCard';
 import { DiagnosisPurchaseIntentsCard } from '@/components/mentor/DiagnosisPurchaseIntentsCard';
 import { DiagnosisLeadScoreCard } from '@/components/mentor/DiagnosisLeadScoreCard';
+import { DiagnosisFeedbackCard } from '@/components/mentor/DiagnosisFeedbackCard';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -71,6 +72,9 @@ export default function AdminAnalytics() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <DiagnosisFunnelCard period={period} />
                   <DiagnosisStatsCard period={period} />
+                </div>
+                <div className="mt-4">
+                  <DiagnosisFeedbackCard />
                 </div>
                 <div className="mt-4">
                   <DiagnosisPurchaseIntentsCard />

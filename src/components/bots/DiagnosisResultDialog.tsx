@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -156,10 +157,16 @@ export function DiagnosisResultDialog({
   onContinue,
 }: DiagnosisResultDialogProps) {
   const continuedRef = useRef(false);
+  const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackTextSent, setFeedbackTextSent] = useState(false);
 
   useEffect(() => {
     if (open) {
       continuedRef.current = false;
+      setFeedbackRating(null);
+      setFeedbackText('');
+      setFeedbackTextSent(false);
       trackEvent('diagnosis_result_viewed', { recommended_tool: result.recommendedTool, bottleneck_stage: result.bottleneckStage });
     } else if (!continuedRef.current) {
       trackEvent('diagnosis_exited_without_continue', { recommended_tool: result.recommendedTool });
@@ -223,6 +230,43 @@ export function DiagnosisResultDialog({
     } catch (e) {
       console.error('failed to record purchase intent', e);
     }
+  };
+
+  // Upsert (one row per user) so clicking a thumb records immediately, and
+  // filling in the optional reason afterward on a thumbs-down just adds to
+  // the same row instead of creating a second one.
+  const submitFeedback = async (rating: 'up' | 'down', text?: string) => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      await supabase.from('diagnosis_feedback').upsert(
+        {
+          user_id: user.id,
+          email: user.email ?? null,
+          rating,
+          feedback_text: text ?? null,
+          recommended_tool: result.recommendedTool,
+          language: isRTL ? 'he' : 'en',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
+    } catch (e) {
+      console.error('failed to record diagnosis feedback', e);
+    }
+  };
+
+  const handleRate = (rating: 'up' | 'down') => {
+    setFeedbackRating(rating);
+    trackEvent('diagnosis_feedback_given', { rating, recommended_tool: result.recommendedTool });
+    void submitFeedback(rating);
+  };
+
+  const handleSendFeedbackText = () => {
+    if (!feedbackText.trim()) return;
+    setFeedbackTextSent(true);
+    void submitFeedback('down', feedbackText.trim());
   };
 
   const handleChooseSingleTool = () => {
@@ -312,6 +356,57 @@ export function DiagnosisResultDialog({
                 {isRTL ? 'מה נראה שבאמת עוצר כרגע את הצמיחה' : "What's actually holding back your growth"}
               </p>
               <p className="text-base font-medium text-foreground leading-relaxed">{result.diagnosisSummary}</p>
+
+              <div className="mt-3 pt-3 border-t border-accent/20 flex items-center gap-2.5">
+                {feedbackRating ? (
+                  <p className="text-xs text-muted-foreground">
+                    {isRTL ? 'תודה על המשוב!' : 'Thanks for the feedback!'}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? 'זה הרגיש מדויק?' : 'Did this feel accurate?'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRate('up')}
+                      aria-label={isRTL ? 'כן, זה מדויק' : 'Yes, this is accurate'}
+                      className="text-muted-foreground hover:text-accent transition-colors"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRate('down')}
+                      aria-label={isRTL ? 'לא, זה לא מדויק' : "No, this isn't accurate"}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {feedbackRating === 'down' && !feedbackTextSent && (
+                <div className="mt-2.5 space-y-1.5">
+                  <Textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder={isRTL ? 'מה לא הרגיש מדויק? (לא חובה)' : "What didn't feel accurate? (optional)"}
+                    className="text-sm min-h-16 bg-background"
+                  />
+                  {feedbackText.trim() && (
+                    <Button size="sm" variant="secondary" onClick={handleSendFeedbackText}>
+                      {isRTL ? 'שליחה' : 'Send'}
+                    </Button>
+                  )}
+                </div>
+              )}
+              {feedbackTextSent && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {isRTL ? 'תודה, זה עוזר לנו לדייק את האבחון.' : 'Thanks — this helps us sharpen the diagnosis.'}
+                </p>
+              )}
             </div>
           )}
 
