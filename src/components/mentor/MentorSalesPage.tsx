@@ -207,8 +207,8 @@ const COPY: any = {
   en: {
     badge: "The Clinic Mentor · Beta",
     hero: {
-      titleLine1: "You were trained to hold a therapy room.",
-      titleLine2: "No one taught you how to build the clinic around it.",
+      titleLine1: "You're not invisible because you're not good enough.",
+      titleLine2: "You're invisible because no one knows what to say about you when someone asks who to refer to.",
       body: "The Mentor is a personal AI practice mentor for therapists building a private practice — guiding you, one focused conversation at a time, through your niche, your fee, your referral relationships, and the language that helps the right clients recognize: this therapist understands me. Not with hype. Not with generic marketing scripts. And not by asking you to become someone you're not. One focused question. One concrete action. In a language that still feels like you.",
       cta: "✦  Start building the container for my practice  →",
       ctaNote:
