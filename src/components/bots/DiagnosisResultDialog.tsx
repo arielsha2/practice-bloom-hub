@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -84,6 +84,11 @@ const FULL_MENTOR_PRICE_ILS = 750;
 const FULL_MENTOR_PRICE_USD = 250;
 const FULL_MENTOR_PAYMENT_URL_HE = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
 const FULL_MENTOR_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN';
+
+// Where the "send to a colleague" WhatsApp message points — the diagnosis's
+// own public entry point, not this account's authenticated /mentor area.
+const DIAGNOSIS_START_URL_HE = 'https://therapykeys.co.il/ai-assistants/practice-diagnosis';
+const DIAGNOSIS_START_URL_EN = 'https://therapykeys.co.il/en/ai-assistants/practice-diagnosis';
 
 const AREA_STATUS_META_HE: Record<AreaStatus, { label: string; Icon: typeof Target }> = {
   priority: { label: 'הכי דחוף', Icon: Target },
@@ -269,6 +274,20 @@ export function DiagnosisResultDialog({
     void submitFeedback('down', feedbackText.trim());
   };
 
+  // Framed around a specific colleague's situation, not the sender's own —
+  // asking "does this feel accurate for you" would require the sender to
+  // hold themselves up as an example in front of a peer, which is exactly
+  // the kind of exposure this population avoids. Sent privately (wa.me,
+  // not a public post) to one person the sender already has in mind.
+  const handleShareWithColleague = () => {
+    trackEvent('diagnosis_colleague_share_clicked', { recommended_tool: result.recommendedTool });
+    const url = isRTL ? DIAGNOSIS_START_URL_HE : DIAGNOSIS_START_URL_EN;
+    const message = isRTL
+      ? `חשבתי עלייך כשראיתי את זה — כלי אבחון קצר וחינמי שעזר לי להבין מה בדיוק עוצר את הקליניקה שלי. חשבתי שאולי יעזור גם לך: ${url}`
+      : `Thought of you when I saw this — a short, free tool that helped me understand what's actually holding back my practice. Thought it might help you too: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noreferrer');
+  };
+
   const handleChooseSingleTool = () => {
     continuedRef.current = true;
     trackEvent('diagnosis_single_tool_purchase_clicked', {
@@ -386,6 +405,20 @@ export function DiagnosisResultDialog({
                   </>
                 )}
               </div>
+
+              {feedbackRating === 'up' && (
+                <div className="mt-2.5 rounded-md border border-border bg-background/60 p-2.5 space-y-2">
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    {isRTL
+                      ? 'עולה לך בראש קולגה שמרגיש שהוא לא הכתובת הראשונה שעולה בראש כשמישהו שואל למי להפנות?'
+                      : "Does a colleague come to mind — someone who isn't the first name people think of when someone asks who to refer to?"}
+                  </p>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShareWithColleague}>
+                    <Share2 className="w-3.5 h-3.5" />
+                    {isRTL ? 'שליחה לקולגה' : 'Send to a colleague'}
+                  </Button>
+                </div>
+              )}
 
               {feedbackRating === 'down' && !feedbackTextSent && (
                 <div className="mt-2.5 space-y-1.5">
