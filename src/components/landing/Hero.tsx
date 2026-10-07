@@ -103,10 +103,11 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <div className="relative w-full max-w-lg">
+              {/* The couple sits left of centre with empty wall on the right: crop from the left edge at the old hero's ~1.42:1 so they land in the middle. */}
               <img
                 src={heroFoundersImg}
                 alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Therapy Keys"}
-                className="w-full h-auto rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
+                className="w-full h-auto aspect-[1333/941] object-cover object-left rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
                 width={1672}
                 height={941}
                 loading="eager"
