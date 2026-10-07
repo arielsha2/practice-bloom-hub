@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 /**
  * Resets the current user's mentor journey: deletes therapist_journeys row,
- * bot memory, bot conversations + messages, and clears local mentor chat cache.
+ * bot memory, the shared professional-details card, bot conversations + messages, and clears local mentor chat cache.
  * Intended for admins to test the mentor as a brand-new therapist.
  */
 export function useResetMentorJourney() {
@@ -33,14 +33,15 @@ export function useResetMentorJourney() {
       }
 
       // 2. Delete conversations, memory, journey row, AND unified mentor chat.
-      const [convRes, memRes, journeyRes, mentorConvRes] = await Promise.all([
+      const [convRes, memRes, journeyRes, mentorConvRes, profileRes] = await Promise.all([
         supabase.from("bot_conversations").delete().eq("user_id", user.id),
         supabase.from("bot_user_memory").delete().eq("user_id", user.id),
         supabase.from("therapist_journeys").delete().eq("user_id", user.id),
         supabase.from("mentor_conversations").delete().eq("user_id", user.id),
+        supabase.from("therapist_profiles").delete().eq("user_id", user.id),
       ]);
 
-      const err = convRes.error || memRes.error || journeyRes.error || mentorConvRes.error;
+      const err = convRes.error || memRes.error || journeyRes.error || mentorConvRes.error || profileRes.error;
       if (err) {
         console.error("Reset mentor error:", err);
         toast.error("שגיאה באיפוס: " + err.message);

@@ -434,6 +434,139 @@ const GENERIC_SUMMARY_SYSTEM = `אתה מנתח שיחה בין כלי AI למט
 }
 השתמש רק במה שאמר המטפל בפועל. אל תמציא.`;
 
+// ---------------------------------------------------------------------------
+// Compact summary of a structured tool output, written to
+// reflection.tool_summaries[botKey]. Until now only the diagnosis and generic
+// bots got one, so the Mentor couldn't see what niche / pricing / contacts /
+// bridge / first-call produced (and its "back from tool" card said "no
+// automatic summary was saved"). Computed from the saved fields — no LLM.
+// Limits: mentor-chat cuts each tool summary at 400 chars, and the same text
+// is shown to the therapist as-is in that card, so it stays short and readable.
+// The field choices mirror bot-chat's CONTEXT_SPECS (separate edge functions,
+// no shared module in the deploy path) — keep the two in step.
+// ---------------------------------------------------------------------------
+const TOOL_SUMMARY_MAX = 400;
+const SUMMARY_FILLER = new Set([
+  "משהו כללי", "כללי", "לא נאמר", "לא צוין", "לא ידוע", "אין", "לא רלוונטי",
+  "general", "something general", "not said", "not stated", "unknown", "none", "n/a",
+]);
+
+// Sentence-form non-answers the extractors write when a detail is missing
+// (e.g. "המטפל לא ציין את לקוח הקצה..."). Short ones only, so real content that
+// merely contains these words is kept.
+const NON_ANSWER_PATTERNS = [
+  /^המטפל(?:\/ת)?\s+לא\s+(?:ציין|צוין|הזכיר|סיפק|נתן|אמר|הגדיר)/,
+  /\bלא\s+(?:צוין|נאמר|הוזכר|ידוע|סופק|הוגדר)\b/,
+  /\b(?:not|wasn'?t|was not)\s+(?:specified|mentioned|stated|provided|defined)\b/i,
+  /\bdid(?:n'?t| not)\s+(?:specify|mention|state|provide)\b/i,
+  /\bno information\b/i,
+];
+function isNonAnswer(s: string): boolean {
+  return s.length <= 110 && NON_ANSWER_PATTERNS.some((re) => re.test(s));
+}
+
+function summaryText(v: unknown, max: number): string {
+  let s = "";
+  if (typeof v === "string") s = v;
+  else if (typeof v === "number" && Number.isFinite(v)) s = String(v);
+  else if (Array.isArray(v)) {
+    // Contacts: only the role/arena. Items also hold third parties' names,
+    // phones and emails, which never go into a summary.
+    s = v
+      .map((x: any) => (typeof x === "string" ? x : x?.profession ?? ""))
+      .filter((x: unknown) => typeof x === "string" && (x as string).trim())
+      .join("; ");
+  }
+  s = s.replace(/\s+/g, " ").trim();
+  if (SUMMARY_FILLER.has(s.toLowerCase().replace(/[.!…\-–—:;,\s]+$/g, ""))) return "";
+  if (isNonAnswer(s)) return "";
+  return s.length > max ? s.slice(0, max - 1) + "…" : s;
+}
+
+function buildToolSummary(botKey: string, structured: unknown, isEnglish: boolean): string {
+  // contact_finder_output is saved as a bare array
+  const o: any = botKey === "contact-finder" ? { contacts: structured } : structured;
+  if (!o || typeof o !== "object") return "";
+  const L = (he: string, en: string, v: unknown, max = 110) => ({ he, en, value: summaryText(v, max) });
+
+  let lines: { he: string; en: string; value: string }[] = [];
+  switch (botKey) {
+    case "niche-finder":
+      lines = [
+        L("מטופל אידיאלי", "Ideal client", o.ideal_client),
+        L("הכאב המרכזי", "Core pain", o.core_pain),
+        L("השינוי", "Transformation", o.transformation),
+        L("משפט לחיצת יד", "Handshake line", o.handshake_version),
+      ];
+      break;
+    case "self-presentation":
+      lines = [
+        L("הסיפור", "Story", o.story_version, 150),
+        L("כאב פנימי", "Internal pain", o.internal_pain, 80),
+        L("כאב חיצוני", "External pain", o.external_pain, 80),
+        L("הכמיהה", "Desire", o.desire, 70),
+        L("התוצאה", "Result", o.result, 70),
+      ];
+      break;
+    case "pricing-calculator":
+      lines = [
+        {
+          he: "טווח נוחות",
+          en: "Comfort range",
+          value: o.comfort_range_low != null && o.comfort_range_high != null ? `${o.comfort_range_low}–${o.comfort_range_high}` : "",
+        },
+        L("תעריף מומלץ", "Recommended rate", o.recommended_rate),
+        {
+          he: "יעד",
+          en: "Target",
+          value:
+            o.target_clients_per_week != null
+              ? isEnglish ? `${o.target_clients_per_week} clients per week` : `${o.target_clients_per_week} מטופלים בשבוע`
+              : "",
+        },
+        L("הכנסה חודשית משוערת", "Estimated monthly income", o.monthly_income),
+      ];
+      break;
+    case "contact-finder":
+      lines = [L("סוגי אנשי קשר שמופו", "Contact types mapped", o.contacts, 300)];
+      break;
+    case "connection-bridge":
+      lines = [
+        L("תורגל מול", "Practiced with", o.contact_type),
+        L("הצעד הבא", "Next step", o.next_action),
+        L("השיפור המרכזי", "Key improvement", o.key_improvement),
+      ];
+      break;
+    case "first-call-practice":
+      lines = [
+        L("הקושי שתורגל", "Concern practiced", o.presenting_concern),
+        L("האמון החלש ביותר", "Weakest trust", o.weakest_trust),
+        L("חסמים פנימיים", "Internal blockers", o.internal_blockers),
+        L("השיפור המרכזי", "Key improvement", o.key_improvement),
+      ];
+      break;
+    default:
+      return "";
+  }
+
+  let out = "";
+  for (const l of lines) {
+    if (!l.value) continue;
+    const label = isEnglish ? l.en : l.he;
+    const sep = out ? "\n" : "";
+    const line = `${label}: ${l.value}`;
+    if ((out + sep + line).length <= TOOL_SUMMARY_MAX) {
+      out += sep + line;
+      continue;
+    }
+    // Out of room: keep a truncated last line only if it still says something.
+    const room = TOOL_SUMMARY_MAX - out.length - sep.length - label.length - 3;
+    if (room >= 30) out += `${sep}${label}: ${l.value.slice(0, room - 1)}…`;
+    break;
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -606,7 +739,19 @@ Deno.serve(async (req) => {
         };
         updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
       } else {
-        updatePayload.reflection = { ...baseReflection, current: nextStage };
+        // Same tool_summaries channel as the diagnosis above, so the Mentor
+        // (journeyBlock) and its "back from tool" card can see this tool's result.
+        const summary = buildToolSummary(botKey, structured, isEnglish);
+        const prevSummaries = (baseReflection.tool_summaries as Record<string, any>) ?? null;
+        if (summary) {
+          updatePayload.reflection = {
+            ...baseReflection,
+            tool_summaries: { ...(prevSummaries ?? {}), [botKey]: { summary, updated_at: new Date().toISOString() } },
+            current: nextStage,
+          };
+        } else {
+          updatePayload.reflection = { ...baseReflection, current: nextStage };
+        }
       }
     }
 

@@ -112,6 +112,20 @@ const CONTEXT_FILLER = new Set([
   "general", "something general", "not said", "not stated", "unknown", "none", "n/a",
 ]);
 
+// Sentence-form non-answers the extractors write when a detail is missing
+// (e.g. "המטפל לא ציין את לקוח הקצה..."). Short ones only, so real content that
+// merely contains these words is kept.
+const NON_ANSWER_PATTERNS = [
+  /^המטפל(?:\/ת)?\s+לא\s+(?:ציין|צוין|הזכיר|סיפק|נתן|אמר|הגדיר)/,
+  /\bלא\s+(?:צוין|נאמר|הוזכר|ידוע|סופק|הוגדר)\b/,
+  /\b(?:not|wasn'?t|was not)\s+(?:specified|mentioned|stated|provided|defined)\b/i,
+  /\bdid(?:n'?t| not)\s+(?:specify|mention|state|provide)\b/i,
+  /\bno information\b/i,
+];
+function isNonAnswer(s: string): boolean {
+  return s.length <= 110 && NON_ANSWER_PATTERNS.some((re) => re.test(s));
+}
+
 function renderContextValue(v: unknown, max: number): string {
   let s = "";
   if (typeof v === "string") s = v;
@@ -124,13 +138,275 @@ function renderContextValue(v: unknown, max: number): string {
   }
   s = s.replace(/\s+/g, " ").trim();
   if (CONTEXT_FILLER.has(s.toLowerCase().replace(/[.!…\-–—:;,\s]+$/g, ""))) return "";
+  if (isNonAnswer(s)) return "";
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
-function buildJourneyContextBlock(journey: any, currentBotKey: string, isEnglish: boolean): string {
-  if (!journey || typeof journey !== "object") return "";
+// ---------------------------------------------------------------------------
+// Shared "professional details" card. Captured server-side here (not in
+// mentor-analyze, which has no auth and persists nothing) from what the
+// therapist already wrote to the Mentor and to other tools, cached in
+// therapist_profiles, and refreshed only when they've said something new.
+// ---------------------------------------------------------------------------
+const PROFILE_VALUE_MAX = 120;
+const PROFILE_SOURCE_MAX = 3000; // per source (Mentor chat / other tools), head+tail
+const PROFILE_LLM_TIMEOUT_MS = 7000;
+
+const PROFILE_FIELDS: { key: string; he: string; en: string }[] = [
+  { key: "profession", he: "מקצוע", en: "Profession" },
+  { key: "modalities", he: "שיטות טיפול", en: "Modalities" },
+  { key: "experience", he: "ותק / שלב בקריירה", en: "Experience" },
+  { key: "location", he: "מיקום", en: "Location" },
+  { key: "current_fee", he: "מחיר נוכחי לפגישה", en: "Current fee per session" },
+  { key: "client_population", he: "אוכלוסיית מטופלים", en: "Client population" },
+];
+
+const PROFILE_EXTRACTION_PROMPT = `You extract a therapist's professional details from what THEY wrote in chat (Mentor chat and tool conversations). A short reply may be preceded by (re: "...") showing the question it answers.
+
+Return JSON only, exactly these keys:
+{"profession":"","modalities":"","experience":"","location":"","current_fee":"","client_population":""}
+
+Rules:
+- Use ONLY facts the therapist explicitly stated about themselves. Never infer, guess or complete. If not stated, return "".
+- profession: their professional title as stated (e.g. clinical social worker, clinical psychologist, art therapist).
+- modalities: therapeutic approaches or methods they say they practice or are trained in.
+- experience: how long they have practiced, or their career stage, as stated (e.g. "opened a private clinic a year and a half ago").
+- location: the city or region where they practice, as stated.
+- current_fee: the fee per session they CURRENTLY charge, keeping the number and currency wording as written. A fee they are considering or aiming for ("I want to raise it to 450") is NOT current. If unclear, "".
+- client_population: who they say they work with (e.g. adults, couples, adolescents).
+- Keep each value under 80 characters, in the therapist's own language (Hebrew stays Hebrew).
+- Never include patient or client names, identifying details or case information. Only the general population served.
+- When you are not sure about a field, return "".`;
+
+function headTail(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const half = Math.floor(max / 2);
+  // The therapist usually introduces themselves first, so the head matters as
+  // much as the most recent messages.
+  return s.slice(0, half) + "\n…\n" + s.slice(s.length - half);
+}
+
+// Turns message arrays ({role, content}) into the therapist's own lines. A very
+// short reply ("400") is meaningless alone, so it carries the question before it.
+function userLines(msgs: any[]): string[] {
+  const out: string[] = [];
+  let lastAssistant = "";
+  for (const m of msgs ?? []) {
+    const text = typeof m?.content === "string" ? m.content.replace(/\s+/g, " ").trim() : "";
+    if (!text) continue;
+    if (m.role === "assistant") {
+      lastAssistant = text;
+    } else if (m.role === "user") {
+      if (/^\[KICKOFF\]/i.test(text)) continue;
+      out.push(text.length < 40 && lastAssistant ? `(re: "${lastAssistant.slice(-160)}") ${text}` : text);
+    }
+  }
+  return out;
+}
+
+function collectProfileSourceText(mentorMsgArrays: any[][], toolMsgArrays: any[][]): string {
+  const mentor = headTail(mentorMsgArrays.flatMap(userLines).join("\n"), PROFILE_SOURCE_MAX);
+  const tools = headTail(toolMsgArrays.flatMap(userLines).join("\n"), PROFILE_SOURCE_MAX);
+  const parts: string[] = [];
+  if (mentor.trim()) parts.push(`Mentor chat — therapist's messages:\n${mentor}`);
+  if (tools.trim()) parts.push(`Tool conversations — therapist's messages:\n${tools}`);
+  return parts.join("\n\n");
+}
+
+function parseProfileResponse(raw: string): Record<string, string> {
+  let parsed: any = {};
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    const m = typeof raw === "string" ? raw.match(/\{[\s\S]*\}/) : null;
+    if (m) {
+      try { parsed = JSON.parse(m[0]); } catch { parsed = {}; }
+    }
+  }
+  const out: Record<string, string> = {};
+  for (const f of PROFILE_FIELDS) {
+    const v = renderContextValue(parsed?.[f.key], PROFILE_VALUE_MAX); // also drops filler
+    if (v) out[f.key] = v;
+  }
+  return out;
+}
+
+// Newer explicit statements win; a field the model found nothing for keeps its
+// earlier value (the source window is capped, so older details can fall out of it).
+function mergeProfile(prev: Record<string, unknown> | null, next: Record<string, string>): Record<string, string> {
+  const merged: Record<string, string> = {};
+  for (const f of PROFILE_FIELDS) {
+    const p = typeof prev?.[f.key] === "string" ? (prev![f.key] as string) : "";
+    const n = next[f.key] ?? "";
+    if (n || p) merged[f.key] = n || p;
+  }
+  return merged;
+}
+
+// Newest message timestamp inside a Mentor conversation's JSON array — the row's
+// updated_at lags the real last message in a lot of conversations.
+function lastMessageTs(msgs: any): string | null {
+  if (!Array.isArray(msgs)) return null;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const t = msgs[i]?.ts;
+    if (typeof t === "string" && !Number.isNaN(new Date(t).getTime())) return t;
+  }
+  return null;
+}
+
+function profileIsStale(profileUpdatedAt: string | null, latestActivityAt: string | null): boolean {
+  if (!latestActivityAt) return false; // nothing said yet — nothing to extract
+  if (!profileUpdatedAt) return true;
+  return new Date(latestActivityAt).getTime() > new Date(profileUpdatedAt).getTime();
+}
+
+// Loads the cached profile and, when starting a NEW tool conversation after the
+// therapist has said something new, refreshes it first. Every failure path
+// returns whatever profile we already had — the chat must never wait on this
+// beyond PROFILE_LLM_TIMEOUT_MS or break because of it.
+async function loadTherapistProfile(
+  supabase: any,
+  userId: string,
+  currentConversationId: string | undefined,
+  isNewConversation: boolean,
+  lovableApiKey: string,
+): Promise<Record<string, unknown>> {
+  const { data: row } = await supabase
+    .from("therapist_profiles")
+    .select("profile, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const existing: Record<string, unknown> = (row?.profile as Record<string, unknown>) ?? {};
+  if (!isNewConversation) return existing;
+
+  try {
+    // bot_conversations.last_message_at is never updated (it stays equal to
+    // created_at), so activity is read from the messages themselves.
+    let otherConvQuery = supabase
+      .from("bot_conversations")
+      .select("id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    if (currentConversationId) otherConvQuery = otherConvQuery.neq("id", currentConversationId);
+    const { data: otherConvs } = await otherConvQuery;
+    const convIds = ((otherConvs ?? []) as any[]).map((c) => c.id);
+
+    const [{ data: mentorRows }, { data: latestToolMsg }] = await Promise.all([
+      supabase
+        .from("mentor_conversations")
+        .select("messages, messages_archive, updated_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(3),
+      convIds.length > 0
+        ? supabase
+            .from("bot_messages")
+            .select("created_at")
+            .in("conversation_id", convIds)
+            .eq("role", "user")
+            .order("created_at", { ascending: false })
+            .limit(1)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const stamps: string[] = [];
+    for (const r of (mentorRows ?? []) as any[]) {
+      if (r.updated_at) stamps.push(r.updated_at);
+      const t = lastMessageTs(r.messages);
+      if (t) stamps.push(t);
+    }
+    for (const r of (latestToolMsg ?? []) as any[]) if (r.created_at) stamps.push(r.created_at);
+    const latestActivity = stamps.length
+      ? new Date(Math.max(...stamps.map((x) => new Date(x).getTime()))).toISOString()
+      : null;
+    if (!profileIsStale((row as any)?.updated_at ?? null, latestActivity)) return existing;
+
+    let toolMsgArrays: any[][] = [];
+    if (convIds.length > 0) {
+      const { data: toolMsgs } = await supabase
+        .from("bot_messages")
+        .select("conversation_id, role, content, created_at")
+        .in("conversation_id", convIds)
+        .order("created_at", { ascending: true })
+        .limit(160);
+      const byConv = new Map<string, any[]>();
+      for (const m of (toolMsgs ?? []) as any[]) {
+        if (!byConv.has(m.conversation_id)) byConv.set(m.conversation_id, []);
+        byConv.get(m.conversation_id)!.push(m);
+      }
+      toolMsgArrays = [...byConv.values()];
+    }
+    const mentorMsgArrays = ((mentorRows ?? []) as any[]).map((r) => [
+      ...(Array.isArray(r.messages_archive) ? r.messages_archive : []),
+      ...(Array.isArray(r.messages) ? r.messages : []),
+    ]);
+
+    const sourceText = collectProfileSourceText(mentorMsgArrays, toolMsgArrays);
+    let next: Record<string, string> = {};
+    if (sourceText) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), PROFILE_LLM_TIMEOUT_MS);
+      try {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            temperature: 0,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: PROFILE_EXTRACTION_PROMPT },
+              { role: "user", content: sourceText },
+            ],
+          }),
+        });
+        if (!aiRes.ok) throw new Error(`profile LLM ${aiRes.status}`);
+        const data = await aiRes.json();
+        next = parseProfileResponse(data?.choices?.[0]?.message?.content ?? "{}");
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    const merged = mergeProfile(existing, next);
+    // Written even when empty, so a therapist who has told us nothing useful
+    // isn't re-extracted on every tool they open.
+    await supabase
+      .from("therapist_profiles")
+      .upsert({ user_id: userId, profile: merged, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    console.log("therapist profile refreshed, fields:", Object.keys(merged).join(",") || "(none)");
+    return merged;
+  } catch (e) {
+    console.warn("therapist profile refresh failed, using cached:", e);
+    return existing;
+  }
+}
+
+function buildJourneyContextBlock(
+  journey: any,
+  profile: Record<string, unknown> | null,
+  currentBotKey: string,
+  isEnglish: boolean,
+): string {
   const lang = isEnglish ? "en" : "he";
   const lines: string[] = [];
+
+  // The therapist's own professional details first — exactly what every
+  // agent otherwise opens by asking again.
+  if (profile && typeof profile === "object") {
+    const parts: string[] = [];
+    for (const f of PROFILE_FIELDS) {
+      const val = renderContextValue(profile[f.key], PROFILE_VALUE_MAX);
+      if (val) parts.push(`${f[lang]}: ${val}`);
+    }
+    if (parts.length > 0) lines.push(`- ${isEnglish ? "Professional details" : "פרטים מקצועיים"}: ${parts.join("; ")}`);
+  }
+
+  if (!journey || typeof journey !== "object") {
+    journey = {};
+  }
 
   // Diagnosis first — it's the broadest read on where the therapist is stuck.
   // Prefer the compact summary written at extraction time; fall back to fields.
@@ -149,8 +425,12 @@ function buildJourneyContextBlock(journey: any, currentBotKey: string, isEnglish
     // The agent's own earlier output is excluded on purpose, so it doesn't
     // treat its job as already done when the therapist reopens the same tool.
     if (spec.botKey === currentBotKey) continue;
-    const out = journey[spec.column];
-    if (!out || typeof out !== "object") continue;
+    const rawOut = journey[spec.column];
+    if (!rawOut || typeof rawOut !== "object") continue;
+    // contact_finder_output is saved as a bare array of {profession, reasoning,
+    // name, phone, email}. Only `profession` is ever read (renderContextValue) —
+    // the names/phones/emails are third parties' details and must not leave it.
+    const out: any = Array.isArray(rawOut) ? { contacts: rawOut } : rawOut;
     const parts: string[] = [];
     for (const f of spec.fields) {
       const val = renderContextValue(out[f.key], f.max ?? CONTEXT_FIELD_MAX);
@@ -345,14 +625,20 @@ Never use this marker in any other situation. Never mention the marker in visibl
       // old diagnosis in context would bias it. Never blocks the chat.
       if (botKey !== "practice-diagnosis") {
         try {
-          const { data: journey } = await supabase
-            .from("therapist_journeys")
-            .select(
-              "niche_output, self_presentation_output, pricing_output, contact_finder_output, connection_bridge_output, first_call_practice_output, diagnosis_output, reflection",
-            )
-            .eq("user_id", user!.id)
-            .maybeSingle();
-          systemPrompt += buildJourneyContextBlock(journey, botKey, isEnglish);
+          const [{ data: journey }, profile] = await Promise.all([
+            supabase
+              .from("therapist_journeys")
+              .select(
+                "niche_output, self_presentation_output, pricing_output, contact_finder_output, connection_bridge_output, first_call_practice_output, diagnosis_output, reflection",
+              )
+              .eq("user_id", user!.id)
+              .maybeSingle(),
+            // Professional details (profession, location, fee...). Refreshed
+            // only when a NEW conversation starts after the therapist said
+            // something new; otherwise just the cached card.
+            loadTherapistProfile(supabase, user!.id, currentConversationId, isNewConversation, lovableApiKey),
+          ]);
+          systemPrompt += buildJourneyContextBlock(journey, profile, botKey, isEnglish);
         } catch (e) {
           console.warn("journey context load failed, continuing without it:", e);
         }
