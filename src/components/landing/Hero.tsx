@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowRight, ArrowLeft, Mail, MessageCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroFoundersImg from "@/assets/hero-founders.png";
+import heroFoundersImg from "@/assets/hero-founders.webp";
 import { trackEvent } from "@/lib/analytics";
 
 const fadeUp = {
@@ -107,8 +107,8 @@ export function Hero() {
                 src={heroFoundersImg}
                 alt={isRTL ? "אליאנה ואריאל – על שפת הקליניקה" : "Eliana and Ariel – Therapy Keys"}
                 className="w-full h-auto rounded-tl-[80px] rounded-br-[80px] shadow-3d-float"
-                width={1024}
-                height={1024}
+                width={1672}
+                height={941}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
