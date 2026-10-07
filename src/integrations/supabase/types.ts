@@ -420,6 +420,117 @@ export type Database = {
           },
         ]
       }
+      diagnosis_feedback: {
+        Row: {
+          created_at: string
+          email: string | null
+          feedback_text: string | null
+          id: string
+          language: string | null
+          rating: string
+          recommended_tool: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          feedback_text?: string | null
+          id?: string
+          language?: string | null
+          rating: string
+          recommended_tool?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          feedback_text?: string | null
+          id?: string
+          language?: string | null
+          rating?: string
+          recommended_tool?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      diagnosis_lead_signals: {
+        Row: {
+          avg_user_message_words: number
+          composite_score_v1: number
+          computed_at: string
+          conversation_id: string | null
+          email: string | null
+          emotional_intensity_count: number
+          id: string
+          numbers_mentioned_count: number
+          urgency_phrase_count: number
+          user_id: string
+          user_message_count: number
+        }
+        Insert: {
+          avg_user_message_words?: number
+          composite_score_v1?: number
+          computed_at?: string
+          conversation_id?: string | null
+          email?: string | null
+          emotional_intensity_count?: number
+          id?: string
+          numbers_mentioned_count?: number
+          urgency_phrase_count?: number
+          user_id: string
+          user_message_count?: number
+        }
+        Update: {
+          avg_user_message_words?: number
+          composite_score_v1?: number
+          computed_at?: string
+          conversation_id?: string | null
+          email?: string | null
+          emotional_intensity_count?: number
+          id?: string
+          numbers_mentioned_count?: number
+          urgency_phrase_count?: number
+          user_id?: string
+          user_message_count?: number
+        }
+        Relationships: []
+      }
+      diagnosis_purchase_intents: {
+        Row: {
+          clicked_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          language: string | null
+          purchase_type: string
+          recommended_tool: string
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          language?: string | null
+          purchase_type: string
+          recommended_tool: string
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          language?: string | null
+          purchase_type?: string
+          recommended_tool?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string | null
@@ -1342,6 +1453,24 @@ export type Database = {
           phone?: string
           slug?: string
           therapist_user_id?: string
+        }
+        Relationships: []
+      }
+      therapist_profiles: {
+        Row: {
+          profile: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          profile?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          profile?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
