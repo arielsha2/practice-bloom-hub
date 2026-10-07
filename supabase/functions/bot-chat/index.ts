@@ -24,6 +24,155 @@ interface Message {
   content: string;
 }
 
+// What an agent already knows about the therapist from the OTHER tools, so
+// moving between tools doesn't mean re-introducing themselves each time.
+// Allowlisted fields only (no free-form dumps), each value and the whole
+// block length-capped, so this stays a few hundred tokens per message.
+const CONTEXT_FIELD_MAX = 220;
+const CONTEXT_BLOCK_MAX = 2400;
+
+type ContextField = { key: string; he: string; en: string; max?: number };
+type ContextSpec = {
+  botKey: string;
+  column: string;
+  label: { he: string; en: string };
+  fields: ContextField[];
+};
+
+const CONTEXT_SPECS: ContextSpec[] = [
+  {
+    botKey: "niche-finder",
+    column: "niche_output",
+    label: { he: "הנישה (מציאת הנישה)", en: "Niche (Niche Finder)" },
+    fields: [
+      { key: "ideal_client", he: "המטופל/ת האידיאלי/ת", en: "Ideal client" },
+      { key: "core_pain", he: "הכאב המרכזי", en: "Core pain" },
+      { key: "transformation", he: "השינוי שהמטופל/ת מקבל/ת", en: "Transformation" },
+      { key: "handshake_version", he: "משפט \"לחיצת יד\"", en: "Handshake line" },
+    ],
+  },
+  {
+    botKey: "self-presentation",
+    column: "self_presentation_output",
+    label: { he: "ההצגה העצמית", en: "Self-presentation" },
+    fields: [
+      { key: "external_pain", he: "הכאב החיצוני של המטופל/ת", en: "Client's external pain" },
+      { key: "internal_pain", he: "הכאב הפנימי", en: "Internal pain" },
+      { key: "desire", he: "הכמיהה", en: "Desire" },
+      { key: "result", he: "התוצאה", en: "Result" },
+      { key: "story_version", he: "גרסת הסיפור", en: "Story version", max: 320 },
+    ],
+  },
+  {
+    botKey: "pricing-calculator",
+    column: "pricing_output",
+    label: { he: "התמחור", en: "Pricing" },
+    fields: [
+      { key: "comfort_range_low", he: "תעריף נוח מינימלי", en: "Comfort rate (low)" },
+      { key: "comfort_range_high", he: "תעריף נוח מקסימלי", en: "Comfort rate (high)" },
+      { key: "recommended_rate", he: "תעריף מומלץ", en: "Recommended rate" },
+      { key: "target_clients_per_week", he: "מטופלים בשבוע (יעד)", en: "Target clients per week" },
+      { key: "monthly_income", he: "הכנסה חודשית רצויה", en: "Target monthly income" },
+    ],
+  },
+  {
+    botKey: "contact-finder",
+    column: "contact_finder_output",
+    label: { he: "אנשי קשר להפניות", en: "Referral contacts" },
+    fields: [{ key: "contacts", he: "סוגי אנשי קשר שמופו", en: "Contact types mapped", max: 300 }],
+  },
+  {
+    botKey: "connection-bridge",
+    column: "connection_bridge_output",
+    label: { he: "גשר הקשר", en: "Connection Bridge" },
+    fields: [
+      { key: "contact_type", he: "סוג איש הקשר שתורגל", en: "Contact type practiced" },
+      { key: "next_action", he: "הצעד הבא שסוכם", en: "Agreed next step" },
+      { key: "key_improvement", he: "השיפור המרכזי", en: "Key improvement" },
+    ],
+  },
+  {
+    botKey: "first-call-practice",
+    column: "first_call_practice_output",
+    label: { he: "תרגול שיחת הטלפון הראשונה", en: "First-call practice" },
+    fields: [
+      { key: "presenting_concern", he: "הקושי שתורגל", en: "Concern practiced" },
+      { key: "weakest_trust", he: "האמון החלש ביותר", en: "Weakest trust" },
+      { key: "internal_blockers", he: "חסמים פנימיים", en: "Internal blockers" },
+      { key: "pricing_moment", he: "התנהלות סביב המחיר", en: "Handling of price" },
+      { key: "key_improvement", he: "השיפור המרכזי", en: "Key improvement" },
+    ],
+  },
+];
+
+// The extractors fill gaps with placeholders ("something general", "not
+// said"). Passing those on would present filler to the next agent as fact.
+const CONTEXT_FILLER = new Set([
+  "משהו כללי", "כללי", "לא נאמר", "לא צוין", "לא ידוע", "אין", "לא רלוונטי",
+  "general", "something general", "not said", "not stated", "unknown", "none", "n/a",
+]);
+
+function renderContextValue(v: unknown, max: number): string {
+  let s = "";
+  if (typeof v === "string") s = v;
+  else if (typeof v === "number") s = String(v);
+  else if (Array.isArray(v)) {
+    s = v
+      .map((x: any) => (typeof x === "string" ? x : x?.profession ?? ""))
+      .filter((x: string) => typeof x === "string" && x.trim())
+      .join("; ");
+  }
+  s = s.replace(/\s+/g, " ").trim();
+  if (CONTEXT_FILLER.has(s.toLowerCase().replace(/[.!…\-–—:;,\s]+$/g, ""))) return "";
+  return s.length > max ? s.slice(0, max - 1) + "…" : s;
+}
+
+function buildJourneyContextBlock(journey: any, currentBotKey: string, isEnglish: boolean): string {
+  if (!journey || typeof journey !== "object") return "";
+  const lang = isEnglish ? "en" : "he";
+  const lines: string[] = [];
+
+  // Diagnosis first — it's the broadest read on where the therapist is stuck.
+  // Prefer the compact summary written at extraction time; fall back to fields.
+  const diag = journey.diagnosis_output;
+  const diagSummary: unknown = journey.reflection?.tool_summaries?.["practice-diagnosis"]?.summary;
+  let diagText = typeof diagSummary === "string" ? renderContextValue(diagSummary, 400) : "";
+  if (!diagText && diag && typeof diag === "object") {
+    diagText = [diag.presenting_theory, diag.diagnosis_summary, diag.bottleneck_description]
+      .map((x) => renderContextValue(x, 200))
+      .filter(Boolean)
+      .join(" | ");
+  }
+  if (diagText) lines.push(`- ${isEnglish ? "Diagnosis" : "האבחון"}: ${diagText}`);
+
+  for (const spec of CONTEXT_SPECS) {
+    // The agent's own earlier output is excluded on purpose, so it doesn't
+    // treat its job as already done when the therapist reopens the same tool.
+    if (spec.botKey === currentBotKey) continue;
+    const out = journey[spec.column];
+    if (!out || typeof out !== "object") continue;
+    const parts: string[] = [];
+    for (const f of spec.fields) {
+      const val = renderContextValue(out[f.key], f.max ?? CONTEXT_FIELD_MAX);
+      if (val) parts.push(`${f[lang]}: ${val}`);
+    }
+    if (parts.length > 0) lines.push(`- ${spec.label[lang]}: ${parts.join("; ")}`);
+  }
+
+  if (lines.length === 0) return "";
+
+  let body = "";
+  for (const line of lines) {
+    if ((body + line).length > CONTEXT_BLOCK_MAX) break;
+    body += (body ? "\n" : "") + line;
+  }
+  if (!body) return "";
+
+  return isEnglish
+    ? `\n\n═══════════════════════════════\nContext from the therapist's earlier work in TherapyKeys (mandatory to use):\n═══════════════════════════════\n${body}\n\nHow to use this (mandatory — it takes priority over any step in your instructions that asks the therapist to introduce themselves or describe their practice, client or background): this was gathered in earlier tools. Use it silently to personalize. Do NOT ask again about anything already covered above — skip or shorten that step. If a detail matters for your current task, confirm it in one short sentence instead of asking from scratch (e.g. "I see your focus is X — still right?"). Do not recite this block or mention that you have it. If what the therapist says now differs from it, trust what they say now.`
+    : `\n\n═══════════════════════════════\nהקשר מהעבודה הקודמת של המטפל/ת במערכת TherapyKeys (חובה להשתמש):\n═══════════════════════════════\n${body}\n\nאיך להשתמש בזה (חובה — גובר על כל שלב בהנחיות שלך שמבקש מהמטפל/ת להציג את עצמם, את העשייה, את המטופל/ת או את הרקע): המידע הזה נאסף בכלים הקודמים. השתמש/י בו בשקט כדי להתאים אישית. אל תשאל/י שוב על שום דבר שכבר מופיע למעלה — דלג/י על השלב או קצר/י אותו. אם פרט חשוב למשימה הנוכחית, אשר/י אותו במשפט קצר אחד ("אני רואה שהמיקוד שלך הוא X — עדיין נכון?") במקום לשאול מאפס. אל תצטט/י את הבלוק ואל תציין/י שיש לך אותו. אם מה שהמטפל/ת אומר/ת עכשיו שונה ממה שכתוב כאן — האמן/י למה שנאמר עכשיו.`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -188,6 +337,25 @@ Never use this marker in any other situation. Never mention the marker in visibl
         systemPrompt += isEnglish
           ? `\n\n---\nInformation gathered about the user (use this to give a personalized response):\n${memorySection}\n---`
           : `\n\n---\nמידע שנאסף על המשתמש (השתמש במידע זה כדי לתת מענה מותאם אישית):\n${memorySection}\n---`;
+      }
+
+      // 3b. What the therapist already told the OTHER tools (niche, pricing,
+      // diagnosis...), so switching tools doesn't mean starting over. Skipped
+      // for the diagnosis itself: it's the intake for a fresh person, and an
+      // old diagnosis in context would bias it. Never blocks the chat.
+      if (botKey !== "practice-diagnosis") {
+        try {
+          const { data: journey } = await supabase
+            .from("therapist_journeys")
+            .select(
+              "niche_output, self_presentation_output, pricing_output, contact_finder_output, connection_bridge_output, first_call_practice_output, diagnosis_output, reflection",
+            )
+            .eq("user_id", user!.id)
+            .maybeSingle();
+          systemPrompt += buildJourneyContextBlock(journey, botKey, isEnglish);
+        } catch (e) {
+          console.warn("journey context load failed, continuing without it:", e);
+        }
       }
 
       // 4. Load conversation history (last 20 messages)
