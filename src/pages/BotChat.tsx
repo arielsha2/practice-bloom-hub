@@ -159,9 +159,11 @@ const BotChat = () => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
       if (msg.role === 'assistant') {
-        const match = msg.content.match(/\[STAGE:(\d)\]/);
-        if (match) {
-          const stage = parseInt(match[1], 10);
+        // A message can carry several markers ("[STAGE:3] ... [STAGE:4]" when the model merges the summary and the
+        // recommendation), and the highest one is where the conversation actually is.
+        const markers = [...msg.content.matchAll(/\[STAGE:(\d)\]/g)].map((m) => parseInt(m[1], 10));
+        if (markers.length) {
+          const stage = Math.max(...markers);
           setCurrentStage(stage);
           if (
             botKey === 'practice-diagnosis' &&

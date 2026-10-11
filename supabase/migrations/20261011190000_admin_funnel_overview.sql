@@ -35,10 +35,12 @@ begin
   -- diagnosis conversations in the window, with the highest stage each one reached
   conv as (
     select c.id, c.user_id,
-           coalesce(max((substring(m.content from '\[STAGE:([0-9])\]'))::int) filter (where m.role = 'assistant'), 0) as stage,
+           coalesce(max(mk.stage) filter (where m.role = 'assistant'), 0) as stage,
            coalesce(bool_or(m.role = 'user'), false) as has_user
     from bot_conversations c
     left join bot_messages m on m.conversation_id = c.id
+    -- the model sometimes writes "[STAGE:3] ... [STAGE:4]" in ONE message (75 of 130 stage-4 messages did), so take the highest marker
+    left join lateral (select max((x[1])::int) as stage from regexp_matches(m.content, '\[STAGE:([0-9])\]', 'g') x) mk on true
     where c.bot_key = 'practice-diagnosis' and c.created_at >= s and c.created_at < u
     group by c.id, c.user_id
   ),
@@ -52,13 +54,13 @@ begin
     select user_id, purchase_type from diagnosis_purchase_intents where clicked_at >= s and clicked_at < u
   ),
   single_buys as (
-    select t.user_id, t.bot_key, t.source,
-           nullif(to_jsonb(t)->>'created_at', '')::timestamptz as at
-    from user_tool_access t
+    select t.user_id, t.bot_key, t.source, t.at
+    from (
+      select x.*, nullif(coalesce(to_jsonb(x)->>'granted_at', to_jsonb(x)->>'created_at'), '')::timestamptz as at
+      from user_tool_access x
+    ) t
     where t.source in ('grow_single_tool', 'paypal_single_tool')
-      and ( nullif(to_jsonb(t)->>'created_at', '') is null
-            or (nullif(to_jsonb(t)->>'created_at', '')::timestamptz >= s
-                and nullif(to_jsonb(t)->>'created_at', '')::timestamptz < u) )
+      and (t.at is null or (t.at >= s and t.at < u))
   ),
   full_buys as (
     select p.id as user_id, p.plan_updated_at as at,
@@ -151,3 +153,5 @@ $$;
 -- Only signed-in users may call it, and the function itself rejects non-admins.
 revoke all on function public.admin_funnel_overview(timestamptz, timestamptz) from public;
 grant execute on function public.admin_funnel_overview(timestamptz, timestamptz) to authenticated;
+-- Supabase grants EXECUTE on new functions to anon by default; the function rejects non-admins anyway, but there is no reason to leave it callable.
+revoke execute on function public.admin_funnel_overview(timestamptz, timestamptz) from anon;
