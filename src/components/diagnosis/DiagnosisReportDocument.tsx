@@ -205,7 +205,7 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
         style={{ display: 'flex', alignItems: 'center', gap: 16, paddingBottom: 14, borderBottom: `3px solid ${C.burgundy}` }}
       >
         {CLINIC_LOGO_SRC ? (
-          <img src={CLINIC_LOGO_SRC} alt="" style={{ height: 92, width: "auto", flex: "0 0 auto" }} crossOrigin="anonymous" />
+          <img src={CLINIC_LOGO_SRC} alt="" style={{ height: 120, width: "auto", flex: "0 0 auto" }} crossOrigin="anonymous" />
         ) : (
           <div
             style={{
