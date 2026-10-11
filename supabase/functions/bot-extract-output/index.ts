@@ -580,6 +580,507 @@ function buildToolSummary(botKey: string, structured: unknown, isEnglish: boolea
   return out;
 }
 
+// ===== diagnosis report: begin =====
+// The formal, bulleted diagnosis report with a numeric anchor score. Same rule as
+// the rest of this file: the system computes, the LLM only phrases. The model
+// rates 24 fixed rubric items from the transcript (2 = in place, 1 = partial,
+// 0 = not in place / visible problem, null = cannot tell) and must quote the fact
+// it relied on; code drops any rating without evidence, then computes every score.
+// Rubric ids and wording live here (the report stores the labels it was scored
+// with, so the frontend needs no copy of this table). Bump RUBRIC_VERSION on any
+// change to the items, so scores from different rubric versions are never compared.
+const RUBRIC_VERSION = 1;
+
+type RubricItem = { id: string; he: string; en: string; guide_he: string; guide_en: string };
+type RubricArea = { area: string; label_he: string; label_en: string; items: RubricItem[] };
+
+const RUBRIC: RubricArea[] = [
+  {
+    area: "niche-finder", label_he: "נישה ובידול", label_en: "Niche and differentiation",
+    items: [
+      { id: "n1", he: "משפט מיקוד אחד ברור: למי העבודה מיועדת ובמה היא עוזרת", en: "One clear focus sentence: who the work is for and what it helps with",
+        guide_he: "2 = יש ניסוח אחד חד שנאמר בשיחה; 1 = יש כיוון אבל מנוסח במעורפל או בכמה דרכים; 0 = לא מצליחים לנסח, או \"עובדים עם כולם\"", guide_en: "2 = one sharp formulation stated in the conversation; 1 = a direction exists but is vague or phrased several ways; 0 = cannot be stated, or \"I work with everyone\"" },
+      { id: "n2", he: "עמיתים יודעים אילו פונים להפנות אליך", en: "Colleagues know which clients to refer to you",
+        guide_he: "2 = עמיתים מפנים את הפונים הנכונים; 1 = חלק מהעמיתים יודעים; 0 = עמיתים לא יודעים מה להפנות או מפנים פונים לא מתאימים", guide_en: "2 = colleagues send the right clients; 1 = some colleagues know; 0 = colleagues don't know what to send, or send unsuitable clients" },
+      { id: "n3", he: "מסר ממוקד בנוכחות הפומבית (אתר, פרופיל, פוסטים)", en: "A focused message in the public presence (site, profile, posts)",
+        guide_he: "2 = המסר הפומבי תואם את המיקוד; 1 = חלקי או לא עקבי; 0 = המסר כללי, או שאין נוכחות פומבית כלל", guide_en: "2 = the public message matches the focus; 1 = partial or inconsistent; 0 = generic, or no public presence at all" },
+      { id: "n4", he: "בידול ברור ממטפלים דומים", en: "Clear differentiation from similar therapists",
+        guide_he: "2 = אפשר לומר במה זה שונה; 1 = יש תחושת שוני אך לא מנוסחת; 0 = לא ברור במה זה שונה", guide_en: "2 = can say what makes it different; 1 = a sense of difference that isn't articulated; 0 = unclear what is different" },
+    ],
+  },
+  {
+    area: "pricing-calculator", label_he: "תמחור", label_en: "Pricing",
+    items: [
+      { id: "p1", he: "המחיר נקבע במודע ולא בדיעבד", en: "The fee was set deliberately, not by default",
+        guide_he: "2 = המחיר נבחר מתוך שיקול שאפשר לנמק; 1 = נקבע בעיקר לפי מה שאחרים גובים או לפי תחושה; 0 = נקבע בלי חשיבה או מתוך חשש", guide_en: "2 = chosen with reasoning that can be explained; 1 = set mostly by what others charge or by feel; 0 = set without thought or out of fear" },
+      { id: "p2", he: "נוחות באמירת המחיר", en: "Comfort stating the fee",
+        guide_he: "2 = אומרים את המחיר בנוחות; 1 = אומרים אבל עם התנצלות או היסוס; 0 = נמנעים או מתקשים לומר אותו", guide_en: "2 = states the fee comfortably; 1 = states it with apology or hesitation; 0 = avoids or struggles to say it" },
+      { id: "p3", he: "עמידה במחיר כשפונה מהסס", en: "Holding the fee when a prospective client hesitates",
+        guide_he: "2 = עומדים במחיר; 1 = לפעמים מוותרים; 0 = בדרך כלל מורידים מחיר כשיש היסוס", guide_en: "2 = holds the fee; 1 = sometimes concedes; 0 = usually lowers it at the first hesitation" },
+      { id: "p4", he: "התאמת המחיר לביקוש ולוותק", en: "The fee fits demand and experience",
+        guide_he: "2 = המחיר תואם (ביקוש גבוה ומחיר ראוי); 1 = פער מתון; 0 = פער ברור (למשל רשימת המתנה או ותק רב עם מחיר נמוך)", guide_en: "2 = fee fits (strong demand, fitting fee); 1 = moderate gap; 0 = clear gap (e.g. a waitlist or long experience with a low fee)" },
+    ],
+  },
+  {
+    area: "self-presentation", label_he: "הצגה עצמית", label_en: "Self-presentation",
+    items: [
+      { id: "s1", he: "תיאור כתוב ברור של העבודה (אתר או פרופיל)", en: "A clear written description of the work (site or profile)",
+        guide_he: "2 = קיים תיאור ברור ועדכני; 1 = קיים אך כללי או לא מעודכן; 0 = אין", guide_en: "2 = a clear, current description exists; 1 = exists but generic or outdated; 0 = none" },
+      { id: "s2", he: "נוחות בתיאור העבודה בפני אדם זר", en: "Comfort describing the work to a stranger",
+        guide_he: "2 = מספרים בקלות ובבהירות; 1 = מצליחים אך עם מאמץ או גמגום; 0 = נמנעים או מרגישים לא נוח מאוד", guide_en: "2 = describes it easily and clearly; 1 = manages with effort; 0 = avoids it or is very uncomfortable" },
+      { id: "s3", he: "נוכחות עקבית במקום גלוי", en: "A consistent presence somewhere visible",
+        guide_he: "2 = נוכחות קבועה (פרסום, כתיבה, הרצאות וכד'); 1 = נוכחות מקרית; 0 = כמעט אין נוכחות גלויה", guide_en: "2 = regular presence (posts, writing, talks etc.); 1 = occasional; 0 = almost no visible presence" },
+      { id: "s4", he: "שפה שהפונים מזהים כשלהם", en: "Language that prospective clients recognize as their own",
+        guide_he: "2 = המסר בשפה של הפונים; 1 = שילוב של שפה מקצועית ושל הפונים; 0 = שפה מקצועית בלבד שהפונים לא מזהים", guide_en: "2 = message in the clients' own language; 1 = a mix; 0 = professional jargon the clients don't recognize" },
+    ],
+  },
+  {
+    area: "contact-finder", label_he: "רשת הפניות", label_en: "Referral network",
+    items: [
+      { id: "r1", he: "לפחות שלושה מקורות הפניה פעילים", en: "At least three active referral sources",
+        guide_he: "2 = שלושה מקורות ויותר; 1 = אחד עד שניים; 0 = אין מקורות הפניה פעילים", guide_en: "2 = three or more; 1 = one or two; 0 = no active sources" },
+      { id: "r2", he: "אין תלות במקור הפניה יחיד", en: "No dependence on a single referral source",
+        guide_he: "2 = הפניות מכמה מקורות; 1 = מקור אחד מוביל אך יש נוספים; 0 = כמעט כל הפונים ממקור אחד", guide_en: "2 = referrals from several sources; 1 = one leads but others exist; 0 = almost all clients come from one source" },
+      { id: "r3", he: "קשר שוטף עם המפנים", en: "Ongoing contact with the people who refer",
+        guide_he: "2 = קשר קבוע; 1 = קשר מדי פעם; 0 = אין קשר מעבר להפניה עצמה", guide_en: "2 = regular contact; 1 = occasional; 0 = no contact beyond the referral itself" },
+      { id: "r4", he: "הפניות סדירות (בערך אחת לחודש לפחות)", en: "Steady referrals (roughly monthly or more)",
+        guide_he: "2 = הפניות כל חודש; 1 = הפניות לסירוגין; 0 = הפניות נדירות או אין", guide_en: "2 = referrals every month; 1 = on and off; 0 = rare or none" },
+    ],
+  },
+  {
+    area: "connection-bridge", label_he: "גישור קשר", label_en: "Connection-building",
+    items: [
+      { id: "c1", he: "יוזמה ליצירת קשרים מקצועיים חדשים", en: "Initiative in making new professional connections",
+        guide_he: "2 = פונים באופן יזום לאנשים חדשים; 1 = לפעמים; 0 = לא יוזמים, ממתינים שיפנו", guide_en: "2 = proactively reaches out to new people; 1 = sometimes; 0 = does not initiate, waits to be approached" },
+      { id: "c2", he: "הצעת ערך ברורה לעמית", en: "A clear value proposition for a colleague",
+        guide_he: "2 = ברור מה העמית מרוויח מהקשר; 1 = ברור חלקית; 0 = לא ברור, או שהפנייה היא רק בקשה", guide_en: "2 = clear what the colleague gains; 1 = partly clear; 0 = unclear, or the approach is only an ask" },
+      { id: "c3", he: "בהירות לעמית מי מתאים לך", en: "Clarity to colleagues about who is a good fit for you",
+        guide_he: "2 = העמית יודע בדיוק; 1 = חלקית; 0 = לא מובהר", guide_en: "2 = the colleague knows exactly; 1 = partly; 0 = not made clear" },
+      { id: "c4", he: "מעקב אחרי היכרות חדשה", en: "Following up after a new acquaintance",
+        guide_he: "2 = מעקב קבוע; 1 = מעקב מקרי; 0 = ההיכרות נגמרת בלי מעקב", guide_en: "2 = consistent follow-up; 1 = occasional; 0 = contact fades with no follow-up" },
+    ],
+  },
+  {
+    area: "first-call-practice", label_he: "שיחת הטלפון הראשונה", label_en: "The first phone call",
+    items: [
+      { id: "f1", he: "שיעור הפניות שהופכות לפגישה", en: "Share of inquiries that become a first session",
+        guide_he: "2 = 60% ומעלה; 1 = 30% עד 59%; 0 = מתחת ל-30%. אם אין מספר ואין תיאור — null", guide_en: "2 = 60% or more; 1 = 30% to 59%; 0 = under 30%. If there is no number and no description — null" },
+      { id: "f2", he: "הובלת השיחה לקביעת מועד", en: "Leading the call toward booking a time",
+        guide_he: "2 = השיחה מסתיימת בקביעת מועד; 1 = לפעמים; 0 = השיחה נגמרת בלי קביעה", guide_en: "2 = the call ends with a booked time; 1 = sometimes; 0 = calls end without booking" },
+      { id: "f3", he: "מענה בביטחון לשאלת המחיר", en: "Answering the fee question with confidence",
+        guide_he: "2 = עונים בביטחון; 1 = עונים בהיסוס; 0 = נמנעים או מתחמקים", guide_en: "2 = answers confidently; 1 = answers hesitantly; 0 = avoids or deflects" },
+      { id: "f4", he: "מעקב אחרי פונה שנעלם", en: "Following up with a prospective client who went quiet",
+        guide_he: "2 = חוזרים לפונה; 1 = לפעמים; 0 = לא חוזרים", guide_en: "2 = follows up; 1 = sometimes; 0 = does not" },
+    ],
+  },
+];
+
+const RUBRIC_AREAS = RUBRIC.map((a) => a.area);
+const RUBRIC_ITEM_BY_ID = new Map<string, { area: string; item: RubricItem }>(
+  RUBRIC.flatMap((a) => a.items.map((item) => [item.id, { area: a.area, item }] as [string, { area: string; item: RubricItem }])),
+);
+
+type Rating = 0 | 1 | 2;
+type ScoreBand = "immediate" | "improve" | "strong";
+interface AreaScore {
+  area: string;
+  label: string;
+  score: number | null; // 1.0 - 10.0, one decimal; null when fewer than 2 items could be rated
+  band: ScoreBand | null;
+  known: number;
+  total: number;
+}
+
+function bandFor(score: number): ScoreBand {
+  return score < 4 ? "immediate" : score < 7 ? "improve" : "strong";
+}
+
+// 1 + 9 x (sum of known ratings / (2 x known items)); one decimal.
+function scoreFromRatings(ratings: Array<Rating | null>): { score: number | null; known: number } {
+  const known = ratings.filter((r): r is Rating => r === 0 || r === 1 || r === 2);
+  if (known.length < 2) return { score: null, known: known.length };
+  const sum = known.reduce<number>((a, b) => a + b, 0);
+  return { score: Math.round((1 + (9 * sum) / (2 * known.length)) * 10) / 10, known: known.length };
+}
+
+function computeScores(ratingById: Map<string, Rating>, isEnglish: boolean) {
+  const areas: AreaScore[] = RUBRIC.map((a) => {
+    const { score, known } = scoreFromRatings(a.items.map((i) => ratingById.get(i.id) ?? null));
+    return {
+      area: a.area,
+      label: isEnglish ? a.label_en : a.label_he,
+      score,
+      band: score === null ? null : bandFor(score),
+      known,
+      total: a.items.length,
+    };
+  });
+  const scored = areas.filter((a) => a.score !== null) as Array<AreaScore & { score: number }>;
+  const overall = scored.length
+    ? Math.round((scored.reduce((s, a) => s + a.score, 0) / scored.length) * 10) / 10
+    : null;
+  let band: ScoreBand | null = overall === null ? null : bandFor(overall);
+  // One badly failing area must not hide behind a "strong" average of the few areas that were scored.
+  if (band === "strong" && scored.some((a) => a.band === "immediate")) band = "improve";
+  return { overall, band, areas, scored_areas: scored.length };
+}
+
+// Central-failure area first, then ascending score; areas with no score last.
+function priorityOrder(areas: AreaScore[], centralArea: string): string[] {
+  const rest = areas
+    .filter((a) => a.area !== centralArea)
+    .sort((a, b) => (a.score ?? 99) - (b.score ?? 99))
+    .map((a) => a.area);
+  return [centralArea, ...rest];
+}
+
+// "Evidence" that only states the topic was not discussed. Such an item is unknown, not 0.
+const ABSENCE_EVIDENCE_RES = [
+  /לא\s+(?:נשאל|נשאלה|נשאלו|נבדק|נבדקה|נבדקו|עלה|עלתה|עלו|נדון|נדונה|נדונו|נגע|נגעו|התייחס|התייחסה|התייחסו)/,
+  /לא\s+(?:צוין|צוינה|צוינו|נאמר|נאמרה|נאמרו|הוזכר|הוזכרה|הוזכרו|ניתן|ניתנה|ניתנו|סופק|סופקה|סופקו)/,
+  /אין\s+(?:מידע|התייחסות|עדות|אזכור|פירוט)/,
+  /\b(?:not|never|wasn'?t|weren'?t|was not|were not|isn'?t|is not)\s+(?:asked|discussed|mentioned|stated|specified|addressed|covered|assessed|examined|provided|raised)\b/i,
+  /\b(?:no|without)\s+(?:information|mention|evidence|reference|details?)\b/i,
+  /\bdid(?:n'?t| not)\s+(?:come up|ask|discuss|mention|address)\b/i,
+];
+function isAbsenceEvidence(s: string): boolean {
+  return ABSENCE_EVIDENCE_RES.some((re) => re.test(s));
+}
+
+const REPORT_LIST_MAX = 6;
+const REPORT_TEXT_MAX = 320;
+
+function reportText(v: unknown, max = REPORT_TEXT_MAX): string {
+  if (typeof v !== "string") return "";
+  const s = v.replace(/\s+/g, " ").trim();
+  if (!s || SUMMARY_FILLER.has(s.toLowerCase().replace(/[.!…\-–—:;,\s]+$/g, "")) || isNonAnswer(s)) return "";
+  return s.length > max ? s.slice(0, max - 1) + "…" : s;
+}
+
+function reportList(v: unknown, pick: (x: unknown) => string, max = REPORT_LIST_MAX): string[] {
+  if (!Array.isArray(v)) return [];
+  const out: string[] = [];
+  for (const x of v) {
+    const s = pick(x);
+    if (s && !out.includes(s)) out.push(s);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+// A gender slash ("מטפל/ת", "את/ה") is a copy rule violation; "ו/או" is fine.
+const GENDER_SLASH_RE = /(?<![א-ת])(?!ו\/או)[א-ת]{1,12}\/(?:ת|ה|ית|ים|ות)(?![א-ת])/;
+function hasGenderSlash(s: string): boolean {
+  return GENDER_SLASH_RE.test(s);
+}
+
+// An evidence quote only counts if it really is in what the therapist wrote. The model
+// sometimes "supports" a rating with the mentor's own remarks or with its inference; a
+// verbatim match against the therapist's messages is the one check code can make.
+function normQuote(s: string): string {
+  return s.toLowerCase().replace(/[\s"'\u201c\u201d\u201e\u2019\u2018\u05f3\u05f4.,;:!?()\[\]{}\-\u2013\u2014\u2026]+/g, " ").trim();
+}
+function quoteInText(quote: string, normText: string): boolean {
+  const parts = quote.split(/\.{2,}|\u2026|\[[^\]]*\]/).map(normQuote).filter((p) => p.length >= 4);
+  if (!parts.length || parts.join(" ").length < 6) return false;
+  return parts.every((p) => normText.includes(p));
+}
+const MAX_ITEMS_PER_QUOTE = 2;
+
+interface ValidReport {
+  therapist_gender: "female" | "male" | "unknown";
+  ratings: Array<{ id: string; area: string; label: string; rating: Rating | null; evidence: string; quote: string }>;
+  works: string[];
+  needs_work: Array<{ area: string; point: string }>;
+  central_failure: { area: string; statement: string; cause: string; evidence: string[] };
+  fix_approach: string[];
+  action_steps: Array<{ step: string; outcome: string }>;
+  not_now: Array<{ item: string; reason: string }>;
+  flags: string[];
+}
+
+// Returns null when the report is unusable (no central failure / no steps); the
+// caller then falls back to the legacy display. Anything it keeps is cleaned.
+function validateReport(raw: unknown, isEnglish: boolean, therapistText?: string): ValidReport | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const flags: string[] = [];
+
+  const ratingsIn = Array.isArray(r.ratings) ? r.ratings : [];
+  const normTherapist = therapistText === undefined ? "" : normQuote(therapistText);
+  const quoteUse = new Map<string, number>();
+  const seen = new Set<string>();
+  const ratings: ValidReport["ratings"] = [];
+  for (const x of ratingsIn) {
+    if (!x || typeof x !== "object") continue;
+    const e = x as Record<string, unknown>;
+    const id = typeof e.id === "string" ? e.id.trim().toLowerCase() : "";
+    const meta = RUBRIC_ITEM_BY_ID.get(id);
+    if (!meta || seen.has(id)) continue;
+    seen.add(id);
+    const evidence = reportText(e.evidence, 240);
+    // No quoted fact, no rating: an unsupported number is worse than "unknown". Evidence
+    // that merely says the topic never came up is also no fact (observed live: the model
+    // rated such items 0 with "not asked and not mentioned" as its "evidence").
+    let rating: Rating | null =
+      evidence && !isAbsenceEvidence(evidence) && (e.rating === 0 || e.rating === 1 || e.rating === 2) ? (e.rating as Rating) : null;
+    const quote = typeof e.evidence_quote === "string" ? e.evidence_quote.trim() : "";
+    if (rating !== null && therapistText !== undefined) {
+      const nq = normQuote(quote);
+      if (!quoteInText(quote, normTherapist)) rating = null;
+      else if ((quoteUse.get(nq) ?? 0) >= MAX_ITEMS_PER_QUOTE) rating = null; // one remark can't carry many items
+      else quoteUse.set(nq, (quoteUse.get(nq) ?? 0) + 1);
+    }
+    ratings.push({ id, area: meta.area, label: isEnglish ? meta.item.en : meta.item.he, rating, evidence: rating === null ? "" : evidence, quote: rating === null ? "" : quote.slice(0, 240) });
+  }
+  // Items the model skipped are recorded as unknown so every report lists all 24.
+  for (const [id, meta] of RUBRIC_ITEM_BY_ID) {
+    if (!seen.has(id)) ratings.push({ id, area: meta.area, label: isEnglish ? meta.item.en : meta.item.he, rating: null, evidence: "", quote: "" });
+  }
+  const order = [...RUBRIC_ITEM_BY_ID.keys()];
+  ratings.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+
+  const cf = (r.central_failure && typeof r.central_failure === "object" ? r.central_failure : {}) as Record<string, unknown>;
+  const statement = reportText(cf.statement, 400);
+  if (!statement) return null;
+  const area = RUBRIC_AREAS.includes(normalizeRecommendedTool(cf.area)) ? normalizeRecommendedTool(cf.area) : "";
+  if (!area) return null;
+
+  const steps: Array<{ step: string; outcome: string }> = [];
+  if (Array.isArray(r.action_steps)) {
+    for (const x of r.action_steps) {
+      const e = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+      const step = reportText(typeof x === "string" ? x : e.step);
+      if (!step) continue;
+      steps.push({ step, outcome: reportText(e.outcome) });
+      if (steps.length >= 5) break;
+    }
+  }
+  if (!steps.length) return null;
+
+  const needs_work: ValidReport["needs_work"] = [];
+  if (Array.isArray(r.needs_work)) {
+    for (const x of r.needs_work) {
+      const e = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+      const point = reportText(typeof x === "string" ? x : e.point);
+      if (!point) continue;
+      const a = typeof e.area === "string" ? normalizeRecommendedTool(e.area) : "";
+      needs_work.push({ area: RUBRIC_AREAS.includes(a) ? a : "", point });
+      if (needs_work.length >= REPORT_LIST_MAX) break;
+    }
+  }
+
+  const not_now: ValidReport["not_now"] = [];
+  if (Array.isArray(r.not_now)) {
+    for (const x of r.not_now) {
+      const e = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+      const item = reportText(typeof x === "string" ? x : e.item);
+      if (!item) continue;
+      not_now.push({ item, reason: reportText(e.reason) });
+      if (not_now.length >= 3) break;
+    }
+  }
+
+  const gender = r.therapist_gender === "female" || r.therapist_gender === "male" ? r.therapist_gender : "unknown";
+  const report: ValidReport = {
+    therapist_gender: gender,
+    ratings,
+    works: reportList(r.works, (x) => reportText(x)),
+    needs_work,
+    central_failure: {
+      area,
+      statement,
+      cause: reportText(cf.cause, 400),
+      evidence: reportList(cf.evidence, (x) => reportText(x, 240), 3),
+    },
+    fix_approach: reportList(r.fix_approach, (x) => reportText(x), 4),
+    action_steps: steps,
+    not_now,
+    flags,
+  };
+
+  if (!isEnglish) {
+    const all = [
+      ...report.works, ...report.fix_approach, statement, report.central_failure.cause,
+      ...report.needs_work.map((n) => n.point), ...steps.flatMap((s) => [s.step, s.outcome]),
+      ...not_now.flatMap((n) => [n.item, n.reason]),
+    ];
+    if (all.some(hasGenderSlash)) flags.push("gender_slash");
+  }
+  return report;
+}
+
+function buildReport(valid: ValidReport, isEnglish: boolean) {
+  const ratingById = new Map<string, Rating>();
+  for (const x of valid.ratings) if (x.rating !== null) ratingById.set(x.id, x.rating);
+  const scores = computeScores(ratingById, isEnglish);
+  return {
+    version: 1,
+    rubric_version: RUBRIC_VERSION,
+    language: isEnglish ? "en" : "he",
+    generated_at: new Date().toISOString(),
+    therapist_gender: valid.therapist_gender,
+    scores,
+    priority_order: priorityOrder(scores.areas, valid.central_failure.area),
+    ratings: valid.ratings,
+    works: valid.works,
+    needs_work: valid.needs_work,
+    central_failure: valid.central_failure,
+    fix_approach: valid.fix_approach,
+    action_steps: valid.action_steps,
+    not_now: valid.not_now,
+    flags: valid.flags,
+  };
+}
+
+function rubricPromptBlock(isEnglish: boolean): string {
+  return RUBRIC.map((a) =>
+    `${a.area} — ${isEnglish ? a.label_en : a.label_he}\n` +
+    a.items.map((i) => `  ${i.id}: ${isEnglish ? i.en : i.he}\n      ${isEnglish ? i.guide_en : i.guide_he}`).join("\n"),
+  ).join("\n\n");
+}
+
+const HE_REPORT_SYSTEM = () => `אתה מכין דו"ח אבחון רשמי למטפל או למטפלת בפסיכותרפיה, על סמך שיחת האבחון שהתקיימה זה עתה. הדו"ח הוא מסמך מקצועי שהמטפל חוזר אליו אחרי זמן ומתקן ממנו את הליקויים בבניית הקליניקה הפרטית. זה לא סיכום שיחתי.
+
+החזר JSON תקין בלבד, בדיוק במבנה הזה:
+{
+  "therapist_gender": "female" | "male" | "unknown",
+  "ratings": [ { "id": "n1", "rating": 2 | 1 | 0 | null, "evidence": "העובדה מהשיחה שעליה הדירוג נשען", "evidence_quote": "ציטוט מילולי קצר מהודעה של המטפל" }, ...כל 24 הפריטים ],
+  "works": ["נקודה קצרה על מה שעובד", ...],
+  "needs_work": [ { "area": "<מפתח אזור>", "point": "נקודה קצרה על מה שלא עובד" }, ...],
+  "central_failure": { "area": "<מפתח אזור>", "statement": "מה נקודת הכשל המרכזית, במשפט אחד", "cause": "הסיבה לכשל, במשפט או שניים", "evidence": ["ציטוט או עובדה מהשיחה", ...] },
+  "fix_approach": ["נקודה קצרה: איך מתקנים את הכשל", ...],
+  "action_steps": [ { "step": "צעד מעשי אחד, בניסוח של פעולה", "outcome": "מה יהיה קיים אחרי שהצעד בוצע" }, ...],
+  "not_now": [ { "item": "מה לא כדאי לעסוק בו כעת", "reason": "למה" }, ...]
+}
+
+אזורי הדירוג והפריטים (מפתח האזור הוא הערך שיש לכתוב בשדות area):
+
+${rubricPromptBlock(false)}
+
+כללי הדירוג:
+1. דרג רק לפי דברי המטפל עצמו בשיחה (עובדות, מספרים, תיאורים, אישורים שלו להשערות המנטור). בשדה evidence כתוב את העובדה הקונקרטית שעליה נשען הדירוג (מספר, תיאור, ציטוט קצר של דברי המטפל). אם אין עובדה כזו, כתוב rating: null ו-evidence ריק. הדירוג null עדיף על ניחוש.
+2. אל תסיק מסקנה על פריט מתוך שתיקה או מתוך היעדר אזכור. פריט שלא נשאל ולא נאמר לגביו דבר הוא null, ו-evidence שלו ריק. כתיבה כמו "לא נשאל", "לא צוין" או "לא עלה בשיחה" בשדה evidence אסורה: במקרה כזה כתוב rating: null.
+3. כל דירוג שאינו null חייב לכלול evidence_quote: ציטוט מילולי, מדויק, באורך של כמה מילים לפחות, מתוך הודעה של המטפל (שורה שמתחילה ב"מטפל:"). לא מדברי המנטור, לא ניסוח מחדש. הציטוט נבדק בקוד מול הודעות המטפל, ודירוג בלי ציטוט שנמצא שם בדיוק הופך ל-null. ציטוט אחד תומך בשני פריטים לכל היותר.
+4. הדירוג 0 דורש אמירה חיובית של המטפל שהדבר חסר או בעייתי אצלו (למשל "אין לי אתר", "אני לא יוזם קשרים", "כמעט כולם מגיעים ממקור אחד"). השערה או פרשנות של המנטור שהמטפל לא אישר אינן ראיה ל-0, ולכל היותר מצדיקות null.
+5. נקודת הכשל המרכזית (central_failure.area) חייבת להיות האזור שהשיחה זיהתה כעיקרי ושעליו הומלץ בשלב ההמלצה. אל תבחר אזור אחר.
+
+כללי הכתיבה (חשובים):
+1. עברית תקנית, רשמית ומקצועית. לא שיחתית, לא הבטחות, לא מליצות.
+2. נקודות קצרות: עד משפט אחד או שניים. בלי פסקאות.
+3. פנייה ישירה אל המטפל בגוף שני יחיד. אם מהשיחה ברור המגדר של המטפל (צורות הפנייה, שמו, ניסוח שלו עצמו), השתמש בצורה התואמת וקבע therapist_gender בהתאם. אם המגדר לא ברור, קבע "unknown" ונסח באופן ניטרלי: זמן עבר בגוף שני (סיפרת, ציינת, תיארת), כינויים וסיומות (שלך, עליך, אצלך, אליך), שמות פעולה ("נמצא כי", "מומלץ לבנות"), וצורת רבים. הימנע בניטרלי מהווה, מעתיד וציווי בגוף שני (אתה עושה, תעשי, עשה).
+4. אסור בהחלט לכתוב צורות עם לוכסן כמו "את/ה", "מטפל/ת", "שלך/שלכם". כתוב רק צורה אחת.
+5. ציין עובדות מהשיחה (מספרים, תיאורים) כדי שהקורא יזהה את עצמו. אל תמציא מידע שלא נאמר.
+6. אל תנסח את הבעיה המרכזית כ"שיווק" כללי ואל תנסח את הפתרון כ"לבקש" הפניות. נסח את הפתרון סביב הפיכה לזכור ולבולט בעיני מי שמפנים.
+7. action_steps: 3 עד 5 צעדים, לפי סדר ביצוע. כל צעד ניתן לביצוע בשבועות הקרובים ויש לו תוצר ברור. בלי צעדים שדורשים קורס, צוות או תקציב.
+8. works: 2 עד 5 נקודות על מה שבאמת עובד אצלו, מבוססות על עובדות. אם כמעט אין, כתוב נקודה אחת על הנכס הקיים (ותק, מוטיבציה, נכונות לשיפור) שנאמר בשיחה.
+9. not_now: 0 עד 3 נקודות, רק אם עלה בשיחה נושא שהמטפל חושב שהוא חשוב אך אינו הדחוף.
+10. לא להזכיר "ציון", "דירוג" או מספרים של הפריטים בטקסטים. הציון מחושב ומוצג בנפרד.`;
+
+const EN_REPORT_SYSTEM = () => `You are preparing a formal diagnosis report for a psychotherapist, based on the diagnostic conversation that just took place. The report is a professional document the therapist returns to later to fix gaps in building their private practice. It is not a conversational summary.
+
+Return valid JSON only, in exactly this shape:
+{
+  "therapist_gender": "female" | "male" | "unknown",
+  "ratings": [ { "id": "n1", "rating": 2 | 1 | 0 | null, "evidence": "the fact from the conversation the rating rests on", "evidence_quote": "a short verbatim quote from a therapist message" }, ...all 24 items ],
+  "works": ["short point on what works", ...],
+  "needs_work": [ { "area": "<area key>", "point": "short point on what does not work" }, ...],
+  "central_failure": { "area": "<area key>", "statement": "the central failure point, one sentence", "cause": "why it is failing, one or two sentences", "evidence": ["quote or fact from the conversation", ...] },
+  "fix_approach": ["short point: how the failure gets fixed", ...],
+  "action_steps": [ { "step": "one practical step, phrased as an action", "outcome": "what exists once the step is done" }, ...],
+  "not_now": [ { "item": "what is not worth working on right now", "reason": "why" }, ...]
+}
+
+Rating areas and items (the area key is the value to write in every area field):
+
+${rubricPromptBlock(true)}
+
+Rating rules:
+1. Rate only from the therapist's own words in the conversation (facts, numbers, descriptions, their confirmations of the mentor's hypotheses). In "evidence" write the concrete fact the rating rests on (a number, a description, a short quote of the therapist). If there is no such fact, write rating: null and an empty evidence. null is better than a guess.
+2. Never infer an item from silence or absence of mention. An item that was not asked about and not mentioned is null with an empty evidence. Writing "not asked", "not mentioned" or "did not come up" in the evidence field is forbidden: in that case write rating: null.
+3. Every rating that is not null must include evidence_quote: an exact, verbatim quote of at least a few words from a therapist message (a line starting with "Therapist:"). Not from the mentor's words, not a paraphrase. The quote is checked in code against the therapist's messages, and a rating without a quote found there exactly becomes null. One quote supports two items at most.
+4. A rating of 0 requires a positive statement by the therapist that the thing is missing or problematic for them (e.g. "I have no website", "I don't initiate contacts", "almost everyone comes from one source"). A hypothesis or interpretation by the mentor that the therapist did not confirm is not evidence for 0, and at most justifies null.
+5. The central failure area (central_failure.area) must be the area the conversation identified as the main one and recommended in the recommendation stage. Do not choose another area.
+
+Writing rules (important):
+1. Formal, professional English. Not conversational, no promises, no flourish.
+2. Short bullet points: one or two sentences at most. No paragraphs.
+3. Address the therapist directly as "you". Set therapist_gender from the conversation if it is clear, otherwise "unknown".
+4. Cite facts from the conversation (numbers, descriptions) so the reader recognizes themselves. Do not invent anything that was not said.
+5. Do not frame the central problem as generic "marketing", and do not frame the fix as "asking" for referrals. Frame it around becoming remembered and visible to the people who refer.
+6. action_steps: 3 to 5 steps in order. Each is doable within the coming weeks and has a clear deliverable. No steps that need a course, a team or a budget.
+7. works: 2 to 5 points about what genuinely works, based on facts. If almost nothing does, give one point on an existing asset (experience, motivation, willingness) mentioned in the conversation.
+8. not_now: 0 to 3 points, only if the therapist raised something they think matters but is not the urgent thing.
+9. Do not mention "score", "rating" or item numbers in the texts. The score is computed and shown separately.`;
+
+function forcedAreaNote(area: string, isEnglish: boolean): string {
+  const a = RUBRIC.find((x) => x.area === area);
+  if (!a) return "";
+  return isEnglish
+    ? `Note: the central failure area fixed in the recommendation stage is "${area}" (${a.label_en}). Set central_failure.area to it and write the whole report to match.\n\n`
+    : `הערה: נקודת הכשל המרכזית שנקבעה בשלב ההמלצה היא באזור "${area}" (${a.label_he}). קבע central_failure.area בהתאם וכתוב את כל הדו"ח כך שיתאים לו.\n\n`;
+}
+
+// Runs the report extraction. Never throws: any failure returns null so the
+// legacy diagnosis_output (which payment webhooks read) is unaffected.
+async function extractReport(
+  transcript: string,
+  therapistText: string,
+  isEnglish: boolean,
+  apiKey: string,
+  opts?: { forceArea?: string; debug?: { reason?: string } },
+) {
+  const debug = opts?.debug;
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(50000),
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: isEnglish ? EN_REPORT_SYSTEM() : HE_REPORT_SYSTEM() },
+          {
+            role: "user",
+            content: (opts?.forceArea ? forcedAreaNote(opts.forceArea, isEnglish) : "") + (isEnglish
+              ? `Conversation to analyze:\n\n${transcript}`
+              : `שיחה לניתוח:\n\n${transcript}`),
+          },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("report AI error", res.status, body);
+      if (debug) debug.reason = `ai_http_${res.status}: ${body.slice(0, 200)}`;
+      return null;
+    }
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content ?? "{}";
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      const m = String(raw).match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : null;
+    }
+    const valid = validateReport(parsed, isEnglish, therapistText);
+    if (!valid) {
+      console.error("report invalid: missing central failure or action steps");
+      if (debug) debug.reason = `invalid: ${String(raw).slice(0, 300)}`;
+      return null;
+    }
+    if (valid.flags.length) console.error("report flags:", valid.flags.join(","));
+    return buildReport(valid, isEnglish);
+  } catch (e) {
+    console.error("report extraction failed", e);
+    if (debug) debug.reason = `exception: ${String(e)}`;
+    return null;
+  }
+}
+// ===== diagnosis report: end =====
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -648,6 +1149,11 @@ Deno.serve(async (req) => {
       : botKey === "practice-diagnosis" && isEnglish
       ? EN_DIAGNOSIS_EXTRACTION_SYSTEM
       : cfg!.system;
+
+    // The formal report runs in parallel with the legacy extraction below and
+    // never throws (null on any failure), so the legacy output is unaffected.
+    const therapistText = msgs.filter((m: any) => m.role === "user").map((m: any) => String(m.content ?? "")).join("\n");
+    const reportPromise = botKey === "practice-diagnosis" ? extractReport(transcript, therapistText, isEnglish, lovableKey) : null;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -739,7 +1245,26 @@ Deno.serve(async (req) => {
       };
       updatePayload.reflection = { ...baseReflection, tool_summaries: toolSummaries, current: nextStage };
     } else {
-      const structured = buildStructuredOutput(botKey, rest);
+      let structured = buildStructuredOutput(botKey, rest);
+      let report: Awaited<ReturnType<typeof extractReport>> = null;
+      if (reportPromise) {
+        report = await reportPromise;
+        // The legacy recommended_tool is what payment webhooks and the CTA use. A report
+        // that failed or whose central failure is a different area gets one more run with
+        // the legacy area fixed (the rare path, so the common case keeps the parallel
+        // latency). If it still disagrees it is dropped and logged rather than shown
+        // next to a conflicting CTA.
+        const legacyTool = String((structured as Record<string, unknown>).recommended_tool);
+        if (!report || report.central_failure.area !== legacyTool) {
+          if (report) console.error("report/legacy mismatch, rerunning", report.central_failure.area, legacyTool);
+          report = await extractReport(transcript, therapistText, isEnglish, lovableKey, { forceArea: legacyTool });
+        }
+        if (report && report.central_failure.area !== legacyTool) {
+          console.error("report/legacy mismatch after rerun", report.central_failure.area, legacyTool);
+          report = null;
+        }
+        if (report) structured = { ...(structured as Record<string, unknown>), report };
+      }
       updatePayload[cfg!.column] = structured;
       if (botKey === "practice-diagnosis") {
         // Feed the diagnosis into the Mentor's context (Fix 2) — same
@@ -787,6 +1312,22 @@ Deno.serve(async (req) => {
         { onConflict: "user_id" },
       );
       if (signalsErr) console.error("lead signals upsert error:", signalsErr);
+
+      // One history row per completed run (therapist_journeys keeps only the latest).
+      const savedReport = (updatePayload[cfg!.column] as { report?: { rubric_version: number; scores: { overall: number | null; areas: AreaScore[] } } } | undefined)?.report;
+      if (savedReport) {
+        const areaScores: Record<string, number | null> = {};
+        for (const a of savedReport.scores.areas) areaScores[a.area] = a.score;
+        const { error: histErr } = await supabase.from("diagnosis_results").insert({
+          user_id: user.id,
+          conversation_id: conversationId,
+          rubric_version: savedReport.rubric_version,
+          overall: savedReport.scores.overall,
+          area_scores: areaScores,
+          report: savedReport,
+        });
+        if (histErr) console.error("diagnosis_results insert error:", histErr);
+      }
     }
 
     // Wave 2.1: record the therapist's actual commitment as a weekly

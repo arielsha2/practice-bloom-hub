@@ -21,6 +21,7 @@ import { DifficultySelector } from '@/components/bots/DifficultySelector';
 import { InsightButton } from '@/components/bots/InsightButton';
 import { InsightDialog } from '@/components/bots/InsightDialog';
 import { DiagnosisResultDialog, type DiagnosisResult } from '@/components/bots/DiagnosisResultDialog';
+import { parseDiagnosisReport } from '@/lib/diagnosisReport';
 import { trackEvent } from '@/lib/analytics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -378,6 +379,7 @@ const BotChat = () => {
             pathForward: String(d.path_forward ?? ''),
             recommendedTool: String(d.recommended_tool ?? ''),
             areaMap: Array.isArray(d.area_map) ? (d.area_map as DiagnosisResult['areaMap']) : [],
+            report: parseDiagnosisReport(d.report),
           });
           trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
           setShowDiagnosisDialog(true);

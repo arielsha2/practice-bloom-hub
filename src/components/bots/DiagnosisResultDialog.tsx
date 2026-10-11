@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
+import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -16,6 +16,9 @@ import {
   type SummarySection,
 } from '@/lib/mentorSummary';
 import { trackEvent } from '@/lib/analytics';
+import { DiagnosisReportDocument } from '@/components/diagnosis/DiagnosisReportDocument';
+import { downloadDiagnosisReportPdf } from '@/lib/diagnosisReportPdf';
+import type { DiagnosisReport } from '@/lib/diagnosisReport';
 import { supabase } from '@/integrations/supabase/client';
 
 export type AreaStatus = 'priority' | 'strong' | 'stable' | 'not_assessed';
@@ -42,6 +45,8 @@ export interface DiagnosisResult {
   pathForward: string;
   recommendedTool: string;
   areaMap: AreaMapEntry[];
+  /** Formal report with computed scores; absent on diagnoses made before it existed. */
+  report?: DiagnosisReport | null;
 }
 
 // Single source of truth for how each recommended tool is labeled in the
@@ -181,6 +186,8 @@ export function DiagnosisResultDialog({
 
   const meta = toolMeta(result.recommendedTool, isRTL);
   const sections = buildSections(result, isRTL);
+  const report = result.report ?? null;
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const handleDownload = async () => {
     try {
@@ -193,6 +200,20 @@ export function DiagnosisResultDialog({
     } catch (e) {
       console.error(e);
       toast.error(isRTL ? 'ההורדה נכשלה' : 'Download failed');
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!report || downloadingReport) return;
+    setDownloadingReport(true);
+    try {
+      await downloadDiagnosisReportPdf(report, { isRTL, displayName });
+      trackEvent('diagnosis_report_pdf_downloaded', { recommended_tool: result.recommendedTool, overall: report.overall });
+    } catch (e) {
+      console.error(e);
+      toast.error(isRTL ? 'ההורדה נכשלה' : 'Download failed');
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -308,13 +329,104 @@ export function DiagnosisResultDialog({
     void recordPurchaseIntent('full_mentor');
   };
 
+  const renderFeedback = () => (
+    <>
+      <div className="mt-3 pt-3 border-t border-accent/20 flex items-center gap-2.5">
+        {feedbackRating ? (
+          <p className="text-xs text-muted-foreground">
+            {isRTL ? 'תודה על המשוב!' : 'Thanks for the feedback!'}
+          </p>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {isRTL ? 'זה הרגיש מדויק?' : 'Did this feel accurate?'}
+            </p>
+            <button
+              type="button"
+              onClick={() => handleRate('up')}
+              aria-label={isRTL ? 'כן, זה מדויק' : 'Yes, this is accurate'}
+              className="text-muted-foreground hover:text-accent transition-colors"
+            >
+              <ThumbsUp className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRate('down')}
+              aria-label={isRTL ? 'לא, זה לא מדויק' : "No, this isn't accurate"}
+              className="text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <ThumbsDown className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {feedbackRating === 'up' && (
+        <div className="mt-2.5 rounded-md border border-border bg-background/60 p-2.5 space-y-2">
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            {isRTL
+              ? 'עולה לך בראש קולגה שמרגיש שהוא לא הכתובת הראשונה שעולה בראש כשמישהו שואל למי להפנות?'
+              : "Does a colleague come to mind — someone who isn't the first name people think of when someone asks who to refer to?"}
+          </p>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShareWithColleague}>
+            <Share2 className="w-3.5 h-3.5" />
+            {isRTL ? 'שליחה לקולגה' : 'Send to a colleague'}
+          </Button>
+        </div>
+      )}
+
+      {feedbackRating === 'down' && !feedbackTextSent && (
+        <div className="mt-2.5 space-y-1.5">
+          <Textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            placeholder={isRTL ? 'מה לא הרגיש מדויק? (לא חובה)' : "What didn't feel accurate? (optional)"}
+            className="text-sm min-h-16 bg-background"
+          />
+          {feedbackText.trim() && (
+            <Button size="sm" variant="secondary" onClick={handleSendFeedbackText}>
+              {isRTL ? 'שליחה' : 'Send'}
+            </Button>
+          )}
+        </div>
+      )}
+      {feedbackTextSent && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {isRTL ? 'תודה, זה עוזר לנו לדייק את האבחון.' : 'Thanks — this helps us sharpen the diagnosis.'}
+        </p>
+      )}
+    </>
+  );
+
+  const renderTestimonial = () => (
+    <div className="rounded-lg border border-border bg-muted/20 p-3 flex gap-2">
+      <Quote className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+      <p className="text-xs text-foreground/80 leading-relaxed italic">
+        {isRTL
+          ? 'מטפלים שעברו את המנטור המלא מספרים שהוא נתן להם ידע וביטחון אמיתי לקחת את הצעדים המשמעותיים בקליניקה שלהם.'
+          : "Therapists who completed the full Mentor say it gave them real knowledge and confidence to take the significant steps in their practice."}
+      </p>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+      <DialogContent className={`${report ? 'sm:max-w-2xl' : 'sm:max-w-lg'} max-h-[85vh] overflow-y-auto`} dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle>{isRTL ? 'האבחון שלך' : 'Your Diagnosis'}</DialogTitle>
         </DialogHeader>
 
+        {report ? (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-border bg-white p-4 sm:p-6 text-start">
+              <DiagnosisReportDocument report={report} isRTL={isRTL} displayName={displayName} showAppendix />
+            </div>
+            <div className="rounded-lg border border-border bg-muted/20 px-3 pb-3 [&>div:first-child]:mt-0 [&>div:first-child]:border-t-0 [&>div:first-child]:pt-3">
+              {renderFeedback()}
+            </div>
+            {!hasPaidAccess && renderTestimonial()}
+          </div>
+        ) : (
         <div className="space-y-5">
           {result.presentingTheory && (
             <div>
@@ -376,70 +488,7 @@ export function DiagnosisResultDialog({
               </p>
               <p className="text-base font-medium text-foreground leading-relaxed">{result.diagnosisSummary}</p>
 
-              <div className="mt-3 pt-3 border-t border-accent/20 flex items-center gap-2.5">
-                {feedbackRating ? (
-                  <p className="text-xs text-muted-foreground">
-                    {isRTL ? 'תודה על המשוב!' : 'Thanks for the feedback!'}
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-xs text-muted-foreground">
-                      {isRTL ? 'זה הרגיש מדויק?' : 'Did this feel accurate?'}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleRate('up')}
-                      aria-label={isRTL ? 'כן, זה מדויק' : 'Yes, this is accurate'}
-                      className="text-muted-foreground hover:text-accent transition-colors"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRate('down')}
-                      aria-label={isRTL ? 'לא, זה לא מדויק' : "No, this isn't accurate"}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {feedbackRating === 'up' && (
-                <div className="mt-2.5 rounded-md border border-border bg-background/60 p-2.5 space-y-2">
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    {isRTL
-                      ? 'עולה לך בראש קולגה שמרגיש שהוא לא הכתובת הראשונה שעולה בראש כשמישהו שואל למי להפנות?'
-                      : "Does a colleague come to mind — someone who isn't the first name people think of when someone asks who to refer to?"}
-                  </p>
-                  <Button size="sm" variant="outline" className="gap-1.5" onClick={handleShareWithColleague}>
-                    <Share2 className="w-3.5 h-3.5" />
-                    {isRTL ? 'שליחה לקולגה' : 'Send to a colleague'}
-                  </Button>
-                </div>
-              )}
-
-              {feedbackRating === 'down' && !feedbackTextSent && (
-                <div className="mt-2.5 space-y-1.5">
-                  <Textarea
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    placeholder={isRTL ? 'מה לא הרגיש מדויק? (לא חובה)' : "What didn't feel accurate? (optional)"}
-                    className="text-sm min-h-16 bg-background"
-                  />
-                  {feedbackText.trim() && (
-                    <Button size="sm" variant="secondary" onClick={handleSendFeedbackText}>
-                      {isRTL ? 'שליחה' : 'Send'}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {feedbackTextSent && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {isRTL ? 'תודה, זה עוזר לנו לדייק את האבחון.' : 'Thanks — this helps us sharpen the diagnosis.'}
-                </p>
-              )}
+              {renderFeedback()}
             </div>
           )}
 
@@ -478,17 +527,9 @@ export function DiagnosisResultDialog({
             </div>
           )}
 
-          {!hasPaidAccess && (
-            <div className="rounded-lg border border-border bg-muted/20 p-3 flex gap-2">
-              <Quote className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-              <p className="text-xs text-foreground/80 leading-relaxed italic">
-                {isRTL
-                  ? 'מטפלים שעברו את המנטור המלא מספרים שהוא נתן להם ידע וביטחון אמיתי לקחת את הצעדים המשמעותיים בקליניקה שלהם.'
-                  : "Therapists who completed the full Mentor say it gave them real knowledge and confidence to take the significant steps in their practice."}
-              </p>
-            </div>
-          )}
+          {!hasPaidAccess && renderTestimonial()}
         </div>
+        )}
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           {hasPaidAccess ? (
@@ -506,7 +547,7 @@ export function DiagnosisResultDialog({
               <div className="flex items-center gap-1.5 justify-center text-xs font-medium text-accent">
                 <Sparkles className="w-3.5 h-3.5" />
                 {isRTL
-                  ? 'בונוס למי שמתחיל/ה תוך 48 שעות: שיחת ייעוץ קצרה איתי, אישית'
+                  ? 'בונוס למי שמתחילים תוך 48 שעות: שיחת ייעוץ קצרה איתי, אישית'
                   : 'Bonus for starting within 48 hours: a short personal call with me'}
               </div>
 
@@ -545,16 +586,27 @@ export function DiagnosisResultDialog({
               </a>
             </div>
           )}
-          <div className="flex gap-2 pt-1">
-            <Button variant="outline" className="flex-1 gap-1.5" onClick={handleDownload}>
-              <Download className="w-4 h-4" />
-              {isRTL ? 'הורד PDF' : 'Download PDF'}
-            </Button>
-            <Button variant="outline" className="flex-1 gap-1.5" onClick={handleCopy}>
-              <Copy className="w-4 h-4" />
-              {isRTL ? 'העתק' : 'Copy'}
-            </Button>
-          </div>
+          {report ? (
+            <div className="pt-1">
+              <Button variant="outline" className="w-full gap-1.5" onClick={handleDownloadReport} disabled={downloadingReport}>
+                <FileText className="w-4 h-4" />
+                {downloadingReport
+                  ? (isRTL ? 'מכין את הקובץ...' : 'Preparing the file...')
+                  : (isRTL ? 'הורדת הדו״ח הרשמי (PDF)' : 'Download the official report (PDF)')}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1 gap-1.5" onClick={handleDownload}>
+                <Download className="w-4 h-4" />
+                {isRTL ? 'הורד PDF' : 'Download PDF'}
+              </Button>
+              <Button variant="outline" className="flex-1 gap-1.5" onClick={handleCopy}>
+                <Copy className="w-4 h-4" />
+                {isRTL ? 'העתק' : 'Copy'}
+              </Button>
+            </div>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

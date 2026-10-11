@@ -531,6 +531,39 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnosis_results: {
+        Row: {
+          area_scores: Json
+          conversation_id: string | null
+          created_at: string
+          id: string
+          overall: number | null
+          report: Json
+          rubric_version: number
+          user_id: string
+        }
+        Insert: {
+          area_scores?: Json
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          overall?: number | null
+          report: Json
+          rubric_version: number
+          user_id: string
+        }
+        Update: {
+          area_scores?: Json
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          overall?: number | null
+          report?: Json
+          rubric_version?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string | null
