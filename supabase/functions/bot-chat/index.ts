@@ -569,6 +569,14 @@ Never use this marker in any other situation. Never mention the marker in visibl
 אל תשתמש בסמן הזה בשום מצב אחר. אל תזכיר את הסמן בטקסט הגלוי.
 ---`;
 
+    // The generic protocol above tells the model to add [ADVANCE] whenever "sufficient progress" is reached. For the
+    // diagnosis that fired mid-conversation (a real run advanced at stage 2), so the diagnosis gets its own rule.
+    if (botKey === "practice-diagnosis") {
+      systemPrompt += isEnglish
+        ? `\n\nRule for this tool (overrides the closing protocol above): the [ADVANCE] marker is allowed ONLY at the end of the stage 4 message (the one that starts with [STAGE:4]). Never add it at any earlier stage, even if the therapist writes "thanks" or "enough", or seems to have reached an insight. Keep going through the stages instead.`
+        : `\n\nכלל לכלי הזה (גובר על פרוטוקול הסיום שלמעלה): הסמן [ADVANCE] מותר אך ורק בסוף הודעת שלב 4 (זו שמתחילה ב-[STAGE:4]). בשום שלב מוקדם יותר אסור להוסיף אותו, גם אם המטפל כותב "תודה" או "מספיק", או נראה שהגיע לתובנה. המשך בשלבי השיחה.`;
+    }
+
     const messages: Message[] = [
       { role: "system", content: systemPrompt },
     ];
@@ -690,23 +698,43 @@ Never use this marker in any other situation. Never mention the marker in visibl
     messages[0] = { role: "system", content: systemPrompt };
 
     // 7. Call Lovable AI with streaming
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: botConfig.model || "google/gemini-3-flash-preview",
-        messages,
-        temperature: botConfig.temperature || 0.7,
-        stream: true,
-      }),
-    });
+    // The user's message is already saved above, so a failed AI call leaves it unanswered. Retry transient
+    // failures (rate limit, gateway errors, network) twice before giving up; a real run stalled on a 429-style failure.
+    const callAI = () =>
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: botConfig.model || "google/gemini-3-flash-preview",
+          messages,
+          temperature: botConfig.temperature || 0.7,
+          stream: true,
+        }),
+      });
+    let aiResponse: Response | null = null;
+    let aiNetworkError: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        aiResponse = await callAI();
+        aiNetworkError = null;
+        if (aiResponse.ok || ![429, 500, 502, 503, 504].includes(aiResponse.status)) break;
+        console.warn("AI gateway transient failure", aiResponse.status, "attempt", attempt + 1);
+        if (attempt < 2) await aiResponse.body?.cancel();
+      } catch (e) {
+        aiNetworkError = e;
+        aiResponse = null;
+        console.warn("AI gateway network failure, attempt", attempt + 1, e);
+      }
+      if (attempt < 2) await new Promise((r) => setTimeout(r, attempt === 0 ? 1500 : 4000));
+    }
+    if (!aiResponse) throw aiNetworkError ?? new Error("AI gateway unreachable");
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        return new Response(JSON.stringify({ error: isEnglish ? "The service is busy right now. Please send your message again in a moment." : "העומס כרגע גבוה. אפשר לשלוח שוב את ההודעה בעוד רגע." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -719,7 +747,7 @@ Never use this marker in any other situation. Never mention the marker in visibl
       }
       const errorText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errorText);
-      return new Response(JSON.stringify({ error: "AI service error" }), {
+      return new Response(JSON.stringify({ error: isEnglish ? "I couldn't reply just now. Please send your message again." : "לא הצלחתי לענות כרגע. אפשר לשלוח שוב את ההודעה." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

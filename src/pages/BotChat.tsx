@@ -187,6 +187,10 @@ const BotChat = () => {
     const last = messages[messages.length - 1];
     if (!last || last.role !== 'assistant' || last.isStreaming) return;
     if (!/\[ADVANCE\]/i.test(last.content)) return;
+    // The diagnosis conversation is only over at stage 4. The model has emitted [ADVANCE] mid-conversation
+    // (a real run advanced at stage 2 and showed the report while the conversation was still going), so the
+    // marker alone is not trusted there: the same message must also carry [STAGE:4].
+    if (botKey === 'practice-diagnosis' && !/\[STAGE:4\]/.test(last.content)) return;
     autoAdvancedRef.current = true;
     const timer = setTimeout(() => {
       toast.success(isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…');
@@ -194,7 +198,7 @@ const BotChat = () => {
     }, 1500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, user, activeConversationId, returningToMentor, isRTL]);
+  }, [messages, user, activeConversationId, returningToMentor, isRTL, botKey]);
 
   // Helper to strip stage markers from content (including the ADVANCE completion marker
   // and the silent KICKOFF marker we prepend to the first auto-greeting prompt).
@@ -246,7 +250,7 @@ const BotChat = () => {
   // Show error toast
   useEffect(() => {
     if (chatError) {
-      toast.error(chatError);
+      toast.error(chatError, { duration: 9000 });
     }
   }, [chatError]);
 
