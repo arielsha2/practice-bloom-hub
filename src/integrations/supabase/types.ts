@@ -1752,6 +1752,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_funnel_overview: {
+        Args: { p_since?: string; p_until?: string }
+        Returns: Json
+      }
       admin_list_unconfirmed_user_ids: {
         Args: never
         Returns: {

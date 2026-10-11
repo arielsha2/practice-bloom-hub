@@ -9,3 +9,7 @@ const PERIOD_DAYS: Record<AnalyticsPeriod, number> = { "1d": 1, "7d": 7, "30d": 
 export function periodToSince(period: AnalyticsPeriod): string {
   return new Date(Date.now() - PERIOD_DAYS[period] * 24 * 60 * 60 * 1000).toISOString();
 }
+
+export function periodToDays(period: AnalyticsPeriod): number {
+  return PERIOD_DAYS[period];
+}

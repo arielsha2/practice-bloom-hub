@@ -20,6 +20,7 @@ import { DiagnosisAIInsightsCard } from '@/components/mentor/DiagnosisAIInsights
 import { DiagnosisPurchaseIntentsCard } from '@/components/mentor/DiagnosisPurchaseIntentsCard';
 import { DiagnosisLeadScoreCard } from '@/components/mentor/DiagnosisLeadScoreCard';
 import { DiagnosisFeedbackCard } from '@/components/mentor/DiagnosisFeedbackCard';
+import { BusinessFunnelOverview } from '@/components/admin/analytics/BusinessFunnelOverview';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -63,6 +64,8 @@ export default function AdminAnalytics() {
 
           {data && (
             <>
+              <BusinessFunnelOverview period={period} />
+
               <KPICards data={data} />
 
               <MentorConversationsSection period={period} />
