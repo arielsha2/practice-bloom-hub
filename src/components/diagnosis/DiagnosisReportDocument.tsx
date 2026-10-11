@@ -38,6 +38,7 @@ const T = {
     outOf: 'מתוך 10',
     scoreNote: 'הציון הכללי הוא ממוצע ציוני התחומים. ככל שהוא גבוה יותר, המצב טוב יותר.',
     partialNote: 'הציון מבוסס על {n} מתוך 6 תחומים. תחום שלא התקבל לגביו מידע מספק אינו נכלל בחישוב, ולכן הציון עשוי להשתנות באבחון חוזר.',
+    noScoreNote: 'לא התקבל בשיחה מספיק מידע כדי לחשב ציון. הדו״ח מבוסס על מה שנאמר, ואפשר להשלים את התמונה באבחון חוזר.',
     areasTitle: 'ציון לפי תחום, לפי סדר דחיפות',
     notAssessed: 'לא נבדק',
     notAssessedNote: 'לא התקבל מידע מספק לדירוג',
@@ -72,6 +73,7 @@ const T = {
     outOf: 'out of 10',
     scoreNote: 'The overall score is the average of the area scores. Higher means a stronger position.',
     partialNote: 'The score is based on {n} of 6 areas. An area without enough information is left out of the calculation, so the score may change when you take the diagnosis again.',
+    noScoreNote: 'The conversation did not give enough information to calculate a score. This report is based on what was said, and you can complete the picture by taking the diagnosis again.',
     areasTitle: 'Score by area, in order of urgency',
     notAssessed: 'Not assessed',
     notAssessedNote: 'Not enough information to rate',
@@ -296,7 +298,7 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
             <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.6, color: C.muted }}>{t.scoreNote}</p>
             {report.scoredAreas < 6 && (
               <p style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.6, color: C.terracotta }}>
-                {t.partialNote.replace('{n}', String(report.scoredAreas))}
+                {report.scoredAreas === 0 ? t.noScoreNote : t.partialNote.replace('{n}', String(report.scoredAreas))}
               </p>
             )}
           </div>

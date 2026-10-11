@@ -188,6 +188,10 @@ const BotChat = () => {
     if (chatLoading) streamedThisVisitRef.current = true;
   }, [chatLoading]);
   const isDiagnosisBot = botKey === 'practice-diagnosis';
+  // A name for the report header. Some accounts store the email as the "name", and a report that gets forwarded
+  // should not print an email address, so anything containing "@" counts as no name.
+  const rawName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name?.trim() ?? '';
+  const reportName = rawName && !rawName.includes('@') ? rawName : null;
   useEffect(() => {
     if (autoAdvancedRef.current) return;
     if (!user || !activeConversationId || returningToMentor) return;
@@ -200,7 +204,8 @@ const BotChat = () => {
     if (!shouldAdvance) return;
     if (isDiagnosisBot && !streamedThisVisitRef.current) return;
     autoAdvancedRef.current = true;
-    // The diagnosis gets longer to read the closing message before the report opens.
+    // For the diagnosis this starts the report right away (it takes about half a minute); the card below says so,
+    // and the therapist reads the closing message while it is prepared.
     const timer = setTimeout(() => {
       toast.success(
         isDiagnosisBot
@@ -208,7 +213,7 @@ const BotChat = () => {
           : (isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…'),
       );
       handleReturnToMentor();
-    }, isDiagnosisBot ? 6000 : 1500);
+    }, 1500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, user, activeConversationId, returningToMentor, isRTL, isDiagnosisBot]);
@@ -561,7 +566,9 @@ const BotChat = () => {
             {isDiagnosisBot && user && currentStage >= 4 && !chatLoading && (
               <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-center space-y-3">
                 <p className="text-sm font-semibold text-foreground">
-                  {isRTL ? 'האבחון הסתיים. הדו״ח שלך מוכן.' : 'The diagnosis is done. Your report is ready.'}
+                  {returningToMentor
+                    ? (isRTL ? 'האבחון הסתיים. מכינים את הדו״ח הכתוב שלך, זה לוקח כחצי דקה. הוא ייפתח כאן מעצמו.' : 'The diagnosis is done. Your written report is being prepared, which takes about half a minute. It will open here on its own.')
+                    : (isRTL ? 'האבחון הסתיים. אפשר לצפות בדו״ח הכתוב שלך.' : 'The diagnosis is done. You can view your written report.')}
                 </p>
                 <Button onClick={handleReturnToMentor} disabled={returningToMentor} className="gap-2">
                   {returningToMentor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
@@ -643,7 +650,7 @@ const BotChat = () => {
           onOpenChange={setShowDiagnosisDialog}
           result={diagnosisResult}
           isRTL={isRTL}
-          displayName={(user?.user_metadata as { full_name?: string } | undefined)?.full_name ?? null}
+          displayName={reportName}
           hasPaidAccess={plan.hasPaidAccess}
           onContinue={() => {
             setShowDiagnosisDialog(false);

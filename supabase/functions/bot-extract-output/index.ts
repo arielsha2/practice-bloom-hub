@@ -786,6 +786,12 @@ function quoteInText(quote: string, normText: string): boolean {
   return parts.every((p) => normText.includes(p));
 }
 const MAX_ITEMS_PER_QUOTE = 2;
+// The prompt points the model at transcript lines that start with "מטפל:" / "Therapist:", and the model copies that
+// label into its quote. A live run lost all 24 ratings to it (the label is not in the therapist's own text), so the
+// label is removed before the check.
+function stripSpeakerPrefix(q: string): string {
+  return q.replace(/^[\s"'\u201c\u201e]*(?:מטפל|מנטור|therapist|mentor)\s*:\s*/i, "").trim();
+}
 
 interface ValidReport {
   therapist_gender: "female" | "male" | "unknown";
@@ -824,7 +830,7 @@ function validateReport(raw: unknown, isEnglish: boolean, therapistText?: string
     // rated such items 0 with "not asked and not mentioned" as its "evidence").
     let rating: Rating | null =
       evidence && !isAbsenceEvidence(evidence) && (e.rating === 0 || e.rating === 1 || e.rating === 2) ? (e.rating as Rating) : null;
-    const quote = typeof e.evidence_quote === "string" ? e.evidence_quote.trim() : "";
+    const quote = typeof e.evidence_quote === "string" ? stripSpeakerPrefix(e.evidence_quote) : "";
     if (rating !== null && therapistText !== undefined) {
       const nq = normQuote(quote);
       if (!quoteInText(quote, normTherapist)) rating = null;
@@ -961,7 +967,7 @@ ${rubricPromptBlock(false)}
 כללי הדירוג:
 1. דרג רק לפי דברי המטפל עצמו בשיחה (עובדות, מספרים, תיאורים, אישורים שלו להשערות המנטור). בשדה evidence כתוב את העובדה הקונקרטית שעליה נשען הדירוג (מספר, תיאור, ציטוט קצר של דברי המטפל). אם אין עובדה כזו, כתוב rating: null ו-evidence ריק. הדירוג null עדיף על ניחוש.
 2. אל תסיק מסקנה על פריט מתוך שתיקה או מתוך היעדר אזכור. פריט שלא נשאל ולא נאמר לגביו דבר הוא null, ו-evidence שלו ריק. כתיבה כמו "לא נשאל", "לא צוין" או "לא עלה בשיחה" בשדה evidence אסורה: במקרה כזה כתוב rating: null.
-3. כל דירוג שאינו null חייב לכלול evidence_quote: ציטוט מילולי, מדויק, באורך של כמה מילים לפחות, מתוך הודעה של המטפל (שורה שמתחילה ב"מטפל:"). לא מדברי המנטור, לא ניסוח מחדש. הציטוט נבדק בקוד מול הודעות המטפל, ודירוג בלי ציטוט שנמצא שם בדיוק הופך ל-null. ציטוט אחד תומך בשני פריטים לכל היותר.
+3. כל דירוג שאינו null חייב לכלול evidence_quote: ציטוט מילולי, מדויק, באורך של כמה מילים לפחות, מתוך הודעה של המטפל (שורה שמתחילה ב"מטפל:"). כתוב את הציטוט בלי המילים "מטפל:" שבתחילת השורה. לא מדברי המנטור, לא ניסוח מחדש. הציטוט נבדק בקוד מול הודעות המטפל, ודירוג בלי ציטוט שנמצא שם בדיוק הופך ל-null. ציטוט אחד תומך בשני פריטים לכל היותר.
 4. הדירוג 0 דורש אמירה חיובית של המטפל שהדבר חסר או בעייתי אצלו (למשל "אין לי אתר", "אני לא יוזם קשרים", "כמעט כולם מגיעים ממקור אחד"). השערה או פרשנות של המנטור שהמטפל לא אישר אינן ראיה ל-0, ולכל היותר מצדיקות null.
 5. נקודת הכשל המרכזית (central_failure.area) חייבת להיות האזור שהשיחה זיהתה כעיקרי ושעליו הומלץ בשלב ההמלצה. אל תבחר אזור אחר.
 
@@ -998,7 +1004,7 @@ ${rubricPromptBlock(true)}
 Rating rules:
 1. Rate only from the therapist's own words in the conversation (facts, numbers, descriptions, their confirmations of the mentor's hypotheses). In "evidence" write the concrete fact the rating rests on (a number, a description, a short quote of the therapist). If there is no such fact, write rating: null and an empty evidence. null is better than a guess.
 2. Never infer an item from silence or absence of mention. An item that was not asked about and not mentioned is null with an empty evidence. Writing "not asked", "not mentioned" or "did not come up" in the evidence field is forbidden: in that case write rating: null.
-3. Every rating that is not null must include evidence_quote: an exact, verbatim quote of at least a few words from a therapist message (a line starting with "Therapist:"). Not from the mentor's words, not a paraphrase. The quote is checked in code against the therapist's messages, and a rating without a quote found there exactly becomes null. One quote supports two items at most.
+3. Every rating that is not null must include evidence_quote: an exact, verbatim quote of at least a few words from a therapist message (a line starting with "Therapist:"). Write the quote without the "Therapist:" label at the start of the line. Not from the mentor's words, not a paraphrase. The quote is checked in code against the therapist's messages, and a rating without a quote found there exactly becomes null. One quote supports two items at most.
 4. A rating of 0 requires a positive statement by the therapist that the thing is missing or problematic for them (e.g. "I have no website", "I don't initiate contacts", "almost everyone comes from one source"). A hypothesis or interpretation by the mentor that the therapist did not confirm is not evidence for 0, and at most justifies null.
 5. The central failure area (central_failure.area) must be the area the conversation identified as the main one and recommended in the recommendation stage. Do not choose another area.
 
