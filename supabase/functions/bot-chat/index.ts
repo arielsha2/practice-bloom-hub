@@ -644,14 +644,18 @@ Never use this marker in any other situation. Never mention the marker in visibl
         }
       }
 
-      // 4. Load conversation history (last 20 messages)
+      // 4. Load conversation history: the LAST 60 messages, oldest first. This used to be
+      // `ascending: true` + `limit(20)`, which loads the FIRST 20, so past the 20th message the
+      // bot stopped seeing its own recent turns (it repeated questions and re-ran its closing;
+      // one real diagnosis ended with [ADVANCE] seven times).
       if (currentConversationId) {
-        const { data: conversationHistory } = await supabase
+        const { data: recentDesc } = await supabase
           .from("bot_messages")
           .select("role, content")
           .eq("conversation_id", currentConversationId)
-          .order("created_at", { ascending: true })
-          .limit(20);
+          .order("created_at", { ascending: false })
+          .limit(60);
+        const conversationHistory = (recentDesc ?? []).slice().reverse();
 
         if (conversationHistory && conversationHistory.length > 0) {
           for (const msg of conversationHistory) {

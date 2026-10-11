@@ -643,8 +643,8 @@ const RUBRIC: RubricArea[] = [
         guide_he: "2 = הפניות מכמה מקורות; 1 = מקור אחד מוביל אך יש נוספים; 0 = כמעט כל הפונים ממקור אחד", guide_en: "2 = referrals from several sources; 1 = one leads but others exist; 0 = almost all clients come from one source" },
       { id: "r3", he: "קשר שוטף עם המפנים", en: "Ongoing contact with the people who refer",
         guide_he: "2 = קשר קבוע; 1 = קשר מדי פעם; 0 = אין קשר מעבר להפניה עצמה", guide_en: "2 = regular contact; 1 = occasional; 0 = no contact beyond the referral itself" },
-      { id: "r4", he: "הפניות סדירות (בערך אחת לחודש לפחות)", en: "Steady referrals (roughly monthly or more)",
-        guide_he: "2 = הפניות כל חודש; 1 = הפניות לסירוגין; 0 = הפניות נדירות או אין", guide_en: "2 = referrals every month; 1 = on and off; 0 = rare or none" },
+      { id: "r4", he: "הפניות סדירות, כמה בחודש", en: "Steady referrals, how many per month",
+        guide_he: "2 = שתיים-שלוש הפניות בחודש ומעלה; 1 = בערך אחת בחודש; 0 = פחות מאחת בחודש או הפניות לסירוגין בלבד", guide_en: "2 = two to three referrals a month or more; 1 = about one a month; 0 = fewer than one a month, or only now and then" },
     ],
   },
   {

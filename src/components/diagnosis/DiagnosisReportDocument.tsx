@@ -425,6 +425,8 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>{t.progressBody.replace('{v}', String(report.rubricVersion))}</p>
       </Section>
 
+      {/* html2pdf starts a new page at this marker; it has no height on screen. The appendix always begins on its own page so its heading never sits alone at the bottom of one. */}
+      {showAppendix && report.ratings.length > 0 && <div className="html2pdf__page-break" style={{ height: 0 }} />}
       {showAppendix && report.ratings.length > 0 && (
         <Section title={t.appendix} avoid={false}>
           {report.areas.map((a) => {
