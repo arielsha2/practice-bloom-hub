@@ -274,7 +274,13 @@ const BotChat = () => {
 
   // Redirect if not authenticated (unless it's a public bot)
   if (!authLoading && !user && !isPublicBot(botKey)) {
-    return <Navigate to="/auth" replace />;
+    // Someone who opens the diagnosis link signed out (e.g. from a WhatsApp invitation) must come back to the
+    // diagnosis after signing up. A bare /auth sends new accounts to the Mentor chat, and the Mentor then has to
+    // hand them over to the diagnosis (three real visitors went through exactly that).
+    const authPath = botKey === 'practice-diagnosis'
+      ? `${language === 'en' ? '/en' : ''}/auth?next=diagnosis&mode=signup`
+      : '/auth';
+    return <Navigate to={authPath} replace />;
   }
 
   // Loading state
