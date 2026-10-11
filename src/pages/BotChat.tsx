@@ -26,7 +26,7 @@ import { trackEvent } from '@/lib/analytics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
@@ -181,24 +181,37 @@ const BotChat = () => {
   // The bot includes this when it concludes the therapist reached sufficient progress
   // OR when the therapist explicitly asks to move on.
   const autoAdvancedRef = useRef(false);
+  // True once a reply has streamed in during THIS visit, so reopening an old, finished conversation never
+  // re-runs the extraction by itself (the manual button is still there).
+  const streamedThisVisitRef = useRef(false);
+  useEffect(() => {
+    if (chatLoading) streamedThisVisitRef.current = true;
+  }, [chatLoading]);
+  const isDiagnosisBot = botKey === 'practice-diagnosis';
   useEffect(() => {
     if (autoAdvancedRef.current) return;
     if (!user || !activeConversationId || returningToMentor) return;
     const last = messages[messages.length - 1];
     if (!last || last.role !== 'assistant' || last.isStreaming) return;
-    if (!/\[ADVANCE\]/i.test(last.content)) return;
-    // The diagnosis conversation is only over at stage 4. The model has emitted [ADVANCE] mid-conversation
-    // (a real run advanced at stage 2 and showed the report while the conversation was still going), so the
-    // marker alone is not trusted there: the same message must also carry [STAGE:4].
-    if (botKey === 'practice-diagnosis' && !/\[STAGE:4\]/.test(last.content)) return;
+    // The diagnosis conversation ends at its stage-4 message. The model's [ADVANCE] marker is not relied on
+    // there: it has fired at stage 2 (the report appeared mid-conversation) and has also been left out at
+    // stage 4 (no report at the end), and one early firing used up this one-shot guard.
+    const shouldAdvance = isDiagnosisBot ? /\[STAGE:4\]/.test(last.content) : /\[ADVANCE\]/i.test(last.content);
+    if (!shouldAdvance) return;
+    if (isDiagnosisBot && !streamedThisVisitRef.current) return;
     autoAdvancedRef.current = true;
+    // The diagnosis gets longer to read the closing message before the report opens.
     const timer = setTimeout(() => {
-      toast.success(isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…');
+      toast.success(
+        isDiagnosisBot
+          ? (isRTL ? 'מכין את הדו״ח שלך…' : 'Preparing your report…')
+          : (isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…'),
+      );
       handleReturnToMentor();
-    }, 1500);
+    }, isDiagnosisBot ? 6000 : 1500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, user, activeConversationId, returningToMentor, isRTL, botKey]);
+  }, [messages, user, activeConversationId, returningToMentor, isRTL, isDiagnosisBot]);
 
   // Helper to strip stage markers from content (including the ADVANCE completion marker
   // and the silent KICKOFF marker we prepend to the first auto-greeting prompt).
@@ -476,6 +489,11 @@ const BotChat = () => {
               : undefined
           }
           isReturningToMentor={returningToMentor}
+          returnLabel={
+            isDiagnosisBot
+              ? (isRTL ? 'לצפייה בדו״ח האבחון' : 'View my diagnosis report')
+              : undefined
+          }
           isToolMode={isEmbedded}
         />
 
@@ -537,6 +555,19 @@ const BotChat = () => {
             {/* Typing indicator */}
             {chatLoading && messages[messages.length - 1]?.role === 'user' && (
               <TypingIndicator />
+            )}
+
+            {/* End of the diagnosis: a card that cannot be missed (the header button alone was) */}
+            {isDiagnosisBot && user && currentStage >= 4 && !chatLoading && (
+              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-center space-y-3">
+                <p className="text-sm font-semibold text-foreground">
+                  {isRTL ? 'האבחון הסתיים. הדו״ח שלך מוכן.' : 'The diagnosis is done. Your report is ready.'}
+                </p>
+                <Button onClick={handleReturnToMentor} disabled={returningToMentor} className="gap-2">
+                  {returningToMentor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                  {isRTL ? 'לצפייה בדו״ח האבחון' : 'View my diagnosis report'}
+                </Button>
+              </div>
             )}
 
             <div ref={messagesEndRef} />
@@ -612,7 +643,7 @@ const BotChat = () => {
           onOpenChange={setShowDiagnosisDialog}
           result={diagnosisResult}
           isRTL={isRTL}
-          displayName={user?.email ?? null}
+          displayName={(user?.user_metadata as { full_name?: string } | undefined)?.full_name ?? null}
           hasPaidAccess={plan.hasPaidAccess}
           onContinue={() => {
             setShowDiagnosisDialog(false);

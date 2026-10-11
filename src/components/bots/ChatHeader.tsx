@@ -11,6 +11,8 @@ interface ChatHeaderProps {
   showMenuButton?: boolean;
   onReturnToMentor?: () => void;
   isReturningToMentor?: boolean;
+  /** Overrides the default "Return to Mentor" label (the standalone diagnosis is not a Mentor tool). */
+  returnLabel?: string;
   isToolMode?: boolean;
 }
 
@@ -21,6 +23,7 @@ export function ChatHeader({
   showMenuButton,
   onReturnToMentor,
   isReturningToMentor,
+  returnLabel,
   isToolMode,
 }: ChatHeaderProps) {
   const { t, isRTL } = useLanguage();
@@ -70,7 +73,7 @@ export function ChatHeader({
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
-            {isRTL ? 'חזרה למנטור עם הסיכום' : 'Return to Mentor'}
+            {returnLabel ?? (isRTL ? 'חזרה למנטור עם הסיכום' : 'Return to Mentor')}
           </Button>
         )}
 
