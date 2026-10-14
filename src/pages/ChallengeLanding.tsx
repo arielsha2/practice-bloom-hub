@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
+import { Header } from "@/components/landing/Header";
+import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,7 +73,7 @@ function CtaButton({ label, location }: { label: string; location: string }) {
     <Button
       asChild
       size="xl"
-      className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg w-full sm:w-auto whitespace-normal h-auto py-4 text-lg"
+      className="bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto whitespace-normal h-auto py-4 text-lg"
     >
       <a href="#register" onClick={() => trackEvent("challenge_cta_click", { location })}>
         {label}
@@ -120,9 +122,9 @@ function RegistrationForm({ source }: { source: string | null }) {
   if (status === "done") {
     return (
       <div className="text-center space-y-5 py-4">
-        <div className="mx-auto w-14 h-14 rounded-full bg-accent/15 flex items-center justify-center">
-          <Check className="w-7 h-7 text-accent" />
-        </div>
+        <span className="icon-chip">
+          <Check className="w-7 h-7" />
+        </span>
         <h3 className="text-2xl md:text-3xl font-display text-primary">נרשמת לאתגר :)</h3>
         <p className="text-lg text-foreground/80 leading-relaxed">
           נשאר צעד אחד חשוב: להצטרף לקבוצת הווטסאפ הסגורה של האתגר.
@@ -171,7 +173,7 @@ function RegistrationForm({ source }: { source: string | null }) {
         type="submit"
         size="xl"
         disabled={status === "sending"}
-        className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg text-lg h-auto py-4 whitespace-normal"
+        className="w-full bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg text-lg h-auto py-4 whitespace-normal"
       >
         {status === "sending" ? <Loader2 className="w-5 h-5 animate-spin" /> : "כן! אני רוצה להפוך למומחה מבוקש בתחומי"}
       </Button>
@@ -194,39 +196,39 @@ const ChallengeLanding = () => {
         ogImage="/og-image.jpg"
       />
 
-      {/* Top bar */}
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="text-primary font-display text-lg">TherapyKeys</Link>
-        <span className="text-sm text-muted-foreground">אתגר חינמי · 9-11.11</span>
-      </div>
+      <Header />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full blur-[140px] pointer-events-none"
-          style={{ background: "hsl(var(--accent) / 0.16)" }}
-        />
-        <div className="container mx-auto px-4 pt-6 pb-16 md:pt-12 md:pb-24 relative">
+      <section className="band band-charcoal band-grain">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[150px]"
+            style={{ background: "hsl(var(--accent) / 0.18)" }}
+          />
+          <div
+            className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full blur-[150px]"
+            style={{ background: "hsl(var(--primary) / 0.4)" }}
+          />
+        </div>
+        <div className="container mx-auto px-4 pt-28 pb-16 md:pt-36 md:pb-24 relative z-10">
           <div className="grid lg:grid-cols-[1.25fr_1fr] gap-10 lg:gap-14 items-center">
             <div>
-              <p className="inline-block rounded-full bg-primary/10 text-primary px-4 py-1.5 text-sm font-semibold mb-6">
-                הזמנה לאתגר · 3 ימים · 9-11 בנובמבר
-              </p>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display text-primary leading-[1.2] mb-6">
+              <p className="section-eyebrow">הזמנה לאתגר חינמי · 3 ימים · 9-11 בנובמבר</p>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display tracking-tight text-background leading-[1.2] mb-6">
                 ממטפל אנונימי
                 <br />
                 למומחה מבוקש בתחומך!
               </h1>
-              <p className="text-xl md:text-2xl text-foreground/85 leading-relaxed mb-4">
+              <p className="text-xl md:text-2xl text-background/85 leading-relaxed mb-4">
                 כזה שמעריכים את המומחיות שלו, ממליצים עליו ופונים אליו כל הזמן.
               </p>
-              <p className="text-lg text-foreground/70 leading-relaxed mb-8 max-w-xl">
+              <p className="text-lg text-background/65 leading-relaxed mb-8 max-w-xl">
                 למטפלים, יועצים ומאמנים, אנשי מקצוע רציניים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם.
               </p>
               <CtaButton label="כן! אני מצטרף לאתגר" location="hero" />
             </div>
             <div className="relative max-w-sm mx-auto lg:max-w-none w-full">
-              <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] bg-accent/20" />
+              <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] border border-[hsl(var(--terracotta)/0.5)]" />
               <img
                 src={elianaPortrait}
                 alt="אליענה שפירא"
@@ -238,7 +240,7 @@ const ChallengeLanding = () => {
       </section>
 
       {/* The empty room */}
-      <section className="bg-primary text-primary-foreground">
+      <section className="band band-burgundy band-grain">
         <div className="container mx-auto px-4 py-16 md:py-24 max-w-3xl text-center">
           <p className="text-xl md:text-2xl leading-loose text-primary-foreground/85">
             הכנת את הכל.
@@ -304,13 +306,15 @@ const ChallengeLanding = () => {
       {/* What we'll discover */}
       <section className="bg-secondary/60">
         <div className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-display text-primary text-center mb-12">מה נגלה באתגר</h2>
+          <div className="text-center"><p className="section-eyebrow">האתגר</p></div>
+          <h2 className="text-3xl md:text-4xl font-display text-primary text-center">מה נגלה באתגר</h2>
+          <span className="section-divider mb-10" />
           <div className="grid md:grid-cols-2 gap-5">
             {DISCOVER.map((d) => (
               <div key={d.title} className="rounded-2xl bg-card p-6 shadow-[var(--shadow-soft)] border border-border">
-                <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center mb-4">
-                  <Check className="w-5 h-5 text-accent" />
-                </div>
+                <span className="icon-chip mb-4">
+                  <Check className="w-6 h-6" />
+                </span>
                 <p className="text-lg leading-relaxed">
                   <span className="font-bold text-primary">{d.title}</span> {d.text}
                 </p>
@@ -326,7 +330,9 @@ const ChallengeLanding = () => {
 
       {/* How it works + outcomes */}
       <section className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
-        <h2 className="text-3xl md:text-4xl font-display text-primary text-center mb-12">איך זה עובד?</h2>
+        <div className="text-center"><p className="section-eyebrow">המבנה</p></div>
+          <h2 className="text-3xl md:text-4xl font-display text-primary text-center">איך זה עובד?</h2>
+          <span className="section-divider mb-10" />
         <div className="grid sm:grid-cols-3 gap-4 mb-14 text-center">
           {[
             { big: "3 ימים", small: "9-11 בנובמבר, ידע עמוק ותרגול פרקטי" },
@@ -357,12 +363,14 @@ const ChallengeLanding = () => {
       {/* Testimonials */}
       <section className="bg-secondary/60">
         <div className="container mx-auto px-4 py-16 md:py-24 max-w-5xl">
-          <h2 className="text-3xl md:text-4xl font-display text-primary text-center mb-12">
+          <div className="text-center"><p className="section-eyebrow">המלצות</p></div>
+          <h2 className="text-3xl md:text-4xl font-display text-primary text-center">
             מה מספרים מטפלים שקיבלו ממני הדרכה וליווי
           </h2>
+          <span className="section-divider mb-10" />
           <div className="grid md:grid-cols-2 gap-6 mb-14">
             {TESTIMONIALS.map((t) => (
-              <figure key={t.by} className="rounded-2xl bg-card p-7 shadow-[var(--shadow-soft)] border border-border flex flex-col">
+              <figure key={t.by} className="card-asym bg-card p-7 shadow-[var(--shadow-soft)] border border-border flex flex-col">
                 <Quote className="w-8 h-8 text-accent/40 mb-3" />
                 <blockquote className="text-lg leading-relaxed text-foreground/85 flex-1">{t.text}</blockquote>
                 <figcaption className="mt-5 text-sm font-semibold text-primary">{t.by}</figcaption>
@@ -398,9 +406,11 @@ const ChallengeLanding = () => {
       </section>
 
       {/* For you if */}
-      <section className="bg-primary text-primary-foreground">
+      <section className="band band-burgundy band-grain">
         <div className="container mx-auto px-4 py-16 md:py-24 max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-display text-center mb-10">האתגר הזה בשבילך אם:</h2>
+          <div className="text-center"><p className="section-eyebrow">למי זה מתאים</p></div>
+          <h2 className="text-3xl md:text-4xl font-display text-center">האתגר הזה בשבילך אם:</h2>
+          <span className="section-divider mb-10" />
           <ul className="space-y-5">
             {FOR_YOU.map((f) => (
               <li key={f} className="flex gap-4 text-lg leading-relaxed text-primary-foreground/90">
@@ -459,9 +469,7 @@ const ChallengeLanding = () => {
         </div>
       </section>
 
-      <footer className="py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} TherapyKeys · <Link to="/" className="underline hover:text-primary">לאתר</Link>
-      </footer>
+      <Footer />
     </div>
   );
 };
