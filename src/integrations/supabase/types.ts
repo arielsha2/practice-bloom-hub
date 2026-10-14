@@ -203,6 +203,39 @@ export type Database = {
           },
         ]
       }
+      challenge_registrations: {
+        Row: {
+          challenge_key: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          marketing_consent: boolean
+          phone: string
+          source: string | null
+        }
+        Insert: {
+          challenge_key: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          marketing_consent?: boolean
+          phone: string
+          source?: string | null
+        }
+        Update: {
+          challenge_key?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          marketing_consent?: boolean
+          phone?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       cohorts: {
         Row: {
           created_at: string | null

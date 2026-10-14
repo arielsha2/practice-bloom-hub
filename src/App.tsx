@@ -36,6 +36,7 @@ import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
 import ShinuyPnimiShivuk from "./pages/ShinuyPnimiShivuk";
 import MetuplimRishonim from "./pages/MetuplimRishonim";
 import AlSfatHaklinika from "./pages/AlSfatHaklinika";
+import ChallengeLanding from "./pages/ChallengeLanding";
 import TherapistsHateMarketing from "./pages/en/TherapistsHateMarketing";
 import MarketWithoutLosingSoul from "./pages/en/MarketWithoutLosingSoul";
 import TherapistsUndercharge from "./pages/en/TherapistsUndercharge";
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/shinuy-pnimi-shivuk" element={<ShinuyPnimiShivuk />} />
               <Route path="/matorpelim-rishonim" element={<MetuplimRishonim />} />
               <Route path="/al-sfat-haklinika" element={<AlSfatHaklinika />} />
+              <Route path="/challenge" element={<ChallengeLanding />} />
               <Route path="/en/therapists-who-hate-marketing" element={<TherapistsHateMarketing />} />
               <Route path="/en/market-without-losing-soul" element={<MarketWithoutLosingSoul />} />
               <Route path="/en/why-therapists-undercharge" element={<TherapistsUndercharge />} />
