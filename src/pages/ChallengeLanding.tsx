@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 import { Check, Quote, Loader2, MessageCircle } from "lucide-react";
 import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
-import clinicLogo from "@/assets/clinic-language-logo.png";
 
 // One row per challenge run in challenge_registrations; change both when the
 // next challenge opens so its sign-ups stay separate.
@@ -448,7 +447,6 @@ const ChallengeLanding = () => {
             <p>
               היום אני עוזרת למטפלים, יועצים ומאמנים להביא לידי ביטוי את המתנה המקצועית שלהם, באופן שמשקף את הידע והכישרון שלהם ומאפשר נתינה גדולה, תגמול מספק ותחושת משמעות.
             </p>
-            <img src={clinicLogo} alt='על שפת הקליניקה' loading="lazy" className="h-12 w-auto opacity-80 pt-2" />
           </div>
         </div>
       </section>
