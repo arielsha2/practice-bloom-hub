@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { Header } from "@/components/landing/Header";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
+import { resolveChallengeSource } from "@/lib/challengeSource";
 import { Check, Quote, Loader2, MessageCircle } from "lucide-react";
 import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
 
@@ -183,8 +184,11 @@ function RegistrationForm({ source }: { source: string | null }) {
 
 const ChallengeLanding = () => {
   const [params] = useSearchParams();
-  // ?src=lecture-xyz (or utm_source) records which audience a sign-up came from.
-  const source = (params.get("src") || params.get("utm_source"))?.slice(0, 200) ?? null;
+  const [source] = useState(() => resolveChallengeSource(params));
+
+  useEffect(() => {
+    trackEvent("challenge_view", { challenge: CHALLENGE_KEY, source: source ?? "direct" });
+  }, [source]);
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">

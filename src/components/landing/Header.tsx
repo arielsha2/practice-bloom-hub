@@ -32,6 +32,14 @@ export function Header() {
           >
             {t("nav.home")}
           </Link>
+          {isRTL && (
+            <Link
+              to="/challenge?src=site"
+              className="px-4 py-2 text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold rounded-lg hover:bg-primary-foreground/10"
+            >
+              האתגר
+            </Link>
+          )}
           <Link
             to={language === "en" ? "/en/mentor" : "/mentor"}
             className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10"
@@ -125,6 +133,15 @@ export function Header() {
             >
               {t("nav.home")}
             </Link>
+            {isRTL && (
+              <Link
+                to="/challenge?src=site"
+                className="text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                האתגר
+              </Link>
+            )}
             <Link
               to={language === "en" ? "/en/mentor" : "/mentor"}
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
