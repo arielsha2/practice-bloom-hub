@@ -211,7 +211,7 @@ export type Database = {
           full_name: string
           id: string
           marketing_consent: boolean
-          phone: string
+          phone: string | null
           source: string | null
         }
         Insert: {
@@ -221,7 +221,7 @@ export type Database = {
           full_name: string
           id?: string
           marketing_consent?: boolean
-          phone: string
+          phone?: string | null
           source?: string | null
         }
         Update: {
@@ -231,7 +231,7 @@ export type Database = {
           full_name?: string
           id?: string
           marketing_consent?: boolean
-          phone?: string
+          phone?: string | null
           source?: string | null
         }
         Relationships: []

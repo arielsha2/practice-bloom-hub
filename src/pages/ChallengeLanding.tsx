@@ -94,10 +94,10 @@ function RegistrationForm({ source }: { source: string | null }) {
     setError(null);
     const name = fullName.trim();
     const mail = email.trim().toLowerCase();
-    const tel = normalizePhone(phone);
+    const tel = phone.trim() ? normalizePhone(phone) : null;
     if (name.length < 2) return setError("נא למלא שם מלא");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return setError("כתובת המייל לא נראית תקינה");
-    if (!tel) return setError("מספר הטלפון לא נראה תקין");
+    if (phone.trim() && !tel) return setError("מספר הטלפון לא נראה תקין");
 
     setStatus("sending");
     const { error: insertError } = await supabase.from("challenge_registrations").insert({
@@ -152,15 +152,15 @@ function RegistrationForm({ source }: { source: string | null }) {
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       <div className="space-y-1.5">
-        <Label htmlFor="ch-name">שם מלא</Label>
+        <Label htmlFor="ch-name">שם מלא <span className="text-accent">*</span></Label>
         <Input id="ch-name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12 text-base bg-background" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="ch-email">מייל</Label>
+        <Label htmlFor="ch-email">מייל <span className="text-accent">*</span></Label>
         <Input id="ch-email" type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 text-base bg-background text-right" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="ch-phone">טלפון</Label>
+        <Label htmlFor="ch-phone">טלפון <span className="text-muted-foreground font-normal">(לא חובה)</span></Label>
         <Input id="ch-phone" type="tel" dir="ltr" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12 text-base bg-background text-right" />
       </div>
       <label className="flex items-start gap-2.5 text-sm text-foreground/75 cursor-pointer pt-1">
@@ -174,9 +174,9 @@ function RegistrationForm({ source }: { source: string | null }) {
         disabled={status === "sending"}
         className="w-full bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg text-lg h-auto py-4 whitespace-normal"
       >
-        {status === "sending" ? <Loader2 className="w-5 h-5 animate-spin" /> : "כן! אני רוצה להפוך למומחה מבוקש בתחומי"}
+        {status === "sending" ? <Loader2 className="w-5 h-5 animate-spin" /> : "כן, אני רוצה להיות מומחה מבוקש"}
       </Button>
-      <p className="text-xs text-center text-muted-foreground">האתגר חינמי לגמרי</p>
+      <p className="text-xs text-center text-muted-foreground">האתגר ללא עלות</p>
     </form>
   );
 }
@@ -456,8 +456,8 @@ const ChallengeLanding = () => {
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-lg mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-display text-primary mb-3">רוצה גם?</h2>
-              <p className="text-lg text-foreground/80">אשמח מאוד להכיר אותך באתגר!</p>
+              <h2 className="text-3xl md:text-4xl font-display text-primary mb-3">רוצה להיות מומחה מבוקש?</h2>
+              <p className="text-lg text-foreground/80">מחכה לך באתגר!</p>
               <p className="text-sm text-muted-foreground mt-2">3 ימים · 9-11 בנובמבר · חינם</p>
             </div>
             <div className="rounded-3xl bg-card p-6 md:p-8 shadow-[var(--shadow-elevated)] border border-border">
