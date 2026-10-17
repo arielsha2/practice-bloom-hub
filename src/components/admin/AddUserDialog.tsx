@@ -95,7 +95,9 @@ export function AddUserDialog({
       email: email.trim().toLowerCase(),
       fullName: fullName.trim() || null,
       courseKey: isMentorOnly ? null : selectedCourse,
-      cohortId: isMentorOnly ? null : (selectedCohort || null),
+      // "No cohort" is the select value 'none', which is not a uuid: sending it as the cohort id made the
+      // insert fail ("invalid input syntax for type uuid: none") for everyone who picked it.
+      cohortId: isMentorOnly || selectedCohort === 'none' ? null : (selectedCohort || null),
       pendingRole: isMentorOnly ? null : (accessType as 'admin' | 'course_member'),
       pendingMentor: isMentorOnly ? true : pendingMentor,
       notes: notes.trim() || null,
