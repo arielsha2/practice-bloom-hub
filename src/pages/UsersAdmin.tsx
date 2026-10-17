@@ -11,8 +11,9 @@ import { PendingUsersTable } from '@/components/admin/PendingUsersTable';
 import { CourseAssignmentDialog } from '@/components/admin/CourseAssignmentDialog';
 import { RoleChangeDialog } from '@/components/admin/RoleChangeDialog';
 import { AddUserDialog } from '@/components/admin/AddUserDialog';
+import { PreGrantToolAccessDialog } from '@/components/admin/PreGrantToolAccessDialog';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Users, Loader2, UserPlus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Users, Loader2, UserPlus, Wrench } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -56,6 +57,7 @@ export default function UsersAdmin() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [preGrantDialogOpen, setPreGrantDialogOpen] = useState(false);
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -184,10 +186,16 @@ export default function UsersAdmin() {
                 </p>
               </div>
             </div>
-            <Button onClick={() => setAddUserDialogOpen(true)}>
-              <UserPlus className="w-4 h-4 me-2" />
-              {isRTL ? 'הוסף משתמש' : 'Add User'}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => setPreGrantDialogOpen(true)}>
+                <Wrench className="w-4 h-4 me-2" />
+                {isRTL ? 'הענק כלי לפי אימייל' : 'Grant tool by email'}
+              </Button>
+              <Button onClick={() => setAddUserDialogOpen(true)}>
+                <UserPlus className="w-4 h-4 me-2" />
+                {isRTL ? 'הוסף משתמש' : 'Add User'}
+              </Button>
+            </div>
           </div>
 
           {/* Content */}
@@ -258,6 +266,8 @@ export default function UsersAdmin() {
           if (selectedUser) toggleMentorAccess.mutate({ userId: selectedUser.id, enable });
         }}
       />
+
+      <PreGrantToolAccessDialog open={preGrantDialogOpen} onOpenChange={setPreGrantDialogOpen} />
 
       <AddUserDialog
         open={addUserDialogOpen}

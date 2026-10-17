@@ -1,4 +1,4 @@
-// Admin-only: give a user access to one or several Mentor tools by hand (a payment made outside the automatic
+// Admin-only: give a user (or an email that has no account yet) access to one or several Mentor tools by hand (a payment made outside the automatic
 // Grow flow, a gift, a fix after a payment under another email), list what a user already has, or take a grant
 // back. Writes the same user_tool_access rows the Grow webhook writes (source 'manual_admin'), so the tools
 // open exactly as after a purchase. Each grant and revoke is also recorded in payment_grant_events
@@ -31,6 +31,7 @@ const TOOL_LABELS_HE: Record<string, string> = {
 
 const SITE_URL = "https://therapykeys.co.il";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -65,7 +66,32 @@ ${rows}
   return { subject, html, text, links };
 }
 
+// Sent when access is granted to an email that has no account yet: it says what was granted and links to the
+// sign-up page (which continues to the first tool after sign-up).
+export function buildInviteEmail(keys: string[], email: string, hasReplyTo: boolean) {
+  const labels = keys.map((k) => TOOL_LABELS_HE[k] ?? k);
+  const link = `${SITE_URL}/auth?mode=signup&next=bot:${keys[0]}`;
+  const single = keys.length === 1;
+  const what = single ? `הכלי <b>${escapeHtml(labels[0])}</b>` : `${keys.length} כלים: <b>${escapeHtml(labels.join(", "))}</b>`;
+  const subject = single ? `הוענקה לך גישה ל${labels[0]}` : "הוענקה לך גישה לכלים ב-TherapyKeys";
+  const help = hasReplyTo ? "אם משהו לא עובד, אפשר להשיב למייל הזה." : "אם משהו לא עובד, אפשר לפנות אלינו דרך האתר.";
+  const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#faf7f2;font-family:Arial,Helvetica,sans-serif;color:#1e1a18">
+<div style="max-width:520px;margin:0 auto;padding:24px">
+<div style="background:#fff;border:1px solid #e6dfd6;border-radius:10px;padding:24px">
+<h1 style="margin:0 0 12px;font-size:20px;color:#4b0b24">הוענקה לך גישה</h1>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6">שמרנו עבורך גישה ל${what}. כדי להפעיל אותה צריך להירשם באתר עם האימייל הזה: <b dir="ltr">${escapeHtml(email)}</b>.</p>
+<p style="margin:0 0 20px"><a href="${link}" style="display:inline-block;background:#4b0b24;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px">להרשמה ולכניסה לכלי</a></p>
+<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b625c">ההרשמה קצרה: אימייל וקוד אימות. הגישה נפתחת מיד אחריה.</p>
+<p style="margin:0;font-size:13px;line-height:1.6;color:#6b625c">${help}</p>
+</div>
+<p style="text-align:center;font-size:12px;color:#9a918a;margin:14px 0 0">על שפת הקליניקה · therapykeys.co.il</p>
+</div></body></html>`;
+  const text = `הוענקה לך גישה ל${labels.join(", ")}\n\nכדי להפעיל אותה צריך להירשם באתר עם האימייל ${email}:\n${link}\n\n${help}`;
+  return { subject, html, text, link };
+}
+
 export interface Grant { bot_key: string; source: string; granted_at: string }
+export interface PendingGrant { id: string; email: string; bot_key: string; created_at: string; applied_at: string | null }
 export interface Profile { id: string; email: string | null; display_name: string | null }
 export interface Deps {
   getCaller(authHeader: string): Promise<{ id: string } | null>;
@@ -76,6 +102,12 @@ export interface Deps {
   deleteGrant(userId: string, key: string): Promise<boolean>;
   logEvent(row: Record<string, unknown>): Promise<void>;
   sendEmail(to: string, keys: string[]): Promise<{ ok: boolean; error?: string }>;
+  // grants by email, for people who have no account yet
+  findProfileByEmail(email: string): Promise<Profile | null>;
+  listPending(): Promise<PendingGrant[]>; // open ones plus the most recently applied
+  insertPending(email: string, keys: string[], by: string): Promise<string[]>; // returns the keys actually added
+  deletePending(id: string): Promise<{ email: string; bot_key: string } | null>; // only if still open
+  sendInviteEmail(to: string, keys: string[]): Promise<{ ok: boolean; error?: string }>;
 }
 
 const json = (body: unknown, status = 200) =>
@@ -93,8 +125,61 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
   const action = String(body?.action ?? "");
+  if (!["list", "grant", "revoke", "pre_list", "pre_grant", "pre_revoke"].includes(action)) return json({ error: "invalid_action" }, 400);
+
+  // ---- by email: the person may not have an account yet ----
+  if (action === "pre_list") return json({ pending: await deps.listPending() });
+
+  if (action === "pre_revoke") {
+    const id = String(body?.id ?? "").trim();
+    if (!UUID_RE.test(id)) return json({ error: "invalid_id" }, 400);
+    const removed = await deps.deletePending(id);
+    if (removed) {
+      await deps.logEvent({ provider: "manual", payer_email: removed.email, tool: removed.bot_key, outcome: "pre_revoked", resolved: true, detail: { by: caller.id } });
+    }
+    return json({ revoked: removed !== null });
+  }
+
+  if (action === "pre_grant") {
+    const email = String(body?.email ?? "").trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 254) return json({ error: "invalid_email" }, 400);
+    const keys = [...new Set((Array.isArray(body?.bot_keys) ? (body.bot_keys as unknown[]).map(String) : []))];
+    if (keys.length === 0 || keys.length > TOOL_KEYS.length || keys.some((k) => !TOOL_KEYS.includes(k))) return json({ error: "invalid_bot_keys" }, 400);
+    const wantsEmail = body?.send_email === true;
+
+    // Someone who already has an account gets the access right now, exactly like the per-user grant.
+    const existing = await deps.findProfileByEmail(email);
+    if (existing) {
+      const inserted = await deps.insertGrants(existing.id, keys);
+      let sent = false;
+      let err: string | null = null;
+      if (inserted.length > 0 && wantsEmail) {
+        const r = await deps.sendEmail(email, inserted);
+        sent = r.ok;
+        err = r.ok ? null : r.error ?? "send_failed";
+      }
+      for (const key of inserted) {
+        await deps.logEvent({ provider: "manual", payer_email: email, user_id: existing.id, tool: key, outcome: "granted", resolved: true, email_sent: sent, email_error: err, detail: { by: caller.id, emailed: wantsEmail, via: "pre_grant_existing_user" } });
+      }
+      return json({ mode: "direct", granted: inserted, already: keys.filter((k) => !inserted.includes(k)), email: { requested: wantsEmail && inserted.length > 0, sent, error: err } });
+    }
+
+    const added = await deps.insertPending(email, keys, caller.id);
+    let sent = false;
+    let err: string | null = null;
+    if (added.length > 0 && wantsEmail) {
+      const r = await deps.sendInviteEmail(email, added);
+      sent = r.ok;
+      err = r.ok ? null : r.error ?? "send_failed";
+    }
+    for (const key of added) {
+      await deps.logEvent({ provider: "manual", payer_email: email, tool: key, outcome: "pre_granted", resolved: true, email_sent: sent, email_error: err, detail: { by: caller.id, emailed: wantsEmail } });
+    }
+    return json({ mode: "pending", pending: added, already: keys.filter((k) => !added.includes(k)), email: { requested: wantsEmail && added.length > 0, sent, error: err } });
+  }
+
+  // ---- by user id ----
   const userId = String(body?.user_id ?? "").trim();
-  if (!["list", "grant", "revoke"].includes(action)) return json({ error: "invalid_action" }, 400);
   if (!UUID_RE.test(userId)) return json({ error: "invalid_user_id" }, 400);
 
   const profile = await deps.findProfile(userId);
@@ -145,13 +230,13 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 // ===== core: end =====
 
 // ----- wiring (not unit-tested; thin) -----
-async function sendEmailViaBrevo(to: string, keys: string[]): Promise<{ ok: boolean; error?: string }> {
+async function sendEmailViaBrevo(to: string, keys: string[], invite = false): Promise<{ ok: boolean; error?: string }> {
   try {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const brevoKey = Deno.env.get("BREVO_API_KEY");
     if (!lovableKey || !brevoKey) return { ok: false, error: "missing_email_secrets" };
     const replyTo = Deno.env.get("PURCHASE_REPLY_TO") ?? "";
-    const m = buildManualAccessEmail(keys, to, !!replyTo);
+    const m = invite ? buildInviteEmail(keys, to, !!replyTo) : buildManualAccessEmail(keys, to, !!replyTo);
     const res = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey },
@@ -212,7 +297,37 @@ if (typeof Deno !== "undefined" && Deno.serve && Deno.env.get("SUPABASE_URL")) {
       const { error } = await admin.from("payment_grant_events").insert(row);
       if (error) console.error("payment_grant_events insert failed:", error);
     },
-    sendEmail: sendEmailViaBrevo,
+    sendEmail: (to, keys) => sendEmailViaBrevo(to, keys),
+    sendInviteEmail: (to, keys) => sendEmailViaBrevo(to, keys, true),
+    async findProfileByEmail(email) {
+      const { data } = await admin.from("profiles").select("id, email, display_name").ilike("email", email).limit(1).maybeSingle();
+      return (data as Profile | null) ?? null;
+    },
+    async listPending() {
+      const { data: open } = await admin.from("pending_tool_grants").select("id, email, bot_key, created_at, applied_at").is("applied_at", null).order("created_at", { ascending: false });
+      const { data: done } = await admin.from("pending_tool_grants").select("id, email, bot_key, created_at, applied_at").not("applied_at", "is", null).order("applied_at", { ascending: false }).limit(10);
+      return [...((open ?? []) as PendingGrant[]), ...((done ?? []) as PendingGrant[])];
+    },
+    async insertPending(email, keys, by) {
+      const { data, error } = await admin
+        .from("pending_tool_grants")
+        .insert(keys.map((bot_key) => ({ email, bot_key, created_by: by })))
+        .select("bot_key");
+      if (!error) return (data ?? []).map((r: { bot_key: string }) => r.bot_key);
+      // A key that is already waiting for this email violates the open-grant unique index: add the others one by one.
+      const added: string[] = [];
+      for (const bot_key of keys) {
+        const r = await admin.from("pending_tool_grants").insert({ email, bot_key, created_by: by }).select("bot_key");
+        if (!r.error) added.push(bot_key);
+        else if (!String(r.error.message).includes("duplicate key")) throw r.error;
+      }
+      return added;
+    },
+    async deletePending(id) {
+      const { data, error } = await admin.from("pending_tool_grants").delete().eq("id", id).is("applied_at", null).select("email, bot_key");
+      if (error) throw error;
+      return (data ?? [])[0] ?? null;
+    },
   };
   Deno.serve(async (req) => {
     try {
