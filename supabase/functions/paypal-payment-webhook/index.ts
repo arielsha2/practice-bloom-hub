@@ -108,6 +108,137 @@ async function fetchOrderPayerEmail(accessToken: string, orderId: string): Promi
   return typeof email === "string" ? email.trim().toLowerCase() : null;
 }
 
+// ===== purchase confirmation helpers: begin =====
+// Identical block in grow-payment-webhook and paypal-payment-webhook (separate edge functions, no shared
+// module in the deploy path) — keep the two copies in step.
+//
+// logPaymentEvent: every outcome goes to payment_grant_events so a payment that grants nothing is visible
+// in the admin dashboard instead of only in function logs. sendAccessEmail: the confirmation with the tool
+// link (Brevo through the same connector gateway signup-send-otp uses). Neither may ever throw: the
+// webhook must still answer 200 and the access grant must not depend on an email or a log row.
+const SITE_URL = "https://therapykeys.co.il";
+
+const TOOL_LABELS: Record<"he" | "en", Record<string, string>> = {
+  he: {
+    "niche-finder": "מציאת הנישה",
+    "pricing-calculator": "מחשבון התמחור",
+    "self-presentation": "הצגה עצמית",
+    "contact-finder": "מציאת אנשי קשר להפניות",
+    "connection-bridge": "גשר הקשר",
+    "first-call-practice": "תרגול שיחת הטלפון הראשונה",
+  },
+  en: {
+    "niche-finder": "Finding your niche",
+    "pricing-calculator": "The pricing calculator",
+    "self-presentation": "Self-presentation",
+    "contact-finder": "Finding referral contacts",
+    "connection-bridge": "The connection bridge",
+    "first-call-practice": "First-call practice",
+  },
+};
+
+function toolLink(tool: string, lang: "he" | "en"): string {
+  return `${SITE_URL}${lang === "en" ? "/en" : ""}/ai-assistants/${tool}`;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function buildAccessEmail(tool: string, lang: "he" | "en", payerEmail: string, hasReplyTo: boolean) {
+  const label = TOOL_LABELS[lang][tool] ?? tool;
+  const link = toolLink(tool, lang);
+  const email = escapeHtml(payerEmail);
+  const he = lang === "he";
+  const subject = he ? `הכלי שרכשת מוכן: ${label}` : `Your tool is ready: ${label}`;
+  const title = he ? "התשלום התקבל, והכלי שלך מוכן" : "Payment received, your tool is ready";
+  const intro = he ? `פתחנו עבורך את הכלי <b>${escapeHtml(label)}</b>.` : `We have opened <b>${escapeHtml(label)}</b> for you.`;
+  const button = he ? "לפתיחת הכלי" : "Open the tool";
+  const loginNote = he
+    ? `הכניסה היא עם האימייל שאיתו נרשמת: <b dir="ltr">${email}</b>. אם הדף עדיין לא מציג את הכלי, כדאי לרענן אותו אחרי דקה. הכלי זמין גם בדף הכלים באתר.`
+    : `Sign in with the email you registered with: <b>${email}</b>. If the page does not show the tool yet, refresh it after a minute. The tool is also in the tools page on the site.`;
+  const help = he
+    ? (hasReplyTo ? "אם משהו לא עובד, אפשר להשיב למייל הזה." : "אם משהו לא עובד, אפשר לפנות אלינו דרך האתר.")
+    : (hasReplyTo ? "If anything does not work, just reply to this email." : "If anything does not work, contact us through the site.");
+  const footer = he ? "על שפת הקליניקה" : "TherapyKeys";
+  const html = `<!doctype html><html lang="${he ? "he" : "en"}" dir="${he ? "rtl" : "ltr"}"><body style="margin:0;background:#faf7f2;font-family:Arial,Helvetica,sans-serif;color:#1e1a18">
+<div style="max-width:520px;margin:0 auto;padding:24px">
+<div style="background:#fff;border:1px solid #e6dfd6;border-radius:10px;padding:24px">
+<h1 style="margin:0 0 12px;font-size:20px;color:#4b0b24">${title}</h1>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6">${intro}</p>
+<p style="margin:0 0 20px"><a href="${link}" style="display:inline-block;background:#4b0b24;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px">${button}</a></p>
+<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b625c">${loginNote}</p>
+<p style="margin:0;font-size:13px;line-height:1.6;color:#6b625c">${help}</p>
+</div>
+<p style="text-align:center;font-size:12px;color:#9a918a;margin:14px 0 0">${footer} · therapykeys.co.il</p>
+</div></body></html>`;
+  const text = he
+    ? `התשלום התקבל, והכלי שלך מוכן: ${label}\n\nלפתיחת הכלי: ${link}\n\nהכניסה היא עם האימייל שאיתו נרשמת: ${payerEmail}\n${help}`
+    : `Payment received, your tool is ready: ${label}\n\nOpen it: ${link}\n\nSign in with the email you registered with: ${payerEmail}\n${help}`;
+  return { subject, html, text, link };
+}
+
+async function sendAccessEmail(to: string, tool: string, lang: "he" | "en"): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const brevoKey = Deno.env.get("BREVO_API_KEY");
+    if (!lovableKey || !brevoKey) return { ok: false, error: "missing_email_secrets" };
+    const replyTo = Deno.env.get("PURCHASE_REPLY_TO") ?? "";
+    const m = buildAccessEmail(tool, lang, to, !!replyTo);
+    const res = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey },
+      body: JSON.stringify({
+        sender: { name: Deno.env.get("SIGNUP_OTP_SENDER_NAME") ?? "TherapyKeys", email: Deno.env.get("SIGNUP_OTP_SENDER_EMAIL") ?? "noreply@therapykeys.co.il" },
+        ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+        to: [{ email: to }],
+        subject: m.subject,
+        htmlContent: m.html,
+        textContent: m.text,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return { ok: false, error: `brevo_${res.status}: ${(await res.text()).slice(0, 200)}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e).slice(0, 200) };
+  }
+}
+
+async function logPaymentEvent(
+  admin: any,
+  row: {
+    provider: "grow" | "paypal";
+    transaction_id: string | null;
+    payer_email: string | null;
+    user_id?: string | null;
+    tool?: string | null;
+    outcome: string;
+    email_sent?: boolean;
+    email_error?: string | null;
+    detail?: Record<string, unknown> | null;
+  },
+): Promise<void> {
+  try {
+    const { error } = await admin.from("payment_grant_events").insert({
+      provider: row.provider,
+      transaction_id: row.transaction_id,
+      payer_email: row.payer_email,
+      user_id: row.user_id ?? null,
+      tool: row.tool ?? null,
+      outcome: row.outcome,
+      email_sent: row.email_sent ?? false,
+      email_error: row.email_error ?? null,
+      detail: row.detail ?? null,
+    });
+    // A retried webhook hits the unique (provider, transaction_id, outcome) index: that is fine.
+    if (error && !String(error.message).includes("duplicate key")) console.error("payment_grant_events insert failed:", error);
+  } catch (e) {
+    console.error("payment_grant_events insert threw:", e);
+  }
+}
+// ===== purchase confirmation helpers: end =====
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -187,6 +318,7 @@ Deno.serve(async (req) => {
 
     if (!isSingleTool && !isFullMentor) {
       console.error("paypal-webhook: unrecognized amount, manual follow-up needed", amountUsd, email);
+      await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, outcome: "unrecognized_amount", detail: { amount_usd: amountUsd } });
       return new Response(JSON.stringify({ ok: true, note: "unrecognized_amount_manual_followup_needed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -209,6 +341,7 @@ Deno.serve(async (req) => {
       const { data: profile } = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
       if (!profile?.id) {
         console.error("paypal-webhook: no profile found for paying email (single tool)", email);
+        await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, outcome: "no_profile" });
         return new Response(JSON.stringify({ ok: true, note: "no_profile_manual_followup_needed" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -219,6 +352,7 @@ Deno.serve(async (req) => {
       const recommendedTool = (journey as any)?.diagnosis_output?.recommended_tool as string | undefined;
       if (!recommendedTool) {
         console.error("paypal-webhook: no recommended_tool on diagnosis for user", profile.id, email);
+        await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, user_id: profile.id, outcome: "no_recommendation" });
         return new Response(JSON.stringify({ ok: true, note: "no_recommendation_manual_followup_needed" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -230,8 +364,15 @@ Deno.serve(async (req) => {
         source: "paypal_single_tool",
         transaction_id: captureId,
       });
-      if (insErr && !String(insErr.message).includes("duplicate key")) {
+      const duplicate = !!insErr && String(insErr.message).includes("duplicate key");
+      if (insErr && !duplicate) {
         console.error("paypal-webhook: insert error:", insErr);
+        await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "grant_failed", detail: { message: String(insErr.message) } });
+      } else if (duplicate) {
+        await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "already_had_tool" });
+      } else {
+        const mail = await sendAccessEmail(email, recommendedTool, "en");
+        await logPaymentEvent(admin, { provider: "paypal", transaction_id: captureId, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "granted", email_sent: mail.ok, email_error: mail.error ?? null });
       }
 
       return new Response(JSON.stringify({ ok: true, granted: recommendedTool }), {

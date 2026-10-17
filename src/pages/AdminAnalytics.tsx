@@ -21,6 +21,7 @@ import { DiagnosisPurchaseIntentsCard } from '@/components/mentor/DiagnosisPurch
 import { DiagnosisLeadScoreCard } from '@/components/mentor/DiagnosisLeadScoreCard';
 import { DiagnosisFeedbackCard } from '@/components/mentor/DiagnosisFeedbackCard';
 import { BusinessFunnelOverview } from '@/components/admin/analytics/BusinessFunnelOverview';
+import { PaymentIssuesCard } from '@/components/admin/analytics/PaymentIssuesCard';
 import { ChallengeRegistrationsCard } from '@/components/admin/analytics/ChallengeRegistrationsCard';
 import { RefreshCw } from 'lucide-react';
 
@@ -66,6 +67,8 @@ export default function AdminAnalytics() {
           {data && (
             <>
               <BusinessFunnelOverview period={period} />
+
+              <PaymentIssuesCard />
 
               <ChallengeRegistrationsCard />
 

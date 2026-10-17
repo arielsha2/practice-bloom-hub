@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +22,7 @@ import { DiagnosisReportDocument } from '@/components/diagnosis/DiagnosisReportD
 import { downloadDiagnosisReportPdf } from '@/lib/diagnosisReportPdf';
 import type { DiagnosisReport } from '@/lib/diagnosisReport';
 import { supabase } from '@/integrations/supabase/client';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 export type AreaStatus = 'priority' | 'strong' | 'stable' | 'not_assessed';
 export interface AreaMapEntry {
@@ -185,6 +188,35 @@ export function DiagnosisResultDialog({
   }, [open]);
 
   const meta = toolMeta(result.recommendedTool, isRTL);
+
+  // After the purchase button is clicked the payment happens in another tab and the webhook grants access a few
+  // seconds later. Poll for the grant (every 5s, up to 20 min) so the dialog itself shows the tool link when it
+  // arrives, without the therapist having to reload anything.
+  const { user: authUser } = useAuth();
+  const [purchaseKind, setPurchaseKind] = useState<'single_tool' | 'full_mentor' | null>(null);
+  const [purchaseStartedAt, setPurchaseStartedAt] = useState<number | null>(null);
+  const toolAccessQuery = useQuery<boolean>({
+    queryKey: ['diagnosis-dialog-tool-access', authUser?.id, result.recommendedTool],
+    enabled: open && !!authUser?.id && !!result.recommendedTool,
+    refetchInterval: (query) =>
+      purchaseKind === 'single_tool' && purchaseStartedAt !== null && Date.now() - purchaseStartedAt < 20 * 60_000 && query.state.data !== true
+        ? 5000
+        : false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_tool_access')
+        .select('id')
+        .eq('user_id', authUser!.id)
+        .eq('bot_key', result.recommendedTool)
+        .limit(1);
+      if (error) throw error;
+      return (data?.length ?? 0) > 0;
+    },
+  });
+  const ownsTool = toolAccessQuery.data === true;
+  const toolPath = `${isRTL ? '' : '/en'}/ai-assistants/${result.recommendedTool}`;
+  const waitingForPayment =
+    purchaseKind === 'single_tool' && !ownsTool && purchaseStartedAt !== null && Date.now() - purchaseStartedAt < 20 * 60_000;
   const sections = buildSections(result, isRTL);
   const report = result.report ?? null;
   const [downloadingReport, setDownloadingReport] = useState(false);
@@ -317,6 +349,8 @@ export function DiagnosisResultDialog({
       price: isRTL ? SINGLE_TOOL_PRICE_ILS : SINGLE_TOOL_PRICE_USD,
     });
     void recordPurchaseIntent('single_tool');
+    setPurchaseKind('single_tool');
+    setPurchaseStartedAt(Date.now());
   };
 
   const handleChooseFullMentor = () => {
@@ -327,6 +361,8 @@ export function DiagnosisResultDialog({
       price: isRTL ? FULL_MENTOR_PRICE_ILS : FULL_MENTOR_PRICE_USD,
     });
     void recordPurchaseIntent('full_mentor');
+    setPurchaseKind('full_mentor');
+    setPurchaseStartedAt(Date.now());
   };
 
   const renderFeedback = () => (
@@ -532,7 +568,24 @@ export function DiagnosisResultDialog({
         )}
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          {hasPaidAccess ? (
+          {ownsTool && !hasPaidAccess ? (
+            <div className="w-full rounded-lg border border-emerald-300 bg-emerald-50 p-3 space-y-2 text-center" role="status">
+              <p className="text-sm font-semibold text-emerald-900 flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                {isRTL ? `הכלי ${meta.label} פתוח עבורך` : `${meta.label} is open for you`}
+              </p>
+              <Button variant="cta" className="w-full" asChild>
+                <a href={toolPath}>{isRTL ? 'לפתיחת הכלי' : 'Open the tool'}</a>
+              </Button>
+              {purchaseKind === 'single_tool' && (
+                <p className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'אימייל אישור עם אותו קישור נשלח לאימייל שאיתו נרשמת. אם הוא לא הגיע, כדאי לבדוק בתיקיית הספאם.'
+                    : 'A confirmation email with the same link was sent to the email you registered with. If it has not arrived, check the spam folder.'}
+                </p>
+              )}
+            </div>
+          ) : hasPaidAccess ? (
             <>
               <Button variant="cta" className="w-full gap-1.5" onClick={handleContinue}>
                 {meta.actionLabel}
@@ -584,6 +637,32 @@ export function DiagnosisResultDialog({
                   ? `או, קבלו את כל המסע המלא עם אליענה (כולל ${meta.label} וחמישה כלים נוספים) — ₪${FULL_MENTOR_PRICE_ILS}`
                   : `Or get the full journey with Eliana (${meta.label} plus five more tools) — $${FULL_MENTOR_PRICE_USD}`}
               </a>
+
+              {purchaseKind && (
+                <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs leading-relaxed space-y-1.5" role="status">
+                  <p className="font-semibold text-foreground">{isRTL ? 'מה קורה אחרי התשלום' : 'What happens after payment'}</p>
+                  {purchaseKind === 'single_tool' ? (
+                    <p>
+                      {isRTL
+                        ? `אחרי התשלום הכלי ${meta.label} ייפתח כאן, בדיאלוג הזה, עם קישור לכניסה אליו. יישלח אליך גם אימייל אישור עם אותו קישור.`
+                        : `After payment, ${meta.label} will open right here in this dialog, with a link to it. A confirmation email with the same link will also be sent to you.`}
+                    </p>
+                  ) : (
+                    <p>{isRTL ? 'אחרי התשלום הגישה תיפתח אוטומטית. כדאי לרענן את הדף אחרי דקה.' : 'After payment, access opens automatically. Refresh the page after a minute.'}</p>
+                  )}
+                  <p>
+                    {isRTL
+                      ? `חשוב לשלם עם האימייל שאיתו נרשמת${authUser?.email ? ': ' + authUser.email : ''}. תשלום באימייל אחר לא יזוהה אוטומטית.`
+                      : `Please pay with the email you registered with${authUser?.email ? ': ' + authUser.email : ''}. A payment under another email is not matched automatically.`}
+                  </p>
+                  {waitingForPayment && (
+                    <p className="flex items-center gap-1.5 text-muted-foreground">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {isRTL ? 'ממתינים לאישור התשלום. הדף מתעדכן לבד.' : 'Waiting for the payment confirmation. This updates by itself.'}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
           {report ? (

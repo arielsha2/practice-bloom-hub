@@ -46,6 +46,11 @@ export default function Auth() {
         : "/en/ai-assistants/practice-diagnosis"
       : null;
 
+  // ?next=bot:<key> sends someone who opened a tool link while signed out back to that tool after login
+  // (the purchase confirmation email links straight to a tool page).
+  const botNext = /^bot:([a-z0-9-]{1,40})$/.exec(nextParam ?? "")?.[1] ?? null;
+  const botRedirect = botNext ? (isRTL ? `/ai-assistants/${botNext}` : `/en/ai-assistants/${botNext}`) : null;
+
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
     ["login", "signup", "forgot", "reset"].includes(initialMode) ? initialMode : "login",
@@ -151,9 +156,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user && !loading && mode !== "reset" && !resumePasswordSetup) {
-      navigate(diagnosisRedirect ?? "/dashboard");
+      navigate(diagnosisRedirect ?? botRedirect ?? "/dashboard");
     }
-  }, [user, loading, navigate, mode, resumePasswordSetup, diagnosisRedirect]);
+  }, [user, loading, navigate, mode, resumePasswordSetup, diagnosisRedirect, botRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,7 +375,7 @@ export default function Auth() {
               <SignupFlow
                 startStep={resumePasswordSetup ? 3 : 1}
                 initialEmail={resumePasswordSetup?.email ?? ""}
-                redirectTo={diagnosisRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
+                redirectTo={diagnosisRedirect ?? botRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
                 skipPassword={!!diagnosisRedirect && !resumePasswordSetup}
               />
             ) : mode === "forgot" && resetSent ? (

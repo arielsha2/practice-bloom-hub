@@ -1078,6 +1078,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_grant_events: {
+        Row: {
+          created_at: string
+          detail: Json | null
+          email_error: string | null
+          email_sent: boolean
+          id: string
+          outcome: string
+          payer_email: string | null
+          provider: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_note: string | null
+          tool: string | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json | null
+          email_error?: string | null
+          email_sent?: boolean
+          id?: string
+          outcome: string
+          payer_email?: string | null
+          provider: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_note?: string | null
+          tool?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: Json | null
+          email_error?: string | null
+          email_sent?: boolean
+          id?: string
+          outcome?: string
+          payer_email?: string | null
+          provider?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_note?: string | null
+          tool?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       plan_changes: {
         Row: {
           changed_at: string
@@ -1718,6 +1769,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_tool_access: {
+        Row: {
+          bot_key: string
+          granted_at: string
+          id: string
+          source: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bot_key: string
+          granted_at?: string
+          id?: string
+          source: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bot_key?: string
+          granted_at?: string
+          id?: string
+          source?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
