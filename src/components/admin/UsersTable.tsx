@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2, ArrowUpCircle, KeyRound, AlertTriangle } from "lucide-react";
+import { UserPlus, X, Search, Shield, Sparkles, Gift, CheckCircle2, Trash2, ArrowUpCircle, KeyRound, AlertTriangle, Wrench } from "lucide-react";
+import { GrantToolAccessDialog } from "@/components/admin/GrantToolAccessDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -105,6 +106,7 @@ export function UsersTable({
   const [cohortFilter, setCohortFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [userToUpgrade, setUserToUpgrade] = useState<UserProfile | null>(null);
+  const [userToGrantTools, setUserToGrantTools] = useState<UserProfile | null>(null);
 
   const getUserEnrollments = (userId: string) => {
     return enrollments.filter((e) => e.user_id === userId);
@@ -366,6 +368,10 @@ export function UsersTable({
                           <UserPlus className="w-4 h-4 me-1" />
                           {isRTL ? "שייך" : "Assign"}
                         </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setUserToGrantTools(user)}>
+                          <Wrench className="w-4 h-4 me-1" />
+                          {isRTL ? "הענק כלים" : "Grant tools"}
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => onChangeRole(user)}>
                           <Shield className="w-4 h-4 me-1" />
                           {isRTL ? "תפקיד" : "Role"}
@@ -449,6 +455,14 @@ export function UsersTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <GrantToolAccessDialog
+        user={userToGrantTools}
+        open={userToGrantTools !== null}
+        onOpenChange={(o) => {
+          if (!o) setUserToGrantTools(null);
+        }}
+      />
     </div>
   );
 }
