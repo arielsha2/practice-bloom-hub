@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackMetaEvent } from "@/lib/analytics";
 import { resolveChallengeSource } from "@/lib/challengeSource";
 import { Check, Quote, Loader2, MessageCircle } from "lucide-react";
 import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
@@ -116,6 +116,7 @@ function RegistrationForm({ source }: { source: string | null }) {
       return;
     }
     trackEvent("challenge_registered", { challenge: CHALLENGE_KEY, source: source ?? "direct" });
+    trackMetaEvent("Lead", { content_name: CHALLENGE_KEY });
     setStatus("done");
   };
 

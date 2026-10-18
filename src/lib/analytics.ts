@@ -5,7 +5,17 @@ declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     clarity?: (...args: unknown[]) => void;
+    fbq?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
+  }
+}
+
+/** Send a standard Meta Pixel event (e.g. "Lead"). No-op when the pixel is blocked. */
+export function trackMetaEvent(name: string, params: Record<string, string | number> = {}) {
+  try {
+    window.fbq?.("track", name, params);
+  } catch (e) {
+    // swallow
   }
 }
 
