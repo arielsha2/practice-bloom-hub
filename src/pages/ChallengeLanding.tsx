@@ -60,12 +60,6 @@ const TESTIMONIALS = [
   },
 ];
 
-function normalizePhone(raw: string): string | null {
-  let digits = raw.replace(/\D/g, "");
-  if (digits.startsWith("972")) digits = "0" + digits.slice(3);
-  return /^0\d{8,9}$/.test(digits) ? digits : null;
-}
-
 function CtaButton({ label, location }: { label: string; location: string }) {
   return (
     <Button
@@ -83,7 +77,6 @@ function CtaButton({ label, location }: { label: string; location: string }) {
 function RegistrationForm({ source }: { source: string | null }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -93,17 +86,15 @@ function RegistrationForm({ source }: { source: string | null }) {
     setError(null);
     const name = fullName.trim();
     const mail = email.trim().toLowerCase();
-    const tel = phone.trim() ? normalizePhone(phone) : null;
     if (name.length < 2) return setError("נא למלא שם מלא");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return setError("כתובת המייל לא נראית תקינה");
-    if (phone.trim() && !tel) return setError("מספר הטלפון לא נראה תקין");
 
     setStatus("sending");
     const { error: insertError } = await supabase.from("challenge_registrations").insert({
       challenge_key: CHALLENGE_KEY,
       full_name: name,
       email: mail,
-      phone: tel,
+      phone: null,
       source,
       marketing_consent: consent,
     });
@@ -158,10 +149,6 @@ function RegistrationForm({ source }: { source: string | null }) {
       <div className="space-y-1.5">
         <Label htmlFor="ch-email">מייל <span className="text-accent">*</span></Label>
         <Input id="ch-email" type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 text-base bg-background text-right" />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="ch-phone">טלפון <span className="text-muted-foreground font-normal">(לא חובה)</span></Label>
-        <Input id="ch-phone" type="tel" dir="ltr" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12 text-base bg-background text-right" />
       </div>
       <label className="flex items-start gap-2.5 text-sm text-foreground/75 cursor-pointer pt-1">
         <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
