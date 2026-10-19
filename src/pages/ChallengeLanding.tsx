@@ -1,8 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
-import { Header } from "@/components/landing/Header";
-import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -200,7 +198,6 @@ const ChallengeLanding = () => {
         ogImage="/og-image.jpg"
       />
 
-      <Header />
 
       {/* Hero */}
       <section className="band band-charcoal band-grain">
@@ -214,7 +211,17 @@ const ChallengeLanding = () => {
             style={{ background: "hsl(var(--primary) / 0.4)" }}
           />
         </div>
-        <div className="container mx-auto px-4 pt-28 pb-16 md:pt-36 md:pb-24 relative z-10">
+        <div className="container mx-auto px-4 pt-5 relative z-10 flex items-center justify-between gap-4">
+          <span className="text-background/90 font-display text-lg">אליענה שפירא</span>
+          <a
+            href="#register"
+            onClick={() => trackEvent("challenge_cta_click", { location: "top_bar" })}
+            className="rounded-full border border-background/30 px-4 py-1.5 text-sm text-background/90 hover:bg-background/10 transition-colors"
+          >
+            להרשמה לאתגר
+          </a>
+        </div>
+        <div className="container mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-24 relative z-10">
           <div className="grid lg:grid-cols-[1.25fr_1fr] gap-10 lg:gap-14 items-center">
             <div>
               <p className="section-eyebrow">הזמנה לאתגר חינמי · 3 ימים · 9-11 בנובמבר</p>
@@ -472,7 +479,9 @@ const ChallengeLanding = () => {
         </div>
       </section>
 
-      <Footer />
+      <footer className="py-8 text-center text-sm text-muted-foreground">
+        © {new Date().getFullYear()} אליענה שפירא · TherapyKeys
+      </footer>
     </div>
   );
 };
