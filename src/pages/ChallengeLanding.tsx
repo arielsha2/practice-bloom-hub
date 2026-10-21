@@ -179,10 +179,10 @@ const ChallengeLanding = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
       <SEOHead
-        title="אתגר חינמי: ממטפל אנונימי למומחה מבוקש בתחומך | TherapyKeys"
+        title="אתגר להיות מומחה מבוקש - עם אליענה שפירא"
         description="אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם. עם אליענה שפירא."
         canonicalUrl="/challenge"
-        ogImage="/og-image.jpg"
+        ogImage="/og-challenge.jpg"
       />
 
 
