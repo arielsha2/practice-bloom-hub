@@ -94,7 +94,8 @@ const FULL_MENTOR_PAYMENT_URL_HE = 'https://meshulam.co.il/quick_payment?b=692ab
 const FULL_MENTOR_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN';
 // For someone who wants hands-on guidance (the small group or one-on-one with Eliana): a short fit
 // questionnaire, after which Eliana sets up an intro call. Hebrew only; the English version is not published.
-const PREMIUM_FIT_FORM_URL_HE = 'https://docs.google.com/forms/d/e/1FAIpQLSffRhcbsjwlcVL46nwy8HHL3OFeBb04uUIvjEQcSAJU5cbWjA/viewform';
+const ELIANA_WHATSAPP_NUMBER = '972523379716';
+const PREMIUM_FIT_FORM_URL_HE ='https://docs.google.com/forms/d/e/1FAIpQLSffRhcbsjwlcVL46nwy8HHL3OFeBb04uUIvjEQcSAJU5cbWjA/viewform';
 
 // Where the "send to a colleague" WhatsApp message points — the diagnosis's
 // own public entry point, not this account's authenticated /mentor area.
@@ -370,6 +371,14 @@ export function DiagnosisResultDialog({
 
   const handlePremiumFitClicked = () => {
     trackEvent('diagnosis_premium_fit_form_clicked', { recommended_tool: result.recommendedTool });
+  };
+
+  // A direct line to Eliana for someone who is still deciding. The prefilled message tells her which tool the
+  // diagnosis recommended; no email, score or other personal detail goes into the link.
+  const handleWhatsappClicked = () => {
+    trackEvent('diagnosis_whatsapp_clicked', { recommended_tool: result.recommendedTool });
+    const message = `היי אליענה, סיימתי את האבחון וההמלצה שקיבלתי היא ${meta.label}. אשמח לעזרה להבין מה הכי מתאים לי.`;
+    window.open(`https://wa.me/${ELIANA_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noreferrer');
   };
 
   const renderFeedback = () => (
@@ -649,6 +658,17 @@ export function DiagnosisResultDialog({
 
               {isRTL && (
                 <div className="rounded-lg border border-border bg-muted/20 p-3 text-center space-y-1">
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    לא בטוחים מה מתאים לך: הכלי שהומלץ, המסע המלא או ליווי אישי? כתבו לי בווצאפ ונחליט יחד מה באמת יעזור לך. אני עונה בעצמי, בדרך כלל תוך יום.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleWhatsappClicked}
+                    className="inline-block text-xs font-medium text-accent hover:underline underline-offset-2"
+                  >
+                    לכתוב לאליענה בווצאפ
+                  </button>
+                  <div className="border-t border-border/60 my-2" />
                   <p className="text-xs text-foreground/80 leading-relaxed">
                     מרגישים שצריך ליווי צמוד? יש גם קבוצה קטנה וגם ליווי אחד על אחד עם אליענה.
                   </p>
