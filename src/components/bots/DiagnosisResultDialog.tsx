@@ -92,6 +92,9 @@ const FULL_MENTOR_PRICE_ILS = 750;
 const FULL_MENTOR_PRICE_USD = 250;
 const FULL_MENTOR_PAYMENT_URL_HE = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
 const FULL_MENTOR_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN';
+// For someone who wants hands-on guidance (the small group or one-on-one with Eliana): a short fit
+// questionnaire, after which Eliana sets up an intro call. Hebrew only; the English version is not published.
+const PREMIUM_FIT_FORM_URL_HE = 'https://docs.google.com/forms/d/e/1FAIpQLSffRhcbsjwlcVL46nwy8HHL3OFeBb04uUIvjEQcSAJU5cbWjA/viewform';
 
 // Where the "send to a colleague" WhatsApp message points — the diagnosis's
 // own public entry point, not this account's authenticated /mentor area.
@@ -363,6 +366,10 @@ export function DiagnosisResultDialog({
     void recordPurchaseIntent('full_mentor');
     setPurchaseKind('full_mentor');
     setPurchaseStartedAt(Date.now());
+  };
+
+  const handlePremiumFitClicked = () => {
+    trackEvent('diagnosis_premium_fit_form_clicked', { recommended_tool: result.recommendedTool });
   };
 
   const renderFeedback = () => (
@@ -639,6 +646,23 @@ export function DiagnosisResultDialog({
                   ? `או להתחיל רק עם ${meta.label} — ₪${SINGLE_TOOL_PRICE_ILS}`
                   : `Or start with just ${meta.label} — $${SINGLE_TOOL_PRICE_USD}`}
               </a>
+
+              {isRTL && (
+                <div className="rounded-lg border border-border bg-muted/20 p-3 text-center space-y-1">
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    מרגישים שצריך ליווי צמוד? יש גם קבוצה קטנה וגם ליווי אחד על אחד עם אליענה.
+                  </p>
+                  <a
+                    href={PREMIUM_FIT_FORM_URL_HE}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={handlePremiumFitClicked}
+                    className="inline-block text-xs font-medium text-accent hover:underline underline-offset-2"
+                  >
+                    לשאלון התאמה קצר, ובהמשך שיחת היכרות
+                  </a>
+                </div>
+              )}
 
               {purchaseKind && (
                 <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs leading-relaxed space-y-1.5" role="status">
