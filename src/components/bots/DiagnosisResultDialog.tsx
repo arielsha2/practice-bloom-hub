@@ -606,17 +606,19 @@ export function DiagnosisResultDialog({
 
               <Button variant="cta" className="w-full h-auto py-2.5" asChild>
                 <a
-                  href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
+                  href={isRTL ? FULL_MENTOR_PAYMENT_URL_HE : FULL_MENTOR_PAYMENT_URL_EN}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={handleChooseSingleTool}
+                  onClick={handleChooseFullMentor}
                   className="flex flex-col items-center leading-tight gap-0.5"
                 >
                   <span>
-                    {isRTL ? `להתחיל עם ${meta.label}` : `Start with ${meta.label}`} — {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `$${SINGLE_TOOL_PRICE_USD}`}
+                    {isRTL ? 'להתחיל את המסע המלא עם אליענה' : 'Start the full journey with Eliana'} — {isRTL ? `₪${FULL_MENTOR_PRICE_ILS}` : `$${FULL_MENTOR_PRICE_USD}`}
                   </span>
                   <span className="text-xs font-normal opacity-85">
-                    {isRTL ? 'בדיוק הכלי שהאבחון המליץ עליו' : 'Exactly the tool the diagnosis recommended'}
+                    {isRTL
+                      ? `כל ששת הכלים, כולל ${meta.label} שהאבחון המליץ עליו`
+                      : `All six tools, including ${meta.label}, the one the diagnosis recommended`}
                   </span>
                 </a>
               </Button>
@@ -627,15 +629,15 @@ export function DiagnosisResultDialog({
               </div>
 
               <a
-                href={isRTL ? FULL_MENTOR_PAYMENT_URL_HE : FULL_MENTOR_PAYMENT_URL_EN}
+                href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
                 target="_blank"
                 rel="noreferrer"
-                onClick={handleChooseFullMentor}
+                onClick={handleChooseSingleTool}
                 className="block text-center text-xs text-muted-foreground hover:text-accent underline underline-offset-2 pt-1"
               >
                 {isRTL
-                  ? `או, קבלו את כל המסע המלא עם אליענה (כולל ${meta.label} וחמישה כלים נוספים) — ₪${FULL_MENTOR_PRICE_ILS}`
-                  : `Or get the full journey with Eliana (${meta.label} plus five more tools) — $${FULL_MENTOR_PRICE_USD}`}
+                  ? `או להתחיל רק עם ${meta.label} — ₪${SINGLE_TOOL_PRICE_ILS}`
+                  : `Or start with just ${meta.label} — $${SINGLE_TOOL_PRICE_USD}`}
               </a>
 
               {purchaseKind && (
