@@ -1,4 +1,8 @@
 // Public Meshulam webhook: validates shared secret header, marks user as paid.
+//
+// It is the Grow account-wide "after a transaction" webhook, so it is called for EVERY payment in the
+// account (single tools, coaching, ...). Only a payment of the full-Mentor price (₪750) may grant the plan;
+// any other amount is logged as unrecognized_amount for manual follow-up and changes nothing.
 // Idempotent via unique index on profiles.meshulam_transaction_id and
 // notes='meshulam:<txn>' on student_enrollments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -9,17 +13,92 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function pickEmail(p: any): string | null {
-  const cand = p?.email ?? p?.payer_email ?? p?.customerEmail ?? p?.data?.email ?? p?.user?.email;
-  return typeof cand === "string" ? cand.trim().toLowerCase() : null;
+// ===== grow payload helpers: begin =====
+// Identical block in grow-payment-webhook and meshulam-payment-webhook (separate edge functions, no shared
+// module in the deploy path) — keep the two copies in step.
+//
+// Grow documents these fields in its webhook body: transactionCode, paymentSum, paymentDate, asmachta, fullName,
+// payerEmail (at the top level or under "data"). A form-encoded body can arrive with bracket keys
+// ("data[payerEmail]"); unbracket() turns those back into nesting. The webhook set up on the Grow account is
+// for ALL transactions, so the product is decided by the AMOUNT paid, never by which link was used: anything
+// that is not a known price must not open anything.
+const SINGLE_TOOL_SUMS_ILS = [98, 290];
+const FULL_MENTOR_SUM_ILS = 750;
+const SUM_TOLERANCE_ILS = 0.5;
+
+function unbracket(flat: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [key, value] of Object.entries(flat)) {
+    const m = key.match(/^([^\[\]]+)((?:\[[^\]]*\])+)$/);
+    if (!m) { out[key] = value; continue; }
+    const path = [m[1], ...[...m[2].matchAll(/\[([^\]]*)\]/g)].map((x) => x[1])];
+    let cur: Record<string, any> = out;
+    path.forEach((seg, i) => {
+      if (i === path.length - 1) cur[seg] = value;
+      else {
+        if (typeof cur[seg] !== "object" || cur[seg] === null) cur[seg] = {};
+        cur = cur[seg];
+      }
+    });
+  }
+  return out;
 }
-function pickTxn(p: any): string | null {
-  const cand = p?.transaction_id ?? p?.transactionId ?? p?.txn_id ?? p?.data?.transaction_id ?? p?.asmachta;
-  return cand == null ? null : String(cand);
+
+function growField(p: any, names: string[]): unknown {
+  for (const scope of [p, p?.data, p?.payload]) {
+    if (!scope || typeof scope !== "object") continue;
+    for (const name of names) {
+      const v = scope[name];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+  }
+  return null;
 }
-function pickName(p: any): string | null {
-  const cand = p?.full_name ?? p?.fullName ?? p?.payer_name ?? p?.data?.full_name ?? p?.first_name;
-  return typeof cand === "string" ? cand : null;
+
+function growEmail(p: any): string | null {
+  const v = growField(p, ["payerEmail", "email", "payer_email", "customerEmail", "customer_email", "buyer_email"]) ?? p?.user?.email;
+  return typeof v === "string" && v.includes("@") ? v.trim().toLowerCase() : null;
+}
+
+function growTxn(p: any): string | null {
+  const v = growField(p, ["transactionCode", "transactionId", "transaction_id", "txn_id", "orderId", "order_id", "asmachta", "id"]);
+  return v == null ? null : String(v);
+}
+
+function growName(p: any): string | null {
+  const v = growField(p, ["fullName", "full_name", "payerName", "payer_name", "first_name"]);
+  return typeof v === "string" ? v : null;
+}
+
+function growSum(p: any): number | null {
+  const raw = growField(p, ["paymentSum", "sum", "paymentAmount", "amount"]);
+  if (raw == null) return null;
+  const n = typeof raw === "number" ? raw : Number(String(raw).replace(",", ".").replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+const sumMatches = (n: number | null, expected: number[]) => n != null && expected.some((s) => Math.abs(n - s) <= SUM_TOLERANCE_ILS);
+const isSingleToolSum = (n: number | null) => sumMatches(n, SINGLE_TOOL_SUMS_ILS);
+const isFullMentorSum = (n: number | null) => sumMatches(n, [FULL_MENTOR_SUM_ILS]);
+// ===== grow payload helpers: end =====
+
+// Gate rejections go to payment_grant_events (shown in the admin dashboard) instead of only the function logs.
+async function logGateEvent(
+  admin: any,
+  row: { transaction_id: string | null; payer_email: string | null; outcome: string; detail?: Record<string, unknown> | null },
+): Promise<void> {
+  try {
+    const { error } = await admin.from("payment_grant_events").insert({
+      provider: "grow",
+      transaction_id: row.transaction_id,
+      payer_email: row.payer_email,
+      outcome: row.outcome,
+      detail: row.detail ?? null,
+    });
+    if (error && !String(error.message).includes("duplicate key")) console.error("payment_grant_events insert failed:", error);
+  } catch (e) {
+    console.error("payment_grant_events insert threw:", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -50,23 +129,36 @@ Deno.serve(async (req) => {
     else {
       const form = await req.formData().catch(() => null);
       if (form) for (const [k, v] of form.entries()) payload[k] = v;
+      payload = unbracket(payload);
     }
     console.log("meshulam-webhook payload keys:", Object.keys(payload));
-
-    const email = pickEmail(payload);
-    const transaction_id = pickTxn(payload);
-    const full_name = pickName(payload);
-
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Missing email" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const email = growEmail(payload);
+    const transaction_id = growTxn(payload);
+    const full_name = growName(payload);
+    const sum = growSum(payload);
+    const eventDetail = { sum_ils: sum, payload_keys: Object.keys(payload) };
+
+    if (!email) {
+      await logGateEvent(admin, { transaction_id, payer_email: null, outcome: "no_email", detail: eventDetail });
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only the full-Mentor price grants the plan; every other amount is somebody else's product.
+    if (!isFullMentorSum(sum)) {
+      console.warn("meshulam-webhook: amount is not the full-Mentor price, nothing granted", sum, email);
+      await logGateEvent(admin, { transaction_id, payer_email: email, outcome: "unrecognized_amount", detail: eventDetail });
+      return new Response(JSON.stringify({ ok: true, note: "not_full_mentor_amount" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Idempotency check by transaction id on profiles
     if (transaction_id) {

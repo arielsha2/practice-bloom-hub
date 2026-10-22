@@ -6,11 +6,12 @@
 // baked into the payment link. Idempotent via the unique (source,
 // transaction_id) index on user_tool_access.
 //
-// Grow's exact webhook payload shape wasn't available while building this —
-// field-picking below is deliberately defensive (tries several common key
-// names, same pattern as pickEmail/pickTxn in meshulam-payment-webhook)
-// rather than trusting one exact vendor format. First real webhook hit
-// should be checked against the logs below to confirm the real field names.
+// Field names follow Grow's webhook documentation (payerEmail, transactionCode, paymentSum), read
+// defensively (see the "grow payload helpers" block). No real webhook has been received yet: the first
+// one should be checked against the payment_grant_events row, whose detail holds the payload keys.
+//
+// The webhook configured on the Grow account fires for EVERY transaction, so a payment only opens a tool
+// when its amount is a single-tool price (₪98 / ₪290); any other amount is logged as unrecognized_amount.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -19,18 +20,74 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function pickEmail(p: any): string | null {
-  const cand =
-    p?.email ?? p?.payer_email ?? p?.customerEmail ?? p?.customer_email ??
-    p?.buyer_email ?? p?.data?.email ?? p?.user?.email ?? p?.payload?.email;
-  return typeof cand === "string" ? cand.trim().toLowerCase() : null;
+// ===== grow payload helpers: begin =====
+// Identical block in grow-payment-webhook and meshulam-payment-webhook (separate edge functions, no shared
+// module in the deploy path) — keep the two copies in step.
+//
+// Grow documents these fields in its webhook body: transactionCode, paymentSum, paymentDate, asmachta, fullName,
+// payerEmail (at the top level or under "data"). A form-encoded body can arrive with bracket keys
+// ("data[payerEmail]"); unbracket() turns those back into nesting. The webhook set up on the Grow account is
+// for ALL transactions, so the product is decided by the AMOUNT paid, never by which link was used: anything
+// that is not a known price must not open anything.
+const SINGLE_TOOL_SUMS_ILS = [98, 290];
+const FULL_MENTOR_SUM_ILS = 750;
+const SUM_TOLERANCE_ILS = 0.5;
+
+function unbracket(flat: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [key, value] of Object.entries(flat)) {
+    const m = key.match(/^([^\[\]]+)((?:\[[^\]]*\])+)$/);
+    if (!m) { out[key] = value; continue; }
+    const path = [m[1], ...[...m[2].matchAll(/\[([^\]]*)\]/g)].map((x) => x[1])];
+    let cur: Record<string, any> = out;
+    path.forEach((seg, i) => {
+      if (i === path.length - 1) cur[seg] = value;
+      else {
+        if (typeof cur[seg] !== "object" || cur[seg] === null) cur[seg] = {};
+        cur = cur[seg];
+      }
+    });
+  }
+  return out;
 }
-function pickTxn(p: any): string | null {
-  const cand =
-    p?.transaction_id ?? p?.transactionId ?? p?.txn_id ?? p?.order_id ??
-    p?.orderId ?? p?.payment_id ?? p?.id ?? p?.data?.transaction_id;
-  return cand == null ? null : String(cand);
+
+function growField(p: any, names: string[]): unknown {
+  for (const scope of [p, p?.data, p?.payload]) {
+    if (!scope || typeof scope !== "object") continue;
+    for (const name of names) {
+      const v = scope[name];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+  }
+  return null;
 }
+
+function growEmail(p: any): string | null {
+  const v = growField(p, ["payerEmail", "email", "payer_email", "customerEmail", "customer_email", "buyer_email"]) ?? p?.user?.email;
+  return typeof v === "string" && v.includes("@") ? v.trim().toLowerCase() : null;
+}
+
+function growTxn(p: any): string | null {
+  const v = growField(p, ["transactionCode", "transactionId", "transaction_id", "txn_id", "orderId", "order_id", "asmachta", "id"]);
+  return v == null ? null : String(v);
+}
+
+function growName(p: any): string | null {
+  const v = growField(p, ["fullName", "full_name", "payerName", "payer_name", "first_name"]);
+  return typeof v === "string" ? v : null;
+}
+
+function growSum(p: any): number | null {
+  const raw = growField(p, ["paymentSum", "sum", "paymentAmount", "amount"]);
+  if (raw == null) return null;
+  const n = typeof raw === "number" ? raw : Number(String(raw).replace(",", ".").replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+const sumMatches = (n: number | null, expected: number[]) => n != null && expected.some((s) => Math.abs(n - s) <= SUM_TOLERANCE_ILS);
+const isSingleToolSum = (n: number | null) => sumMatches(n, SINGLE_TOOL_SUMS_ILS);
+const isFullMentorSum = (n: number | null) => sumMatches(n, [FULL_MENTOR_SUM_ILS]);
+// ===== grow payload helpers: end =====
 
 // ===== purchase confirmation helpers: begin =====
 // Identical block in grow-payment-webhook and paypal-payment-webhook (separate edge functions, no shared
@@ -188,23 +245,37 @@ Deno.serve(async (req) => {
     else {
       const form = await req.formData().catch(() => null);
       if (form) for (const [k, v] of form.entries()) payload[k] = v;
+      payload = unbracket(payload);
     }
     console.log("grow-webhook payload keys:", Object.keys(payload));
-
-    const email = pickEmail(payload);
-    const transaction_id = pickTxn(payload);
-
-    if (!email) {
-      console.error("grow-webhook: no email found in payload", JSON.stringify(payload));
-      return new Response(JSON.stringify({ error: "Missing email" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const email = growEmail(payload);
+    const transaction_id = growTxn(payload);
+    const sum = growSum(payload);
+    // Kept on every event row so the first real webhooks can be checked without reading function logs.
+    const eventDetail = { sum_ils: sum, payload_keys: Object.keys(payload) };
+
+    if (!email) {
+      console.error("grow-webhook: no email found in payload", JSON.stringify(payload));
+      await logPaymentEvent(admin, { provider: "grow", transaction_id, payer_email: null, outcome: "no_email", detail: eventDetail });
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // This webhook may be attached to the whole Grow account: only a single-tool price opens a tool.
+    if (!isSingleToolSum(sum)) {
+      console.error("grow-webhook: unrecognized amount, manual follow-up needed", sum, email);
+      await logPaymentEvent(admin, { provider: "grow", transaction_id, payer_email: email, outcome: "unrecognized_amount", detail: eventDetail });
+      return new Response(JSON.stringify({ ok: true, note: "unrecognized_amount_manual_followup_needed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Idempotency: this exact transaction already processed.
     if (transaction_id) {
@@ -230,7 +301,7 @@ Deno.serve(async (req) => {
       // completed diagnosis. Log loudly for manual follow-up rather than
       // silently dropping a real payment.
       console.error("grow-webhook: no profile found for paying email", email);
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, outcome: "no_profile" });
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, outcome: "no_profile", detail: eventDetail });
       return new Response(JSON.stringify({ ok: true, note: "no_profile_manual_followup_needed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -245,7 +316,7 @@ Deno.serve(async (req) => {
 
     if (!recommendedTool) {
       console.error("grow-webhook: no recommended_tool on diagnosis for user", profile.id, email);
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, outcome: "no_recommendation" });
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, outcome: "no_recommendation", detail: eventDetail });
       return new Response(JSON.stringify({ ok: true, note: "no_recommendation_manual_followup_needed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -262,13 +333,13 @@ Deno.serve(async (req) => {
     const duplicate = !!insErr && String(insErr.message).includes("duplicate key");
     if (insErr && !duplicate) {
       console.error("grow-webhook: insert error:", insErr);
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "grant_failed", detail: { message: String(insErr.message) } });
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "grant_failed", detail: { ...eventDetail, message: String(insErr.message) } });
     } else if (duplicate) {
       // Already owned: no second confirmation email.
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "already_had_tool" });
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "already_had_tool", detail: eventDetail });
     } else {
       const mail = await sendAccessEmail(email, recommendedTool, "he");
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "granted", email_sent: mail.ok, email_error: mail.error ?? null });
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "granted", email_sent: mail.ok, email_error: mail.error ?? null, detail: eventDetail });
     }
 
     return new Response(JSON.stringify({ ok: true, granted: recommendedTool }), {
