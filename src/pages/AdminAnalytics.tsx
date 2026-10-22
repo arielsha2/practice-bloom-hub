@@ -23,6 +23,7 @@ import { DiagnosisFeedbackCard } from '@/components/mentor/DiagnosisFeedbackCard
 import { BusinessFunnelOverview } from '@/components/admin/analytics/BusinessFunnelOverview';
 import { PaymentIssuesCard } from '@/components/admin/analytics/PaymentIssuesCard';
 import { ChallengeRegistrationsCard } from '@/components/admin/analytics/ChallengeRegistrationsCard';
+import { DiagnosisFollowupListCard } from '@/components/admin/analytics/DiagnosisFollowupListCard';
 import { RefreshCw } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -71,6 +72,8 @@ export default function AdminAnalytics() {
               <PaymentIssuesCard />
 
               <ChallengeRegistrationsCard />
+
+              <DiagnosisFollowupListCard />
 
               <KPICards data={data} />
 

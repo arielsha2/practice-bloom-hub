@@ -1863,6 +1863,17 @@ export type Database = {
       }
     }
     Functions: {
+      admin_diagnosis_completers: {
+        Args: never
+        Returns: {
+          clicked_buy: boolean
+          display_name: string
+          email: string
+          finished_on: string
+          has_report: boolean
+          recommended_tool: string
+        }[]
+      }
       admin_funnel_overview: {
         Args: { p_since?: string; p_until?: string }
         Returns: Json
