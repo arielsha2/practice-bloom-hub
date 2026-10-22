@@ -1773,6 +1773,7 @@ export type Database = {
       user_tool_access: {
         Row: {
           bot_key: string
+          expires_at: string | null
           granted_at: string
           id: string
           source: string
@@ -1781,6 +1782,7 @@ export type Database = {
         }
         Insert: {
           bot_key: string
+          expires_at?: string | null
           granted_at?: string
           id?: string
           source: string
@@ -1789,6 +1791,7 @@ export type Database = {
         }
         Update: {
           bot_key?: string
+          expires_at?: string | null
           granted_at?: string
           id?: string
           source?: string

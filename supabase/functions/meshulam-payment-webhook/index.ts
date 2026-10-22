@@ -80,6 +80,12 @@ function growSum(p: any): number | null {
 const sumMatches = (n: number | null, expected: number[]) => n != null && expected.some((s) => Math.abs(n - s) <= SUM_TOLERANCE_ILS);
 const isSingleToolSum = (n: number | null) => sumMatches(n, SINGLE_TOOL_SUMS_ILS);
 const isFullMentorSum = (n: number | null) => sumMatches(n, [FULL_MENTOR_SUM_ILS]);
+
+// The introductory single-tool price opens the tool for a limited time; the full single-tool price opens it for good.
+const TIME_LIMITED_SUM_ILS = 98;
+const LIMITED_ACCESS_DAYS = 30;
+const isTimeLimitedSum = (n: number | null) => sumMatches(n, [TIME_LIMITED_SUM_ILS]);
+const addDays = (from: Date, days: number) => new Date(from.getTime() + days * 86_400_000);
 // ===== grow payload helpers: end =====
 
 // Gate rejections go to payment_grant_events (shown in the admin dashboard) instead of only the function logs.

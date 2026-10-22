@@ -73,10 +73,16 @@ function useSingleToolAccess() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_tool_access")
-        .select("bot_key")
+        .select("bot_key, expires_at")
         .eq("user_id", user!.id);
       if (error) throw error;
-      return new Set((data ?? []).map((r) => r.bot_key as string));
+      // expires_at null = permanent; a time-limited purchase (introductory price) stops opening the tool after it.
+      const now = Date.now();
+      return new Set(
+        (data ?? [])
+          .filter((r) => !r.expires_at || new Date(r.expires_at as string).getTime() > now)
+          .map((r) => r.bot_key as string),
+      );
     },
   });
   return { grantedTools: q.data ?? new Set<string>(), loading: q.isLoading };

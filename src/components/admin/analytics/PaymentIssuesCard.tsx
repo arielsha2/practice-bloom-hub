@@ -33,6 +33,8 @@ const OUTCOME_LABELS: Record<string, { label: string; hint: string }> = {
   no_recommendation: { label: 'אין לו אבחון שמור, לא ידוע איזה כלי להעניק', hint: 'צריך לברר איזה כלי מתאים ולהעניק אותו ידנית.' },
   unrecognized_amount: { label: 'סכום ששולם אינו תואם מחיר מוכר', hint: 'לבדוק ב-Grow או ב-PayPal מה נרכש. תשלום על מוצר אחר, כמו ליווי אישי, לא פותח גישה אוטומטית.' },
   no_email: { label: 'תשלום שהגיע בלי אימייל של המשלם', hint: 'לבדוק ב-Grow מי שילם ולהעניק ידנית. אם זה חוזר, שמות השדות בהודעה של Grow השתנו.' },
+  renewed: { label: 'הגישה הוארכה, אך אימייל האישור לא נשלח', hint: 'הכלי פתוח למשתמש. אפשר לשלוח לו את הקישור ואת תאריך הסיום ידנית.' },
+  upgraded: { label: 'הגישה הפכה לקבועה, אך אימייל האישור לא נשלח', hint: 'הכלי פתוח למשתמש. אפשר לשלוח לו את הקישור ידנית.' },
   grant_failed: { label: 'הענקת הגישה נכשלה', hint: 'לבדוק את הלוגים של פונקציית התשלום ולהעניק ידנית.' },
   granted: { label: 'הגישה ניתנה, אך אימייל האישור לא נשלח', hint: 'הכלי פתוח למשתמש. אפשר לשלוח לו את הקישור ידנית.' },
 };
@@ -40,7 +42,7 @@ const OUTCOME_LABELS: Record<string, { label: string; hint: string }> = {
 function isProblem(e: PaymentEvent): boolean {
   if (e.resolved) return false;
   if (e.outcome === 'already_had_tool') return false;
-  if (e.outcome === 'granted') return !e.email_sent;
+  if (e.outcome === 'granted' || e.outcome === 'renewed' || e.outcome === 'upgraded') return !e.email_sent;
   return true;
 }
 

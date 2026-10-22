@@ -212,6 +212,8 @@ export function DiagnosisResultDialog({
         .select('id')
         .eq('user_id', authUser!.id)
         .eq('bot_key', result.recommendedTool)
+        // a time-limited purchase that has run out no longer counts as owning the tool
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .limit(1);
       if (error) throw error;
       return (data?.length ?? 0) > 0;

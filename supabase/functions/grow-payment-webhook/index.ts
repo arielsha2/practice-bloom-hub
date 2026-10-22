@@ -87,6 +87,12 @@ function growSum(p: any): number | null {
 const sumMatches = (n: number | null, expected: number[]) => n != null && expected.some((s) => Math.abs(n - s) <= SUM_TOLERANCE_ILS);
 const isSingleToolSum = (n: number | null) => sumMatches(n, SINGLE_TOOL_SUMS_ILS);
 const isFullMentorSum = (n: number | null) => sumMatches(n, [FULL_MENTOR_SUM_ILS]);
+
+// The introductory single-tool price opens the tool for a limited time; the full single-tool price opens it for good.
+const TIME_LIMITED_SUM_ILS = 98;
+const LIMITED_ACCESS_DAYS = 30;
+const isTimeLimitedSum = (n: number | null) => sumMatches(n, [TIME_LIMITED_SUM_ILS]);
+const addDays = (from: Date, days: number) => new Date(from.getTime() + days * 86_400_000);
 // ===== grow payload helpers: end =====
 
 // ===== purchase confirmation helpers: begin =====
@@ -126,14 +132,17 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function buildAccessEmail(tool: string, lang: "he" | "en", payerEmail: string, hasReplyTo: boolean) {
+function buildAccessEmail(tool: string, lang: "he" | "en", payerEmail: string, hasReplyTo: boolean, expiresAt: string | null = null) {
   const label = TOOL_LABELS[lang][tool] ?? tool;
   const link = toolLink(tool, lang);
   const email = escapeHtml(payerEmail);
   const he = lang === "he";
   const subject = he ? `הכלי שרכשת מוכן: ${label}` : `Your tool is ready: ${label}`;
   const title = he ? "התשלום התקבל, והכלי שלך מוכן" : "Payment received, your tool is ready";
-  const intro = he ? `פתחנו עבורך את הכלי <b>${escapeHtml(label)}</b>.` : `We have opened <b>${escapeHtml(label)}</b> for you.`;
+  // A time-limited purchase says until when the tool is open (Israel time); a permanent one says nothing.
+  const until = expiresAt ? new Date(expiresAt).toLocaleDateString(he ? "he-IL" : "en-GB", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric" }) : null;
+  const untilNote = until ? (he ? ` הגישה פעילה עד ${until}.` : ` Access is active until ${until}.`) : "";
+  const intro = (he ? `פתחנו עבורך את הכלי <b>${escapeHtml(label)}</b>.` : `We have opened <b>${escapeHtml(label)}</b> for you.`) + untilNote;
   const button = he ? "לפתיחת הכלי" : "Open the tool";
   const loginNote = he
     ? `הכניסה היא עם האימייל שאיתו נרשמת: <b dir="ltr">${email}</b>. אם הדף עדיין לא מציג את הכלי, כדאי לרענן אותו אחרי דקה. הכלי זמין גם בדף הכלים באתר.`
@@ -154,18 +163,18 @@ function buildAccessEmail(tool: string, lang: "he" | "en", payerEmail: string, h
 <p style="text-align:center;font-size:12px;color:#9a918a;margin:14px 0 0">${footer} · therapykeys.co.il</p>
 </div></body></html>`;
   const text = he
-    ? `התשלום התקבל, והכלי שלך מוכן: ${label}\n\nלפתיחת הכלי: ${link}\n\nהכניסה היא עם האימייל שאיתו נרשמת: ${payerEmail}\n${help}`
-    : `Payment received, your tool is ready: ${label}\n\nOpen it: ${link}\n\nSign in with the email you registered with: ${payerEmail}\n${help}`;
+    ? `התשלום התקבל, והכלי שלך מוכן: ${label}${untilNote}\n\nלפתיחת הכלי: ${link}\n\nהכניסה היא עם האימייל שאיתו נרשמת: ${payerEmail}\n${help}`
+    : `Payment received, your tool is ready: ${label}${untilNote}\n\nOpen it: ${link}\n\nSign in with the email you registered with: ${payerEmail}\n${help}`;
   return { subject, html, text, link };
 }
 
-async function sendAccessEmail(to: string, tool: string, lang: "he" | "en"): Promise<{ ok: boolean; error?: string }> {
+async function sendAccessEmail(to: string, tool: string, lang: "he" | "en", expiresAt: string | null = null): Promise<{ ok: boolean; error?: string }> {
   try {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const brevoKey = Deno.env.get("BREVO_API_KEY");
     if (!lovableKey || !brevoKey) return { ok: false, error: "missing_email_secrets" };
     const replyTo = Deno.env.get("PURCHASE_REPLY_TO") ?? "";
-    const m = buildAccessEmail(tool, lang, to, !!replyTo);
+    const m = buildAccessEmail(tool, lang, to, !!replyTo, expiresAt);
     const res = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey },
@@ -322,11 +331,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    // The introductory price (₪98) opens the tool for 30 days; the full single-tool price (₪290) opens it for good
+    // (expires_at null = permanent, which is also what every older row and every manual grant has).
+    const now = new Date();
+    const limited = isTimeLimitedSum(sum);
+    const expiresAt = limited ? addDays(now, LIMITED_ACCESS_DAYS).toISOString() : null;
+
     const { error: insErr } = await admin.from("user_tool_access").insert({
       user_id: profile.id,
       bot_key: recommendedTool,
       source: "grow_single_tool",
       transaction_id: transaction_id ?? null,
+      expires_at: expiresAt,
     });
     // Unique (user_id, bot_key) may already exist (e.g. re-purchase, or a
     // retried webhook without a transaction id) — that's fine, not an error.
@@ -335,11 +351,29 @@ Deno.serve(async (req) => {
       console.error("grow-webhook: insert error:", insErr);
       await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "grant_failed", detail: { ...eventDetail, message: String(insErr.message) } });
     } else if (duplicate) {
-      // Already owned: no second confirmation email.
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "already_had_tool", detail: eventDetail });
+      // The tool is already on the account. A permanent row stays as it is (no second confirmation email); a
+      // time-limited one is extended by another limited purchase, or made permanent by the full price.
+      const { data: existing } = await admin
+        .from("user_tool_access").select("expires_at").eq("user_id", profile.id).eq("bot_key", recommendedTool).maybeSingle();
+      const existingEnds = existing?.expires_at ? new Date(existing.expires_at as string) : null;
+      if (!existing || existingEnds === null) {
+        await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "already_had_tool", detail: eventDetail });
+      } else {
+        const newEnds = limited ? addDays(existingEnds > now ? existingEnds : now, LIMITED_ACCESS_DAYS).toISOString() : null;
+        // The new transaction id goes on the row so a retried webhook for this payment is recognised as processed.
+        const { error: updErr } = await admin
+          .from("user_tool_access").update({ expires_at: newEnds, transaction_id: transaction_id ?? null }).eq("user_id", profile.id).eq("bot_key", recommendedTool);
+        if (updErr) {
+          console.error("grow-webhook: extend error:", updErr);
+          await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "grant_failed", detail: { ...eventDetail, message: String(updErr.message) } });
+        } else {
+          const mail = await sendAccessEmail(email, recommendedTool, "he", newEnds);
+          await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: limited ? "renewed" : "upgraded", email_sent: mail.ok, email_error: mail.error ?? null, detail: { ...eventDetail, expires_at: newEnds } });
+        }
+      }
     } else {
-      const mail = await sendAccessEmail(email, recommendedTool, "he");
-      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "granted", email_sent: mail.ok, email_error: mail.error ?? null, detail: eventDetail });
+      const mail = await sendAccessEmail(email, recommendedTool, "he", expiresAt);
+      await logPaymentEvent(admin, { provider: "grow", transaction_id: transaction_id ?? null, payer_email: email, user_id: profile.id, tool: recommendedTool, outcome: "granted", email_sent: mail.ok, email_error: mail.error ?? null, detail: { ...eventDetail, expires_at: expiresAt } });
     }
 
     return new Response(JSON.stringify({ ok: true, granted: recommendedTool }), {
