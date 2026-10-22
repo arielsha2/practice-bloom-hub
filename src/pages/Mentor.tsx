@@ -62,6 +62,7 @@ import { MentorSalesPage } from "@/components/mentor/MentorSalesPage";
 import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
+import { StartFreshButton } from "@/components/mentor/StartFreshButton";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
@@ -346,6 +347,8 @@ function JourneyRail({ onOpenBot }: { onOpenBot: (botKey: string) => void }) {
           </div>
         </li>
       </ol>
+
+      <StartFreshButton />
     </div>
   );
 }

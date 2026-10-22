@@ -5,7 +5,9 @@ import { toast } from "sonner";
 /**
  * Resets the current user's mentor journey: deletes therapist_journeys row,
  * bot memory, the shared professional-details card, bot conversations + messages, and clears local mentor chat cache.
- * Intended for admins to test the mentor as a brand-new therapist.
+ * Used by the admin-only ResetMentorButton (to test the mentor as a brand-new therapist) and by the
+ * user-facing StartFreshButton ("start over"). Every delete runs under the caller's own session, so the
+ * row-level policies (owner only) are what limit it to the caller's own data.
  */
 export function useResetMentorJourney() {
   const [isResetting, setIsResetting] = useState(false);
