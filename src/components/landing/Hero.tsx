@@ -66,15 +66,16 @@ export function Hero() {
                 onClick={() => trackEvent("diagnosis_entry_click", { location: "hero_primary" })}
               >
                 <Button
-                  size="xl"
-                  className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto whitespace-normal h-auto py-4"
+                  variant="outline"
+                  size="lg"
+                  className="group bg-transparent border-[#ff6f61]/70 text-background hover:bg-[#ff6f61]/15 hover:text-background w-full sm:w-auto"
                   data-track="hero_cta_click"
                   data-track-label="hero_start_diagnosis"
                 >
-                  <Stethoscope className="w-5 h-5 shrink-0" />
-                  {isRTL ? "לאבחון חינמי: מה עוצר את הקליניקה שלך?" : "Free diagnosis: what is holding your practice back?"}
+                  <Stethoscope className="w-4 h-4 shrink-0 text-[#ff6f61]" />
+                  {isRTL ? "אבחון חינמי לקליניקה" : "Free practice diagnosis"}
                   <Arrow
-                    className={`w-5 h-5 shrink-0 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
+                    className={`w-4 h-4 shrink-0 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
                   />
                 </Button>
               </Link>
@@ -86,8 +87,8 @@ export function Hero() {
               >
                 <Button
                   variant="outline"
-                  size="xl"
-                  className="bg-transparent border-background/50 text-background hover:bg-background/10 hover:text-background w-full sm:w-auto"
+                  size="lg"
+                  className="bg-transparent border-background/30 text-background hover:bg-background/10 hover:text-background w-full sm:w-auto"
                   data-track="hero_cta_click"
                   data-track-label="hero_start_mentor"
                 >

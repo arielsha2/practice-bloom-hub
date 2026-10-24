@@ -10,6 +10,7 @@ interface SiteContent {
   title: string;
   avatarUrl?: string;
   keyPhrase: string;
+  heroLine?: string;
   about: string;
   forYouIf: string[];
   phone: string;
@@ -308,18 +309,20 @@ export default function PublicTherapistSite() {
               margin: "32px 0",
             }}
           />
-          <p
-            style={{
-              fontSize: 17,
-              lineHeight: 1.75,
-              color: C.cream,
-              opacity: 0.85,
-              maxWidth: 480,
-              margin: 0,
-            }}
-          >
-            {c.about}
-          </p>
+          {c.heroLine && (
+            <p
+              style={{
+                fontSize: 17,
+                lineHeight: 1.75,
+                color: C.cream,
+                opacity: 0.85,
+                maxWidth: 480,
+                margin: 0,
+              }}
+            >
+              {c.heroLine}
+            </p>
+          )}
           <div style={{ marginTop: 40 }}>
             <a
               href={ctaHref}

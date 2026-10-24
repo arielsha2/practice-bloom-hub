@@ -43,7 +43,7 @@ export function Header() {
           )}
           <Link
             to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
-            className="px-4 py-2 rounded-lg font-semibold bg-[#ff6f61] text-white hover:bg-[#ff5a4d] transition-colors"
+            className="px-3 py-1.5 rounded-full border border-[#ff6f61]/70 text-[#ff9a8f] hover:bg-[#ff6f61]/15 transition-colors"
             onClick={() => trackEvent("diagnosis_entry_click", { location: "header_tab" })}
           >
             {isRTL ? "אבחון חינמי" : "Free diagnosis"}
@@ -152,7 +152,7 @@ export function Header() {
             )}
             <Link
               to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
-              className="font-semibold py-3 px-4 rounded-lg bg-[#ff6f61] text-white text-center"
+              className="py-3 px-4 rounded-full border border-[#ff6f61]/70 text-[#ff9a8f] text-center"
               onClick={() => {
                 trackEvent("diagnosis_entry_click", { location: "header_tab_mobile" });
                 setMobileMenuOpen(false);

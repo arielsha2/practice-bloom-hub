@@ -6,21 +6,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `אתה עוזר למטפל לבנות דף נחיתה שיווקי מהנתונים שחולצו מהמסע שלו.
-אל תמציא — השתמש רק במה שמופיע בנתונים שקיבלת.
-אם חסר מידע — כתוב משפט כללי חם שמתאים למטפל פסיכותרפיסט.
-הטון: חם, אישי, מדויק — לא גנרי, לא מנופח, לא שיווקי-צעקני.
-הכתיבה בגוף ראשון מנקודת המבט של המטפל.
-המטרה: שמטופל פוטנציאלי יקרא את הדף וירגיש "זה בדיוק אני, זה מה שאני צריך".
+const SYSTEM_PROMPT = `אתה כותב דף נחיתה אישי למטפל, מהנתונים שחולצו מהמסע שלו. הדף הוא של המטפל עצמו, לא של פלטפורמה.
+אל תמציא עובדות: השתמש רק במה שמופיע בנתונים. אם חסר מידע, כתוב משפט כללי וחם בלי לפרט דברים שלא נאמרו.
+הטון: חם, אישי, מדויק. לא גנרי, לא מנופח, לא שיווקי-צעקני, בלי הבטחות לתוצאה, בלי הבטחות ריפוי.
+הכתיבה בגוף ראשון מנקודת המבט של המטפל, בעברית טבעית וזורמת שמטפל באמת היה אומר.
+
+כללי ניסוח (חשובים):
+1. אין לדעת את המגדר של המטפל או של הפונה, ולכן אסור להשתמש בצורות חתך עם לוכסן או סוגריים (כמו "מרגיש/ה", "אתה/את", "(ה)"). במקומם:
+   - בגוף ראשון: זמן עבר ("עבדתי", "למדתי"), צורות רבים, או שמות פעולה ("ליווי של...", "עבודה עם..."). הימנע מפעלי הווה שמשתנים לפי מגדר.
+   - בפנייה למטופל: ניסוח נטול מגדר: "שלך", "עליך", "בך", שמות עצם ("תחושה ש...", "קושי ל..."), או פנייה כללית ("יש רגעים ש..."). לא "אתה/את" ולא "מרגיש/ה".
+2. כל שדה אומר דבר אחר. אסור לחזור על אותו משפט, אותה הצהרה או אותה מילת מפתח בין השדות.
+3. בלי קלישאות ("מרחב בטוח", "מסע של צמיחה", "הדלת פתוחה", "לצעוד איתך צעד אחר צעד").
+4. עברית תקנית, בלי מילים באנגלית ובלי שמות השדות.
 
 החזר JSON בלבד, ללא הסבר, ללא markdown, בפורמט הזה בדיוק:
 {
-  "keyPhrase": "משפט אחד קצר מבוסס על handshake_version, עד 100 תווים",
-  "about": "פסקה קצרה בגוף ראשון מבוססת על story_version, עד 250 תווים",
+  "keyPhrase": "הכותרת: משפט אחד קצר שאומר למי המטפל עוזר ובמה, מבוסס על handshake_version, עד 100 תווים",
+  "heroLine": "משפט תומך קצר מתחת לכותרת: מה משתנה אצל מי שעובד איתו, מבוסס על transformation ו-result, עד 120 תווים. לא חוזר על הכותרת",
+  "about": "פסקה אישית בגוף ראשון, 2-3 משפטים, על מי המטפל ולמה הוא עושה את מה שהוא עושה, מבוססת על story_version, עד 250 תווים. לא חוזרת על הכותרת ולא על המשפט התומך",
   "forYouIf": [
-    "משפט קצר המבוסס על internal_pain — מה מרגישים מבפנים",
-    "משפט קצר המבוסס על external_pain — מה קורה בחיים בפועל",
-    "משפט קצר המבוסס על desire — מה מחפשים בעמקי הלב"
+    "משפט קצר המבוסס על internal_pain: מה מרגישים מבפנים",
+    "משפט קצר המבוסס על external_pain: מה קורה בחיים בפועל",
+    "משפט קצר המבוסס על desire: מה מחפשים ומקווים לו"
   ]
 }`;
 
@@ -151,21 +158,38 @@ story_version: ${selfp.story_version ?? "—"}`;
 
     const data = await aiRes.json();
     const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: { keyPhrase?: string; about?: string; forYouIf?: string[] } = {};
+    let parsed: { keyPhrase?: string; heroLine?: string; about?: string; forYouIf?: string[] } = {};
     try { parsed = JSON.parse(raw); } catch {
       const m = raw.match(/\{[\s\S]*\}/);
-      if (m) parsed = JSON.parse(m[0]);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch { /* fall through to the defaults */ } }
     }
 
+    // The model sometimes slips in gender slashes ("מרגיש/ה") or repeats the headline in the other fields; a field
+    // that fails either check is dropped so the neutral default (or an empty field the therapist fills) is used.
+    const hasSlashForm = (t: string) => /[\u0590-\u05FF][\/(][\u0590-\u05FF]{1,3}\)?/.test(t);
+    const clean = (v: unknown, max: number): string => {
+      if (typeof v !== "string") return "";
+      const t = v.replace(/\s+/g, " ").trim();
+      return t && t.length <= max && !hasSlashForm(t) ? t : "";
+    };
+    const keyPhrase = clean(parsed.keyPhrase, 110);
+    const norm = (t: string) => t.replace(/[^\u0590-\u05FFa-z0-9]/gi, "");
+    let heroLine = clean(parsed.heroLine, 140);
+    if (heroLine && keyPhrase && (norm(heroLine) === norm(keyPhrase))) heroLine = "";
+    let about = clean(parsed.about, 300);
+    if (about && (norm(about) === norm(heroLine) || norm(about) === norm(keyPhrase))) about = "";
+    const forYouIf = Array.isArray(parsed.forYouIf) ? parsed.forYouIf.map((x) => clean(x, 160)) : [];
+
     const result = {
-      keyPhrase: parsed.keyPhrase || "מרחב טיפולי חם, מקצועי ובטוח",
-      about: parsed.about || "אני מאמין שכל אחד יכול לצמוח מתוך מקום של חמלה ושייכות. אני כאן כדי להחזיק לך מקום בטוח ולצעוד איתך צעד-צעד.",
-      forYouIf: Array.isArray(parsed.forYouIf) && parsed.forYouIf.length === 3
-        ? parsed.forYouIf
+      keyPhrase: keyPhrase || "מרחב טיפולי חם ומקצועי",
+      heroLine,
+      about: about || "אני מלווה אנשים שמחפשים להבין את עצמם טוב יותר, בקצב שלהם ובשיחה פתוחה, בלי שיפוט.",
+      forYouIf: forYouIf.length === 3 && forYouIf.every(Boolean)
+        ? forYouIf
         : [
-            "אתה מרגיש שמשהו דורש שינוי, גם אם קשה לשים את האצבע על מה",
-            "החיים נראים תקינים מבחוץ אבל מבפנים יש משהו שלא נח",
-            "אתה מחפש מרחב שבאמת מקשיב — בלי שיפוט ובלי ייעוץ ממהר",
+            "יש תחושה שמשהו דורש שינוי, גם אם קשה לשים את האצבע על מה",
+            "החיים נראים תקינים מבחוץ, אבל מבפנים יש משהו שלא נח",
+            "יש רצון במרחב שבאמת מקשיב, בלי שיפוט ובלי עצות ממהרות",
           ],
     };
 

@@ -29,6 +29,30 @@ function romanize(s: string) {
     .slice(0, 60) || "therapist";
 }
 
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_MAX_INPUT_BYTES = 10 * 1024 * 1024;
+const PHOTO_MAX_SIDE = 1200;
+
+// Scales the photo down to at most 1200px on the long side and re-encodes it as JPEG (about 100-300KB), so a
+// phone photo does not cost storage and bandwidth every time the page loads. A photo that cannot be decoded is rejected.
+async function shrinkPhoto(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) throw new Error("unreadable image");
+  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("no canvas");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85));
+  if (!blob) throw new Error("encode failed");
+  return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+}
+
 export default function WebsiteBuilder() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -41,6 +65,7 @@ export default function WebsiteBuilder() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [keyPhrase, setKeyPhrase] = useState("");
+  const [heroLine, setHeroLine] = useState("");
   const [about, setAbout] = useState("");
   const [forYouIf, setForYouIf] = useState<string[]>(["", "", ""]);
 
@@ -78,6 +103,7 @@ export default function WebsiteBuilder() {
 
       if (c.keyPhrase || c.about || c.forYouIf) {
         setKeyPhrase(c.keyPhrase ?? "");
+        setHeroLine(c.heroLine ?? "");
         setAbout(c.about ?? "");
         setForYouIf(Array.isArray(c.forYouIf) && c.forYouIf.length === 3 ? c.forYouIf : ["", "", ""]);
         setLoading(false);
@@ -89,6 +115,7 @@ export default function WebsiteBuilder() {
         const { data, error } = await supabase.functions.invoke("website-generate-content", {});
         if (error) throw error;
         setKeyPhrase(data?.keyPhrase ?? "");
+        setHeroLine(data?.heroLine ?? "");
         setAbout(data?.about ?? "");
         setForYouIf(Array.isArray(data?.forYouIf) && data.forYouIf.length === 3 ? data.forYouIf : ["", "", ""]);
       } catch (e) {
@@ -100,12 +127,20 @@ export default function WebsiteBuilder() {
     })();
   }, [user, authLoading, navigate]);
 
-  async function handlePhotoUpload(file: File) {
+  async function handlePhotoUpload(original: File) {
     if (!user) return;
+    if (!PHOTO_TYPES.includes(original.type)) {
+      toast.error("אפשר להעלות תמונה בפורמט JPG, PNG או WebP בלבד");
+      return;
+    }
+    if (original.size > PHOTO_MAX_INPUT_BYTES) {
+      toast.error("התמונה גדולה מדי. אפשר להעלות תמונה עד 10MB");
+      return;
+    }
     setUploadingPhoto(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const file = await shrinkPhoto(original);
+      const path = `${user.id}/avatar-${Date.now()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from("therapist-websites")
         .upload(path, file, { upsert: true, contentType: file.type });
@@ -153,7 +188,7 @@ export default function WebsiteBuilder() {
       const slug = existingSlug ?? (await uniqueSlug(baseSlug));
 
       const content = {
-        fullName, title, avatarUrl, keyPhrase, about, forYouIf, phone, email,
+        fullName, title, avatarUrl, keyPhrase, heroLine, about, forYouIf, phone, email,
       };
 
       const { error } = await supabase
@@ -219,7 +254,7 @@ export default function WebsiteBuilder() {
               <label className="cursor-pointer">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   onChange={(e) => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])}
                 />
@@ -237,6 +272,15 @@ export default function WebsiteBuilder() {
               value={keyPhrase}
               onChange={(e) => setKeyPhrase(e.target.value.slice(0, 100))}
               maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>משפט תומך מתחת לכותרת <span className="text-xs text-muted-foreground">(עד 120 תווים, לא חובה)</span></Label>
+            <Input
+              value={heroLine}
+              onChange={(e) => setHeroLine(e.target.value.slice(0, 120))}
+              maxLength={120}
             />
           </div>
 
