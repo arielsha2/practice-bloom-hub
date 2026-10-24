@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Quote, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
+import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -19,6 +19,7 @@ import {
 } from '@/lib/mentorSummary';
 import { trackEvent } from '@/lib/analytics';
 import { DiagnosisReportDocument } from '@/components/diagnosis/DiagnosisReportDocument';
+import { DiagnosisTestimonials } from '@/components/bots/DiagnosisTestimonials';
 import { downloadDiagnosisReportPdf } from '@/lib/diagnosisReportPdf';
 import type { DiagnosisReport } from '@/lib/diagnosisReport';
 import { supabase } from '@/integrations/supabase/client';
@@ -452,16 +453,7 @@ export function DiagnosisResultDialog({
     </>
   );
 
-  const renderTestimonial = () => (
-    <div className="rounded-lg border border-border bg-muted/20 p-3 flex gap-2">
-      <Quote className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-      <p className="text-xs text-foreground/80 leading-relaxed italic">
-        {isRTL
-          ? 'מטפלים שעברו את המנטור המלא מספרים שהוא נתן להם ידע וביטחון אמיתי לקחת את הצעדים המשמעותיים בקליניקה שלהם.'
-          : "Therapists who completed the full Mentor say it gave them real knowledge and confidence to take the significant steps in their practice."}
-      </p>
-    </div>
-  );
+  const renderTestimonial = () => <DiagnosisTestimonials isRTL={isRTL} />;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
