@@ -509,6 +509,15 @@ async function aiFetch(url: string, init: RequestInit): Promise<Response> {
 }
 // ===== ai provider: end =====
 
+// First word of the name the therapist registered with, for greeting them by name. Titles are skipped, and anything
+// that is not plain letters (initials, an e-mail address stored as the name) counts as no name.
+function firstNameOf(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const words = raw.trim().split(/\s+/).filter((w) => !["ד״ר", 'ד"ר', "דר", "Dr", "Dr."].includes(w));
+  const w = words[0] ?? "";
+  return w.length >= 2 && /^[֐-׿A-Za-z'"-]+$/.test(w) ? w : "";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -534,7 +543,7 @@ serve(async (req) => {
     const isPublicBot = PUBLIC_BOTS[botKey] && new Date() < new Date(PUBLIC_BOTS[botKey]);
 
     const authHeader = req.headers.get("Authorization");
-    let user: { id: string } | null = null;
+    let user: { id: string; user_metadata?: Record<string, unknown> } | null = null;
     let supabase: any;
 
     if (authHeader) {
@@ -631,6 +640,16 @@ Never use this marker in any other situation. Never mention the marker in visibl
       systemPrompt += isEnglish
         ? `\n\nRule for this tool (overrides the closing protocol above): the [ADVANCE] marker is allowed ONLY at the end of the stage 4 message (the one that starts with [STAGE:4]). Never add it at any earlier stage, even if the therapist writes "thanks" or "enough", or seems to have reached an insight. Keep going through the stages instead.`
         : `\n\nכלל לכלי הזה (גובר על פרוטוקול הסיום שלמעלה): הסמן [ADVANCE] מותר אך ורק בסוף הודעת שלב 4 (זו שמתחילה ב-[STAGE:4]). בשום שלב מוקדם יותר אסור להוסיף אותו, גם אם המטפל כותב "תודה" או "מספיק", או נראה שהגיע לתובנה. המשך בשלבי השיחה.`;
+    }
+
+    // The diagnosis greets the therapist by the first name they registered with.
+    if (botKey === "practice-diagnosis") {
+      const first = firstNameOf(user?.user_metadata?.full_name);
+      if (first) {
+        systemPrompt += isEnglish
+          ? `\n\nThe therapist signed up as "${first}". Address them by that first name once or twice in the conversation, warmly and naturally (not in every message).`
+          : `\n\nהמטפל נרשם בשם "${first}". פנה אליו בשמו הפרטי פעם או פעמיים בשיחה, בחום ובטבעיות (לא בכל הודעה).`;
+      }
     }
 
     const messages: Message[] = [

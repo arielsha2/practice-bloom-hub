@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowRight, ArrowLeft, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, MessageCircle, Stethoscope } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroFoundersImg from "@/assets/hero-founders.webp";
 import { trackEvent } from "@/lib/analytics";
@@ -61,21 +61,37 @@ export function Hero() {
               transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
             >
               <Link
+                to={isRTL ? "/ai-assistants/practice-diagnosis" : "/en/ai-assistants/practice-diagnosis"}
+                className="inline-flex"
+                onClick={() => trackEvent("diagnosis_entry_click", { location: "hero_primary" })}
+              >
+                <Button
+                  size="xl"
+                  className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto whitespace-normal h-auto py-4"
+                  data-track="hero_cta_click"
+                  data-track-label="hero_start_diagnosis"
+                >
+                  <Stethoscope className="w-5 h-5 shrink-0" />
+                  {isRTL ? "לאבחון חינמי: מה עוצר את הקליניקה שלך?" : "Free diagnosis: what is holding your practice back?"}
+                  <Arrow
+                    className={`w-5 h-5 shrink-0 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
+                  />
+                </Button>
+              </Link>
+
+              <Link
                 to={isRTL ? "/mentor" : "/en/mentor"}
                 className="inline-flex"
                 onClick={() => trackEvent("contact_button_click", { location: "hero_start_mentor" })}
               >
                 <Button
+                  variant="outline"
                   size="xl"
-                  className="group bg-[#ff6f61] hover:bg-[#ff5a4d] text-white shadow-lg w-full sm:w-auto"
+                  className="bg-transparent border-background/50 text-background hover:bg-background/10 hover:text-background w-full sm:w-auto"
                   data-track="hero_cta_click"
                   data-track-label="hero_start_mentor"
                 >
-                  <Sparkles className="w-5 h-5" />
-                  {isRTL ? "התחילו עכשיו עם המנטור" : "Start now with the mentor"}
-                  <Arrow
-                    className={`w-5 h-5 transition-transform ${isRTL ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"}`}
-                  />
+                  {isRTL ? "להכיר את המנטור" : "Meet the mentor"}
                 </Button>
               </Link>
 

@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { TrialBanner } from '@/components/access/TrialBanner';
 
 const botData = [
+  { key: 'diagnosis', icon: Stethoscope },
   { key: 'niche', icon: Compass },
   { key: 'strategy', icon: Map },
   { key: 'content', icon: PenTool },
@@ -16,7 +17,6 @@ const botData = [
   { key: 'presentation', icon: Mic },
   { key: 'contacts', icon: Users },
   { key: 'firstcall', icon: PhoneCall },
-  { key: 'diagnosis', icon: Stethoscope },
 ];
 
 const botKeyMapping: Record<string, string> = {
@@ -78,6 +78,11 @@ const AIAssistants = () => {
                   >
                     {/* Header stripe */}
                     <div className="h-1.5 bg-gradient-to-r from-primary to-primary/70" />
+                    {bot.key === 'diagnosis' && (
+                      <div className="bg-[#ff6f61] text-white text-center text-sm font-semibold py-1.5">
+                        {isRTL ? 'התחילו כאן: חינם, כמה דקות' : 'Start here: free, a few minutes'}
+                      </div>
+                    )}
 
                     {/* Content */}
                     <div className="p-8">

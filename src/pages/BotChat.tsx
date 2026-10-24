@@ -26,12 +26,21 @@ import { trackEvent } from '@/lib/analytics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, Loader2, FileText } from 'lucide-react';
+import { Menu, Loader2, FileText, Download } from 'lucide-react';
+import { downloadDiagnosisReportPdf } from '@/lib/diagnosisReportPdf';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
 import { useBotAccess } from '@/hooks/useUserPlan';
 import { UpgradeGate } from '@/components/access/UpgradeGate';
+
+// First word of a registered name, for greeting by name. Titles are skipped, and anything that is not plain letters
+// (initials, an e-mail address) counts as no name.
+function firstNameOf(raw: string): string {
+  const words = raw.trim().split(/\s+/).filter((w) => !['ד״ר', 'ד"ר', 'דר', 'Dr', 'Dr.'].includes(w));
+  const w = words[0] ?? '';
+  return w.length >= 2 && /^[\u0590-\u05FFA-Za-z'"-]+$/.test(w) ? w : '';
+}
 
 const botIcons: Record<string, React.ReactNode> = {
   'niche-finder': <Compass className="w-5 h-5 text-primary" />,
@@ -83,6 +92,7 @@ const BotChat = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [showDiagnosisDialog, setShowDiagnosisDialog] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
   const diagnosisConversationCompletedRef = useRef(false);
 
   // Data fetching
@@ -214,7 +224,10 @@ const BotChat = () => {
           ? (isRTL ? 'מכין את הדו״ח שלך…' : 'Preparing your report…')
           : (isRTL ? 'מעביר אותך חזרה למנטור עם הסיכום…' : 'Sending the summary back to your mentor…'),
       );
-      handleReturnToMentor();
+      // The diagnosis prepares its report in the background and does NOT open it: the dialog used to jump up over
+      // the closing message before it was read. The card below turns into "the report is ready" instead.
+      if (isDiagnosisBot) void prepareDiagnosisReport(false);
+      else handleReturnToMentor();
     }, 1500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -354,11 +367,40 @@ const BotChat = () => {
   };
 
   // Show welcome message if no messages and bot has welcome message
-  const welcomeMessage = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
+  const rawWelcome = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
+  const greetName = isDiagnosisBot && reportName ? firstNameOf(reportName) : '';
+  const welcomeMessage =
+    rawWelcome && greetName ? rawWelcome.replace(/^(היי|Hi),?/, (_m: string, hi: string) => `${hi} ${greetName},`) : rawWelcome;
   const showWelcome = messages.length === 0 && welcomeMessage;
   const showDifficultySelector = DIFFICULTY_SELECTOR_BOTS.has(botKey || '') && messages.length === 0 && !activeConversationId;
 
-  const handleReturnToMentor = async () => {
+  const handleReturnToMentor = () => prepareDiagnosisReport(true);
+
+  // Opens the finished report on demand (the card and the header button); prepares it first if it does not exist yet.
+  const openDiagnosisReport = () => {
+    if (diagnosisResult) setShowDiagnosisDialog(true);
+    else void prepareDiagnosisReport(true);
+  };
+
+  const handleDownloadReportFromChat = async () => {
+    const report = diagnosisResult?.report;
+    if (!report) {
+      openDiagnosisReport();
+      return;
+    }
+    setDownloadingReport(true);
+    try {
+      await downloadDiagnosisReportPdf(report, { isRTL, displayName: reportName });
+      trackEvent('diagnosis_pdf_downloaded', { recommended_tool: diagnosisResult?.recommendedTool ?? '', from: 'chat_card' });
+    } catch (e) {
+      console.error(e);
+      toast.error(isRTL ? 'ההורדה נכשלה' : 'Download failed');
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
+  const prepareDiagnosisReport = async (openDialog: boolean) => {
     if (!user || !botKey) {
       navigate(isRTL ? '/mentor' : '/en/mentor');
       return;
@@ -413,11 +455,17 @@ const BotChat = () => {
             report: parseDiagnosisReport(d.report),
           });
           trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
-          setShowDiagnosisDialog(true);
+          if (openDialog) setShowDiagnosisDialog(true);
           return;
         }
       }
 
+      // A failed background preparation of the report keeps the therapist in the chat (the card offers a retry)
+      // instead of sending them away from the closing message.
+      if (botKey === 'practice-diagnosis' && !openDialog) {
+        toast.error(isRTL ? 'הדו״ח לא הצליח להיווצר. אפשר ללחוץ על הכפתור כדי לנסות שוב.' : 'The report could not be prepared. Press the button to try again.');
+        return;
+      }
       navigate(`${isRTL ? '/mentor' : '/en/mentor'}?from=${encodeURIComponent(botKey)}`);
     } finally {
       setReturningToMentor(false);
@@ -499,7 +547,7 @@ const BotChat = () => {
           showMenuButton
           onReturnToMentor={
             user && (isEmbedded || (botKey === 'practice-diagnosis' && currentStage >= 4))
-              ? handleReturnToMentor
+              ? (isDiagnosisBot ? openDiagnosisReport : handleReturnToMentor)
               : undefined
           }
           isReturningToMentor={returningToMentor}
@@ -573,16 +621,33 @@ const BotChat = () => {
 
             {/* End of the diagnosis: a card that cannot be missed (the header button alone was) */}
             {isDiagnosisBot && user && currentStage >= 4 && !chatLoading && (
-              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-center space-y-3">
-                <p className="text-sm font-semibold text-foreground">
-                  {returningToMentor
-                    ? (isRTL ? 'האבחון הסתיים. מכינים את הדו״ח הכתוב שלך, זה לוקח כחצי דקה. הוא ייפתח כאן מעצמו.' : 'The diagnosis is done. Your written report is being prepared, which takes about half a minute. It will open here on its own.')
-                    : (isRTL ? 'האבחון הסתיים. אפשר לצפות בדו״ח הכתוב שלך.' : 'The diagnosis is done. You can view your written report.')}
+              <div className="rounded-xl border-2 border-accent/50 bg-accent/5 p-5 text-center space-y-3">
+                <p className="text-base font-semibold text-foreground">
+                  {returningToMentor && !diagnosisResult
+                    ? (isRTL ? 'האבחון הסתיים. מכינים את הדו״ח הכתוב שלך, זה לוקח כחצי דקה. כאן תופיע הודעה כשהוא מוכן, ואפשר להמשיך לקרוא בינתיים.' : 'The diagnosis is done. Your written report is being prepared, which takes about half a minute. This card will update when it is ready, and you can keep reading meanwhile.')
+                    : diagnosisResult
+                      ? (isRTL ? 'הדו״ח הכתוב שלך מוכן.' : 'Your written report is ready.')
+                      : (isRTL ? 'האבחון הסתיים. אפשר לצפות בדו״ח הכתוב שלך.' : 'The diagnosis is done. You can view your written report.')}
                 </p>
-                <Button onClick={handleReturnToMentor} disabled={returningToMentor} className="gap-2">
-                  {returningToMentor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                <Button
+                  size="lg"
+                  onClick={openDiagnosisReport}
+                  disabled={returningToMentor && !diagnosisResult}
+                  className="w-full sm:w-auto gap-2 px-8 text-base"
+                >
+                  {returningToMentor && !diagnosisResult ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
                   {isRTL ? 'לצפייה בדו״ח האבחון' : 'View my diagnosis report'}
                 </Button>
+                {diagnosisResult?.report && (
+                  <div>
+                    <Button variant="outline" onClick={handleDownloadReportFromChat} disabled={downloadingReport} className="gap-2">
+                      <Download className="w-4 h-4" />
+                      {downloadingReport
+                        ? (isRTL ? 'מכין את הקובץ...' : 'Preparing the file...')
+                        : (isRTL ? 'הורדת הדו״ח (PDF)' : 'Download the report (PDF)')}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 

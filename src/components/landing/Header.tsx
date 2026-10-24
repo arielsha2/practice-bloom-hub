@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { trackEvent } from "@/lib/analytics";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -40,6 +41,13 @@ export function Header() {
               האתגר
             </Link>
           )}
+          <Link
+            to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
+            className="px-4 py-2 rounded-lg font-semibold bg-[#ff6f61] text-white hover:bg-[#ff5a4d] transition-colors"
+            onClick={() => trackEvent("diagnosis_entry_click", { location: "header_tab" })}
+          >
+            {isRTL ? "אבחון חינמי" : "Free diagnosis"}
+          </Link>
           <Link
             to={language === "en" ? "/en/mentor" : "/mentor"}
             className="px-4 py-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium rounded-lg hover:bg-primary-foreground/10"
@@ -142,6 +150,16 @@ export function Header() {
                 האתגר
               </Link>
             )}
+            <Link
+              to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
+              className="font-semibold py-3 px-4 rounded-lg bg-[#ff6f61] text-white text-center"
+              onClick={() => {
+                trackEvent("diagnosis_entry_click", { location: "header_tab_mobile" });
+                setMobileMenuOpen(false);
+              }}
+            >
+              {isRTL ? "אבחון חינמי" : "Free diagnosis"}
+            </Link>
             <Link
               to={language === "en" ? "/en/mentor" : "/mentor"}
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium py-3 px-4 rounded-lg hover:bg-primary-foreground/10"

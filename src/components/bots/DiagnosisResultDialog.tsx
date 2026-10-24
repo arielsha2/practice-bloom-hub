@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
+import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, MessageCircle, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -607,11 +607,45 @@ export function DiagnosisResultDialog({
             </>
           ) : (
             <div className="w-full space-y-2.5">
+              {isRTL && (
+                <div className="rounded-xl border-2 border-accent/50 bg-accent/5 p-4 space-y-3 text-center">
+                  <p className="text-base font-bold text-foreground">להתייעץ עם אליענה על מה שמתאים לך</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed">
+                    אליענה שפירא, מטפלת זוגית ומומחית ליצירת תוכן ובינה מלאכותית, מלווה מטפלים בבניית קליניקה פרטית,
+                    בדיוק בנקודות שעלו באבחון שלך. אפשר לפנות אליה ולהתייעץ על הצעד הנכון עבורך עכשיו.
+                  </p>
+                  <Button
+                    size="lg"
+                    className="w-full h-auto py-3.5 text-base font-semibold gap-2 bg-[#25D366] hover:bg-[#1ebe5a] text-white"
+                    onClick={handleWhatsappClicked}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    לפנייה לאליענה בווצאפ
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    אליענה עונה בעצמה, בדרך כלל תוך יום. הפנייה היא כדי להתייעץ, ואין חובה לקנות דבר.
+                  </p>
+                  <a
+                    href={PREMIUM_FIT_FORM_URL_HE}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={handlePremiumFitClicked}
+                    className="inline-block text-sm font-medium text-accent hover:underline underline-offset-2"
+                  >
+                    מתעניינים בליווי אישי (קבוצה קטנה או אחד על אחד)? לשאלון התאמה קצר
+                  </a>
+                </div>
+              )}
+
+              <p className="pt-1 text-center text-sm font-medium text-muted-foreground">
+                {isRTL ? 'או להמשיך לבד, בקצב שלך:' : 'Or continue on your own:'}
+              </p>
+
               <div className="flex items-center gap-1.5 justify-center text-xs font-medium text-accent">
                 <Sparkles className="w-3.5 h-3.5" />
                 {isRTL
-                  ? 'בונוס למי שמתחילים תוך 48 שעות: שיחת ייעוץ קצרה איתי, אישית'
-                  : 'Bonus for starting within 48 hours: a short personal call with me'}
+                  ? 'בונוס למי שמתחילים תוך 48 שעות: שיחת ייעוץ קצרה עם אליענה, אישית'
+                  : 'Bonus for starting within 48 hours: a short personal call with Eliana'}
               </div>
 
               <Button variant="cta" className="w-full h-auto py-2.5" asChild>
@@ -638,45 +672,19 @@ export function DiagnosisResultDialog({
                 {isRTL ? 'לא מתאים לך? החזר כספי מלא, ללא שאלות.' : "Not a fit? Full refund, no questions asked."}
               </div>
 
-              <a
-                href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
-                target="_blank"
-                rel="noreferrer"
-                onClick={handleChooseSingleTool}
-                className="block text-center text-xs text-muted-foreground hover:text-accent underline underline-offset-2 pt-1"
-              >
-                {isRTL
-                  ? `או להתחיל רק עם ${meta.label} — ₪${SINGLE_TOOL_PRICE_ILS}`
-                  : `Or start with just ${meta.label} — $${SINGLE_TOOL_PRICE_USD}`}
-              </a>
-
-              {isRTL && (
-                <div className="rounded-lg border border-border bg-muted/20 p-3 text-center space-y-1">
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    לא בטוחים מה מתאים לך: הכלי שהומלץ, המסע המלא או ליווי אישי? כתבו לי בווצאפ ונחליט יחד מה באמת יעזור לך. אני עונה בעצמי, בדרך כלל תוך יום.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleWhatsappClicked}
-                    className="inline-block text-xs font-medium text-accent hover:underline underline-offset-2"
-                  >
-                    לכתוב לאליענה בווצאפ
-                  </button>
-                  <div className="border-t border-border/60 my-2" />
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    מרגישים שצריך ליווי צמוד? יש גם קבוצה קטנה וגם ליווי אחד על אחד עם אליענה.
-                  </p>
-                  <a
-                    href={PREMIUM_FIT_FORM_URL_HE}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={handlePremiumFitClicked}
-                    className="inline-block text-xs font-medium text-accent hover:underline underline-offset-2"
-                  >
-                    לשאלון התאמה קצר, ובהמשך שיחת היכרות
-                  </a>
-                </div>
-              )}
+              <Button variant="outline" className="w-full h-auto py-2.5" asChild>
+                <a
+                  href={isRTL ? SINGLE_TOOL_PAYMENT_URL_HE : SINGLE_TOOL_PAYMENT_URL_EN}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={handleChooseSingleTool}
+                  className="flex flex-col items-center leading-tight gap-0.5"
+                >
+                  <span>
+                    {isRTL ? `רק הכלי שהומלץ: ${meta.label}` : `Just the recommended tool: ${meta.label}`} — {isRTL ? `₪${SINGLE_TOOL_PRICE_ILS}` : `$${SINGLE_TOOL_PRICE_USD}`}
+                  </span>
+                </a>
+              </Button>
 
               {purchaseKind && (
                 <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs leading-relaxed space-y-1.5" role="status">

@@ -589,6 +589,15 @@ export function MentorSalesPage() {
             >
               {t.hero.ctaNote}
             </p>
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <Link
+                to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
+                className="underline underline-offset-4 hover:opacity-90 transition"
+                style={{ color: "rgba(250,247,242,0.9)", fontSize: "15px" }}
+              >
+                {language === "en" ? "Not sure yet? Start with the free diagnosis →" : "לא בטוחים עדיין? התחילו באבחון החינמי →"}
+              </Link>
+            </div>
             {trialOpen && (
               <div style={{ marginTop: "1rem", textAlign: "center" }}>
                 <Link
