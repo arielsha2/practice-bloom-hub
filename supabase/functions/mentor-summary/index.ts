@@ -50,6 +50,62 @@ Rules:
 • Never invent facts. If something wasn't said, include fewer items.
 • No markdown, no emojis, no text outside the JSON.`;
 
+// ===== ai provider: begin =====
+// Identical block in every function that calls an AI model (separate edge functions, no shared module in the
+// deploy path) — keep the copies in step.
+//
+// aiFetch is a drop-in for fetch() on the Lovable AI gateway URL. When the GEMINI_API_KEY secret exists the call
+// goes to Google's Gemini API directly (OpenAI-compatible endpoint, same request and response format; only the
+// URL, the key and the model name differ), and ANY failure there falls back to the gateway call that was
+// originally asked for: a model Google rejected once took the mentor down (incident 2026-08-03), and the
+// gateway can run out of credits (402), so neither path may be the only one.
+//
+// Google retires models for new keys without notice ("no longer available to new users": the whole 2.5 family
+// was retired by 2026-10), so the names stored in the database (google/gemini-2.5-flash, ...) are translated
+// through GEMINI_MODEL_MAP; a name Google still does not know (400 / 404) is retried once with the always-current
+// alias before giving up on Google. Update the map when Google retires another model.
+const GEMINI_CHAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const GEMINI_FALLBACK_MODEL = "gemini-flash-latest";
+const GEMINI_MODEL_MAP: Record<string, string> = {
+  "google/gemini-2.5-flash": "gemini-3.8-flash",
+  "google/gemini-2.5-flash-lite": "gemini-3.1-flash-lite",
+  "google/gemini-2.5-pro": "gemini-3.1-pro-preview",
+  "google/gemini-3-flash-preview": "gemini-3-flash-preview",
+};
+
+// The retired 2.5-flash answered fast; its 3.x replacement thinks first (about 7 s to the first word on
+// gemini-3.8-flash, about 2.8 s with reasoning_effort "low"), so requests that asked for it are sent with "low"
+// unless they set their own effort. Models that were already 3.x (the diagnosis) are left exactly as they were.
+const GEMINI_LOW_EFFORT_FOR = new Set(["google/gemini-2.5-flash"]);
+
+async function aiFetch(url: string, init: RequestInit): Promise<Response> {
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (geminiKey && typeof init.body === "string") {
+    try {
+      const body = JSON.parse(init.body) as Record<string, unknown>;
+      const asked = String(body.model ?? "");
+      const effort = GEMINI_LOW_EFFORT_FOR.has(asked) && body.reasoning_effort === undefined ? { reasoning_effort: "low" } : {};
+      const call = (model: string) =>
+        fetch(GEMINI_CHAT_URL, {
+          ...init,
+          headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${geminiKey}` },
+          body: JSON.stringify({ ...body, ...effort, model }),
+        });
+      const model = GEMINI_MODEL_MAP[asked] ?? (asked.replace(/^google\//, "") || GEMINI_FALLBACK_MODEL);
+      let res = await call(model);
+      if (!res.ok && (res.status === 400 || res.status === 404) && model !== GEMINI_FALLBACK_MODEL) {
+        res = await call(GEMINI_FALLBACK_MODEL);
+      }
+      if (res.ok) return res;
+      console.error("gemini direct failed, falling back to the gateway:", res.status, (await res.text().catch(() => "")).slice(0, 200));
+    } catch (e) {
+      console.error("gemini direct threw, falling back to the gateway:", e instanceof Error ? e.message : String(e));
+    }
+  }
+  return fetch(url, init);
+}
+// ===== ai provider: end =====
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -80,7 +136,7 @@ serve(async (req) => {
       .filter((s) => s.trim().length > 0)
       .join("\n\n");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

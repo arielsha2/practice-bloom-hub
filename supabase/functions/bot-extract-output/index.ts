@@ -800,6 +800,7 @@ interface ValidReport {
   needs_work: Array<{ area: string; point: string }>;
   central_failure: { area: string; statement: string; cause: string; evidence: string[] };
   fix_approach: string[];
+  future_picture: string[];
   action_steps: Array<{ step: string; outcome: string }>;
   not_now: Array<{ item: string; reason: string }>;
   flags: string[];
@@ -900,6 +901,7 @@ function validateReport(raw: unknown, isEnglish: boolean, therapistText?: string
       evidence: reportList(cf.evidence, (x) => reportText(x, 240), 3),
     },
     fix_approach: reportList(r.fix_approach, (x) => reportText(x), 4),
+    future_picture: reportList(r.future_picture, (x) => reportText(x, 260), 5),
     action_steps: steps,
     not_now,
     flags,
@@ -907,7 +909,7 @@ function validateReport(raw: unknown, isEnglish: boolean, therapistText?: string
 
   if (!isEnglish) {
     const all = [
-      ...report.works, ...report.fix_approach, statement, report.central_failure.cause,
+      ...report.works, ...report.fix_approach, ...report.future_picture, statement, report.central_failure.cause,
       ...report.needs_work.map((n) => n.point), ...steps.flatMap((s) => [s.step, s.outcome]),
       ...not_now.flatMap((n) => [n.item, n.reason]),
     ];
@@ -933,6 +935,7 @@ function buildReport(valid: ValidReport, isEnglish: boolean) {
     needs_work: valid.needs_work,
     central_failure: valid.central_failure,
     fix_approach: valid.fix_approach,
+    future_picture: valid.future_picture,
     action_steps: valid.action_steps,
     not_now: valid.not_now,
     flags: valid.flags,
@@ -953,9 +956,10 @@ const HE_REPORT_SYSTEM = () => `אתה מכין דו"ח אבחון רשמי למ
   "therapist_gender": "female" | "male" | "unknown",
   "ratings": [ { "id": "n1", "rating": 2 | 1 | 0 | null, "evidence": "העובדה מהשיחה שעליה הדירוג נשען", "evidence_quote": "ציטוט מילולי קצר מהודעה של המטפל" }, ...כל 24 הפריטים ],
   "works": ["נקודה קצרה על מה שעובד", ...],
-  "needs_work": [ { "area": "<מפתח אזור>", "point": "נקודה קצרה על מה שלא עובד" }, ...],
+  "needs_work": [ { "area": "<מפתח אזור>", "point": "נקודה קצרה על מה שכדאי לחזק" }, ...],
   "central_failure": { "area": "<מפתח אזור>", "statement": "מה נקודת הכשל המרכזית, במשפט אחד", "cause": "הסיבה לכשל, במשפט או שניים", "evidence": ["ציטוט או עובדה מהשיחה", ...] },
   "fix_approach": ["נקודה קצרה: איך מתקנים את הכשל", ...],
+  "future_picture": ["נקודה קצרה וקונקרטית: איך נראית ומרגישה הקליניקה אחרי השינוי", ...],
   "action_steps": [ { "step": "צעד מעשי אחד, בניסוח של פעולה", "outcome": "מה יהיה קיים אחרי שהצעד בוצע" }, ...],
   "not_now": [ { "item": "מה לא כדאי לעסוק בו כעת", "reason": "למה" }, ...]
 }
@@ -981,7 +985,9 @@ ${rubricPromptBlock(false)}
 7. action_steps: 3 עד 5 צעדים, לפי סדר ביצוע. כל צעד ניתן לביצוע בשבועות הקרובים ויש לו תוצר ברור. בלי צעדים שדורשים קורס, צוות או תקציב.
 8. works: 2 עד 5 נקודות על מה שבאמת עובד אצלו, מבוססות על עובדות. אם כמעט אין, כתוב נקודה אחת על הנכס הקיים (ותק, מוטיבציה, נכונות לשיפור) שנאמר בשיחה.
 9. not_now: 0 עד 3 נקודות, רק אם עלה בשיחה נושא שהמטפל חושב שהוא חשוב אך אינו הדחוף.
-10. לא להזכיר "ציון", "דירוג" או מספרים של הפריטים בטקסטים. הציון מחושב ומוצג בנפרד.`;
+10. לא להזכיר "ציון", "דירוג" או מספרים של הפריטים בטקסטים. הציון מחושב ומוצג בנפרד.
+11. נסח את נקודת הכשל, הסיבה והדרך לתיקון כנקודה מוגדרת וניתנת לשינוי, בשפה של תהליך (מה כדאי לבנות או לשנות) ולא בשפה של פגם או של שיפוט על המטפל. הקורא צריך לצאת בהבנה שמדובר במקום ברור שאפשר לעבוד עליו בצעדים קטנים. אל תבטיח תוצאה ואל תמציא מספרים. השתמש בעברית טבעית של מטפלים ולא בניסוחים ארכאיים: "אמירת המחיר" ולא "נקיבת המחיר".
+12. future_picture: 3 עד 5 נקודות קונקרטיות על היום-יום בקליניקה אחרי שהצעדים בוצעו: מה קורה כשפונה יוצר קשר ואיך נראית השיחה איתו, איך נאמר המחיר ואיך זה מרגיש, איך נראה היומן, מה עמיתים אומרים ולמי הם מפנים. הנקודות נגזרות מהחסם שעלה בשיחה ומדברי המטפל על מה שהוא רוצה, ומנוסחות כך שהמטפל יוכל לדמיין את הקליניקה שלו. כתוב אותן כתמונה של אפשרות ולא כהבטחה: בלי מספרים, בלי לוחות זמנים ובלי הבטחת הכנסה או מספר מטופלים, בשפה חמה וקונקרטית ולא בקלישאות. זה המקום היחיד בדו"ח שבו מתארים עתיד.`;
 
 const EN_REPORT_SYSTEM = () => `You are preparing a formal diagnosis report for a psychotherapist, based on the diagnostic conversation that just took place. The report is a professional document the therapist returns to later to fix gaps in building their private practice. It is not a conversational summary.
 
@@ -990,9 +996,10 @@ Return valid JSON only, in exactly this shape:
   "therapist_gender": "female" | "male" | "unknown",
   "ratings": [ { "id": "n1", "rating": 2 | 1 | 0 | null, "evidence": "the fact from the conversation the rating rests on", "evidence_quote": "a short verbatim quote from a therapist message" }, ...all 24 items ],
   "works": ["short point on what works", ...],
-  "needs_work": [ { "area": "<area key>", "point": "short point on what does not work" }, ...],
+  "needs_work": [ { "area": "<area key>", "point": "short point on what is worth strengthening" }, ...],
   "central_failure": { "area": "<area key>", "statement": "the central failure point, one sentence", "cause": "why it is failing, one or two sentences", "evidence": ["quote or fact from the conversation", ...] },
   "fix_approach": ["short point: how the failure gets fixed", ...],
+  "future_picture": ["short, concrete point: what the practice looks and feels like after the change", ...],
   "action_steps": [ { "step": "one practical step, phrased as an action", "outcome": "what exists once the step is done" }, ...],
   "not_now": [ { "item": "what is not worth working on right now", "reason": "why" }, ...]
 }
@@ -1017,7 +1024,9 @@ Writing rules (important):
 6. action_steps: 3 to 5 steps in order. Each is doable within the coming weeks and has a clear deliverable. No steps that need a course, a team or a budget.
 7. works: 2 to 5 points about what genuinely works, based on facts. If almost nothing does, give one point on an existing asset (experience, motivation, willingness) mentioned in the conversation.
 8. not_now: 0 to 3 points, only if the therapist raised something they think matters but is not the urgent thing.
-9. Do not mention "score", "rating" or item numbers in the texts. The score is computed and shown separately.`;
+9. Do not mention "score", "rating" or item numbers in the texts. The score is computed and shown separately.
+10. Phrase the failure point, its cause and the fix as a defined point that can be changed, in the language of a process (what is worth building or changing), not in the language of a flaw or a judgment of the therapist. The reader should leave understanding that this is a clear place to work on in small steps. Do not promise a result and do not invent numbers.
+11. future_picture: 3 to 5 concrete points about the day-to-day of the practice once the steps have been done: what happens when a prospective client reaches out and how the conversation looks, how the fee is stated and how that feels, what the calendar looks like, what colleagues say and who they refer to. The points come from the blocker raised in the conversation and from what the therapist said they want, and are worded so the therapist can picture their own practice. Write them as a picture of a possibility, not a promise: no numbers, no timelines, no promise of income or number of clients, in warm, concrete language and not clichés. This is the only place in the report that describes the future.`;
 
 function forcedAreaNote(area: string, isEnglish: boolean): string {
   const a = RUBRIC.find((x) => x.area === area);
@@ -1038,7 +1047,7 @@ async function extractReport(
 ) {
   const debug = opts?.debug;
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       signal: AbortSignal.timeout(50000),
@@ -1086,6 +1095,62 @@ async function extractReport(
   }
 }
 // ===== diagnosis report: end =====
+
+// ===== ai provider: begin =====
+// Identical block in every function that calls an AI model (separate edge functions, no shared module in the
+// deploy path) — keep the copies in step.
+//
+// aiFetch is a drop-in for fetch() on the Lovable AI gateway URL. When the GEMINI_API_KEY secret exists the call
+// goes to Google's Gemini API directly (OpenAI-compatible endpoint, same request and response format; only the
+// URL, the key and the model name differ), and ANY failure there falls back to the gateway call that was
+// originally asked for: a model Google rejected once took the mentor down (incident 2026-08-03), and the
+// gateway can run out of credits (402), so neither path may be the only one.
+//
+// Google retires models for new keys without notice ("no longer available to new users": the whole 2.5 family
+// was retired by 2026-10), so the names stored in the database (google/gemini-2.5-flash, ...) are translated
+// through GEMINI_MODEL_MAP; a name Google still does not know (400 / 404) is retried once with the always-current
+// alias before giving up on Google. Update the map when Google retires another model.
+const GEMINI_CHAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const GEMINI_FALLBACK_MODEL = "gemini-flash-latest";
+const GEMINI_MODEL_MAP: Record<string, string> = {
+  "google/gemini-2.5-flash": "gemini-3.8-flash",
+  "google/gemini-2.5-flash-lite": "gemini-3.1-flash-lite",
+  "google/gemini-2.5-pro": "gemini-3.1-pro-preview",
+  "google/gemini-3-flash-preview": "gemini-3-flash-preview",
+};
+
+// The retired 2.5-flash answered fast; its 3.x replacement thinks first (about 7 s to the first word on
+// gemini-3.8-flash, about 2.8 s with reasoning_effort "low"), so requests that asked for it are sent with "low"
+// unless they set their own effort. Models that were already 3.x (the diagnosis) are left exactly as they were.
+const GEMINI_LOW_EFFORT_FOR = new Set(["google/gemini-2.5-flash"]);
+
+async function aiFetch(url: string, init: RequestInit): Promise<Response> {
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (geminiKey && typeof init.body === "string") {
+    try {
+      const body = JSON.parse(init.body) as Record<string, unknown>;
+      const asked = String(body.model ?? "");
+      const effort = GEMINI_LOW_EFFORT_FOR.has(asked) && body.reasoning_effort === undefined ? { reasoning_effort: "low" } : {};
+      const call = (model: string) =>
+        fetch(GEMINI_CHAT_URL, {
+          ...init,
+          headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${geminiKey}` },
+          body: JSON.stringify({ ...body, ...effort, model }),
+        });
+      const model = GEMINI_MODEL_MAP[asked] ?? (asked.replace(/^google\//, "") || GEMINI_FALLBACK_MODEL);
+      let res = await call(model);
+      if (!res.ok && (res.status === 400 || res.status === 404) && model !== GEMINI_FALLBACK_MODEL) {
+        res = await call(GEMINI_FALLBACK_MODEL);
+      }
+      if (res.ok) return res;
+      console.error("gemini direct failed, falling back to the gateway:", res.status, (await res.text().catch(() => "")).slice(0, 200));
+    } catch (e) {
+      console.error("gemini direct threw, falling back to the gateway:", e instanceof Error ? e.message : String(e));
+    }
+  }
+  return fetch(url, init);
+}
+// ===== ai provider: end =====
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -1161,7 +1226,7 @@ Deno.serve(async (req) => {
     const therapistText = msgs.filter((m: any) => m.role === "user").map((m: any) => String(m.content ?? "")).join("\n");
     const reportPromise = botKey === "practice-diagnosis" ? extractReport(transcript, therapistText, isEnglish, lovableKey) : null;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({

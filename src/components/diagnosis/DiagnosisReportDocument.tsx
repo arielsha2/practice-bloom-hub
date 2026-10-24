@@ -37,18 +37,23 @@ const T = {
     scoreTitle: 'ציון עוגן',
     outOf: 'מתוך 10',
     scoreNote: 'הציון הכללי הוא ממוצע ציוני התחומים. ככל שהוא גבוה יותר, המצב טוב יותר.',
+    startNote: 'הדו״ח הזה הוא נקודת התחלה ולא פסק דין. ציון נמוך מצביע על המקום שכדאי להתחיל ממנו, לא על מה שאפשר או אי אפשר לשנות.',
+    afterTitle: 'ומה אחר כך',
+    afterBody:
+      'אפשר ליישם את הצעדים לבד, ואפשר לעשות זאת בליווי. אליענה שפירא מלווה מטפלים בבניית קליניקה פרטית בדיוק בתחומים האלה: נישה, תמחור, הצגה עצמית, רשת הפניות ושיחה ראשונה. המטרה היא שבכל שבוע יהיה ברור מהו הצעד הבא.',
     partialNote: 'הציון מבוסס על {n} מתוך 6 תחומים. תחום שלא התקבל לגביו מידע מספק אינו נכלל בחישוב, ולכן הציון עשוי להשתנות באבחון חוזר.',
     noScoreNote: 'לא התקבל בשיחה מספיק מידע כדי לחשב ציון. הדו״ח מבוסס על מה שנאמר, ואפשר להשלים את התמונה באבחון חוזר.',
     areasTitle: 'ציון לפי תחום, לפי סדר דחיפות',
     notAssessed: 'לא נבדק',
     notAssessedNote: 'לא התקבל מידע מספק לדירוג',
-    urgent: 'נקודת הכשל',
-    central: 'נקודת הכשל המרכזית',
+    urgent: 'כדאי להתחיל כאן',
+    central: 'הנקודה המרכזית לשינוי',
     cause: 'הסיבה',
     basis: 'על מה זה מבוסס',
     works: 'מה עובד',
-    needsWork: 'מה לא עובד',
+    needsWork: 'מה כדאי לחזק',
     fix: 'איך מתקנים',
+    future: 'איך זה נראה אחרי השינוי',
     steps: 'צעדים מעשיים',
     outcome: 'תוצר',
     notNow: 'מה לא כדאי לעסוק בו כעת',
@@ -72,18 +77,23 @@ const T = {
     scoreTitle: 'Anchor score',
     outOf: 'out of 10',
     scoreNote: 'The overall score is the average of the area scores. Higher means a stronger position.',
+    startNote: 'This report is a starting point, not a verdict. A low score shows where it is worth starting, not what can or cannot change.',
+    afterTitle: 'What comes next',
+    afterBody:
+      'You can put the steps into practice on your own, or with support. Eliana Shapira works with therapists on building a private practice in exactly these areas: niche, pricing, self-presentation, referral network and the first call. The aim is that every week it is clear what the next step is.',
     partialNote: 'The score is based on {n} of 6 areas. An area without enough information is left out of the calculation, so the score may change when you take the diagnosis again.',
     noScoreNote: 'The conversation did not give enough information to calculate a score. This report is based on what was said, and you can complete the picture by taking the diagnosis again.',
     areasTitle: 'Score by area, in order of urgency',
     notAssessed: 'Not assessed',
     notAssessedNote: 'Not enough information to rate',
-    urgent: 'Failure point',
-    central: 'The central failure point',
+    urgent: 'A good place to start',
+    central: 'The main point to change',
     cause: 'Cause',
     basis: 'What this is based on',
     works: "What's working",
-    needsWork: "What isn't working",
+    needsWork: 'What to strengthen',
     fix: 'How to fix it',
+    future: 'What it looks like after the change',
     steps: 'Practical steps',
     outcome: 'Deliverable',
     notNow: 'What not to work on right now',
@@ -296,6 +306,7 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
               </span>
             )}
             <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.6, color: C.muted }}>{t.scoreNote}</p>
+            <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.6, color: C.burgundy, fontWeight: 600 }}>{t.startNote}</p>
             {report.scoredAreas < 6 && (
               <p style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.6, color: C.terracotta }}>
                 {report.scoredAreas === 0 ? t.noScoreNote : t.partialNote.replace('{n}', String(report.scoredAreas))}
@@ -388,6 +399,17 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
         </Section>
       )}
 
+      {report.futurePicture.length > 0 && (
+        <Section title={t.future}>
+          {report.futurePicture.map((f, i) => (
+            <div key={i} className="dr-avoid" style={{ display: 'flex', gap: 4, fontSize: 14, lineHeight: 1.7, margin: '0 0 6px' }}>
+              <Dot color={C.terracotta} />
+              <span style={{ flex: 1 }}>{f}</span>
+            </div>
+          ))}
+        </Section>
+      )}
+
       {report.fixApproach.length > 0 && (
         <Section title={t.fix}>
           {report.fixApproach.map((f, i) => (
@@ -425,6 +447,10 @@ export const DiagnosisReportDocument = forwardRef<HTMLDivElement, Props>(functio
 
       <Section title={t.progress}>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>{t.progressBody.replace('{v}', String(report.rubricVersion))}</p>
+      </Section>
+
+      <Section title={t.afterTitle}>
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>{t.afterBody}</p>
       </Section>
 
       {/* html2pdf starts a new page at this marker; it has no height on screen. The appendix always begins on its own page so its heading never sits alone at the bottom of one. */}

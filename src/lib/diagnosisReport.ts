@@ -38,6 +38,7 @@ export interface DiagnosisReport {
   needsWork: Array<{ area: string; point: string }>;
   centralFailure: { area: string; statement: string; cause: string; evidence: string[] };
   fixApproach: string[];
+  futurePicture: string[];
   actionSteps: Array<{ step: string; outcome: string }>;
   notNow: Array<{ item: string; reason: string }>;
 }
@@ -102,6 +103,7 @@ export function parseDiagnosisReport(raw: unknown): DiagnosisReport | null {
       evidence: strings(cf.evidence),
     },
     fixApproach: strings(r.fix_approach),
+    futurePicture: strings(r.future_picture),
     actionSteps: steps,
     notNow: asArray(r.not_now).map((x) => {
       const e = asObject(x);
@@ -111,8 +113,8 @@ export function parseDiagnosisReport(raw: unknown): DiagnosisReport | null {
 }
 
 export const BAND_META: Record<ScoreBand, { he: string; en: string; color: string; tint: string }> = {
-  immediate: { he: 'דורש טיפול מיידי', en: 'Needs immediate attention', color: '#9e2b25', tint: '#f6e4e1' },
-  improve: { he: 'דורש שיפור', en: 'Needs improvement', color: '#a8661f', tint: '#f7ecdc' },
+  immediate: { he: 'כדאי להתחיל כאן', en: 'A good place to start', color: '#9e2b25', tint: '#f6e4e1' },
+  improve: { he: 'יש בסיס לבנות עליו', en: 'A base to build on', color: '#a8661f', tint: '#f7ecdc' },
   strong: { he: 'חזק', en: 'Strong', color: '#33704f', tint: '#e0eee6' },
 };
 
