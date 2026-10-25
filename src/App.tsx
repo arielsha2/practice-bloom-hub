@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,42 +7,44 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Contents from "./pages/Contents";
-import ContentDetail from "./pages/ContentDetail";
-import Auth from "./pages/Auth";
-import StudentPortal from "./pages/StudentPortal";
-import LessonDetail from "./pages/LessonDetail";
-import PortalAdmin from "./pages/PortalAdmin";
-import MediaLibrary from "./pages/MediaLibrary";
-import AIAssistants from "./pages/AIAssistants";
-import Dashboard from "./pages/Dashboard";
-import ContentsAdmin from "./pages/ContentsAdmin";
-import BotAdmin from "./pages/BotAdmin";
-import BotChat from "./pages/BotChat";
-import UsersAdmin from "./pages/UsersAdmin";
-import CoursesAdmin from "./pages/CoursesAdmin";
-import TurningPoint from "./pages/TurningPoint";
-import Mentor from "./pages/Mentor";
-import Welcome from "./pages/Welcome";
-import AdminInsights from "./pages/AdminInsights";
-import WebsiteBuilder from "./pages/WebsiteBuilder";
-import PublicTherapistSite from "./pages/PublicTherapistSite";
-import MentorAdmin from "./pages/MentorAdmin";
-import MentorTestimonialsAdmin from "./pages/MentorTestimonialsAdmin";
-import AdminAnalytics from "./pages/AdminAnalytics";
-import ShivukKlinika from "./pages/ShivukKlinika";
-import ShivukLoMitchabel from "./pages/ShivukLoMitchabel";
-import ShinuyPnimiShivuk from "./pages/ShinuyPnimiShivuk";
-import MetuplimRishonim from "./pages/MetuplimRishonim";
-import AlSfatHaklinika from "./pages/AlSfatHaklinika";
-import ChallengeLanding from "./pages/ChallengeLanding";
-import TherapistsHateMarketing from "./pages/en/TherapistsHateMarketing";
-import MarketWithoutLosingSoul from "./pages/en/MarketWithoutLosingSoul";
-import TherapistsUndercharge from "./pages/en/TherapistsUndercharge";
-import KnowLikeTrust from "./pages/en/KnowLikeTrust";
-import FirstClients from "./pages/en/FirstClients";
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Contents = lazy(() => import("./pages/Contents"));
+const ContentDetail = lazy(() => import("./pages/ContentDetail"));
+const Auth = lazy(() => import("./pages/Auth"));
+const StudentPortal = lazy(() => import("./pages/StudentPortal"));
+const LessonDetail = lazy(() => import("./pages/LessonDetail"));
+const PortalAdmin = lazy(() => import("./pages/PortalAdmin"));
+const MediaLibrary = lazy(() => import("./pages/MediaLibrary"));
+const AIAssistants = lazy(() => import("./pages/AIAssistants"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ContentsAdmin = lazy(() => import("./pages/ContentsAdmin"));
+const BotAdmin = lazy(() => import("./pages/BotAdmin"));
+const BotChat = lazy(() => import("./pages/BotChat"));
+const UsersAdmin = lazy(() => import("./pages/UsersAdmin"));
+const CoursesAdmin = lazy(() => import("./pages/CoursesAdmin"));
+const TurningPoint = lazy(() => import("./pages/TurningPoint"));
+const Mentor = lazy(() => import("./pages/Mentor"));
+const Welcome = lazy(() => import("./pages/Welcome"));
+const AdminInsights = lazy(() => import("./pages/AdminInsights"));
+const WebsiteBuilder = lazy(() => import("./pages/WebsiteBuilder"));
+const PublicTherapistSite = lazy(() => import("./pages/PublicTherapistSite"));
+const MentorAdmin = lazy(() => import("./pages/MentorAdmin"));
+const MentorTestimonialsAdmin = lazy(() => import("./pages/MentorTestimonialsAdmin"));
+const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
+const ShivukKlinika = lazy(() => import("./pages/ShivukKlinika"));
+const ShivukLoMitchabel = lazy(() => import("./pages/ShivukLoMitchabel"));
+const ShinuyPnimiShivuk = lazy(() => import("./pages/ShinuyPnimiShivuk"));
+const MetuplimRishonim = lazy(() => import("./pages/MetuplimRishonim"));
+const AlSfatHaklinika = lazy(() => import("./pages/AlSfatHaklinika"));
+const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
+const TherapistsHateMarketing = lazy(() => import("./pages/en/TherapistsHateMarketing"));
+const MarketWithoutLosingSoul = lazy(() => import("./pages/en/MarketWithoutLosingSoul"));
+const TherapistsUndercharge = lazy(() => import("./pages/en/TherapistsUndercharge"));
+const KnowLikeTrust = lazy(() => import("./pages/en/KnowLikeTrust"));
+const FirstClients = lazy(() => import("./pages/en/FirstClients"));
+// Every page is its own chunk: a visitor (e.g. on /challenge from an ad) only
+// downloads the page they open, not the whole app.
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,6 +56,7 @@ const App = () => (
         <BrowserRouter>
           <LanguageProvider>
             <ScrollToTop />
+            <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/en" element={<Index />} />
@@ -99,6 +103,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </LanguageProvider>
         </BrowserRouter>
       </TooltipProvider>

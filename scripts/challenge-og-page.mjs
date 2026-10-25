@@ -6,7 +6,7 @@
 // built index.html with the challenge's title/description/image. Netlify
 // serves a matching static file before the "/* -> /index.html" rewrite,
 // and the copy boots the same app, so the page itself is unchanged.
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const SITE = "https://therapykeys.co.il";
 const TITLE = "אתגר להיות מומחה מבוקש - עם אליענה שפירא";
@@ -36,6 +36,28 @@ set(
   "og:image",
 );
 set(/<meta name="twitter:image"[^>]*\/>/, `<meta name="twitter:image" content="${IMAGE}" />`, "twitter:image");
+
+// Pages are lazy-loaded chunks, so without hints the browser only discovers
+// the challenge chunk (and the hero photo inside it) after the main bundle
+// has run. Preload them up front so they download in parallel.
+const assets = readdirSync("dist/assets");
+const pageChunk = assets.find((f) => /^ChallengeLanding-.*\.js$/.test(f));
+const heroImage = assets.find((f) => /^eliana-portrait-.*\.(jpg|webp)$/.test(f));
+if (!pageChunk || !heroImage) throw new Error("challenge-og-page: challenge chunk or hero image not found in dist/assets");
+
+const chunks = new Set();
+(function walk(file) {
+  if (chunks.has(file)) return;
+  chunks.add(file);
+  const src = readFileSync(`dist/assets/${file}`, "utf8");
+  for (const m of src.matchAll(/(?:from|import)\s*"\.\/([^"]+\.js)"/g)) walk(m[1]);
+})(pageChunk);
+
+const hints = [
+  `<link rel="preload" as="image" href="/assets/${heroImage}" fetchpriority="high" />`,
+  ...[...chunks].map((f) => `<link rel="modulepreload" crossorigin href="/assets/${f}" />`),
+].map((l) => `    ${l}`).join("\n");
+set(/<\/head>/, `${hints}\n  </head>`, "</head>");
 
 writeFileSync("dist/challenge.html", html);
 console.log("challenge-og-page: wrote dist/challenge.html");
