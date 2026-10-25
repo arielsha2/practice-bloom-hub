@@ -369,8 +369,12 @@ const BotChat = () => {
   // Show welcome message if no messages and bot has welcome message
   const rawWelcome = language === 'he' ? botConfig.welcome_message_he : botConfig.welcome_message_en;
   const greetName = isDiagnosisBot && reportName ? firstNameOf(reportName) : '';
-  const welcomeMessage =
-    rawWelcome && greetName ? rawWelcome.replace(/^(היי|Hi),?/, (_m: string, hi: string) => `${hi} ${greetName},`) : rawWelcome;
+  // A welcome may hold {{askName}}: when the registered name is unknown it becomes a question about what to call them.
+  const askName = language === 'he' ? '\n\n**מה שמך?**' : "\n\n**What's your name?**";
+  const welcomeMessage = rawWelcome
+    ? (greetName ? rawWelcome.replace(/^(היי|Hi),?/, (_m: string, hi: string) => `${hi} ${greetName},`) : rawWelcome)
+        .replace('{{askName}}', greetName ? '' : askName)
+    : rawWelcome;
   const showWelcome = messages.length === 0 && welcomeMessage;
   const showDifficultySelector = DIFFICULTY_SELECTOR_BOTS.has(botKey || '') && messages.length === 0 && !activeConversationId;
 
