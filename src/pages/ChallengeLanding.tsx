@@ -15,7 +15,7 @@ import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
 // next challenge opens so its sign-ups stay separate.
 const CHALLENGE_KEY = "anonymous-to-expert-2026-11";
 const WHATSAPP_GROUP_URL =
-  "https://chat.whatsapp.com/HXhgZGw2g6pF2rusCfEcgr?s=sw&p=i&mlu=4&ilr=4";
+  "https://chat.whatsapp.com/KBJdNI4SqvUGrrxCkIEl5x";
 
 const DISCOVER = [
   {
