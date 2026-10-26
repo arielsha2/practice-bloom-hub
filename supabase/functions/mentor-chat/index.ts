@@ -293,11 +293,45 @@ async function aiFetch(url: string, init: RequestInit): Promise<Response> {
 }
 // ===== ai provider: end =====
 
+// ===== diagnosis guard: begin =====
+// The Mentor used to offer the diagnosis again to someone who had already done it (seen 2026-10-11): the only thing
+// stopping it was a prompt rule that depends on the CLIENT forwarding the diagnosis summary. Whether a diagnosis was
+// completed is now read from the database, and the summary is added to the context when the client did not send it.
+function withServerDiagnosis(
+  journeyContext: any,
+  journeyRow: { diagnosis_output?: any; reflection?: any } | null | undefined,
+): { journeyContext: any; hasDiagnosis: boolean } {
+  const out = journeyRow?.diagnosis_output;
+  const hasDiagnosis = !!out && typeof out === "object" && !!(out.recommended_tool || out.stuck_category);
+  if (!hasDiagnosis) return { journeyContext, hasDiagnosis: false };
+  const base = journeyContext && typeof journeyContext === "object" ? journeyContext : {};
+  const clientSummaries = base.tool_summaries && typeof base.tool_summaries === "object" ? base.tool_summaries : {};
+  if (typeof clientSummaries["practice-diagnosis"]?.summary === "string" && clientSummaries["practice-diagnosis"].summary) {
+    return { journeyContext, hasDiagnosis: true };
+  }
+  const stored = journeyRow?.reflection?.tool_summaries?.["practice-diagnosis"]?.summary;
+  const summary = typeof stored === "string" && stored
+    ? stored
+    : `האבחון המליץ להתחיל בכלי ${String(out.recommended_tool ?? "").trim() || "המתאים"}`;
+  return {
+    journeyContext: { ...base, tool_summaries: { ...clientSummaries, "practice-diagnosis": { summary } } },
+    hasDiagnosis: true,
+  };
+}
+
+const NO_DIAGNOSIS_REOFFER_BLOCK = `
+
+═══════════════════════════════
+כלל קשיח — האבחון כבר הושלם (גובר על כל הוראה אחרת למעלה):
+═══════════════════════════════
+המטפל/ת כבר סיים/ה את האבחון. אסור להציע לו/ה להתחיל אבחון, אסור להציג אותו כצעד הבא, ואסור להשתמש בתג [HANDOFF:practice-diagnosis] בשום מקרה. אם הוראה אחרת בפרומפט אומרת להזמין לאבחון — התעלמי ממנה. אם רוצים להמשיך הלאה, הפני לכלי שהאבחון המליץ עליו, או התייחסי לממצא עצמו.`;
+// ===== diagnosis guard: end =====
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language, journey_context, returning_user, deep_mode } = await req.json();
+    let { messages, language, journey_context, returning_user, deep_mode } = await req.json();
     console.log("journey_context checkin:", JSON.stringify({ checkin_due: journey_context?.checkin_due, checkin_question: journey_context?.checkin_question }), "returning_user:", JSON.stringify(returning_user ?? null));
 
     // ===== Normalize attachments =====
@@ -398,6 +432,27 @@ serve(async (req) => {
       }
     } catch (e) {
       console.error("Trial enforcement: failed to load plan, defaulting to permissive:", e);
+    }
+
+    // ===== The diagnosis is read from the database, not trusted from the client =====
+    let hasDiagnosis = false;
+    if (authedUserId) {
+      try {
+        const supaUrl = Deno.env.get("SUPABASE_URL");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (supaUrl && serviceKey) {
+          const { data: jr } = await createClient(supaUrl, serviceKey)
+            .from("therapist_journeys")
+            .select("diagnosis_output, reflection")
+            .eq("user_id", authedUserId)
+            .maybeSingle();
+          const r = withServerDiagnosis(journey_context, jr);
+          journey_context = r.journeyContext;
+          hasDiagnosis = r.hasDiagnosis;
+        }
+      } catch (e) {
+        console.error("diagnosis guard: failed to read the journey:", e);
+      }
     }
 
     // ===== Daily usage limit (soft @ 50, hard @ 80, Israel TZ UTC+3) =====
@@ -712,7 +767,7 @@ LANGUAGE RULE (overrides everything else):
     // the end of a long system prompt get followed far more reliably than ones
     // buried mid-prompt — confirmed live 2026-08-12, when this same instruction
     // sitting inside journeyBlock (mid-prompt) was silently ignored.
-    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix + checkinBlock + diagnosisContinuityBlock;
+    const systemPrompt = baseSystemPrompt + handoffGuardrail + journeyBlock + freeTrialBlock + returningUserBlock + languageRule + softLimitSuffix + checkinBlock + diagnosisContinuityBlock + (hasDiagnosis ? NO_DIAGNOSIS_REOFFER_BLOCK : "");
 
 
 

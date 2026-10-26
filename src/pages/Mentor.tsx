@@ -812,7 +812,14 @@ export default function Mentor() {
   //   1. Exact tag [HANDOFF:bot-key]
   //   2. Bare bot URL anywhere in the text (markdown or plain)
   //   3. A transition phrase AND a tool name, both within the last 3 sentences
+  // Someone who already finished the diagnosis is never sent back to it, even if the model slips and offers it.
   const detectHandoff = (text: string): string | null => {
+    const key = detectHandoffRaw(text);
+    if (key === "practice-diagnosis" && (journeyRef.current as any)?.diagnosis_output) return null;
+    return key;
+  };
+
+  const detectHandoffRaw = (text: string): string | null => {
     if (!text) return null;
 
     // 1. Exact tag — normalize through aliases (LLM sometimes invents keys
