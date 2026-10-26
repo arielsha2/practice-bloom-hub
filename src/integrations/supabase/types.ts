@@ -531,6 +531,39 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnosis_consult_clicks: {
+        Row: {
+          clicked_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          kind: string
+          language: string | null
+          recommended_tool: string | null
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          kind: string
+          language?: string | null
+          recommended_tool?: string | null
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          kind?: string
+          language?: string | null
+          recommended_tool?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       diagnosis_purchase_intents: {
         Row: {
           clicked_at: string

@@ -18,6 +18,7 @@ import { DiagnosisFunnelCard } from '@/components/mentor/DiagnosisFunnelCard';
 import { DiagnosisStatsCard } from '@/components/mentor/DiagnosisStatsCard';
 import { DiagnosisAIInsightsCard } from '@/components/mentor/DiagnosisAIInsightsCard';
 import { DiagnosisPurchaseIntentsCard } from '@/components/mentor/DiagnosisPurchaseIntentsCard';
+import { DiagnosisConsultClicksCard } from '@/components/mentor/DiagnosisConsultClicksCard';
 import { DiagnosisLeadScoreCard } from '@/components/mentor/DiagnosisLeadScoreCard';
 import { DiagnosisFeedbackCard } from '@/components/mentor/DiagnosisFeedbackCard';
 import { BusinessFunnelOverview } from '@/components/admin/analytics/BusinessFunnelOverview';
@@ -90,6 +91,9 @@ export default function AdminAnalytics() {
                 </div>
                 <div className="mt-4">
                   <DiagnosisPurchaseIntentsCard />
+                </div>
+                <div className="mt-4">
+                  <DiagnosisConsultClicksCard />
                 </div>
                 <div className="mt-4">
                   <DiagnosisLeadScoreCard />

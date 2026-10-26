@@ -186,6 +186,7 @@ export function DiagnosisResultDialog({
       setFeedbackText('');
       setFeedbackTextSent(false);
       trackEvent('diagnosis_result_viewed', { recommended_tool: result.recommendedTool, bottleneck_stage: result.bottleneckStage });
+      void recordConsultClick('report_opened');
     } else if (!continuedRef.current) {
       trackEvent('diagnosis_exited_without_continue', { recommended_tool: result.recommendedTool });
     }
@@ -297,6 +298,25 @@ export function DiagnosisResultDialog({
     }
   };
 
+  // Who opened the report and who tried to reach Eliana, so the follow-up list is real people and not a GA4 count.
+  const recordConsultClick = async (kind: 'report_opened' | 'whatsapp' | 'premium_form') => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      await supabase.from('diagnosis_consult_clicks').insert({
+        user_id: user.id,
+        email: user.email ?? null,
+        full_name: displayName ?? null,
+        kind,
+        recommended_tool: result.recommendedTool,
+        language: isRTL ? 'he' : 'en',
+      });
+    } catch (e) {
+      console.error('failed to record consult click', e);
+    }
+  };
+
   // Upsert (one row per user) so clicking a thumb records immediately, and
   // filling in the optional reason afterward on a thumbs-down just adds to
   // the same row instead of creating a second one.
@@ -374,12 +394,14 @@ export function DiagnosisResultDialog({
 
   const handlePremiumFitClicked = () => {
     trackEvent('diagnosis_premium_fit_form_clicked', { recommended_tool: result.recommendedTool });
+    void recordConsultClick('premium_form');
   };
 
   // A direct line to Eliana for someone who is still deciding. The prefilled message tells her which tool the
   // diagnosis recommended; no email, score or other personal detail goes into the link.
   const handleWhatsappClicked = () => {
     trackEvent('diagnosis_whatsapp_clicked', { recommended_tool: result.recommendedTool });
+    void recordConsultClick('whatsapp');
     const message = `היי אליענה, סיימתי את האבחון וההמלצה שקיבלתי היא ${meta.label}. אשמח לעזרה להבין מה הכי מתאים לי.`;
     window.open(`https://wa.me/${ELIANA_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noreferrer');
   };
