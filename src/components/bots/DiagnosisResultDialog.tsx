@@ -91,7 +91,7 @@ const SINGLE_TOOL_PAYMENT_URL_HE = 'https://pay.grow.link/NzkyMDE~68a43deedc01ab
 const SINGLE_TOOL_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/6X9HVVT5D7WS4';
 const FULL_MENTOR_PRICE_ILS = 750;
 const FULL_MENTOR_PRICE_USD = 250;
-const FULL_MENTOR_PAYMENT_URL_HE = 'https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab';
+const FULL_MENTOR_PAYMENT_URL_HE = 'https://pay.grow.link/NzkyMDE~37becd30ebba9992e43ee21a35ec3340-NDE5NTkzMQ';
 const FULL_MENTOR_PAYMENT_URL_EN = 'https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN';
 // For someone who wants hands-on guidance (the small group or one-on-one with Eliana): a short fit
 // questionnaire, after which Eliana sets up an intro call. Hebrew only; the English version is not published.

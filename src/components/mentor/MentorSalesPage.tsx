@@ -32,7 +32,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentorTrialOpen } from "@/hooks/useMentorTrialOpen";
 import arielElianaPhoto from "@/assets/ariel-eliana.jpg.asset.json";
 
-const PAYMENT_URL_HE = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
+const PAYMENT_URL_HE = "https://pay.grow.link/NzkyMDE~37becd30ebba9992e43ee21a35ec3340-NDE5NTkzMQ";
 const PAYMENT_URL_EN = "https://www.paypal.com/ncp/payment/TLJZ4QDGZCDWN";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=972523379716&text&type=phone_number&app_absent=0";
 

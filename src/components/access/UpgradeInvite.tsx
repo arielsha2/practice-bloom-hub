@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Heart } from "lucide-react";
 
-const PAY_URL = "https://meshulam.co.il/quick_payment?b=692abdd2459224a95d57aef700a015ab";
+const PAY_URL = "https://pay.grow.link/NzkyMDE~37becd30ebba9992e43ee21a35ec3340-NDE5NTkzMQ";
 
 interface UpgradeInviteProps {
   onDismiss?: () => void;
