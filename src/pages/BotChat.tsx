@@ -36,6 +36,24 @@ import { UpgradeGate } from '@/components/access/UpgradeGate';
 
 // First word of a registered name, for greeting by name. Titles are skipped, and anything that is not plain letters
 // (initials, an e-mail address) counts as no name.
+// Maps the stored diagnosis_output row (snake_case, written by bot-extract-output) to what the result dialog shows.
+function diagnosisFromOutput(d: Record<string, unknown>): DiagnosisResult {
+  return {
+    presentingTheory: String(d.presenting_theory ?? ''),
+    whatIsWorking: String(d.what_is_working ?? ''),
+    bottleneck: String(d.bottleneck_description ?? ''),
+    diagnosisSummary: String(d.diagnosis_summary ?? ''),
+    bottleneckStage: String(d.bottleneck_stage ?? ''),
+    evidenceSummary: String(d.evidence_summary ?? ''),
+    behavioralMechanism: String(d.behavioral_mechanism ?? ''),
+    notThePriority: String(d.not_the_priority ?? ''),
+    pathForward: String(d.path_forward ?? ''),
+    recommendedTool: String(d.recommended_tool ?? ''),
+    areaMap: Array.isArray(d.area_map) ? (d.area_map as DiagnosisResult['areaMap']) : [],
+    report: parseDiagnosisReport(d.report),
+  };
+}
+
 function firstNameOf(raw: string): string {
   const words = raw.trim().split(/\s+/).filter((w) => !['ד״ר', 'ד"ר', 'דר', 'Dr', 'Dr.'].includes(w));
   const w = words[0] ?? '';
@@ -200,6 +218,29 @@ const BotChat = () => {
     if (chatLoading) streamedThisVisitRef.current = true;
   }, [chatLoading]);
   const isDiagnosisBot = botKey === 'practice-diagnosis';
+  // ?report=1 (from the follow-up e-mail) opens the therapist's STORED diagnosis report, without running anything.
+  const wantsStoredReport = isDiagnosisBot && searchParams.get('report') === '1';
+  const storedReportOpenedRef = useRef(false);
+  useEffect(() => {
+    if (!wantsStoredReport || !user || storedReportOpenedRef.current) return;
+    storedReportOpenedRef.current = true;
+    void (async () => {
+      const { data: journey } = await supabase
+        .from('therapist_journeys')
+        .select('diagnosis_output')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const d = (journey as any)?.diagnosis_output as Record<string, unknown> | null | undefined;
+      if (d && d.recommended_tool) {
+        setDiagnosisResult(diagnosisFromOutput(d));
+        setShowDiagnosisDialog(true);
+        trackEvent('diagnosis_report_link_opened', { recommended_tool: String(d.recommended_tool) });
+      } else {
+        toast.info(isRTL ? 'לא מצאנו אבחון שמור. אפשר להתחיל אבחון חדש כאן.' : 'No saved diagnosis was found. You can start a new one here.');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsStoredReport, user]);
   // A name for the report header. Some accounts store the email as the "name", and a report that gets forwarded
   // should not print an email address, so anything containing "@" counts as no name.
   const rawName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name?.trim() ?? '';
@@ -294,7 +335,7 @@ const BotChat = () => {
     // hand them over to the diagnosis (three real visitors went through exactly that).
     const authBase = language === 'en' ? '/en/auth' : '/auth';
     const authPath = botKey === 'practice-diagnosis'
-      ? `${authBase}?next=diagnosis&mode=signup`
+      ? (searchParams.get('report') === '1' ? `${authBase}?next=report&mode=login` : `${authBase}?next=diagnosis&mode=signup`)
       : `${authBase}?next=bot:${botKey}`;
     return <Navigate to={authPath} replace />;
   }
@@ -444,20 +485,7 @@ const BotChat = () => {
           .maybeSingle();
         const d = (journey as any)?.diagnosis_output as Record<string, unknown> | null | undefined;
         if (d) {
-          setDiagnosisResult({
-            presentingTheory: String(d.presenting_theory ?? ''),
-            whatIsWorking: String(d.what_is_working ?? ''),
-            bottleneck: String(d.bottleneck_description ?? ''),
-            diagnosisSummary: String(d.diagnosis_summary ?? ''),
-            bottleneckStage: String(d.bottleneck_stage ?? ''),
-            evidenceSummary: String(d.evidence_summary ?? ''),
-            behavioralMechanism: String(d.behavioral_mechanism ?? ''),
-            notThePriority: String(d.not_the_priority ?? ''),
-            pathForward: String(d.path_forward ?? ''),
-            recommendedTool: String(d.recommended_tool ?? ''),
-            areaMap: Array.isArray(d.area_map) ? (d.area_map as DiagnosisResult['areaMap']) : [],
-            report: parseDiagnosisReport(d.report),
-          });
+          setDiagnosisResult(diagnosisFromOutput(d));
           trackEvent('diagnosis_completed', { recommended_tool: String(d.recommended_tool ?? '') });
           if (openDialog) setShowDiagnosisDialog(true);
           return;

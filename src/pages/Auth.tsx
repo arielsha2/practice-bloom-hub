@@ -51,6 +51,13 @@ export default function Auth() {
   const botNext = /^bot:([a-z0-9-]{1,40})$/.exec(nextParam ?? "")?.[1] ?? null;
   const botRedirect = botNext ? (isRTL ? `/ai-assistants/${botNext}` : `/en/ai-assistants/${botNext}`) : null;
 
+  // ?next=report sends someone who opened the "my diagnosis report" link in an e-mail back to their stored report
+  // after login (the diagnosis page opens it for ?report=1).
+  const reportRedirect = nextParam === "report"
+    ? (isRTL ? "/ai-assistants/practice-diagnosis?report=1" : "/en/ai-assistants/practice-diagnosis?report=1")
+    : null;
+  const afterLoginPath = diagnosisRedirect ?? botRedirect ?? reportRedirect ?? "/dashboard";
+
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
     ["login", "signup", "forgot", "reset"].includes(initialMode) ? initialMode : "login",
@@ -156,9 +163,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user && !loading && mode !== "reset" && !resumePasswordSetup) {
-      navigate(diagnosisRedirect ?? botRedirect ?? "/dashboard");
+      navigate(afterLoginPath);
     }
-  }, [user, loading, navigate, mode, resumePasswordSetup, diagnosisRedirect, botRedirect]);
+  }, [user, loading, navigate, mode, resumePasswordSetup, afterLoginPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +197,7 @@ export default function Auth() {
             }
           }
           toast.success(t("auth.loginSuccess"));
-          navigate("/dashboard");
+          navigate(afterLoginPath);
         }
       } else if (mode === "forgot") {
         const { error } = await resetPasswordForEmail(normalizeEmail(email));
@@ -282,7 +289,7 @@ export default function Auth() {
     }
     trackEvent("form_submission", { form: "login_code", location: "auth_page" });
     toast.success(t("auth.loginSuccess"));
-    navigate("/dashboard");
+    navigate(afterLoginPath);
   };
 
   const resendLoginCode = async () => {
