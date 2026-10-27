@@ -23,6 +23,9 @@ const AREA_LABELS: Record<string, string> = {
   "first-call-practice": "תרגול שיחת הטלפון הראשונה",
 };
 
+// The personal link to the stored report (no login needed); the token comes from admin_report_links_for_completers.
+const REPORT_LINK_BASE = "https://therapykeys.co.il/r/";
+
 // A usable first name for "שלום {{first_name}}": the first word when it looks like a name, otherwise empty
 // (initials, e-mail addresses and one-letter display names would read badly in a greeting).
 function firstName(displayName: string | null): string {
@@ -30,9 +33,9 @@ function firstName(displayName: string | null): string {
   return word.length >= 2 && !word.includes("@") && /^[\u0590-\u05FFA-Za-z'"-]+$/.test(word) ? word : "";
 }
 
-function toCsv(rows: CompleterRow[]): string {
+function toCsv(rows: CompleterRow[], links: Map<string, string>): string {
   const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const header = ["email", "first_name", "display_name", "recommended_tool", "area_hebrew", "finished_on", "has_report", "version", "clicked_buy"];
+  const header = ["email", "first_name", "display_name", "recommended_tool", "area_hebrew", "finished_on", "has_report", "version", "clicked_buy", "report_url"];
   const lines = rows.map((r) =>
     [
       r.email,
@@ -45,6 +48,7 @@ function toCsv(rows: CompleterRow[]): string {
       // A = has the official report (finished after it launched), B = older run without it
       r.has_report ? "A" : "B",
       r.clicked_buy ? "yes" : "",
+      links.has(r.email.toLowerCase()) ? REPORT_LINK_BASE + links.get(r.email.toLowerCase()) : "",
     ].map(esc).join(","),
   );
   // BOM so Excel opens the Hebrew correctly
@@ -67,8 +71,13 @@ export function DiagnosisFollowupListCard() {
     })();
   }, []);
 
-  function downloadCsv() {
-    const blob = new Blob([toCsv(rows)], { type: "text/csv;charset=utf-8" });
+  async function downloadCsv() {
+    // One personal report link per person: the same link on every download, valid for 60 days from the last one.
+    const links = new Map<string, string>();
+    const { data: linkRows, error: linkError } = await supabase.rpc("admin_report_links_for_completers", { p_days: 60 });
+    if (linkError) setError(linkError.message);
+    for (const l of linkRows ?? []) links.set(l.email.toLowerCase(), l.token);
+    const blob = new Blob([toCsv(rows, links)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

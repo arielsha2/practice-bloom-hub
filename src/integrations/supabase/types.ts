@@ -1910,6 +1910,13 @@ export type Database = {
           recommended_tool: string
         }[]
       }
+      admin_report_links_for_completers: {
+        Args: { p_days?: number }
+        Returns: {
+          email: string
+          token: string
+        }[]
+      }
       admin_funnel_overview: {
         Args: { p_since?: string; p_until?: string }
         Returns: Json
