@@ -28,7 +28,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     const body = await req.json();
     token = typeof body?.token === "string" ? body.token : "";
   } catch { /* handled below */ }
-  if (!/^[a-f0-9]{64}$/.test(token)) return json(404, { error: "not_found" });
+  if (!/^[a-f0-9]{16}$/.test(token)) return json(404, { error: "not_found" });
 
   const link = await deps.findLink(token);
   if (!link) return json(404, { error: "not_found" });
