@@ -203,6 +203,30 @@ export type Database = {
           },
         ]
       }
+      challenge_page_views: {
+        Row: {
+          challenge_key: string
+          created_at: string
+          id: string
+          source: string | null
+          visitor_id: string
+        }
+        Insert: {
+          challenge_key: string
+          created_at?: string
+          id?: string
+          source?: string | null
+          visitor_id: string
+        }
+        Update: {
+          challenge_key?: string
+          created_at?: string
+          id?: string
+          source?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       challenge_registrations: {
         Row: {
           challenge_key: string

@@ -17,6 +17,12 @@ interface RegistrationRow {
   created_at: string;
 }
 
+interface ViewRow {
+  source: string | null;
+  visitor_id: string;
+  created_at: string;
+}
+
 const GROUP_ORDER: SourceGroup[] = ["site", "lecture", "paid", "referral", "direct", "other"];
 
 function toCsv(rows: RegistrationRow[]): string {
@@ -41,6 +47,7 @@ export function ChallengeRegistrationsCard() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RegistrationRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [views, setViews] = useState<ViewRow[]>([]);
 
   useEffect(() => {
     void load();
@@ -55,6 +62,14 @@ export function ChallengeRegistrationsCard() {
       .limit(2000);
     if (loadError) setError(loadError.message);
     setRows((data as RegistrationRow[]) ?? []);
+    // Page views only exist from the day visit tracking went live; a missing
+    // table (migration not applied yet) just hides the visits table.
+    const { data: viewData } = await supabase
+      .from("challenge_page_views")
+      .select("source, visitor_id, created_at")
+      .order("created_at", { ascending: true })
+      .limit(20000);
+    setViews((viewData as ViewRow[]) ?? []);
     setLoading(false);
   }
 
@@ -86,6 +101,31 @@ export function ChallengeRegistrationsCard() {
     bySource.set(key, (bySource.get(key) ?? 0) + 1);
   }
   const detailed = [...bySource.entries()].sort((a, b) => b[1] - a[1]);
+
+  // Visits vs sign-ups per source, counted only from the first recorded
+  // visit, so sign-ups from before visit tracking do not inflate conversion.
+  const since = views[0]?.created_at ?? null;
+  const funnel = new Map<SourceGroup, { visitors: Set<string>; visits: number; signups: number }>();
+  const slot = (g: SourceGroup) => {
+    let f = funnel.get(g);
+    if (!f) funnel.set(g, (f = { visitors: new Set(), visits: 0, signups: 0 }));
+    return f;
+  };
+  for (const v of views) {
+    const f = slot(sourceGroup(v.source));
+    f.visits++;
+    f.visitors.add(v.visitor_id);
+  }
+  if (since) for (const r of rows) if (r.created_at >= since) slot(sourceGroup(r.source)).signups++;
+  const funnelRows = GROUP_ORDER.filter((g) => funnel.has(g)).map((g) => {
+    const f = funnel.get(g)!;
+    return { g, visitors: f.visitors.size, visits: f.visits, signups: f.signups };
+  });
+  const totals = funnelRows.reduce(
+    (t, r) => ({ visitors: t.visitors + r.visitors, visits: t.visits + r.visits, signups: t.signups + r.signups }),
+    { visitors: 0, visits: 0, signups: 0 },
+  );
+  const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : "—");
 
   return (
     <Card>
@@ -125,6 +165,50 @@ export function ChallengeRegistrationsCard() {
                 </div>
               ))}
             </div>
+
+            {since && (
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">כניסות מול נרשמים, לפי מקור</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  מאז {new Date(since).toLocaleDateString("he-IL")}, כשהתחלנו לספור כניסות. מבקרים = אנשים שונים
+                  (לפי דפדפן); כניסות = כל פתיחה של הדף.
+                </p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">מקור</TableHead>
+                        <TableHead className="text-right">מבקרים</TableHead>
+                        <TableHead className="text-right">כניסות</TableHead>
+                        <TableHead className="text-right">נרשמו</TableHead>
+                        <TableHead className="text-right">לא נרשמו</TableHead>
+                        <TableHead className="text-right">המרה</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {funnelRows.map((r) => (
+                        <TableRow key={r.g}>
+                          <TableCell>{SOURCE_GROUP_LABELS[r.g]}</TableCell>
+                          <TableCell>{r.visitors}</TableCell>
+                          <TableCell>{r.visits}</TableCell>
+                          <TableCell>{r.signups}</TableCell>
+                          <TableCell>{Math.max(r.visitors - r.signups, 0)}</TableCell>
+                          <TableCell className="font-semibold">{pct(r.signups, r.visitors)}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell className="font-semibold">סה"כ</TableCell>
+                        <TableCell className="font-semibold">{totals.visitors}</TableCell>
+                        <TableCell className="font-semibold">{totals.visits}</TableCell>
+                        <TableCell className="font-semibold">{totals.signups}</TableCell>
+                        <TableCell className="font-semibold">{Math.max(totals.visitors - totals.signups, 0)}</TableCell>
+                        <TableCell className="font-semibold">{pct(totals.signups, totals.visitors)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
 
             {detailed.length > 1 && (
               <div>

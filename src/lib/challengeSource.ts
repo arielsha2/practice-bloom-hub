@@ -58,6 +58,44 @@ export function resolveChallengeSource(params: URLSearchParams): string | null {
   return source;
 }
 
+// crypto.randomUUID is missing in some older in-app browsers.
+export function randomId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+}
+
+/**
+ * A random id kept in this browser, used only to count distinct visitors
+ * (nothing identifying). Null when storage is blocked.
+ */
+export function challengeVisitorId(): string | null {
+  try {
+    let id = localStorage.getItem("challenge_visitor_id");
+    if (!id) {
+      id = randomId();
+      localStorage.setItem("challenge_visitor_id", id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/** True the first time it is called for this challenge in this browser tab. */
+export function firstViewInTab(challengeKey: string): boolean {
+  const key = `challenge_view_logged:${challengeKey}`;
+  try {
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, "1");
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 export type SourceGroup = "site" | "lecture" | "paid" | "referral" | "direct" | "other";
 
 export const SOURCE_GROUP_LABELS: Record<SourceGroup, string> = {

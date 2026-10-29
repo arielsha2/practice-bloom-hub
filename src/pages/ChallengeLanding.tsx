@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackMetaEvent } from "@/lib/analytics";
-import { resolveChallengeSource } from "@/lib/challengeSource";
+import { challengeVisitorId, firstViewInTab, randomId, resolveChallengeSource } from "@/lib/challengeSource";
 import { Check, Quote, Loader2, MessageCircle } from "lucide-react";
 import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
 
@@ -174,6 +174,16 @@ const ChallengeLanding = () => {
 
   useEffect(() => {
     trackEvent("challenge_view", { challenge: CHALLENGE_KEY, source: source ?? "direct" });
+    // One row per tab session, for the visits-vs-sign-ups card on the admin page.
+    const visitorId = challengeVisitorId() ?? randomId();
+    if (firstViewInTab(CHALLENGE_KEY)) {
+      void supabase
+        .from("challenge_page_views")
+        .insert({ challenge_key: CHALLENGE_KEY, source, visitor_id: visitorId })
+        .then(({ error }) => {
+          if (error) console.warn("challenge view not recorded", error.message);
+        });
+    }
   }, [source]);
 
   return (
