@@ -1768,12 +1768,9 @@ export default function Mentor() {
           </p>
         </section>
 
-        {/* My portfolio: the ready-to-use deliverables written from what the therapist said */}
-        <PortfolioCard />
-
         {/* Main grid: sidebar + chat */}
         <section className="container mx-auto px-4 pb-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-5 lg:gap-6 items-start max-w-6xl mx-auto">
+          <div className={`grid grid-cols-1 lg:grid-cols-[14rem_1fr] ${isRTL && user ? "xl:grid-cols-[14rem_1fr_22rem] xl:max-w-7xl" : ""} gap-5 lg:gap-6 items-start max-w-6xl mx-auto`}>
             {/* Sidebar (desktop only) */}
             <aside className="hidden lg:flex flex-col gap-4 sticky top-20">
               <JourneyRail
@@ -2298,6 +2295,14 @@ export default function Mentor() {
                 <SidebarAccordions benefits={benefits} outcomes={outcomes} compact={false} />
               </div>
             </div>
+
+            {/* My portfolio: the ready-to-use deliverables written from what the therapist said. Beside the chat on wide
+                screens, under it on narrower ones. */}
+            {isRTL && user && (
+              <div className="min-w-0 lg:col-start-2 xl:col-start-auto xl:sticky xl:top-20 xl:self-start">
+                <PortfolioCard />
+              </div>
+            )}
           </div>
         </section>
 

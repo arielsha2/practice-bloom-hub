@@ -312,7 +312,7 @@ export function PortfolioCard() {
   const count = DELIVERABLE_TOOLS.filter((t) => data?.[t]).length;
 
   return (
-    <section dir="rtl" className="container mx-auto px-4 pb-4 max-w-6xl">
+    <aside dir="rtl">
       <div className="rounded-2xl border-2 border-mentor-accent/40 bg-mentor-accent/5 p-4 md:p-6">
         <div className="flex items-center gap-3 mb-4">
           <span className="w-10 h-10 rounded-full bg-mentor-accent/15 text-mentor-accent flex items-center justify-center shrink-0">
@@ -345,6 +345,6 @@ export function PortfolioCard() {
           </Tabs>
         )}
       </div>
-    </section>
+    </aside>
   );
 }
