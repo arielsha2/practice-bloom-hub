@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, MessageCircle, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
+import { Download, FileText, Copy, ArrowLeft, Target, Check, Minus, CircleDashed, ShieldCheck, Sparkles, Lock, MessageCircle, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   downloadSummaryPdf,
@@ -71,6 +71,21 @@ const RECOMMENDED_TOOL_META_EN: Record<string, { label: string; actionLabel: str
   'contact-finder': { label: 'Finding referral contacts', actionLabel: 'Start working on my referral network' },
   'connection-bridge': { label: 'The connection bridge', actionLabel: 'Start working on my referral relationships' },
   'first-call-practice': { label: 'First-call practice', actionLabel: 'Start working on my first phone call' },
+};
+
+// A hand-written example (not generated from this therapist) of what the Mentor writes for the two tools that have a
+// deliverable. It shows the kind of thing they get; the therapist's own version is made in the Mentor.
+const DELIVERABLE_TEASERS: Record<string, { heading: string; example: string; locked: string }> = {
+  'niche-finder': {
+    heading: 'במנטור, כלי הנישה כותב לך משפט מיקוד מוכן',
+    example: 'אני מלווה אנשים שהפרידה עצרה להם את החיים, לחזור להחליט ולהרגיש שהם זזים שוב.',
+    locked: 'עוד שתי גרסאות בזוויות אחרות, וכותרת מוכנה לדף או לפרופיל',
+  },
+  'contact-finder': {
+    heading: 'במנטור, כלי אנשי הקשר כותב לך הודעות מוכנות למי שמפנה',
+    example: 'שלום [שם], אצלך מגיעים אנשים עם תסמינים גופניים של חרדה. אני עוסק בטיפול בחרדה אונליין, ויש לי כרגע שעות פנויות בערב. אם יש מטופל שזה עשוי להתאים לו, אשמח שתעביר לו את המייל שלי.',
+    locked: 'עוד שני סוגי מפנים, כל אחד עם הודעה והודעת מעקב',
+  },
 };
 
 function toolMeta(botKey: string, isRTL: boolean) {
@@ -656,6 +671,20 @@ export function DiagnosisResultDialog({
                   >
                     מתעניינים בליווי אישי (קבוצה קטנה או אחד על אחד)? לשאלון התאמה קצר
                   </a>
+                </div>
+              )}
+
+              {isRTL && DELIVERABLE_TEASERS[result.recommendedTool] && (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-sm font-semibold text-foreground">{DELIVERABLE_TEASERS[result.recommendedTool].heading}</p>
+                  <div className="rounded-lg bg-background border border-border/60 p-3">
+                    <p className="text-xs text-muted-foreground mb-1">דוגמה, ממטפל אחר (שלך ייכתב ממה שתספר)</p>
+                    <p className="text-sm leading-relaxed text-foreground">{DELIVERABLE_TEASERS[result.recommendedTool].example}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Lock className="w-3.5 h-3.5" />
+                    {DELIVERABLE_TEASERS[result.recommendedTool].locked}
+                  </div>
                 </div>
               )}
 

@@ -63,6 +63,7 @@ import { useTherapistJourney } from "@/hooks/useTherapistJourney";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { ResetMentorButton } from "@/components/mentor/ResetMentorButton";
 import { StartFreshButton } from "@/components/mentor/StartFreshButton";
+import { PortfolioCard } from "@/components/mentor/PortfolioCard";
 import { UpgradeInvite } from "@/components/access/UpgradeInvite";
 import { TrialBanner } from "@/components/access/TrialBanner";
 import { MailingConsentGate } from "@/components/mentor/MailingConsentGate";
@@ -1766,6 +1767,9 @@ export default function Mentor() {
               : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
           </p>
         </section>
+
+        {/* My portfolio: the ready-to-use deliverables written from what the therapist said */}
+        <PortfolioCard />
 
         {/* Main grid: sidebar + chat */}
         <section className="container mx-auto px-4 pb-10">

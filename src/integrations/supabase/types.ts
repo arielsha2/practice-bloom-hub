@@ -555,6 +555,33 @@ export type Database = {
         }
         Relationships: []
       }
+      deliverable_events: {
+        Row: {
+          created_at: string
+          deliverable_id: string | null
+          id: string
+          kind: string
+          tool: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deliverable_id?: string | null
+          id?: string
+          kind: string
+          tool?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deliverable_id?: string | null
+          id?: string
+          kind?: string
+          tool?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       diagnosis_consult_clicks: {
         Row: {
           clicked_at: string
@@ -1528,6 +1555,42 @@ export type Database = {
           id?: string
           question_key?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      therapist_deliverables: {
+        Row: {
+          content: Json
+          created_at: string
+          edited_content: Json | null
+          id: string
+          inputs: Json
+          tool: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          edited_content?: Json | null
+          id?: string
+          inputs?: Json
+          tool: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          edited_content?: Json | null
+          id?: string
+          inputs?: Json
+          tool?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
         }
         Relationships: []
       }
