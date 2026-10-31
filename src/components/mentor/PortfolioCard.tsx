@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DELIVERABLE_TOOLS,
   type ContactContent,
@@ -23,13 +24,15 @@ import {
 
 const TITLES: Record<DeliverableTool, { title: string; blurb: string; button: string }> = {
   'niche-finder': {
-    title: 'משפט המיקוד שלך',
-    blurb: 'שלוש גרסאות של משפט שאומר למי העבודה שלך מיועדת, בנוי ממה שסיפרת, וכותרת מוכנה לדף או לפרופיל.',
-    button: 'הכן לי את משפט המיקוד',
+    title: 'המשפט שמציג את העבודה שלך',
+    blurb:
+      'משפט קצר אחד שאומר למי העבודה שלך מתאימה ובמה היא עוזרת. אפשר לשים אותו בפרופיל, באתר ובשיחה עם עמיתים. שלוש גרסאות לבחירה, וכותרת מוכנה.',
+    button: 'הכן לי את המשפט',
   },
   'contact-finder': {
-    title: 'הודעות למי שמפנה אליך',
-    blurb: 'הודעה פותחת מוכנה לכל אחד משלושה סוגי מפנים, עם הודעת מעקב. אפשר לשלוח כבר היום.',
+    title: 'הודעה לאנשי מקצוע שמפנים מטופלים',
+    blurb:
+      'רופאים, מורים, עמיתים ועוד: אנשים שפוגשים את המטופלים שלך לפני שהם מגיעים אליך. הודעה קצרה מוכנה לכל סוג, ואחריה הודעת מעקב. אפשר לשלוח כבר היום.',
     button: 'הכן לי את ההודעות',
   },
 };
@@ -111,7 +114,7 @@ function DeliverableBody({
         ))}
         <div className="rounded-xl bg-background border border-mentor-border/50 p-3">
           <div className="flex items-start justify-between gap-3">
-            <span className="text-xs text-muted-foreground">כותרת לדף או לפרופיל</span>
+            <span className="text-xs text-muted-foreground">כותרת מוכנה לאתר או לפרופיל</span>
             <CopyButton text={c.page_headline} onCopied={onCopied} />
           </div>
           <Editable value={c.page_headline} editing={editing} onChange={(v) => setContent({ ...c, page_headline: v })} />
@@ -228,7 +231,6 @@ function DeliverableBlock({ tool, deliverable }: { tool: DeliverableTool; delive
     <div className="rounded-2xl border border-mentor-border/60 bg-card p-4 md:p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <h3 className="text-base font-serif font-semibold text-foreground">{t.title}</h3>
           {!deliverable && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.blurb}</p>}
         </div>
         {deliverable && (
@@ -319,18 +321,28 @@ export function PortfolioCard() {
           <div>
             <h2 className="text-lg md:text-xl font-serif font-semibold text-foreground">התיק שלי</h2>
             <p className="text-sm text-muted-foreground">
-              {count > 0 ? `${count} מתוך 2 תוצרים מוכנים לשימוש` : 'דברים מוכנים לשימוש, שנכתבו ממה שסיפרת. אפשר להעתיק, לערוך ולשלוח.'}
+              {count > 0 ? `${count} מתוך 2 תוצרים מוכנים לשימוש` : 'טקסטים מוכנים לשימוש, שנכתבו ממה שסיפרת למנטור. אפשר להעתיק, לערוך ולשלוח.'}
             </p>
           </div>
         </div>
         {isLoading ? (
           <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-mentor-accent" /></div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 items-start">
+          <Tabs defaultValue={DELIVERABLE_TOOLS[0]} dir="rtl">
+            <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1 bg-background/70 p-1">
+              {DELIVERABLE_TOOLS.map((tool) => (
+                <TabsTrigger key={tool} value={tool} className="flex-1 min-w-[10rem] gap-1.5 py-2 text-sm whitespace-normal">
+                  {data?.[tool] && <Check className="w-3.5 h-3.5 text-mentor-accent shrink-0" />}
+                  {TITLES[tool].title}
+                </TabsTrigger>
+              ))}
+            </TabsList>
             {DELIVERABLE_TOOLS.map((tool) => (
-              <DeliverableBlock key={tool} tool={tool} deliverable={data?.[tool]} />
+              <TabsContent key={tool} value={tool} className="mt-3">
+                <DeliverableBlock tool={tool} deliverable={data?.[tool]} />
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
         )}
       </div>
     </section>

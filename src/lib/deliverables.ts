@@ -82,7 +82,7 @@ export function deliverableToText(tool: DeliverableTool, content: DeliverableCon
   if (tool === 'niche-finder') {
     const c = content as NicheContent;
     return [
-      'משפט המיקוד שלך',
+      'המשפט שמציג את העבודה שלך',
       '',
       ...c.focus_sentences.map((s, i) => `${i + 1}. ${s}`),
       '',
@@ -93,7 +93,7 @@ export function deliverableToText(tool: DeliverableTool, content: DeliverableCon
   }
   const c = content as ContactContent;
   return [
-    'הודעות למי שמפנה אליך',
+    'הודעה לאנשי מקצוע שמפנים מטופלים',
     '',
     ...c.referral_sources.flatMap((r, i) => [`${i + 1}. ${r.type}`, r.message, `מעקב: ${r.followup}`, '']),
   ].join('\n');

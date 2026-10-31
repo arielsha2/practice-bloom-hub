@@ -77,12 +77,12 @@ const RECOMMENDED_TOOL_META_EN: Record<string, { label: string; actionLabel: str
 // deliverable. It shows the kind of thing they get; the therapist's own version is made in the Mentor.
 const DELIVERABLE_TEASERS: Record<string, { heading: string; example: string; locked: string }> = {
   'niche-finder': {
-    heading: 'במנטור, כלי הנישה כותב לך משפט מיקוד מוכן',
+    heading: 'במנטור, כלי הנישה כותב לך את המשפט שמציג את העבודה שלך',
     example: 'אני מלווה אנשים שהפרידה עצרה להם את החיים, לחזור להחליט ולהרגיש שהם זזים שוב.',
-    locked: 'עוד שתי גרסאות בזוויות אחרות, וכותרת מוכנה לדף או לפרופיל',
+    locked: 'עוד שתי גרסאות לבחירה, וכותרת מוכנה לאתר או לפרופיל',
   },
   'contact-finder': {
-    heading: 'במנטור, כלי אנשי הקשר כותב לך הודעות מוכנות למי שמפנה',
+    heading: 'במנטור, כלי אנשי הקשר כותב לך הודעות מוכנות לאנשי מקצוע שמפנים מטופלים',
     example: 'שלום [שם], אצלך מגיעים אנשים עם תסמינים גופניים של חרדה. אני עוסק בטיפול בחרדה אונליין, ויש לי כרגע שעות פנויות בערב. אם יש מטופל שזה עשוי להתאים לו, אשמח שתעביר לו את המייל שלי.',
     locked: 'עוד שני סוגי מפנים, כל אחד עם הודעה והודעת מעקב',
   },
