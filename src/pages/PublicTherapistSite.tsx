@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SEOHead } from "@/components/SEOHead";
+import { TherapistSite } from "@/components/site/TherapistSite";
+import { isWizardSite, toSiteView } from "@/lib/siteContent";
 
 interface SiteContent {
   fullName: string;
@@ -127,6 +129,23 @@ export default function PublicTherapistSite() {
           <p style={{ color: C.muted }}>הקישור שגוי או שהדף לא פורסם.</p>
         </div>
       </div>
+    );
+  }
+
+  if (isWizardSite(site.content)) {
+    const w = site.content;
+    const desc = [w.keyPhrase, w.heroLine || w.about].filter(Boolean).join(". ").replace(/\s+/g, " ").slice(0, 160);
+    return (
+      <>
+        <SEOHead
+          title={`${w.fullName} | ${w.title}`}
+          description={desc}
+          canonicalUrl={`/t/${site.slug}`}
+          ogImage={w.avatarUrl}
+          ogType="profile"
+        />
+        <TherapistSite site={toSiteView(w, site.contact_method === "calendar" ? site.calendar_link : null)} style={w.style} />
+      </>
     );
   }
 

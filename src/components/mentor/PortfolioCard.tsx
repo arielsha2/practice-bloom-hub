@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, Copy, Download, FolderHeart, Loader2, Pencil, RefreshCw, Sparkles } from 'lucide-react';
+import { Check, Copy, Download, FolderHeart, Globe, Loader2, Pencil, RefreshCw, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -302,6 +303,36 @@ function DeliverableBlock({ tool, deliverable }: { tool: DeliverableTool; delive
   );
 }
 
+// The way into the page builder: the personal site is built from the deliverables and the Mentor's other outputs.
+function SiteEntry() {
+  const { user } = useAuth();
+  const { data } = useQuery<{ slug: string; is_published: boolean } | null>({
+    queryKey: ['my-site', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data: row } = await supabase.from('therapist_websites').select('slug, is_published').eq('user_id', user!.id).maybeSingle();
+      return (row as { slug: string; is_published: boolean } | null) ?? null;
+    },
+  });
+  const live = !!data?.is_published;
+  return (
+    <div className="rounded-2xl bg-gradient-to-l from-mentor-accent/20 to-mentor-accent/5 border border-mentor-accent/40 p-4 mb-4 flex items-center gap-4 flex-wrap">
+      <span className="w-11 h-11 rounded-full bg-mentor-accent text-mentor-accent-foreground flex items-center justify-center shrink-0">
+        <Globe className="w-5 h-5" />
+      </span>
+      <div className="flex-1 min-w-[12rem]">
+        <p className="font-serif font-semibold text-foreground">{live ? 'האתר האישי שלך חי' : 'האתר האישי שלך'}</p>
+        <p className="text-sm text-muted-foreground leading-snug">
+          {live ? `therapykeys.co.il/t/${data?.slug}` : 'נבנה מהתוצרים שלך, בקול שלך. אתה בוחר סגנון מתוך שלוש תצוגות, ועובר על כל מילה לפני שהוא עולה.'}
+        </p>
+      </div>
+      <Button asChild className="gap-2">
+        <Link to="/mentor/my-site"><Sparkles className="w-4 h-4" />{live ? 'עריכת האתר' : 'בנה לי אתר'}</Link>
+      </Button>
+    </div>
+  );
+}
+
 // "התיק שלי": the ready-to-use things the Mentor wrote from what the therapist said. A prominent card at the top of
 // the Mentor page, so what they get from the journey is visible and one click away.
 export function PortfolioCard() {
@@ -325,6 +356,7 @@ export function PortfolioCard() {
             </p>
           </div>
         </div>
+        <SiteEntry />
         {isLoading ? (
           <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-mentor-accent" /></div>
         ) : (

@@ -49,6 +49,13 @@ export function seoFor(slug: string, c: Record<string, unknown>): Seo {
   };
 }
 
+function faqOf(c: Record<string, unknown>): Array<{ q: string; a: string }> {
+  if (!Array.isArray(c.faq)) return [];
+  return (c.faq as Array<Record<string, unknown>>)
+    .map((f) => ({ q: text(f?.q), a: text(f?.a) }))
+    .filter((f) => f.q && f.a);
+}
+
 function structuredData(slug: string, c: Record<string, unknown>, seo: Seo): unknown {
   const personId = `${seo.canonical}#person`;
   const person: Record<string, unknown> = { "@type": "Person", "@id": personId, name: seo.name, url: seo.canonical };
@@ -69,7 +76,16 @@ function structuredData(slug: string, c: Record<string, unknown>, seo: Seo): unk
   };
   if (text(c.phone)) service.telephone = text(c.phone);
   if (text(c.email)) service.email = text(c.email);
-  return { "@context": "https://schema.org", "@graph": [person, service] };
+  const graph: unknown[] = [person, service];
+  const faq = faqOf(c);
+  if (faq.length) {
+    graph.push({
+      "@type": "FAQPage",
+      "@id": `${seo.canonical}#faq`,
+      mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+  }
+  return { "@context": "https://schema.org", "@graph": graph };
 }
 
 function bodyHtml(c: Record<string, unknown>): string {
@@ -80,9 +96,14 @@ function bodyHtml(c: Record<string, unknown>): string {
   if (text(c.fullName)) parts.push(`<p><strong>${esc(text(c.fullName))}</strong>${text(c.title) ? `, ${esc(text(c.title))}` : ""}</p>`);
   if (text(c.about)) parts.push(`<h2>קצת עליי</h2><p>${esc(text(c.about))}</p>`);
   if (forYou.length) parts.push(`<h2>הדף הזה בשבילך אם</h2><ul>${forYou.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`);
+  const steps = Array.isArray(c.firstSession) ? (c.firstSession as unknown[]).map(text).filter(Boolean) : [];
+  if (steps.length) parts.push(`<h2>איך מתחילים</h2><ol>${steps.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>`);
+  const faq = faqOf(c);
+  if (faq.length) parts.push(`<h2>שאלות נפוצות</h2>${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join("")}`);
   const contact: string[] = [];
   if (text(c.phone)) contact.push(`<a href="tel:${esc(text(c.phone).replace(/[^\d+]/g, ""))}">${esc(text(c.phone))}</a>`);
   if (text(c.email)) contact.push(`<a href="mailto:${esc(text(c.email))}">${esc(text(c.email))}</a>`);
+  if (text(c.location)) contact.push(esc(text(c.location)));
   if (contact.length) parts.push(`<h2>יצירת קשר</h2><p>${contact.join(" · ")}</p>`);
   return parts.join("");
 }
