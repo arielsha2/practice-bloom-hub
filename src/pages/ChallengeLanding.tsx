@@ -192,7 +192,7 @@ const ChallengeLanding = () => {
         title="אתגר להיות מומחה מבוקש - עם אליענה שפירא"
         description="אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם. עם אליענה שפירא."
         canonicalUrl="/challenge"
-        ogImage="/og-challenge-v2.jpg"
+        ogImage="/og-challenge-v3.jpg"
       />
 
 
