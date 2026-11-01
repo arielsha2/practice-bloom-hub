@@ -96,11 +96,16 @@ export function firstViewInTab(challengeKey: string): boolean {
   }
 }
 
-export type SourceGroup = "site" | "lecture" | "paid" | "referral" | "direct" | "other";
+// Organic shares use ?src=wa-<group> (WhatsApp) or ?src=fbg-<group> (Facebook
+// groups); only latin letters, digits and "-" survive clean(), so Hebrew
+// names in ?src are dropped.
+export type SourceGroup = "site" | "lecture" | "whatsapp" | "fbgroup" | "paid" | "referral" | "direct" | "other";
 
 export const SOURCE_GROUP_LABELS: Record<SourceGroup, string> = {
   site: "מהאתר",
   lecture: "מתנת ההרצאה",
+  whatsapp: "קבוצות ווטסאפ",
+  fbgroup: "קבוצות פייסבוק",
   paid: "פרסום ממומן",
   referral: "הפניה מאתר אחר",
   direct: "ישיר (בלי מקור)",
@@ -111,6 +116,8 @@ export function sourceGroup(source: string | null): SourceGroup {
   if (!source) return "direct";
   if (source === "site") return "site";
   if (source.startsWith("lecture")) return "lecture";
+  if (source === "wa" || source.startsWith("wa-")) return "whatsapp";
+  if (source === "fbg" || source.startsWith("fbg-")) return "fbgroup";
   if (source.startsWith("paid:")) return "paid";
   if (source.startsWith("ref:")) return "referral";
   return "other";
