@@ -12,7 +12,8 @@ const SITE = "https://therapykeys.co.il";
 const TITLE = "אתגר להיות מומחה מבוקש - עם אליענה שפירא";
 const DESCRIPTION =
   "אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם.";
-const IMAGE = `${SITE}/og-challenge.jpg`;
+// v2: photo and title centred, so WhatsApp's small square thumbnail (a centre crop) shows them whole.
+const IMAGE = `${SITE}/og-challenge-v2.jpg`;
 const URL = `${SITE}/challenge`;
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
