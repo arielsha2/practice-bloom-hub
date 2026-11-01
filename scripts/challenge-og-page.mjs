@@ -12,9 +12,10 @@ const SITE = "https://therapykeys.co.il";
 const TITLE = "אתגר להיות מומחה מבוקש - עם אליענה שפירא";
 const DESCRIPTION =
   "אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם.";
-// v3: mirrors the page hero (photo left, title right). WhatsApp on desktop crops a
-// small centre square from it; chosen anyway because most visitors open it on mobile.
-const IMAGE = `${SITE}/og-challenge-v3.jpg`;
+// v4: a mini version of the page hero that fits inside the centre 630x630 square.
+// WhatsApp (phone and desktop) shows a square thumbnail cropped from the centre,
+// so everything that matters must sit there; Facebook shows the full width.
+const IMAGE = `${SITE}/og-challenge-v4.jpg`;
 const URL = `${SITE}/challenge`;
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
