@@ -21,6 +21,7 @@ interface ViewRow {
   source: string | null;
   visitor_id: string;
   created_at: string;
+  already_registered?: boolean;
 }
 
 const GROUP_ORDER: SourceGroup[] = ["site", "lecture", "whatsapp", "fbgroup", "paid", "referral", "direct", "other"];
@@ -64,12 +65,12 @@ export function ChallengeRegistrationsCard() {
     setRows((data as RegistrationRow[]) ?? []);
     // Page views only exist from the day visit tracking went live; a missing
     // table (migration not applied yet) just hides the visits table.
-    const { data: viewData } = await supabase
-      .from("challenge_page_views")
-      .select("source, visitor_id, created_at")
-      .order("created_at", { ascending: true })
-      .limit(20000);
-    setViews((viewData as ViewRow[]) ?? []);
+    const viewQuery = (columns: string) =>
+      supabase.from("challenge_page_views").select(columns).order("created_at", { ascending: true }).limit(20000);
+    let { data: viewData, error: viewError } = await viewQuery("source, visitor_id, created_at, already_registered");
+    // Before migration 20261102120000 there is no already_registered column.
+    if (viewError) ({ data: viewData } = await viewQuery("source, visitor_id, created_at"));
+    setViews((viewData as unknown as ViewRow[]) ?? []);
     setLoading(false);
   }
 
@@ -104,27 +105,60 @@ export function ChallengeRegistrationsCard() {
 
   // Visits vs sign-ups per source, counted only from the first recorded
   // visit, so sign-ups from before visit tracking do not inflate conversion.
+  // A visitor counts as "already registered" when their first recorded visit
+  // came from a browser that had registered before: they cannot sign up
+  // again, so they are left out of the conversion rate.
   const since = views[0]?.created_at ?? null;
-  const funnel = new Map<SourceGroup, { visitors: Set<string>; visits: number; signups: number }>();
-  const slot = (g: SourceGroup) => {
-    let f = funnel.get(g);
-    if (!f) funnel.set(g, (f = { visitors: new Set(), visits: 0, signups: 0 }));
+  type Tally = { visitors: Set<string>; returning: Set<string>; visits: number; signups: number };
+  const newTally = (): Tally => ({ visitors: new Set(), returning: new Set(), visits: 0, signups: 0 });
+  const funnel = new Map<string, Tally>();
+  const byLink = new Map<string, Tally>(); // organic group links only (wa-..., fbg-...)
+  const isGroupLink = (src: string | null): src is string =>
+    src !== null && (sourceGroup(src) === "whatsapp" || sourceGroup(src) === "fbgroup");
+  const slot = (map: Map<string, Tally>, key: string) => {
+    let f = map.get(key);
+    if (!f) map.set(key, (f = newTally()));
     return f;
   };
   for (const v of views) {
-    const f = slot(sourceGroup(v.source));
-    f.visits++;
-    f.visitors.add(v.visitor_id);
+    const targets = [slot(funnel, sourceGroup(v.source))];
+    if (isGroupLink(v.source)) targets.push(slot(byLink, v.source));
+    for (const f of targets) {
+      f.visits++;
+      if (!f.visitors.has(v.visitor_id)) {
+        f.visitors.add(v.visitor_id);
+        if (v.already_registered) f.returning.add(v.visitor_id);
+      }
+    }
   }
-  if (since) for (const r of rows) if (r.created_at >= since) slot(sourceGroup(r.source)).signups++;
-  const funnelRows = GROUP_ORDER.filter((g) => funnel.has(g)).map((g) => {
-    const f = funnel.get(g)!;
-    return { g, visitors: f.visitors.size, visits: f.visits, signups: f.signups };
+  if (since) {
+    for (const r of rows) {
+      if (r.created_at < since) continue;
+      slot(funnel, sourceGroup(r.source)).signups++;
+      if (isGroupLink(r.source)) slot(byLink, r.source).signups++;
+    }
+  }
+  const summarize = (f: Tally) => ({
+    visitors: f.visitors.size,
+    returning: f.returning.size,
+    fresh: f.visitors.size - f.returning.size,
+    visits: f.visits,
+    signups: f.signups,
   });
+  const funnelRows = GROUP_ORDER.filter((g) => funnel.has(g)).map((g) => ({ g, ...summarize(funnel.get(g)!) }));
   const totals = funnelRows.reduce(
-    (t, r) => ({ visitors: t.visitors + r.visitors, visits: t.visits + r.visits, signups: t.signups + r.signups }),
-    { visitors: 0, visits: 0, signups: 0 },
+    (t, r) => ({
+      visitors: t.visitors + r.visitors,
+      returning: t.returning + r.returning,
+      fresh: t.fresh + r.fresh,
+      visits: t.visits + r.visits,
+      signups: t.signups + r.signups,
+    }),
+    { visitors: 0, returning: 0, fresh: 0, visits: 0, signups: 0 },
   );
+  const linkRows = [...byLink.entries()]
+    .map(([src, f]) => ({ src, ...summarize(f) }))
+    .sort((a, b) => b.visitors - a.visitors);
   const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : "—");
 
   return (
@@ -171,7 +205,8 @@ export function ChallengeRegistrationsCard() {
                 <p className="text-xs font-semibold text-foreground mb-1">כניסות מול נרשמים, לפי מקור</p>
                 <p className="text-xs text-muted-foreground mb-2">
                   מאז {new Date(since).toLocaleDateString("he-IL")}, כשהתחלנו לספור כניסות. מבקרים = אנשים שונים
-                  (לפי דפדפן); כניסות = כל פתיחה של הדף.
+                  (לפי דפדפן); כניסות = כל פתיחה של הדף. "כבר רשומים" = מבקרים מדפדפן שכבר נרשם ממנו
+                  (נספר רק מ-2.11.2026), והם לא נכללים בהמרה.
                 </p>
                 <div className="overflow-x-auto">
                   <Table>
@@ -179,6 +214,7 @@ export function ChallengeRegistrationsCard() {
                       <TableRow>
                         <TableHead className="text-right">מקור</TableHead>
                         <TableHead className="text-right">מבקרים</TableHead>
+                        <TableHead className="text-right">מהם כבר רשומים</TableHead>
                         <TableHead className="text-right">כניסות</TableHead>
                         <TableHead className="text-right">נרשמו</TableHead>
                         <TableHead className="text-right">לא נרשמו</TableHead>
@@ -190,20 +226,52 @@ export function ChallengeRegistrationsCard() {
                         <TableRow key={r.g}>
                           <TableCell>{SOURCE_GROUP_LABELS[r.g]}</TableCell>
                           <TableCell>{r.visitors}</TableCell>
+                          <TableCell>{r.returning}</TableCell>
                           <TableCell>{r.visits}</TableCell>
                           <TableCell>{r.signups}</TableCell>
-                          <TableCell>{Math.max(r.visitors - r.signups, 0)}</TableCell>
-                          <TableCell className="font-semibold">{pct(r.signups, r.visitors)}</TableCell>
+                          <TableCell>{Math.max(r.fresh - r.signups, 0)}</TableCell>
+                          <TableCell className="font-semibold">{pct(r.signups, r.fresh)}</TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
                         <TableCell className="font-semibold">סה"כ</TableCell>
                         <TableCell className="font-semibold">{totals.visitors}</TableCell>
+                        <TableCell className="font-semibold">{totals.returning}</TableCell>
                         <TableCell className="font-semibold">{totals.visits}</TableCell>
                         <TableCell className="font-semibold">{totals.signups}</TableCell>
-                        <TableCell className="font-semibold">{Math.max(totals.visitors - totals.signups, 0)}</TableCell>
-                        <TableCell className="font-semibold">{pct(totals.signups, totals.visitors)}</TableCell>
+                        <TableCell className="font-semibold">{Math.max(totals.fresh - totals.signups, 0)}</TableCell>
+                        <TableCell className="font-semibold">{pct(totals.signups, totals.fresh)}</TableCell>
                       </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {linkRows.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-2">קבוצות ווטסאפ ופייסבוק, לפי קישור</p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">קישור</TableHead>
+                        <TableHead className="text-right">מבקרים</TableHead>
+                        <TableHead className="text-right">מהם כבר רשומים</TableHead>
+                        <TableHead className="text-right">נרשמו</TableHead>
+                        <TableHead className="text-right">המרה</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {linkRows.map((r) => (
+                        <TableRow key={r.src}>
+                          <TableCell dir="ltr" className="text-right">{r.src}</TableCell>
+                          <TableCell>{r.visitors}</TableCell>
+                          <TableCell>{r.returning}</TableCell>
+                          <TableCell>{r.signups}</TableCell>
+                          <TableCell className="font-semibold">{pct(r.signups, r.fresh)}</TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>

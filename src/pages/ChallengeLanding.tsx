@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent, trackMetaEvent } from "@/lib/analytics";
-import { challengeVisitorId, firstViewInTab, randomId, resolveChallengeSource } from "@/lib/challengeSource";
+import { challengeVisitorId, firstViewInTab, isRegistered, markRegistered, randomId, resolveChallengeSource } from "@/lib/challengeSource";
 import { Check, Quote, Loader2, MessageCircle } from "lucide-react";
 import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
 
@@ -106,6 +106,7 @@ function RegistrationForm({ source }: { source: string | null }) {
     }
     trackEvent("challenge_registered", { challenge: CHALLENGE_KEY, source: source ?? "direct" });
     trackMetaEvent("Lead", { content_name: CHALLENGE_KEY });
+    markRegistered(CHALLENGE_KEY);
     setStatus("done");
   };
 
@@ -177,12 +178,18 @@ const ChallengeLanding = () => {
     // One row per tab session, for the visits-vs-sign-ups card on the admin page.
     const visitorId = challengeVisitorId() ?? randomId();
     if (firstViewInTab(CHALLENGE_KEY)) {
-      void supabase
-        .from("challenge_page_views")
-        .insert({ challenge_key: CHALLENGE_KEY, source, visitor_id: visitorId })
-        .then(({ error }) => {
-          if (error) console.warn("challenge view not recorded", error.message);
-        });
+      const row = { challenge_key: CHALLENGE_KEY, source, visitor_id: visitorId };
+      void (async () => {
+        let { error } = await supabase
+          .from("challenge_page_views")
+          .insert({ ...row, already_registered: isRegistered(CHALLENGE_KEY) });
+        // Before migration 20261102120000 the column does not exist: keep
+        // recording the visit without the flag rather than losing it.
+        if (error?.message.includes("already_registered")) {
+          ({ error } = await supabase.from("challenge_page_views").insert(row));
+        }
+        if (error) console.warn("challenge view not recorded", error.message);
+      })();
     }
   }, [source]);
 

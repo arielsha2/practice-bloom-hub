@@ -96,6 +96,24 @@ export function firstViewInTab(challengeKey: string): boolean {
   }
 }
 
+/** Remember in this browser that it registered for the challenge. */
+export function markRegistered(challengeKey: string): void {
+  try {
+    localStorage.setItem(`challenge_registered:${challengeKey}`, "1");
+  } catch {
+    // storage blocked: the visit just counts as new
+  }
+}
+
+/** True when this browser registered for the challenge before. */
+export function isRegistered(challengeKey: string): boolean {
+  try {
+    return localStorage.getItem(`challenge_registered:${challengeKey}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
 // Organic shares use ?src=wa-<group> (WhatsApp) or ?src=fbg-<group> (Facebook
 // groups); only latin letters, digits and "-" survive clean(), so Hebrew
 // names in ?src are dropped.

@@ -205,6 +205,7 @@ export type Database = {
       }
       challenge_page_views: {
         Row: {
+          already_registered: boolean
           challenge_key: string
           created_at: string
           id: string
@@ -212,6 +213,7 @@ export type Database = {
           visitor_id: string
         }
         Insert: {
+          already_registered?: boolean
           challenge_key: string
           created_at?: string
           id?: string
@@ -219,6 +221,7 @@ export type Database = {
           visitor_id: string
         }
         Update: {
+          already_registered?: boolean
           challenge_key?: string
           created_at?: string
           id?: string
