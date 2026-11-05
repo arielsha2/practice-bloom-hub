@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CollapsibleSection from "@/components/admin/analytics/CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageCircleHeart } from "lucide-react";
 
@@ -68,7 +69,8 @@ export function DiagnosisConsultClicksCard() {
         {shown.length === 0 ? (
           <p className="text-sm text-muted-foreground">עדיין אין שורות להצגה.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <CollapsibleSection title="טבלת הלחיצות והפתיחות" summary={`${shown.length} שורות`}>
+<div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -94,6 +96,7 @@ export function DiagnosisConsultClicksCard() {
               </TableBody>
             </Table>
           </div>
+</CollapsibleSection>
         )}
       </CardContent>
     </Card>

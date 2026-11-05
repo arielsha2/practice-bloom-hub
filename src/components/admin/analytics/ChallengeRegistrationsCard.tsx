@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CollapsibleSection from "./CollapsibleSection";
 import { Loader2, Trophy, Download } from "lucide-react";
 import { sourceGroup, SOURCE_GROUP_LABELS, type SourceGroup } from "@/lib/challengeSource";
 
@@ -201,8 +202,7 @@ export function ChallengeRegistrationsCard() {
             </div>
 
             {since && (
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">כניסות מול נרשמים, לפי מקור</p>
+              <CollapsibleSection title="כניסות מול נרשמים, לפי מקור" summary={`${funnelRows.length} מקורות · ${totals.signups} נרשמו`}>
                 <p className="text-xs text-muted-foreground mb-2">
                   מאז {new Date(since).toLocaleDateString("he-IL")}, כשהתחלנו לספור כניסות. מבקרים = אנשים שונים
                   (לפי דפדפן); כניסות = כל פתיחה של הדף. "כבר רשומים" = מבקרים מדפדפן שכבר נרשם ממנו
@@ -245,12 +245,11 @@ export function ChallengeRegistrationsCard() {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </CollapsibleSection>
             )}
 
             {linkRows.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-2">קבוצות ווטסאפ ופייסבוק, לפי קישור</p>
+              <CollapsibleSection title="קבוצות ווטסאפ ופייסבוק, לפי קישור" summary={`${linkRows.length} קישורים`}>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -275,7 +274,7 @@ export function ChallengeRegistrationsCard() {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </CollapsibleSection>
             )}
 
             {detailed.length > 1 && (
@@ -291,6 +290,7 @@ export function ChallengeRegistrationsCard() {
               </div>
             )}
 
+            <CollapsibleSection title="רשימת הנרשמים" summary={`${total} נרשמים`}>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -323,6 +323,7 @@ export function ChallengeRegistrationsCard() {
                 <p className="text-xs text-muted-foreground mt-2">מוצגים 100 האחרונים. הרשימה המלאה בהורדה לאקסל.</p>
               )}
             </div>
+            </CollapsibleSection>
           </div>
         )}
       </CardContent>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CollapsibleSection from "@/components/admin/analytics/CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, HandCoins } from "lucide-react";
 
@@ -70,7 +71,8 @@ export function DiagnosisPurchaseIntentsCard() {
             <p className="text-xs text-muted-foreground mb-3">
               כל שורה כאן היא ליד חם שלחץ על אחת מכפתורי הרכישה באבחון — שווה פנייה אישית תוך יום-יומיים.
             </p>
-            <div className="overflow-x-auto">
+            <CollapsibleSection title="טבלת לחיצות הרכישה" summary={`${rows.length} שורות`}>
+<div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -102,6 +104,7 @@ export function DiagnosisPurchaseIntentsCard() {
                 </TableBody>
               </Table>
             </div>
+</CollapsibleSection>
           </>
         )}
       </CardContent>

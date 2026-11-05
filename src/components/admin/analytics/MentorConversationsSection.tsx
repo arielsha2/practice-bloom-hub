@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import CollapsibleSection from './CollapsibleSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { MessageSquare, CalendarClock, Activity, Layers, Sparkles, BookOpen } from 'lucide-react';
@@ -105,7 +106,8 @@ export function MentorConversationsSection({ period }: { period: AnalyticsPeriod
               {data.conversations.length === 0 ? (
                 <p className="text-sm text-muted-foreground">אין שיחות בתקופה זו</p>
               ) : (
-                <div className="overflow-x-auto">
+                <CollapsibleSection title="טבלת השיחות" summary={`${data.conversations.length} שיחות`}>
+<div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -138,6 +140,7 @@ export function MentorConversationsSection({ period }: { period: AnalyticsPeriod
                     </TableBody>
                   </Table>
                 </div>
+</CollapsibleSection>
               )}
             </CardContent>
           </Card>

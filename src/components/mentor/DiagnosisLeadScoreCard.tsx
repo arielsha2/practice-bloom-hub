@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CollapsibleSection from "@/components/admin/analytics/CollapsibleSection";
 import { Loader2, Flame } from "lucide-react";
 
 interface LeadSignalRow {
@@ -57,7 +58,8 @@ export function DiagnosisLeadScoreCard() {
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">אין עדיין נתונים.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <CollapsibleSection title="טבלת הניקוד" summary={`${rows.length} שורות`}>
+<div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -81,6 +83,7 @@ export function DiagnosisLeadScoreCard() {
               </TableBody>
             </Table>
           </div>
+</CollapsibleSection>
         )}
       </CardContent>
     </Card>
