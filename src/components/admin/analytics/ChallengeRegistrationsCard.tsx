@@ -25,7 +25,7 @@ interface ViewRow {
   already_registered?: boolean;
 }
 
-const GROUP_ORDER: SourceGroup[] = ["site", "lecture", "whatsapp", "fbgroup", "paid", "referral", "direct", "other"];
+const GROUP_ORDER: SourceGroup[] = ["site", "community", "lecture", "whatsapp", "fbgroup", "paid", "referral", "direct", "other"];
 
 function toCsv(rows: RegistrationRow[]): string {
   const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;

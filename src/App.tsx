@@ -41,6 +41,7 @@ const ShinuyPnimiShivuk = lazy(() => import("./pages/ShinuyPnimiShivuk"));
 const MetuplimRishonim = lazy(() => import("./pages/MetuplimRishonim"));
 const AlSfatHaklinika = lazy(() => import("./pages/AlSfatHaklinika"));
 const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
+const ChallengeCommunity = lazy(() => import("./pages/ChallengeCommunity"));
 const TherapistsHateMarketing = lazy(() => import("./pages/en/TherapistsHateMarketing"));
 const MarketWithoutLosingSoul = lazy(() => import("./pages/en/MarketWithoutLosingSoul"));
 const TherapistsUndercharge = lazy(() => import("./pages/en/TherapistsUndercharge"));
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="/matorpelim-rishonim" element={<MetuplimRishonim />} />
               <Route path="/al-sfat-haklinika" element={<AlSfatHaklinika />} />
               <Route path="/challenge" element={<ChallengeLanding />} />
+              <Route path="/challenge-community" element={<ChallengeCommunity />} />
               <Route path="/en/therapists-who-hate-marketing" element={<TherapistsHateMarketing />} />
               <Route path="/en/market-without-losing-soul" element={<MarketWithoutLosingSoul />} />
               <Route path="/en/why-therapists-undercharge" element={<TherapistsUndercharge />} />

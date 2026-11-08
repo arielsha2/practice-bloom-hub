@@ -117,10 +117,11 @@ export function isRegistered(challengeKey: string): boolean {
 // Organic shares use ?src=wa-<group> (WhatsApp) or ?src=fbg-<group> (Facebook
 // groups); only latin letters, digits and "-" survive clean(), so Hebrew
 // names in ?src are dropped.
-export type SourceGroup = "site" | "lecture" | "whatsapp" | "fbgroup" | "paid" | "referral" | "direct" | "other";
+export type SourceGroup = "site" | "community" | "lecture" | "whatsapp" | "fbgroup" | "paid" | "referral" | "direct" | "other";
 
 export const SOURCE_GROUP_LABELS: Record<SourceGroup, string> = {
   site: "מהאתר",
+  community: "דף הקהילה",
   lecture: "מתנת ההרצאה",
   whatsapp: "קבוצות ווטסאפ",
   fbgroup: "קבוצות פייסבוק",
@@ -133,6 +134,7 @@ export const SOURCE_GROUP_LABELS: Record<SourceGroup, string> = {
 export function sourceGroup(source: string | null): SourceGroup {
   if (!source) return "direct";
   if (source === "site") return "site";
+  if (source === "community") return "community";
   if (source.startsWith("lecture")) return "lecture";
   if (source === "wa" || source.startsWith("wa-")) return "whatsapp";
   if (source === "fbg" || source.startsWith("fbg-")) return "fbgroup";
