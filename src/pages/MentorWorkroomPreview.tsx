@@ -41,10 +41,19 @@ interface Task {
   note?: string;
 }
 
+interface MsgRef {
+  kind: "task" | "focus";
+  taskId?: string;
+  title: string;
+  meta?: string;
+}
+
 interface Msg {
   id: string;
   from: "eliana" | "me";
   text: string;
+  divider?: string; // a day / stage marker instead of a message
+  ref?: MsgRef; // a card that points at a task or deliverable the message talks about
   action?: { label: string; onClick: () => void };
 }
 
@@ -112,10 +121,15 @@ const at = (daysFromNow: number, hour: number, minute = 0) => {
   return d;
 };
 
-const inHours = (h: number) => new Date(Date.now() + h * 3600 * 1000);
-
 const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+// Sample data should read sensibly at any hour: the next half hour two hours ahead, or tomorrow morning if that is past midnight.
+const soonToday = () => {
+  const d = new Date(Date.now() + 2 * 3600 * 1000);
+  d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0);
+  return sameDay(d, new Date()) ? d : at(1, 9);
+};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const dateInput = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -218,7 +232,7 @@ const INITIAL_TASKS: Task[] = [
     name: "ד״ר רונן",
     role: "פסיכיאטר",
     message: SOURCES[0].message,
-    due: inHours(2),
+    due: soonToday(),
     status: "pending",
   },
   {
@@ -243,17 +257,28 @@ const INITIAL_TASKS: Task[] = [
   },
 ];
 
+const FOCUS_SENTENCE = "אני מלווה זוגות אחרי לידה ראשונה לחזור לדבר, ולמצוא שוב זמן זה לזה.";
+
 const INITIAL_MSGS: Msg[] = [
+  { id: "d1", from: "eliana", text: "", divider: "אתמול · מציאת נישה" },
+  {
+    id: "m0",
+    from: "eliana",
+    text: "ניסחנו יחד את משפט המיקוד שלך, ובדקנו אותו מול עמית דמיוני. זה מה שיצא:",
+    ref: { kind: "focus", title: FOCUS_SENTENCE, meta: "משפט המיקוד · בתוצרים" },
+  },
+  { id: "d2", from: "eliana", text: "", divider: "היום · רשת הפניות" },
   {
     id: "m1",
     from: "eliana",
-    text: "סיימנו אתמול את המיקוד, ויצא לך משפט חד: ״אני מלווה זוגות אחרי לידה ראשונה לחזור לדבר.״ עכשיו מוציאים אותו לעולם. בחרנו יחד ארבעה עמיתים לפנייה הראשונה. שלוש הפניות הראשונות כבר מחכות לך בשולחן העבודה, עם נוסח ומועד.",
+    text: "עכשיו מוציאים את המשפט לעולם. בחרנו יחד ארבעה עמיתים לפנייה הראשונה, ושלוש הפניות הראשונות כבר מחכות לך בשולחן העבודה, עם נוסח ומועד.",
   },
   { id: "m2", from: "me", text: "אני קצת מתלבטת אם לפתוח עם טלפון או עם הודעה." },
   {
     id: "m3",
     from: "eliana",
     text: "שאלה טובה. עם עמית שעוד לא מכיר אותך, הודעה קצרה קודמת לשיחה. הטלפון מגיע אחרי שהוא ענה, ואז יש לו כבר הקשר. בגלל זה בחרתי בהודעה לפסיכיאטר, והיא אמורה לצאת היום.",
+    ref: { kind: "task", taskId: "t1", title: "לשלוח הודעת היכרות לפסיכיאטר" },
   },
 ];
 
@@ -330,6 +355,46 @@ export default function MentorWorkroomPreview() {
     }
     setCopied(key);
     window.setTimeout(() => setCopied(null), 1500);
+  };
+
+  // A small card inside a message that points at the task or deliverable it talks about.
+  const renderRef = (r: MsgRef) => {
+    if (r.kind === "focus") {
+      return (
+        <button
+          onClick={() => openDesk("deliverables")}
+          className="mt-2 block w-full rounded-xl border border-mentor-border/70 bg-mentor-bg p-3 text-start hover:bg-mentor-surface"
+        >
+          <span className="block text-[11px] text-muted-foreground">{r.meta}</span>
+          <span className="mt-0.5 block text-base leading-snug text-primary" style={{ fontFamily: SERIF }}>
+            {r.title}
+          </span>
+        </button>
+      );
+    }
+    const t = tasks.find((x) => x.id === r.taskId);
+    const I = t ? KIND_META[t.kind].Icon : ListChecks;
+    return (
+      <button
+        onClick={() => {
+          if (t) setOpenMessage(t.id);
+          openDesk("tasks");
+        }}
+        className="mt-2 flex w-full items-center gap-3 rounded-xl border border-mentor-border/70 bg-mentor-bg p-3 text-start hover:bg-mentor-surface"
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-card text-primary">
+          <I className="h-4 w-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] text-muted-foreground">
+            משימה · {t ? (t.status === "done" ? "בוצעה" : whenLabel(t.due)) : ""}
+          </span>
+          <span className="block truncate text-sm font-semibold" style={{ fontFamily: SERIF }}>
+            {r.title}
+          </span>
+        </span>
+      </button>
+    );
   };
 
   const submitReport = (t: Task) => {
@@ -547,34 +612,6 @@ export default function MentorWorkroomPreview() {
           ))}
         </nav>
 
-        {/* Next step: always visible */}
-        {next ? (
-          <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-mentor-accent/40 bg-card p-4 shadow-sm">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mentor-accent text-mentor-accent-foreground">
-              {(() => {
-                const I = KIND_META[next.kind].Icon;
-                return <I className="h-5 w-5" />;
-              })()}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">הצעד הבא שלך</p>
-              <p className="text-base font-semibold leading-snug" style={{ fontFamily: SERIF }}>
-                {next.title} · {whenLabel(next.due)}
-              </p>
-            </div>
-            <button
-              onClick={() => openDesk("tasks")}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-            >
-              לפתוח את המשימה
-            </button>
-          </div>
-        ) : (
-          <div className="mb-5 rounded-2xl border border-dashed border-mentor-border bg-card p-4 text-sm text-muted-foreground">
-            אין משימות פתוחות. בואי נחליט עם אליענה מה הצעד הבא.
-          </div>
-        )}
-
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_27rem] lg:items-start">
           {/* Conversation: the heart of the room */}
           <section
@@ -586,17 +623,61 @@ export default function MentorWorkroomPreview() {
                 <p className="font-semibold leading-tight" style={{ fontFamily: SERIF }}>
                   אליענה
                 </p>
-                <p className="text-xs text-muted-foreground">רשת הפניות · שלב 4 מתוך 6</p>
+                <p className="text-xs text-muted-foreground">המלווה שלך במסע</p>
               </div>
             </header>
 
+            {/* Where we are: the stage, its goal, progress, and what is already in hand */}
+            <div className="border-b border-mentor-border/60 bg-mentor-bg/70 px-5 py-3">
+              <p className="text-xs font-semibold text-primary">איפה אנחנו · שלב 4 מתוך 6: רשת הפניות</p>
+              <p className="mt-0.5 text-sm leading-snug text-foreground" style={{ fontFamily: SERIF }}>
+                המטרה בשלב הזה: שלוש פניות ראשונות לעמיתים שמפנים זוגות אחרי לידה.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span className="flex items-center gap-1" aria-label={`${done.length} מתוך ${done.length + pending.length} בוצעו`}>
+                  {Array.from({ length: done.length + pending.length }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-2 w-5 rounded-full ${i < done.length ? "bg-primary" : "bg-mentor-border"}`}
+                    />
+                  ))}
+                  <span className="ms-1 text-xs text-muted-foreground">
+                    {done.length} מתוך {done.length + pending.length} בוצעו
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground">כבר יש לנו:</span>
+                <button
+                  onClick={() => openDesk("deliverables")}
+                  className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs hover:bg-mentor-surface"
+                >
+                  <Check className="h-3 w-3 text-primary" />
+                  משפט מיקוד
+                </button>
+                <span className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs">
+                  <Check className="h-3 w-3 text-primary" />
+                  מחיר
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs">
+                  <Check className="h-3 w-3 text-primary" />
+                  היכרות של 30 שניות
+                </span>
+              </div>
+            </div>
+
             <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
               {msgs.map((m) =>
-                m.from === "eliana" ? (
+                m.divider ? (
+                  <div key={m.id} className="flex items-center gap-3 pt-1 text-[11px] font-medium text-muted-foreground">
+                    <span className="h-px flex-1 bg-mentor-border/70" />
+                    {m.divider}
+                    <span className="h-px flex-1 bg-mentor-border/70" />
+                  </div>
+                ) : m.from === "eliana" ? (
                   <div key={m.id} className="max-w-[92%]">
                     <p className="text-[15px] leading-relaxed text-foreground" style={{ fontFamily: SERIF }}>
                       {m.text}
                     </p>
+                    {m.ref && renderRef(m.ref)}
                     {m.action && (
                       <button onClick={m.action.onClick} className="mt-1.5 text-xs font-medium text-primary underline">
                         {m.action.label}
@@ -612,7 +693,38 @@ export default function MentorWorkroomPreview() {
               <div ref={chatEnd} />
             </div>
 
-            <div className="border-t border-mentor-border/60 p-3">
+            <div className="border-t border-mentor-border/60 px-3 pt-2.5">
+              {next ? (
+                <div className="flex items-center gap-3 rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 px-3 py-2">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mentor-accent text-mentor-accent-foreground">
+                    {(() => {
+                      const I = KIND_META[next.kind].Icon;
+                      return <I className="h-4 w-4" />;
+                    })()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] text-muted-foreground">הצעד הבא שלך</p>
+                    <p className="truncate text-sm font-semibold leading-snug" style={{ fontFamily: SERIF }}>
+                      {next.title} · {whenLabel(next.due)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setOpenMessage(next.id);
+                      openDesk("tasks");
+                    }}
+                    className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+                  >
+                    לפתוח
+                  </button>
+                </div>
+              ) : (
+                <p className="rounded-xl border border-dashed border-mentor-border px-3 py-2 text-xs text-muted-foreground">
+                  אין משימות פתוחות. בואי נחליט עם אליענה מה הצעד הבא.
+                </p>
+              )}
+            </div>
+            <div className="p-3">
               <div className="flex items-end gap-2">
                 <textarea
                   value={draft}
