@@ -31,6 +31,7 @@ const WebsiteBuilder = lazy(() => import("./pages/WebsiteBuilder"));
 const PublicTherapistSite = lazy(() => import("./pages/PublicTherapistSite"));
 const ReportByLink = lazy(() => import("./pages/ReportByLink"));
 const SiteStylesPreview = lazy(() => import("./pages/SiteStylesPreview"));
+const MentorWorkroomPreview = lazy(() => import("./pages/MentorWorkroomPreview"));
 const MySite = lazy(() => import("./pages/MySite"));
 const MentorAdmin = lazy(() => import("./pages/MentorAdmin"));
 const MentorTestimonialsAdmin = lazy(() => import("./pages/MentorTestimonialsAdmin"));
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/t/:slug" element={<PublicTherapistSite />} />
               <Route path="/r/:token" element={<ReportByLink />} />
               <Route path="/site-styles" element={<SiteStylesPreview />} />
+              <Route path="/mentor-workroom" element={<MentorWorkroomPreview />} />
               <Route path="/mentor/my-site" element={<MySite />} />
               <Route path="/contact-finder" element={<BotChat />} />
               <Route path="/admin-insights" element={<AdminInsights />} />
