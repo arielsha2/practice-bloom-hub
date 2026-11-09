@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  BookOpen,
   Calendar,
   Check,
   ChevronDown,
+  ChevronLeft,
   Clock,
   Copy,
   FileText,
@@ -357,16 +357,16 @@ export default function MentorWorkroomPreview() {
     window.setTimeout(() => setCopied(null), 1500);
   };
 
-  // A small card inside a message that points at the task or deliverable it talks about.
+  // A quiet quote inside a message that points at the task or deliverable it talks about.
   const renderRef = (r: MsgRef) => {
     if (r.kind === "focus") {
       return (
         <button
           onClick={() => openDesk("deliverables")}
-          className="mt-2 block w-full rounded-xl border border-mentor-border/70 bg-mentor-bg p-3 text-start hover:bg-mentor-surface"
+          className="mt-3 block w-full border-s-2 border-mentor-accent/60 ps-3 text-start hover:opacity-75"
         >
           <span className="block text-[11px] text-muted-foreground">{r.meta}</span>
-          <span className="mt-0.5 block text-base leading-snug text-primary" style={{ fontFamily: SERIF }}>
+          <span className="block text-base leading-snug text-primary" style={{ fontFamily: SERIF }}>
             {r.title}
           </span>
         </button>
@@ -380,16 +380,14 @@ export default function MentorWorkroomPreview() {
           if (t) setOpenMessage(t.id);
           openDesk("tasks");
         }}
-        className="mt-2 flex w-full items-center gap-3 rounded-xl border border-mentor-border/70 bg-mentor-bg p-3 text-start hover:bg-mentor-surface"
+        className="mt-3 flex w-full items-center gap-2.5 border-s-2 border-mentor-accent/60 ps-3 text-start hover:opacity-75"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-card text-primary">
-          <I className="h-4 w-4" />
-        </span>
+        <I className="h-4 w-4 shrink-0 text-mentor-accent" />
         <span className="min-w-0 flex-1">
           <span className="block text-[11px] text-muted-foreground">
             משימה · {t ? (t.status === "done" ? "בוצעה" : whenLabel(t.due)) : ""}
           </span>
-          <span className="block truncate text-sm font-semibold" style={{ fontFamily: SERIF }}>
+          <span className="block truncate text-sm font-medium" style={{ fontFamily: SERIF }}>
             {r.title}
           </span>
         </span>
@@ -589,92 +587,53 @@ export default function MentorWorkroomPreview() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-5">
-        {/* Table of contents: progress is pages finished, not messages */}
-        <nav aria-label="שלבי המסע" className="mb-4 flex flex-wrap items-center gap-1.5">
-          <span className="ms-0 me-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground" style={{ fontFamily: SERIF }}>
-            <BookOpen className="h-3.5 w-3.5" />
-            המחברת שלי
-          </span>
-          {STAGES.map((s) => (
-            <span
-              key={s.label}
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs ${
-                s.state === "current"
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : s.state === "done"
-                    ? "border-mentor-border bg-mentor-surface text-foreground"
-                    : "border-dashed border-mentor-border text-muted-foreground"
-              }`}
-            >
-              {s.state === "done" && <Check className="h-3 w-3" />}
-              {s.label}
-            </span>
-          ))}
-        </nav>
-
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_27rem] lg:items-start">
           {/* Conversation: the heart of the room */}
           <section
             className={`${mobilePane === "chat" ? "flex" : "hidden"} min-h-[30rem] flex-col overflow-hidden rounded-3xl border border-mentor-border/70 bg-card shadow-md lg:flex lg:h-[40rem]`}
           >
-            <header className="flex items-center gap-3 border-b border-mentor-border/60 bg-mentor-surface px-5 py-3">
-              <img src="/images/eliana-avatar.png" alt="" className="h-10 w-10 rounded-full border-2 border-mentor-accent/30 object-cover" />
-              <div>
-                <p className="font-semibold leading-tight" style={{ fontFamily: SERIF }}>
-                  אליענה
-                </p>
-                <p className="text-xs text-muted-foreground">המלווה שלך במסע</p>
+            {/* Where we are, in one band: who, which stage of six, the goal, and how far */}
+            <header className="bg-primary px-5 pb-4 pt-4 text-primary-foreground">
+              <div className="flex items-center gap-3">
+                <img src="/images/eliana-avatar.png" alt="" className="h-10 w-10 rounded-full border-2 border-primary-foreground/30 object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold leading-tight" style={{ fontFamily: SERIF }}>
+                    אליענה
+                  </p>
+                  <p className="text-xs opacity-80">שלב 4 מתוך 6 · רשת הפניות</p>
+                </div>
               </div>
+              <div className="mt-3 flex gap-1" role="img" aria-label="שלב 4 מתוך 6">
+                {STAGES.map((st) => (
+                  <span
+                    key={st.label}
+                    title={st.label}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      st.state === "done"
+                        ? "bg-primary-foreground"
+                        : st.state === "current"
+                          ? "bg-mentor-accent"
+                          : "bg-primary-foreground/25"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-2.5 text-[13px] leading-snug opacity-90">
+                המטרה: שלוש פניות ראשונות לעמיתים · {done.length} מתוך {done.length + pending.length} בוצעו
+              </p>
             </header>
 
-            {/* Where we are: the stage, its goal, progress, and what is already in hand */}
-            <div className="border-b border-mentor-border/60 bg-mentor-bg/70 px-5 py-3">
-              <p className="text-xs font-semibold text-primary">איפה אנחנו · שלב 4 מתוך 6: רשת הפניות</p>
-              <p className="mt-0.5 text-sm leading-snug text-foreground" style={{ fontFamily: SERIF }}>
-                המטרה בשלב הזה: שלוש פניות ראשונות לעמיתים שמפנים זוגות אחרי לידה.
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="flex items-center gap-1" aria-label={`${done.length} מתוך ${done.length + pending.length} בוצעו`}>
-                  {Array.from({ length: done.length + pending.length }).map((_, i) => (
-                    <span
-                      key={i}
-                      className={`h-2 w-5 rounded-full ${i < done.length ? "bg-primary" : "bg-mentor-border"}`}
-                    />
-                  ))}
-                  <span className="ms-1 text-xs text-muted-foreground">
-                    {done.length} מתוך {done.length + pending.length} בוצעו
-                  </span>
-                </span>
-                <span className="text-xs text-muted-foreground">כבר יש לנו:</span>
-                <button
-                  onClick={() => openDesk("deliverables")}
-                  className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs hover:bg-mentor-surface"
-                >
-                  <Check className="h-3 w-3 text-primary" />
-                  משפט מיקוד
-                </button>
-                <span className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs">
-                  <Check className="h-3 w-3 text-primary" />
-                  מחיר
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-mentor-border bg-card px-2.5 py-0.5 text-xs">
-                  <Check className="h-3 w-3 text-primary" />
-                  היכרות של 30 שניות
-                </span>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
               {msgs.map((m) =>
                 m.divider ? (
-                  <div key={m.id} className="flex items-center gap-3 pt-1 text-[11px] font-medium text-muted-foreground">
-                    <span className="h-px flex-1 bg-mentor-border/70" />
+                  <div key={m.id} className="flex items-center gap-3 text-[11px] text-muted-foreground/80">
+                    <span className="h-px flex-1 bg-mentor-border/50" />
                     {m.divider}
-                    <span className="h-px flex-1 bg-mentor-border/70" />
+                    <span className="h-px flex-1 bg-mentor-border/50" />
                   </div>
                 ) : m.from === "eliana" ? (
                   <div key={m.id} className="max-w-[92%]">
-                    <p className="text-[15px] leading-relaxed text-foreground" style={{ fontFamily: SERIF }}>
+                    <p className="text-[15px] leading-[1.85] text-foreground" style={{ fontFamily: SERIF }}>
                       {m.text}
                     </p>
                     {m.ref && renderRef(m.ref)}
@@ -693,38 +652,28 @@ export default function MentorWorkroomPreview() {
               <div ref={chatEnd} />
             </div>
 
-            <div className="border-t border-mentor-border/60 px-3 pt-2.5">
+            <div className="border-t border-mentor-border/60 bg-mentor-bg/60 p-3">
               {next ? (
-                <div className="flex items-center gap-3 rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 px-3 py-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mentor-accent text-mentor-accent-foreground">
-                    {(() => {
-                      const I = KIND_META[next.kind].Icon;
-                      return <I className="h-4 w-4" />;
-                    })()}
+                <button
+                  onClick={() => {
+                    setOpenMessage(next.id);
+                    openDesk("tasks");
+                  }}
+                  className="mb-2 flex w-full items-center gap-2 rounded-lg bg-mentor-accent/10 px-3 py-2 text-start text-[13px] hover:bg-mentor-accent/15"
+                >
+                  {(() => {
+                    const I = KIND_META[next.kind].Icon;
+                    return <I className="h-4 w-4 shrink-0 text-mentor-accent" />;
+                  })()}
+                  <span className="shrink-0 text-muted-foreground">הצעד הבא:</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {next.title} · {whenLabel(next.due)}
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-muted-foreground">הצעד הבא שלך</p>
-                    <p className="truncate text-sm font-semibold leading-snug" style={{ fontFamily: SERIF }}>
-                      {next.title} · {whenLabel(next.due)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setOpenMessage(next.id);
-                      openDesk("tasks");
-                    }}
-                    className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-                  >
-                    לפתוח
-                  </button>
-                </div>
+                  <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
               ) : (
-                <p className="rounded-xl border border-dashed border-mentor-border px-3 py-2 text-xs text-muted-foreground">
-                  אין משימות פתוחות. בואי נחליט עם אליענה מה הצעד הבא.
-                </p>
+                <p className="mb-2 px-1 text-xs text-muted-foreground">אין משימות פתוחות. בואי נחליט עם אליענה מה הצעד הבא.</p>
               )}
-            </div>
-            <div className="p-3">
               <div className="flex items-end gap-2">
                 <textarea
                   value={draft}
@@ -737,7 +686,7 @@ export default function MentorWorkroomPreview() {
                   }}
                   rows={2}
                   placeholder="מה עובר עלייך עם הפנייה הראשונה?"
-                  className="flex-1 resize-none rounded-xl border border-mentor-border bg-mentor-bg p-3 text-sm"
+                  className="flex-1 resize-none rounded-xl border border-mentor-border bg-card p-3 text-sm"
                 />
                 <button
                   onClick={send}
