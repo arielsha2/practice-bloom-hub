@@ -55,8 +55,8 @@ export function ToolIntroBanner({ botKey, botName, isRTL }: ToolIntroBannerProps
     ? `את/ה כרגע בכלי AI · ${botName}`
     : `You are now in the AI tool · ${botName}`;
   const tail = isRTL
-    ? 'כשתסיים/י — לחיצה על "חזרה למנטור עם הסיכום" בראש המסך תחזיר אותך לאליענה עם סיכום השיחה.'
-    : 'When you finish — click "Return to Mentor" at the top to go back to Eliana with your summary.';
+    ? 'כשתסיים/י — לחיצה על "חזרה למנטור עם הסיכום" בראש המסך תחזיר אותך לנרי עם סיכום השיחה.'
+    : 'When you finish — click "Return to Mentor" at the top to go back to Neri with your summary.';
 
   return (
     <div

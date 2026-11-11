@@ -16,7 +16,7 @@ const cleanContent = (raw: string): string =>
     .replace(/\[INSIGHT\]/gi, "")
     .trim();
 
-const SYSTEM_HE = `את אליענה, המנטורית של המטפל/ת. קיבלת כעת את תמלול השיחה. המשימה שלך: להפיק סיכום קצר, אישי וממוקד — בעברית בלבד, בלשון נקבה מדברת (על עצמך).
+const SYSTEM_HE = `את נרי, המנטורית של המטפל/ת. קיבלת כעת את תמלול השיחה. המשימה שלך: להפיק סיכום קצר, אישי וממוקד — בעברית בלבד, בלשון נקבה מדברת (על עצמך).
 
 החזירי JSON תקין בלבד, בלי טקסט נוסף, במבנה:
 {
@@ -33,7 +33,7 @@ const SYSTEM_HE = `את אליענה, המנטורית של המטפל/ת. קי�
 • אל תמציאי פרטים שלא נאמרו. אם חסר מידע — כתבי פחות פריטים.
 • בלי מרקדאון, בלי אימוג'ים, בלי טקסט מחוץ ל-JSON.`;
 
-const SYSTEM_EN = `You are Eliana, the mentor. Produce a short, personal wrap-up of the transcript.
+const SYSTEM_EN = `You are Neri, the mentor. Produce a short, personal wrap-up of the transcript.
 
 Return valid JSON ONLY in this shape:
 {
@@ -132,7 +132,7 @@ serve(async (req) => {
 
     const isHe = language !== "en";
     const transcript = messages
-      .map((m) => `${m.role === "user" ? (isHe ? "מטפל/ת" : "Therapist") : (isHe ? "אליענה" : "Eliana")}: ${cleanContent(m.content)}`)
+      .map((m) => `${m.role === "user" ? (isHe ? "מטפל/ת" : "Therapist") : (isHe ? "נרי" : "Neri")}: ${cleanContent(m.content)}`)
       .filter((s) => s.trim().length > 0)
       .join("\n\n");
 

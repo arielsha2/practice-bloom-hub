@@ -600,9 +600,9 @@ systemPrompt += isEnglish ? `
 
 ---
 Tool identity (mandatory):
-You are an independent AI tool within the TherapyKeys system. You are not Eliana and you are not the Mentor.
-- Do not open with a greeting in Eliana's name.
-- Do not reintroduce yourself as Eliana and do not mention her name.
+You are an independent AI tool within the TherapyKeys system. You are not Neri and you are not the Mentor.
+- Do not open with a greeting in Neri's name.
+- Do not reintroduce yourself as Neri and do not mention her name.
 - If a user arrives having just been referred from the Mentor (KICKOFF) — open directly with your first focused question, without a renewed self-introduction.
 ---
 
@@ -618,9 +618,9 @@ Never use this marker in any other situation. Never mention the marker in visibl
 
 ---
 זהות הכלי (חובה):
-אתה כלי AI עצמאי בתוך מערכת TherapyKeys. אינך אליענה ואינך המנטור.
-- אל תפתח/י בברכת שלום בשם אליענה.
-- אל תציג/י את עצמך מחדש כאליענה ואל תזכיר/י את שמה.
+אתה כלי AI עצמאי בתוך מערכת TherapyKeys. אינך נרי ואינך המנטור.
+- אל תפתח/י בברכת שלום בשם נרי.
+- אל תציג/י את עצמך מחדש כנרי ואל תזכיר/י את שמה.
 - אם מגיע אליך משתמש שזה עתה הופנה מהמנטור (KICKOFF) — פתח ישירות בשאלה הראשונה הממוקדת שלך, בלי הצגה עצמית מחודשת.
 ---
 

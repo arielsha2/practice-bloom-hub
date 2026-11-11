@@ -277,8 +277,8 @@ const BotChat = () => {
     if (STAGE_MARKER_BOTS.has(botKey || '')) return;
     kickoffSentRef.current = true;
     const kickoffPrompt = isRTL
-      ? '[KICKOFF] המנטור הפנתה אותי אליך עכשיו. אל תציג/י את עצמך מחדש, אל תזכיר/י את אליענה ואל תפתח/י בברכת שלום בשמה. פתח/י ישירות בשאלה הראשונה הממוקדת שלך כדי להתחיל לעבוד יחד. אל תזכיר/י את ההודעה הזו.'
-      : "[KICKOFF] The mentor just sent me over to you. Do not re-introduce yourself, do not mention Eliana, and do not greet on her behalf. Open directly with your first focused question to start working together. Don't reference this message.";
+      ? '[KICKOFF] המנטור הפנתה אותי אליך עכשיו. אל תציג/י את עצמך מחדש, אל תזכיר/י את נרי ואל תפתח/י בברכת שלום בשמה. פתח/י ישירות בשאלה הראשונה הממוקדת שלך כדי להתחיל לעבוד יחד. אל תזכיר/י את ההודעה הזו.'
+      : "[KICKOFF] The mentor just sent me over to you. Do not re-introduce yourself, do not mention Neri, and do not greet on her behalf. Open directly with your first focused question to start working together. Don't reference this message.";
     sendMessage(kickoffPrompt, undefined, { hideUserMessage: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isKickoff, authLoading, botLoading, user, activeConversationId, messages.length, chatLoading, botKey, isRTL]);

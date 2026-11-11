@@ -463,7 +463,7 @@ export default function MentorWorkroomPreview() {
       () =>
         say(
           "eliana",
-          "(בגרסה האמיתית כאן אליענה עונה לפי כל מה שהיא יודעת עלייך. בתצוגה הזו התשובה קבועה.)",
+          "(בגרסה האמיתית כאן נרי עונה לפי כל מה שהיא יודעת עלייך. בתצוגה הזו התשובה קבועה.)",
         ),
       600,
     );
@@ -940,10 +940,10 @@ export default function MentorWorkroomPreview() {
             {/* Where we are, in one band: who, which stage of six, the goal, and how far */}
             <header className="bg-primary px-5 pb-4 pt-4 text-primary-foreground">
               <div className="flex items-center gap-3">
-                <img src="/images/eliana-avatar.png" alt="" className="h-10 w-10 rounded-full border-2 border-primary-foreground/30 object-cover" />
+                <img src="/images/neri-avatar.png" alt="" className="h-10 w-10 rounded-full border-2 border-primary-foreground/30 object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold leading-tight" style={{ fontFamily: SERIF }}>
-                    אליענה
+                    נרי
                   </p>
                   <p className="text-xs opacity-80">שלב 4 מתוך 6 · רשת הפניות</p>
                 </div>
@@ -1014,7 +1014,7 @@ export default function MentorWorkroomPreview() {
                   <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </button>
               ) : (
-                <p className="mb-2 px-1 text-xs text-muted-foreground">אין משימות פתוחות. בואי נחליט עם אליענה מה הצעד הבא.</p>
+                <p className="mb-2 px-1 text-xs text-muted-foreground">אין משימות פתוחות. בואי נחליט עם נרי מה הצעד הבא.</p>
               )}
               <div className="flex items-end gap-2">
                 <textarea
@@ -1075,7 +1075,7 @@ export default function MentorWorkroomPreview() {
                   <div className="space-y-5">
                     {suggestion && (
                       <div className="rounded-xl border-2 border-dashed border-mentor-accent/60 bg-mentor-accent/5 p-3.5">
-                        <p className="text-xs font-semibold text-mentor-accent">הצעה מאליענה</p>
+                        <p className="text-xs font-semibold text-mentor-accent">הצעה מנרי</p>
                         <p className="mt-1 text-sm font-semibold" style={{ fontFamily: SERIF }}>
                           {suggestion.title}
                         </p>

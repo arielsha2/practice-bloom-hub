@@ -173,7 +173,7 @@ function WebsiteBuilderCTA() {
 }
 
 const MENTOR_SALES_URL = "https://meshulam.co.il/s/7e0acf30-e444-60ce-c935-fc7bfe8b7510";
-const ELIANA_AVATAR = "/images/eliana-avatar.png";
+const NERI_AVATAR = "/images/neri-avatar.png";
 
 export async function updateTherapistProgress(
   step_number: number,
@@ -1256,8 +1256,8 @@ export default function Mentor() {
 
       if (!summary) {
         summary = isRTL
-          ? "לא נשמר סיכום אוטומטי לכלי הזה. אפשר לספר לאליענה במילים שלך."
-          : "No automatic summary was saved for this tool. You can tell Eliana in your own words.";
+          ? "לא נשמר סיכום אוטומטי לכלי הזה. אפשר לספר לנרי במילים שלך."
+          : "No automatic summary was saved for this tool. You can tell Neri in your own words.";
       }
 
       const kickoff = latestExperiment
@@ -1763,8 +1763,8 @@ export default function Mentor() {
         <section className="container mx-auto px-4 pt-6 md:pt-8 pb-3 text-center max-w-2xl">
           <p className="text-sm md:text-base text-foreground/80 font-serif leading-relaxed">
             {isRTL
-              ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
-              : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
+              ? "הי, אני נרי ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
+              : "Hi, I'm Neri — I'll be guiding you on this journey to your practice."}
           </p>
         </section>
 
@@ -1798,8 +1798,8 @@ export default function Mentor() {
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
                     {isRTL
-                      ? "זה הסיכום שיועבר לאליענה. אפשר לעיין בו לפני שממשיכים."
-                      : "This summary will be passed to Eliana. Review it before continuing."}
+                      ? "זה הסיכום שיועבר לנרי. אפשר לעיין בו לפני שממשיכים."
+                      : "This summary will be passed to Neri. Review it before continuing."}
                   </p>
                   <div className="bg-card border border-mentor-border/60 rounded-xl p-4 mb-4 max-h-56 overflow-auto">
                     <pre
@@ -1825,7 +1825,7 @@ export default function Mentor() {
                       className="bg-mentor-accent hover:bg-mentor-accent/90 text-mentor-accent-foreground gap-1.5"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      {isRTL ? "המשך את השיחה עם אליענה" : "Continue with Eliana"}
+                      {isRTL ? "המשך את השיחה עם נרי" : "Continue with Neri"}
                     </Button>
                   </div>
                 </div>
@@ -1868,7 +1868,7 @@ export default function Mentor() {
                       className="gap-1.5 text-accent-foreground hover:bg-accent/30"
                     >
                       {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-                      {isRTL ? "חזרה לאליענה" : "Back to Eliana"}
+                      {isRTL ? "חזרה לנרי" : "Back to Neri"}
                     </Button>
                   )}
 
@@ -1882,7 +1882,7 @@ export default function Mentor() {
                     {activeBotKey ? (
                       <Sparkles className="w-5 h-5" />
                     ) : (
-                      <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                      <img src={NERI_AVATAR} alt="Neri" className="w-full h-full object-cover" />
                     )}
                   </div>
 
@@ -1902,15 +1902,15 @@ export default function Mentor() {
                             "connection-bridge": isRTL ? "שיחת המרה" : "Connection Bridge",
                           }[activeBotKey] ?? activeBotKey)
                         : isRTL
-                          ? "אליענה"
-                          : "Eliana"}
+                          ? "נרי"
+                          : "Neri"}
                     </h2>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       {activeBotKey
                         ? isRTL
-                          ? "את/ה מדבר/ת עם בוט אחר — השיחה עם אליענה נשמרת"
-                          : "You're now talking to a different assistant — your chat with Eliana is saved"
+                          ? "את/ה מדבר/ת עם בוט אחר — השיחה עם נרי נשמרת"
+                          : "You're now talking to a different assistant — your chat with Neri is saved"
                         : isRTL
                           ? "מקשיבה ✦"
                           : "Listening ✦"}
@@ -2044,8 +2044,8 @@ export default function Mentor() {
                   // Show a lightweight placeholder so the chat card keeps its height.
                   <div className="flex-1 w-full flex items-center justify-center bg-mentor-bg text-sm text-muted-foreground p-6 text-center">
                     {isRTL
-                      ? "הכלי נפתח במסך מלא. סגרי אותו כדי לחזור לאליענה."
-                      : "The tool is open full-screen. Close it to return to Eliana."}
+                      ? "הכלי נפתח במסך מלא. סגרי אותו כדי לחזור לנרי."
+                      : "The tool is open full-screen. Close it to return to Neri."}
                   </div>
                 ) : (
                   <>
@@ -2054,7 +2054,7 @@ export default function Mentor() {
                         {showWelcome && (
                           <div className="flex gap-2.5 animate-fade-in">
                             <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden border border-mentor-accent/30">
-                              <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                              <img src={NERI_AVATAR} alt="Neri" className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0 space-y-2">
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
@@ -2063,8 +2063,8 @@ export default function Mentor() {
                                   className={`text-foreground leading-relaxed text-sm md:text-base ${isRTL ? "text-right" : "text-left"}`}
                                 >
                                   {isRTL
-                                    ? "הי, אני אליענה ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
-                                    : "Hi, I'm Eliana — I'll be guiding you on this journey to your practice."}
+                                    ? "הי, אני נרי ואני זו שאלווה אותך במסע הזה אל הקליניקה שלך."
+                                    : "Hi, I'm Neri — I'll be guiding you on this journey to your practice."}
                                 </p>
                               </div>
                               <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3">
@@ -2107,7 +2107,7 @@ export default function Mentor() {
                               >
                                 {!isUser && (
                                   <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                                    <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                                    <img src={NERI_AVATAR} alt="Neri" className="w-full h-full object-cover" />
                                   </div>
                                 )}
                                 <div
@@ -2168,7 +2168,7 @@ export default function Mentor() {
                         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                           <div className="flex gap-2.5 animate-fade-in">
                             <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden border border-mentor-accent/30 mt-1">
-                              <img src={ELIANA_AVATAR} alt="Eliana" className="w-full h-full object-cover" />
+                              <img src={NERI_AVATAR} alt="Neri" className="w-full h-full object-cover" />
                             </div>
                             <div className="bg-mentor-surface border border-mentor-border/60 rounded-2xl rounded-ss-none px-4 py-3 flex items-center gap-1">
                               {[0, 1, 2].map((i) => (
