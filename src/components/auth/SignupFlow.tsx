@@ -33,9 +33,11 @@ interface SignupFlowProps {
    * without ever needing a password at all.
    */
   skipPassword?: boolean;
+  /** What the new account is for, only used in the consent line when the password step is skipped. */
+  purpose?: "diagnosis" | "challenge-tool";
 }
 
-export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false }: SignupFlowProps) {
+export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false, purpose = "diagnosis" }: SignupFlowProps) {
   const navigate = useNavigate();
   const { isRTL } = useLanguage();
   const [step, setStep] = useState<Step>(startStep);
@@ -247,8 +249,8 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
                 : 'I agree to receive emailed content, tips and updates from "Therapy Keys". You can unsubscribe anytime.'}
               <span className="block text-xs text-muted-foreground mt-1">
                 {isRTL
-                  ? `* אישור זה הוא תנאי ${skipPassword ? "להתנסות באבחון" : "לשימוש במנטור"}.`
-                  : `* This confirmation is required to ${skipPassword ? "try the diagnosis" : "use the Mentor"}.`}
+                  ? `* אישור זה הוא תנאי ${skipPassword ? (purpose === "challenge-tool" ? "לשימוש בכלי" : "להתנסות באבחון") : "לשימוש במנטור"}.`
+                  : `* This confirmation is required to ${skipPassword ? (purpose === "challenge-tool" ? "use the tool" : "try the diagnosis") : "use the Mentor"}.`}
               </span>
             </span>
           </label>

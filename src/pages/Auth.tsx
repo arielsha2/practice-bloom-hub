@@ -56,7 +56,10 @@ export default function Auth() {
   const reportRedirect = nextParam === "report"
     ? (isRTL ? "/ai-assistants/practice-diagnosis?report=1" : "/en/ai-assistants/practice-diagnosis?report=1")
     : null;
-  const afterLoginPath = diagnosisRedirect ?? botRedirect ?? reportRedirect ?? "/dashboard";
+  // ?next=challenge-card: the first free challenge tool (the professional business card), sent as homework.
+  // Like the diagnosis it skips the password step: a new visitor goes from "e-mail + code" straight to the tool.
+  const challengeRedirect = nextParam === "challenge-card" ? "/challenge-tools/card" : null;
+  const afterLoginPath = diagnosisRedirect ?? botRedirect ?? reportRedirect ?? challengeRedirect ?? "/dashboard";
 
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
@@ -308,6 +311,7 @@ export default function Auth() {
         return t("auth.loginTitle");
       case "signup":
         if (diagnosisRedirect) return isRTL ? "הרשמה לאבחון החינמי" : "Sign up for the free diagnosis";
+        if (challengeRedirect) return isRTL ? "הרשמה לכלי האתגר" : "Sign up for the challenge tool";
         return isRTL ? "הרשמה למנטור" : "Sign up for the Mentor";
       case "forgot":
         return t("auth.forgotTitle");
@@ -322,7 +326,7 @@ export default function Auth() {
       case "login":
         return t("auth.loginSubtitle");
       case "signup":
-        if (diagnosisRedirect) return isRTL ? "2 שלבים פשוטים: מייל → קוד אימות, ומתחילים" : "2 simple steps: email → verification code, then start";
+        if (diagnosisRedirect || challengeRedirect) return isRTL ? "2 שלבים פשוטים: מייל → קוד אימות, ומתחילים" : "2 simple steps: email → verification code, then start";
         return isRTL ? "3 שלבים פשוטים: מייל → אימות → סיסמה" : "3 simple steps: email → verify → password";
       case "forgot":
         return t("auth.forgotSubtitle");
@@ -382,8 +386,9 @@ export default function Auth() {
               <SignupFlow
                 startStep={resumePasswordSetup ? 3 : 1}
                 initialEmail={resumePasswordSetup?.email ?? ""}
-                redirectTo={diagnosisRedirect ?? botRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
-                skipPassword={!!diagnosisRedirect && !resumePasswordSetup}
+                redirectTo={diagnosisRedirect ?? botRedirect ?? challengeRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
+                skipPassword={(!!diagnosisRedirect || !!challengeRedirect) && !resumePasswordSetup}
+                purpose={challengeRedirect ? "challenge-tool" : "diagnosis"}
               />
             ) : mode === "forgot" && resetSent ? (
               <div className="text-center space-y-4">

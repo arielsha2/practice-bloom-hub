@@ -5,12 +5,14 @@ import { Menu, X, LogIn, LogOut, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { trackEvent } from "@/lib/analytics";
+import { EXPERTS_PATH, useShowExpertsTab } from "@/components/landing/ExpertsAdminTab";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const showExperts = useShowExpertsTab(); // admin only; everyone else gets the page by its direct link
 
   const handleSignOut = async () => {
     await signOut();
@@ -39,6 +41,15 @@ export function Header() {
               className="px-4 py-2 text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold rounded-lg hover:bg-primary-foreground/10"
             >
               האתגר
+            </Link>
+          )}
+          {isRTL && showExperts && (
+            <Link
+              to={EXPERTS_PATH}
+              className="px-4 py-2 text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold rounded-lg hover:bg-primary-foreground/10"
+            >
+              המומחים
+              <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
             </Link>
           )}
           <Link
@@ -148,6 +159,16 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 האתגר
+              </Link>
+            )}
+            {isRTL && showExperts && (
+              <Link
+                to={EXPERTS_PATH}
+                className="text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                המומחים
+                <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
               </Link>
             )}
             <Link
