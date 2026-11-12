@@ -186,6 +186,17 @@ const ExpertsSales = () => {
   useRevealOnScroll();
   const [showBar, setShowBar] = useState(false);
 
+  // The round, warm faces of this page (headings: Fredoka, text: Alef), loaded only here.
+  useEffect(() => {
+    const id = "experts-fonts";
+    if (document.getElementById(id)) return;
+    const l = document.createElement("link");
+    l.id = id;
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Alef:wght@400;700&display=swap";
+    document.head.appendChild(l);
+  }, []);
+
   // The sticky bar appears once the first screen has been scrolled past, and goes away at the price section.
   useEffect(() => {
     const onScroll = () => {
@@ -200,7 +211,13 @@ const ExpertsSales = () => {
   }, []);
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background font-body text-foreground">
+    <div dir="rtl" className="experts-page min-h-screen bg-background text-foreground">
+      <style>{`
+        .experts-page { font-family: 'Alef', 'Assistant', sans-serif; }
+        .experts-page .font-display, .experts-page .section-eyebrow { font-family: 'Fredoka', 'Alef', sans-serif; font-weight: 500; }
+        .experts-page h1.font-display { font-weight: 600; }
+        .experts-page .section-eyebrow { letter-spacing: 0.1em; }
+      `}</style>
       <SEOHead
         title='המומחים | תוכנית ליווי למטפלים עם אליענה שפירא'
         description="ממטפל אנונימי למומחה מבוקש: ארבעה חודשים של לימוד, תרגול וליווי אישי וקבוצתי, שמשלבים אסטרטגיה שיווקית ועבודה פנימית."
@@ -263,12 +280,6 @@ const ExpertsSales = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-6 flex items-baseline justify-between border-t border-background/15 pt-5">
-                  <span className="text-sm text-background/60">ההשקעה</span>
-                  <span className="font-display text-3xl text-background">
-                    {PRICE} <span className="text-lg">₪</span>
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -685,40 +696,42 @@ const ExpertsSales = () => {
             <p className="reveal mt-1 text-background/60">שלושה חודשי לימוד ובנייה, וחודש של מעבדת יישום והטמעה.</p>
           </div>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <div className="reveal rounded-3xl border border-background/15 bg-background/5 p-8">
-              <h3 className="font-display text-xl text-[hsl(var(--terracotta))]">ההרשמה כוללת</h3>
-              <ul className="mt-5 space-y-3.5 text-background/90">
-                {[
-                  "מפגשי לימוד ותרגול חיים בזום לאורך שלושת החודשים הראשונים.",
-                  "חודש של מעבדת יישום והטמעה.",
-                  "פגישת אסטרטגיה אישית אחת איתי.",
-                  "“חמישי אישי”, חלון שבועי לפנייה פרטית בימי חמישי בין 8:00 ל־10:00.",
-                  "קבוצת ליווי בוואטסאפ.",
-                  "בונוס: גישה למנטור AI לתרגול ולעבודה בין המפגשים.",
-                  "בונוס: מאחורי הקלעים של המהלך השיווקי שלי.",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-[hsl(var(--terracotta))]" />
-                    <span className="leading-relaxed">{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 space-y-2 border-t border-background/15 pt-5 text-sm text-background/80">
-                <p>
-                  מועד פתיחת התוכנית: <Todo>תאריך</Todo>
-                </p>
-                <p>
-                  מועדי המפגשים: <Todo>לפי לוח התוכנית</Todo>
-                </p>
-                <p>
-                  מספר המפגשים ומשך כל מפגש: <Todo>לפי לוח התוכנית הסופי</Todo>
-                </p>
-              </div>
+          <div className="reveal mx-auto mt-12 max-w-3xl rounded-3xl border border-background/15 bg-background/5 p-8">
+            <h3 className="font-display text-xl text-[hsl(var(--terracotta))]">ההרשמה כוללת</h3>
+            <ul className="mt-5 space-y-3.5 text-background/90">
+              {[
+                "מפגשי לימוד ותרגול חיים בזום לאורך שלושת החודשים הראשונים.",
+                "חודש של מעבדת יישום והטמעה.",
+                "פגישת אסטרטגיה אישית אחת איתי.",
+                "“חמישי אישי”, חלון שבועי לפנייה פרטית בימי חמישי בין 8:00 ל־10:00.",
+                "קבוצת ליווי בוואטסאפ.",
+                "בונוס: גישה למנטור AI לתרגול ולעבודה בין המפגשים.",
+                "בונוס: מאחורי הקלעים של המהלך השיווקי שלי.",
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-3">
+                  <Check className="mt-1 h-4 w-4 shrink-0 text-[hsl(var(--terracotta))]" />
+                  <span className="leading-relaxed">{t}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 space-y-2 border-t border-background/15 pt-5 text-sm text-background/80">
+              <p>
+                מועד פתיחת התוכנית: <Todo>תאריך</Todo>
+              </p>
+              <p>
+                מועדי המפגשים: <Todo>לפי לוח התוכנית</Todo>
+              </p>
+              <p>
+                מספר המפגשים ומשך כל מפגש: <Todo>לפי לוח התוכנית הסופי</Todo>
+              </p>
             </div>
+          </div>
 
-            <div className="reveal card-asym relative bg-background p-8 text-foreground shadow-[var(--shadow-elevated)]">
-              <p className="font-display text-sm text-accent">ההשקעה בתוכנית</p>
+          {/* The price appears only here, after everything the program gives has been read. */}
+          <div className="reveal mx-auto mt-14 max-w-xl text-center">
+            <p className="font-display text-lg text-background/70">וההשקעה בתוכנית</p>
+            <div className="card-asym relative mt-4 bg-background p-8 text-foreground shadow-[var(--shadow-elevated)]">
+              <p className="font-display text-sm text-accent">ארבעה חודשים · ליווי אישי וקבוצתי</p>
               <p className="mt-2 font-display text-6xl leading-none text-primary md:text-7xl">
                 {PRICE} <span className="text-3xl">₪</span>
               </p>
@@ -728,7 +741,7 @@ const ExpertsSales = () => {
               <div className="mt-6">
                 <JoinButton location="price_card" />
               </div>
-              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4">
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-start">
                 <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
                 <div>
                   <p className="font-semibold text-primary">שבוע ראשון עם אחריות מלאה</p>
@@ -892,9 +905,7 @@ const ExpertsSales = () => {
         }`}
       >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <span className="hidden font-display text-lg text-primary sm:block">
-            המומחים · {PRICE} ₪
-          </span>
+          <span className="hidden font-display text-lg text-primary sm:block">המומחים</span>
           <JoinButton label="אני רוצה להצטרף" location="sticky_bar" />
         </div>
       </div>
