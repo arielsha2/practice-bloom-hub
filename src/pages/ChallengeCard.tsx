@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ImagePlus, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Check, ImagePlus, MessageCircle, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
@@ -35,6 +35,9 @@ import { guessGender, usableName } from "@/lib/hebrewNames";
 // is worded so it reads the same to anyone. Free for any signed-in therapist; the link comes as homework (?src=hw1).
 
 const ANSWER_COUNT = 4;
+// Eliana's personal WhatsApp, for feedback on the card (wa.me takes the number without the leading 0).
+const ELIANA_WHATSAPP = "972523379716";
+const FEEDBACK_TEXT = "היי אליענה, הכנתי את כרטיס הביקור המקצועי שלי באתגר ואשמח לפידבק ממך. הנה הכרטיס:";
 const HAND = "'Gveret Levin', 'Miriam Libre', cursive";
 
 const SINGULAR: Record<ClientWord, string> = { מטופלים: "מטופל", לקוחות: "לקוח", מתאמנים: "מתאמן" };
@@ -153,6 +156,25 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
   );
 
   const input = "w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-sm";
+
+  // What still makes the card incomplete (the photo is optional).
+  const completeness = [
+    { label: "שם", done: !!edit.name.trim() },
+    { label: "הכשרה ותואר", done: !!edit.title.trim() },
+    { label: "פרטי קשר", done: !!(edit.phone.trim() || edit.site.trim()) },
+    { label: "תמונה (רשות)", done: !!edit.photo },
+  ];
+  const missing = completeness.filter((c) => !c.done && !c.label.includes("רשות")).map((c) => c.label);
+
+  const feedbackUrl = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(FEEDBACK_TEXT)}`;
+  const downloadCardPdf = async () => {
+    await downloadPdf(<CardPdfDocument data={cardData} />, PAGE_W, "business-card.pdf");
+    void recordCardEvent("downloaded", row.id, { kind: "pdf" });
+  };
+  const downloadCardPng = async () => {
+    await downloadPng(<BusinessCard data={cardData} width={640} />, 640, "business-card.png", 3);
+    void recordCardEvent("downloaded", row.id, { kind: "png" });
+  };
 
   return (
     <div className="py-8">
@@ -338,6 +360,34 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             </ScaledBox>
           </div>
 
+          {professional && (
+            <div className={`rounded-xl border p-3 text-sm ${missing.length ? "border-mentor-accent/50 bg-mentor-accent/5" : "border-primary/30 bg-card"}`}>
+              <div className="flex flex-wrap items-center gap-2">
+                {completeness.map((c) => (
+                  <span
+                    key={c.label}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${c.done ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground ring-1 ring-mentor-border"}`}
+                  >
+                    {c.done ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-mentor-accent" />}
+                    {c.label}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2 leading-relaxed text-muted-foreground">
+                {missing.length ? (
+                  <>
+                    כדי שהכרטיס יהיה שלם, חסרים עוד: {missing.join(", ")}.{" "}
+                    <a href="#complete-card" className="font-medium text-primary underline underline-offset-2">
+                      להשלמת הכרטיס
+                    </a>
+                  </>
+                ) : (
+                  "הכרטיס שלם ומוכן להורדה ולשליחה."
+                )}
+              </p>
+            </div>
+          )}
+
           {content.way_line && !professional && (
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input type="checkbox" checked={edit.showWay !== false} onChange={(e) => update({ showWay: e.target.checked })} />
@@ -345,110 +395,134 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             </label>
           )}
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-muted-foreground">צבע:</span>
-            {(Object.keys(THEME_LABELS) as CardTheme[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => update({ theme: t })}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${edit.theme === t ? "border-primary bg-card" : "border-mentor-border hover:bg-card"}`}
-              >
-                <span className="h-4 w-4 rounded-full border border-black/10" style={{ background: THEME_SWATCH[t] }} />
-                {THEME_LABELS[t]}
-              </button>
-            ))}
-          </div>
+          <DownloadButtons pngLabel="הורדת הכרטיס כתמונה" onPdf={downloadCardPdf} onPng={downloadCardPng} />
 
           {professional && (
-            <div className="flex items-center gap-4 rounded-xl border border-dashed border-mentor-accent/60 bg-card/70 p-4">
-              {edit.photo ? (
-                <img src={edit.photo} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-mentor-accent/60 object-cover" />
-              ) : (
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-mentor-surface text-mentor-accent">
-                  <ImagePlus className="h-6 w-6" />
-                </span>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-2xl leading-tight text-primary" style={{ fontFamily: HAND }}>
-                  {edit.photo ? "איזה כיף, עכשיו רואים אותך בכרטיס" : "מוזמנים להוסיף תמונה שלכם לכרטיס הביקור"}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                  <label className="cursor-pointer rounded-lg border border-mentor-border bg-card px-3 py-1.5 hover:bg-mentor-surface">
-                    {edit.photo ? "החלפת התמונה" : "בחירת תמונה"}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        e.target.value = "";
-                        if (!file) return;
-                        try {
-                          update({ photo: await photoToDataUrl(file) });
-                          trackEvent("challenge_card_photo_added", {});
-                        } catch {
-                          toast.error("לא הצלחנו לקרוא את התמונה. אפשר לנסות קובץ JPG או PNG אחר.");
-                        }
-                      }}
-                    />
-                  </label>
-                  {edit.photo && (
-                    <button onClick={() => update({ photo: null })} className="text-muted-foreground underline-offset-2 hover:underline">
-                      הסרה
-                    </button>
-                  )}
-                </div>
+            <div className="rounded-2xl border border-[#25D366]/40 bg-[#25D366]/[0.06] p-5">
+              <p className="text-lg font-semibold text-primary" style={{ fontFamily: SERIF }}>
+                רוצה פידבק אישי על הכרטיס?
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">
+                שלחו את הכרטיס לאליענה בווטסאפ, והיא תסתכל עליו ותחזיר אליך פידבק אישי. מורידים את הכרטיס כתמונה, ומצרפים אותו להודעה.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <a
+                  href={feedbackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent("challenge_card_feedback_whatsapp", {})}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857]"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  שליחת הכרטיס לאליענה
+                </a>
+                <button onClick={() => void downloadCardPng()} className="text-sm text-primary underline-offset-2 hover:underline">
+                  קודם להוריד את הכרטיס כתמונה
+                </button>
               </div>
             </div>
           )}
 
-          <div className="space-y-3 rounded-xl border border-mentor-border bg-card p-4">
-            <p className="text-sm font-semibold text-primary">פרטי הכרטיס</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs text-muted-foreground">
-                שם
-                <input className={input} value={edit.name} onChange={(e) => update({ name: e.target.value })} maxLength={60} />
-              </label>
-              <label className="space-y-1 text-xs text-muted-foreground">
-                {professional ? "הכשרה ותואר" : "כותרת מקצועית"}
-                <input
-                  className={input}
-                  value={edit.title}
-                  onChange={(e) => update({ title: e.target.value })}
-                  placeholder={professional ? "למשל: עובדת סוציאלית קלינית, M.S.W" : "למשל: פסיכותרפיסטית זוגית ומשפחתית"}
-                  maxLength={70}
-                />
-              </label>
-              <label className="space-y-1 text-xs text-muted-foreground">
-                טלפון
-                <input className={input} dir="ltr" value={edit.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="050-000-0000" maxLength={30} />
-              </label>
-              <label className="space-y-1 text-xs text-muted-foreground">
-                אימייל או אתר
-                <input className={input} dir="ltr" value={edit.site} onChange={(e) => update({ site: e.target.value })} placeholder="name@example.com" maxLength={60} />
-              </label>
-            </div>
-            {!edit.title.trim() && (
-              <p className="text-xs text-muted-foreground">
-                {professional ? "כדאי להוסיף את ההכשרה והתואר שלך, כדי שהכרטיס יהיה שלם." : "כדאי להוסיף כותרת מקצועית, כדי שהכרטיס יהיה שלם."}
+          <div id="complete-card" className="scroll-mt-6 space-y-4 rounded-2xl border border-mentor-border bg-card/60 p-4 sm:p-5">
+            <div>
+              <p className="text-lg font-semibold text-primary" style={{ fontFamily: SERIF }}>
+                השלמת הכרטיס
               </p>
-            )}
-            {(!edit.phone.trim() || !edit.site.trim()) && professional && (
-              <p className="text-xs text-muted-foreground">ופרטי קשר, כדי שאפשר יהיה לפנות אליך מהכרטיס.</p>
-            )}
-          </div>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {professional ? "השם, ההכשרה, פרטי הקשר והתמונה מופיעים על הכרטיס עצמו. כל מה שממלאים כאן מתעדכן בכרטיס מיד." : "הפרטים כאן מופיעים על הכרטיס."}
+              </p>
+            </div>
 
-          <DownloadButtons
-            pngLabel="הורדת הכרטיס כתמונה"
-            onPdf={async () => {
-              await downloadPdf(<CardPdfDocument data={cardData} />, PAGE_W, "business-card.pdf");
-              void recordCardEvent("downloaded", row.id, { kind: "pdf" });
-            }}
-            onPng={async () => {
-              await downloadPng(<BusinessCard data={cardData} width={640} />, 640, "business-card.png", 3);
-              void recordCardEvent("downloaded", row.id, { kind: "png" });
-            }}
-          />
+            <div className="space-y-3 rounded-xl border border-mentor-border bg-card p-4">
+              <p className="text-sm font-semibold text-primary">{professional ? "1. הפרטים שלך" : "פרטי הכרטיס"}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 text-xs text-muted-foreground">
+                  שם
+                  <input className={input} value={edit.name} onChange={(e) => update({ name: e.target.value })} placeholder="השם כפי שיופיע בכרטיס" maxLength={60} />
+                </label>
+                <label className="space-y-1 text-xs text-muted-foreground">
+                  {professional ? "הכשרה ותואר" : "כותרת מקצועית"}
+                  <input
+                    className={input}
+                    value={edit.title}
+                    onChange={(e) => update({ title: e.target.value })}
+                    placeholder={professional ? "למשל: עובדת סוציאלית קלינית, M.S.W" : "למשל: פסיכותרפיסטית זוגית ומשפחתית"}
+                    maxLength={70}
+                  />
+                </label>
+                <label className="space-y-1 text-xs text-muted-foreground">
+                  טלפון
+                  <input className={input} dir="ltr" value={edit.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="050-000-0000" maxLength={30} />
+                </label>
+                <label className="space-y-1 text-xs text-muted-foreground">
+                  אימייל או אתר
+                  <input className={input} dir="ltr" value={edit.site} onChange={(e) => update({ site: e.target.value })} placeholder="name@example.com" maxLength={60} />
+                </label>
+              </div>
+            </div>
+
+            {professional && (
+              <div className="rounded-xl border border-dashed border-mentor-accent/60 bg-card p-4">
+                <p className="mb-2 text-sm font-semibold text-primary">2. תמונה</p>
+                <div className="flex items-center gap-4">
+                  {edit.photo ? (
+                    <img src={edit.photo} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-mentor-accent/60 object-cover" />
+                  ) : (
+                    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-mentor-surface text-mentor-accent">
+                      <ImagePlus className="h-6 w-6" />
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-2xl leading-tight text-primary" style={{ fontFamily: HAND }}>
+                      {edit.photo ? "איזה כיף, עכשיו רואים אותך בכרטיס" : "מוזמנים להוסיף תמונה שלכם לכרטיס הביקור"}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                      <label className="cursor-pointer rounded-lg border border-mentor-border bg-card px-3 py-1.5 hover:bg-mentor-surface">
+                        {edit.photo ? "החלפת התמונה" : "בחירת תמונה"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = "";
+                            if (!file) return;
+                            try {
+                              update({ photo: await photoToDataUrl(file) });
+                              trackEvent("challenge_card_photo_added", {});
+                            } catch {
+                              toast.error("לא הצלחנו לקרוא את התמונה. אפשר לנסות קובץ JPG או PNG אחר.");
+                            }
+                          }}
+                        />
+                      </label>
+                      {edit.photo && (
+                        <button onClick={() => update({ photo: null })} className="text-muted-foreground underline-offset-2 hover:underline">
+                          הסרה
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-mentor-border bg-card p-4">
+              <p className="mb-2 text-sm font-semibold text-primary">{professional ? "3. צבע הכרטיס" : "צבע הכרטיס"}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                {(Object.keys(THEME_LABELS) as CardTheme[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => update({ theme: t })}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${edit.theme === t ? "border-primary bg-card" : "border-mentor-border hover:bg-card"}`}
+                  >
+                    <span className="h-4 w-4 rounded-full border border-black/10" style={{ background: THEME_SWATCH[t] }} />
+                    {THEME_LABELS[t]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div>
             <p className="mb-2 text-sm font-semibold text-primary">מה יש בקובץ ה-PDF</p>
