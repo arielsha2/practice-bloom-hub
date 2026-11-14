@@ -1,6 +1,8 @@
-// The free challenge tools. Tool "professional-card": from three answers about ONE person the therapist loves
-// working with (who he is, what troubles him, what he hopes will change) it writes three versions of the sentence
-// "אני עוזר ל__ ל__" and a line that defines the niche. The system owns everything that is structure (the
+// The free challenge tools. Tool "professional-card": four short questions about ONE person whose life the
+// therapist's work changed (who, and what happened when they reached out; what they asked for and what lay beneath
+// it; what changed after a few months; what was different in the therapist's way). action "reflect" returns Neri's
+// one-sentence mirror of an answer (and, rarely, one follow-up question); the default action writes three versions
+// of "אני עוזר ל__ ל__", a line that defines the niche and a line on the therapist's own way. The system owns everything that is structure (the
 // first-person opening by the therapist's gender, the word limits, the banned words, the checks); the model only
 // phrases. Stored in therapist_deliverables (tool = 'professional-card'), one new version per run.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -70,14 +72,19 @@ async function aiFetch(url: string, init: RequestInit): Promise<Response> {
 export type Tool = "professional-card";
 export const TOOLS: Tool[] = ["professional-card"];
 export const DAILY_LIMIT = 8;
+export const DAILY_REFLECT_LIMIT = 120;
 
 export type Gender = "f" | "m" | "n";
-export type Person = "f" | "m";
 
-// The therapist's own first-person opening, chosen by code from the therapist's gender (never by the model).
+// The therapist's own first-person opening, chosen by code from the therapist's gender (never by the model, never
+// asked: the page guesses it from the account name and sends "n" when the name says nothing).
 export const LEADS: Record<Gender, string> = { f: "אני עוזרת", m: "אני עוזר", n: "אני כאן כדי לעזור" };
 
 export const TAGS = ["לפי הקהל", "לפי הקושי", "לפי השינוי"] as const;
+
+// What the therapist calls the people who come to them (one tap on the page); the model uses the same word.
+export const CLIENT_WORDS = ["מטופלים", "לקוחות", "מתאמנים"] as const;
+export type ClientWord = (typeof CLIENT_WORDS)[number];
 
 // Words that keep a person at a distance: professional terms and vague abstractions the client would not use
 // about himself. They are also flagged for the therapist in the card they review (client side, same list).
@@ -91,65 +98,117 @@ const hebrewStem = (w: string) => w.replace(/[^֐-׿]/g, "").replace(/^[ומהב
 const STOP = new Set(["אחרי", "שהם", "שהוא", "שהיא", "אני", "עוזר", "עוזרת", "מלווה", "מרגישים", "מרגיש", "מרגישות", "כמו", "גם", "כל", "עם", "בלי", "אבל", "זה", "זו", "את", "של", "על"]);
 const stems = (s: string) => new Set(s.split(/\s+/).map(hebrewStem).filter((w) => w.length >= 3 && !STOP.has(w)));
 
+// The four questions, in the order the page asks them (the path of Eliana's card prompt: who, what was asked and
+// what lay beneath it, where to, and the therapist's own way). Kept here too so the model sees the exact wording.
+export const QUESTIONS = [
+  "על איזה אדם אחד היית רוצה שיגיעו אליך עוד רבים כמוהו? מה קרה בחייו ברגע שפנה אליך?",
+  "מה הוא ביקש, ומה היה באמת מתחת לבקשה?",
+  "מה השתנה אצלו אחרי כמה חודשים? מה שמו לב האנשים סביבו?",
+  "מה היה בדרך שלך שונה מהרגיל? מה היה צריך לקרות אצלו בפנים כדי שמשהו באמת יזוז?",
+];
+export const ANSWER_COUNT = QUESTIONS.length;
+
 export interface Input {
-  answers: string[]; // [who he is, what troubles him, what he hopes for]
-  gender: Gender; // the therapist's
-  person: Person; // the person described
+  answers: string[];
+  gender: Gender;
+  clientWord: ClientWord;
   source: string | null;
 }
 export interface Missing { index: number; hint: string }
 
 const MIN_WORDS = 4;
+const HINTS = [
+  "תארו אדם אחד: באיזה שלב בחיים הוא היה, ומה קרה ברגע שפנה.",
+  "מה הוא ביקש במילים שלו, ומה היה מתחת לבקשה?",
+  "מה השתנה ביום רגיל שלו, ומה שמו לב האנשים סביבו?",
+  "מה עשית אחרת, ומה היה צריך לקרות אצלו בפנים?",
+];
+
+const cleanAnswer = (a: unknown) => (typeof a === "string" ? a.replace(/\s+/g, " ").trim().slice(0, 900) : "");
+const parseGender = (g: unknown): Gender => (g === "f" || g === "m" ? g : "n");
+const parseClientWord = (w: unknown): ClientWord => (CLIENT_WORDS as readonly string[]).includes(String(w)) ? (w as ClientWord) : "מטופלים";
 
 export function parseInput(body: any): { input: Input } | { error: string } | { missing: Missing[] } {
   const raw = Array.isArray(body?.answers) ? body.answers : null;
-  if (!raw || raw.length !== 3) return { error: "bad_answers" };
-  const answers = raw.map((a: unknown) => (typeof a === "string" ? a.replace(/\s+/g, " ").trim().slice(0, 700) : ""));
-  const gender: Gender = body?.gender === "f" || body?.gender === "m" ? body.gender : "n";
-  const person: Person = body?.person === "m" ? "m" : "f";
+  if (!raw || raw.length !== ANSWER_COUNT) return { error: "bad_answers" };
+  const answers = raw.map(cleanAnswer);
   const missing: Missing[] = [];
-  const hints = [
-    "תארו את האדם: גיל או שלב בחיים, מצב משפחתי ועבודה, ומה הוא עושה בימים רגילים.",
-    "תארו מה קורה לו בפועל, ומה היה הרגע שבו הבין שהגיע הזמן.",
-    "תארו איך ייראה ערב או בוקר רגיל אחרי השינוי.",
-  ];
   answers.forEach((a: string, index: number) => {
-    if (words(a) < MIN_WORDS) missing.push({ index, hint: hints[index] });
+    if (words(a) < MIN_WORDS) missing.push({ index, hint: HINTS[index] });
   });
   if (missing.length) return { missing };
   const source = typeof body?.source === "string" ? body.source.replace(/[^a-z0-9_.:-]/gi, "").slice(0, 60) || null : null;
-  return { input: { answers, gender, person, source } };
+  return { input: { answers, gender: parseGender(body?.gender), clientWord: parseClientWord(body?.client_word), source } };
 }
 
-export const SYSTEM = `אתה מנסח כרטיס ביקור מקצועי למטפל. המטפל חשב על אדם אחד, אמיתי או מדומיין, שהכי טוב לו לעבוד איתו, ומסר שלוש תשובות: מי האדם, מה מעסיק ומטריד אותו, ומה הוא מקווה שישתנה בחייו.
+// ---------------------------------------------------------------- the short reflection after each answer
+// Neri mirrors each answer in one sentence, in the person's own words, and once per question may ask one
+// follow-up: when the first answer describes a group or a diagnosis instead of one person in a moment of life, or
+// when an answer is apologetic or dismissive of the therapist's own worth. Code decides what is allowed to come
+// back; a reply that fails a check is simply dropped and the page goes on with its own fixed line.
+export const REFLECT_SYSTEM = `את נרי, מנטורית חמה למטפלים, יועצים ומאמנים. המטפל עונה על ארבע שאלות קצרות כדי לנסח משפט אחד לכרטיס ביקור: למי הוא עוזר, מאיפה ולאן. עכשיו הוא ענה על שאלה אחת, ואת מגיבה בקצרה לפני השאלה הבאה.
 
-המשימה: שלוש גרסאות של משפט אחד במבנה "אני עוזר ל___ ל___", ושורה אחת שמגדירה את הנישה. את הפתיחה "אני עוזר" אתה לא כותב, הקוד מוסיף אותה לפי המטפל. אתה כותב רק את who ואת change.
+פורמט: JSON בלבד: {"mirror": "...", "follow_up": "..."}
+
+mirror: משפט אחד, עד 20 מילים, שמשקף את מה שנאמר, במילים של המטפל עצמו. בלי עצה, בלי פרשנות, בלי שבח ובלי "אני שומעת ש". למשל: "אמא שחזרה לעבודה, וזוגיות שהשתתקה בערבים." דברי על האדם שתואר (הוא, היא, הם), לא על המטפל.
+
+follow_up: בדרך כלל מחרוזת ריקה "". כתבי אותו רק באחד משני המצבים:
+1. בשאלה הראשונה בלבד: אם התשובה מתארת קבוצה, אבחנה או נושא ("אנשים עם חרדה", "נשים שרוצות רוגע") ולא אדם אחד ברגע מסוים בחייו. אז שאלה אחת: "מי בדיוק? באיזה רגע בחיים הוא מגיע?" במילים שלך, עד 16 מילים.
+2. בכל שאלה: אם התשובה מתנצלת, מקטינה את עצמה או חוששת להיראות ("לא בטוח שזה מיוחד", "יחשבו שאני עף על עצמי"). אז משפט חמלה קצר ותזכורת שהמשפט הזה נועד לשרת את האדם שאפשר הכי לעזור לו, ושאלה אחת. עד 30 מילים.
+אם התשובה כבר קונקרטית, follow_up הוא "".
+
+כללי לשון: עברית חמה ומכובדת, לא רחובית ולא שיווקית. לא ידוע אם המטפל גבר או אישה: אל תפני אליו בפועל שמשתנה לפי מגדר (לא "את חושבת", לא "אתה מרגיש"), ובלי לוכסנים. מותר: שלך, אליך, אצלך, ממך, ופעלי עבר בגוף שני (עשית, ראית). אסור להשתמש במילים: ${BANNED.join(", ")}.`;
+
+export function buildReflectUser(step: number, answers: string[], clientWord: ClientWord): string {
+  const prior = answers.slice(0, step).map((a, k) => `שאלה ${k + 1}: ${QUESTIONS[k]}\nתשובה: ${a}`).join("\n\n");
+  return `המטפל קורא לאנשים שמגיעים אליו "${clientWord}".
+${prior ? `\nמה שנאמר עד עכשיו:\n${prior}\n` : ""}
+השאלה הנוכחית (שאלה ${step + 1} מתוך ${ANSWER_COUNT}): ${QUESTIONS[step]}
+התשובה: ${answers[step]}`;
+}
+
+
+export function validateReflect(obj: any): { mirror: string; follow_up: string } | null {
+  if (!obj || typeof obj !== "object") return null;
+  const mirror = typeof obj.mirror === "string" ? obj.mirror.trim() : "";
+  const follow = typeof obj.follow_up === "string" ? obj.follow_up.trim() : "";
+  if (!mirror || words(mirror) > 24) return null;
+  const all = `${mirror}\n${follow}`;
+  if (BANNED.some((b) => all.includes(b)) || SLASH.test(all) || /[\[\]{}]/.test(all)) return null;
+  // Addressing the therapist with a gendered verb ("את חושבת", "ספרי") reads wrong to half of them.
+  if (/(^|[\sשו])(את|אתה)\s+(חושב|חושבת|מרגיש|מרגישה|יודע|יודעת|עובד|עובדת|מאמין|מאמינה|רואה)(?=[\s.,?]|$)/.test(all)) return null;
+  if (/(^|\s)(חשבי|ספרי|נסי|תארי|שימי|כתבי|דמייני)(?=[\s.,?]|$)/.test(all)) return null;
+  const okFollow = follow && words(follow) <= 32 && follow.includes("?") ? follow : "";
+  return { mirror, follow_up: okFollow };
+}
+
+// ---------------------------------------------------------------- the card
+export const SYSTEM = `את נרי, ומנסחת כרטיס ביקור מקצועי: משפט אחד שאומר למי המטפל עוזר, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותו. המטפל ענה על ארבע שאלות על אדם אחד שעבודתו שינתה את חייו: מי הוא ומה קרה בחייו כשפנה, מה ביקש ומה היה מתחת לבקשה, מה השתנה אחרי כמה חודשים, ומה היה שונה בדרך של המטפל.
+
+המשימה: שלוש גרסאות של משפט אחד במבנה "אני עוזר ל[מי] שמתמודדים עם [קושי], ל[מצב רצוי]", שורה אחת שמגדירה את הנישה, ושורה אחת שמתארת את הדרך הייחודית של המטפל. את הפתיחה "אני עוזר" אתה לא כותב, הקוד מוסיף אותה לפי המטפל. אתה כותב רק את who ואת change.
 
 פורמט: JSON בלבד, בלי הסבר ובלי markdown:
-{"niche_line": "...", "variants": [{"tag": "לפי הקהל", "who": "...", "change": "..."}, {"tag": "לפי הקושי", "who": "...", "change": "..."}, {"tag": "לפי השינוי", "who": "...", "change": "..."}]}
+{"niche_line": "...", "way_line": "...", "variants": [{"tag": "לפי הקהל", "who": "...", "change": "..."}, {"tag": "לפי הקושי", "who": "...", "change": "..."}, {"tag": "לפי השינוי", "who": "...", "change": "..."}]}
 
 כללים:
-1. who ממשיך את "אני עוזר" ומתחיל באות ל' ("לזוגות ...", "לאמהות ..."). הוא אומר מי האנשים ומה מטריד אותם, בתיאור אחד ברור ולא ברשימה. עד 9 מילים ומסתיים בפסיק.
-2. change הוא פועל במקור שמתחיל באות ל' ("לחזור ...", "להרגיש ..."), פעולה אחת ולא רשימה. הוא אומר מה משתנה בחיים שלהם. עד 9 מילים ומסתיים בנקודה.
+1. who ממשיך את "אני עוזר" ומתחיל באות ל' ("לזוגות ...", "לאמהות ..."). הוא אומר מי האנשים ומה הקושי שלהם, בתיאור אחד ברור ולא ברשימה. עד 10 מילים ומסתיים בפסיק.
+2. change הוא פועל במקור שמתחיל באות ל' ("לחזור ...", "להרגיש ..."), פעולה אחת ולא רשימה. הוא אומר לאן הם מגיעים, משהו שאפשר לראות בחיים (מתשובה 3). עד 9 מילים ומסתיים בנקודה.
 3. המשפט המלא "אני עוזר" + who + change חייב להיות עברית תקינה וטבעית ועד 20 מילים, משפט שאפשר להגיד בנשימה אחת למי ששואל במה אתה עוסק. קצר עדיף על שלם.
    דוגמאות לאורך ולסגנון בלבד, אל תעתיק מהן: "אני עוזר לבני נוער שמתקשים להגיע לבית הספר, לחזור ללמוד בלי כאבי בטן." / "אני עוזר לגברים שנשחקו מהעבודה, לחזור הביתה עם כוח לבני המשפחה."
-4. תאר קבוצה של אנשים כמו האדם שתואר, בלשון רבים, ולא את האדם עצמו. בלי שם, בלי גיל מדויק, בלי מקום עבודה ובלי פרט שמזהה אדם.
-5. שלוש הגרסאות שונות בזווית: "לפי הקהל" מדגישה מי האנשים, "לפי הקושי" מדגישה מה מטריד אותם, "לפי השינוי" מדגישה מה משתנה.
-6. השתמש במילים ובתמונות של המטפל. אל תמציא עובדות שלא נאמרו. כתוב במילים של יום יום, כמו שהאדם עצמו היה אומר, בלי מונחים מקצועיים ובלי מילים מופשטות ועמומות. אסור להשתמש במילים: ${BANNED.join(", ")}.
+4. תאר קבוצה של אנשים כמו האדם שתואר, בלשון רבים, ולא את האדם עצמו. בלי שם, בלי גיל מדויק, בלי מקום עבודה ובלי פרט שמזהה אדם. הקושי נשען על מה שהיה מתחת לבקשה (תשובה 2), לא רק על הבקשה.
+5. שלוש הגרסאות שונות בזווית: "לפי הקהל" מדגישה מי האנשים, "לפי הקושי" מדגישה מה קשה להם, "לפי השינוי" מדגישה לאן הם מגיעים.
+6. השתמש במילים ובתמונות של המטפל. אל תמציא עובדות שלא נאמרו. כתוב במילים של יום יום, כמו שהאדם עצמו היה אומר, בלי מונחים מקצועיים, בלי ז'רגון שיווקי ובלי מילים מופשטות ועמומות. אסור להשתמש במילים: ${BANNED.join(", ")}.
 7. בלי לוכסנים ובלי סוגריים, בלי הבטחת ריפוי או תוצאה.
-8. niche_line: שורה אחת, עד 20 מילים, שמגדירה את הקבוצה שהאדם מייצג: מי הם, ומה משותף להם. בלי "אני עוזר".`;
+8. niche_line: שורה אחת, עד 20 מילים, שמגדירה את הקבוצה שהאדם מייצג: מי הם, ומה משותף להם. בלי "אני עוזר".
+9. way_line: צירוף קצר, עד 10 מילים, שמתאר את הדרך הייחודית של המטפל מתוך תשובה 4, ומתחיל ב"דרך", "בעזרת" או "בעבודה". למשל: "בעבודה שמתחילה במה שהכי קשה לומר בקול." בלי פועל בגוף ראשון ובלי פנייה לפי מגדר. אל תמציא שיטה שלא נאמרה.
+10. לפני שאתה מחזיר, בדוק כל גרסה: האם מי שלא מכיר את התחום מבין אותה? האם היא מעוררת סקרנות? האם השומע יכול לחשוב מיד על מישהו שצריך אותה? אם לא, נסח מחדש.
+11. לא ידוע אם המטפל גבר או אישה, ולא ידוע מין האדם שתואר אלא אם זה עולה מהתיאור. אל תנחש: כתוב על האנשים בלשון רבים.`;
 
 export function buildUser(input: Input): string {
-  return `האדם שתואר הוא ${input.person === "m" ? "גבר" : "אישה"}.
+  const a = input.answers;
+  return `המטפל קורא לאנשים שמגיעים אליו "${input.clientWord}". השתמש במילה הזו אם צריך לכנות אותם.
 
-תשובה 1, מי האדם:
-${input.answers[0]}
-
-תשובה 2, מה מעסיק ומטריד אותו:
-${input.answers[1]}
-
-תשובה 3, מה הוא מקווה שישתנה:
-${input.answers[2]}`;
+${QUESTIONS.map((q, k) => `תשובה ${k + 1}. ${q}\n${a[k]}`).join("\n\n")}`;
 }
 
 export function validateCard(obj: any, answersText: string): string[] {
@@ -163,11 +222,13 @@ export function validateCard(obj: any, answersText: string): string[] {
     return v.trim();
   };
   str(obj.niche_line, "שורת הנישה", 24);
+  const way = str(obj.way_line, "שורת הדרך", 12);
+  if (way && !/^(דרך|בדרך|בעזרת|בעבודה)/.test(way)) fails.push(`שורת הדרך חייבת להתחיל ב"דרך", "בעזרת" או "בעבודה"`);
   const vs = Array.isArray(obj.variants) ? obj.variants : [];
   if (vs.length !== 3) fails.push("נדרשות בדיוק שלוש גרסאות");
   const full: string[] = [];
   vs.forEach((v: any, i: number) => {
-    const who = str(v?.who, `גרסה ${i + 1}: who`, 11);
+    const who = str(v?.who, `גרסה ${i + 1}: who`, 12);
     const change = str(v?.change, `גרסה ${i + 1}: change`, 11);
     if (who && change && words(who) + words(change) > 18) fails.push(`גרסה ${i + 1}: המשפט ארוך מדי לכרטיס (מעל 18 מילים בשני החלקים)`);
     if (who && !who.startsWith("ל")) fails.push(`גרסה ${i + 1}: who חייב להתחיל באות ל'`);
@@ -196,8 +257,9 @@ export function validateCard(obj: any, answersText: string): string[] {
 
 export interface CardContent {
   gender: Gender;
-  person: Person;
+  client_word: ClientWord;
   niche_line: string;
+  way_line: string;
   person_summary: string;
   variants: { tag: string; lead: string; who: string; change: string }[];
 }
@@ -205,8 +267,9 @@ export interface CardContent {
 export function composeContent(obj: any, input: Input): CardContent {
   return {
     gender: input.gender,
-    person: input.person,
+    client_word: input.clientWord,
     niche_line: String(obj.niche_line).trim(),
+    way_line: String(obj.way_line).trim(),
     person_summary: input.answers[0],
     variants: obj.variants.map((v: any, i: number) => ({
       tag: TAGS[i],
@@ -220,12 +283,32 @@ export function composeContent(obj: any, input: Input): CardContent {
 export interface Deps {
   getUserId: (req: Request) => Promise<string | null>;
   countToday: (userId: string) => Promise<number>;
+  countReflectToday: (userId: string) => Promise<number>;
+  logReflect: (userId: string) => Promise<void>;
   callModel: (system: string, user: string) => Promise<string>;
   save: (userId: string, tool: Tool, content: unknown, inputs: unknown) => Promise<{ id: string; version: number }>;
 }
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+const parseJson = (raw: string): unknown => {
+  try { return JSON.parse(raw); } catch { const m = raw.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; }
+};
+
+async function handleReflect(body: any, userId: string, deps: Deps): Promise<Response> {
+  const step = Number(body?.step);
+  const raw = Array.isArray(body?.answers) ? body.answers.slice(0, ANSWER_COUNT).map(cleanAnswer) : [];
+  if (!Number.isInteger(step) || step < 0 || step >= ANSWER_COUNT || raw.length <= step || !raw[step]) return json(400, { error: "bad_step" });
+  if ((await deps.countReflectToday(userId)) >= DAILY_REFLECT_LIMIT) return json(200, { status: "skip" });
+  await deps.logReflect(userId);
+  try {
+    const out = validateReflect(parseJson(await deps.callModel(REFLECT_SYSTEM, buildReflectUser(step, raw, parseClientWord(body?.client_word)))));
+    return json(200, out ? { status: "ok", ...out } : { status: "skip" });
+  } catch {
+    return json(200, { status: "skip" });
+  }
+}
 
 export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
@@ -236,6 +319,8 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
   const userId = await deps.getUserId(req);
   if (!userId) return json(401, { error: "unauthorized" });
+
+  if (body?.action === "reflect") return handleReflect(body, userId, deps);
 
   const parsed = parseInput(body);
   if ("error" in parsed) return json(400, { error: parsed.error });
@@ -251,19 +336,20 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     const extra = attempt === 0 ? "" : `\n\nהניסיון הקודם נפסל מהסיבות האלה, תקן אותן: ${lastFails.join("; ")}`;
     let obj: unknown = null;
     try {
-      const raw = await deps.callModel(SYSTEM, user + extra);
-      try { obj = JSON.parse(raw); } catch { const m = raw.match(/\{[\s\S]*\}/); obj = m ? JSON.parse(m[0]) : null; }
+      obj = parseJson(await deps.callModel(SYSTEM, user + extra));
     } catch { lastFails = ["שגיאת מודל"]; continue; }
     lastFails = validateCard(obj, answersText);
     if (!lastFails.length) {
       const content = composeContent(obj, input);
-      const saved = await deps.save(userId, tool, content, { answers: input.answers, gender: input.gender, person: input.person, source: input.source });
+      const saved = await deps.save(userId, tool, content, { answers: input.answers, gender: input.gender, client_word: input.clientWord, source: input.source });
       return json(200, { status: "ok", deliverable: { id: saved.id, tool, version: saved.version, content, edited_content: null } });
     }
   }
   return json(200, { status: "failed", reason: "quality_check", failures: lastFails });
 }
 // ===== core: end =====
+
+const reflectCounts = new Map<string, number>();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -272,6 +358,18 @@ Deno.serve(async (req) => {
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
     const deps: Deps = {
+      // Reflections save nothing, so their limit is a soft per-instance guard against a runaway client.
+      countReflectToday: async (userId) => {
+        const day = new Date().toISOString().slice(0, 10);
+        const k = `${day}:${userId}`;
+        return reflectCounts.get(k) ?? 0;
+      },
+      logReflect: async (userId) => {
+        const day = new Date().toISOString().slice(0, 10);
+        const k = `${day}:${userId}`;
+        if (reflectCounts.size > 5000) reflectCounts.clear();
+        reflectCounts.set(k, (reflectCounts.get(k) ?? 0) + 1);
+      },
       getUserId: async (r) => {
         const auth = r.headers.get("Authorization") ?? "";
         if (!auth.startsWith("Bearer ")) return null;

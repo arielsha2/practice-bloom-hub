@@ -16,6 +16,8 @@ export interface QDef {
   custom?: ReactNode; // replaces the text box (e.g. marking words)
 }
 
+const REFLECT_WAIT_MS = 9000;
+
 export const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
 // Scales a fixed-size document to the width available, so a real A4 page can be previewed.
@@ -82,6 +84,7 @@ export function Guided({
   finishLabel,
   onFinish,
   showSamples = true,
+  reflect,
 }: {
   eyebrow: string;
   title: string;
@@ -97,10 +100,18 @@ export function Guided({
   // May be async: while it runs the "writing" screen stays. Returning false (or throwing) brings the therapist back to the last question.
   onFinish: () => void | boolean | Promise<void | boolean>;
   showSamples?: boolean;
+  // Optional: Neri's one-sentence mirror of each answer, shown above the next question instead of the fixed
+  // reaction, and at most one follow-up question per step (the therapist then adds to the same answer). Null, an
+  // error or a slow reply (over REFLECT_WAIT_MS) falls back to the fixed reaction, so the flow never stalls.
+  reflect?: (i: number, answers: string[]) => Promise<{ mirror?: string; followUp?: string } | null>;
 }) {
   const [i, setI] = useState(-1);
   const [nudged, setNudged] = useState(false);
   const [writing, setWriting] = useState(false);
+  const [thinking, setThinking] = useState(false);
+  const [mirrors, setMirrors] = useState<Record<number, string>>({});
+  const [followUps, setFollowUps] = useState<Record<number, string>>({});
+  const reflected = useRef<Set<number>>(new Set());
 
   const finish = async () => {
     setWriting(true);
@@ -115,7 +126,13 @@ export function Guided({
     if (ok === false) setWriting(false);
   };
 
-  const next = () => {
+  const advance = () => {
+    if (i === questions.length - 1) {
+      void finish();
+    } else setI(i + 1);
+  };
+
+  const next = async () => {
     const q = questions[i];
     const a = answers[i] ?? "";
     if (!q.custom && wordCount(a) < 7 && !nudged) {
@@ -123,9 +140,24 @@ export function Guided({
       return;
     }
     setNudged(false);
-    if (i === questions.length - 1) {
-      void finish();
-    } else setI(i + 1);
+    if (reflect && !q.custom && !reflected.current.has(i)) {
+      reflected.current.add(i);
+      setThinking(true);
+      const step = i;
+      let r: { mirror?: string; followUp?: string } | null = null;
+      try {
+        r = await Promise.race([reflect(step, answers), new Promise<null>((res) => setTimeout(() => res(null), REFLECT_WAIT_MS))]);
+      } catch {
+        r = null;
+      }
+      setThinking(false);
+      if (r?.mirror) setMirrors((m) => ({ ...m, [step]: r!.mirror! }));
+      if (r?.followUp) {
+        setFollowUps((m) => ({ ...m, [step]: r!.followUp! }));
+        return; // stay: the therapist adds to the same answer, and the next click moves on
+      }
+    }
+    advance();
   };
 
   if (writing) {
@@ -176,7 +208,7 @@ export function Guided({
           ))}
         </span>
       </div>
-      {i > 0 && <NeriLine>{reactions[i - 1]}</NeriLine>}
+      {i > 0 && <NeriLine>{mirrors[i - 1] ?? reactions[i - 1]}</NeriLine>}
       {q.before && <div className="rounded-xl border border-mentor-border bg-mentor-surface/70 p-4 text-sm leading-relaxed">{q.before}</div>}
       <h3 className="text-2xl leading-snug text-primary" style={{ fontFamily: SERIF }}>
         {q.label}
@@ -201,12 +233,25 @@ export function Guided({
           className="w-full resize-none rounded-xl border border-mentor-border bg-card p-4 text-base leading-relaxed"
         />
       )}
+      {followUps[i] && (
+        <div className="space-y-2 rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 p-4">
+          {mirrors[i] && <NeriLine>{mirrors[i]}</NeriLine>}
+          <NeriLine>
+            <span className="text-foreground">{followUps[i]}</span>
+          </NeriLine>
+          <p className="ps-12 text-xs text-muted-foreground">אפשר להוסיף לתשובה שכבר כתבת, ואז להמשיך.</p>
+        </div>
+      )}
       {nudged && !q.custom && (
         <NeriLine>אפשר להרחיב קצת? ככל שהתיאור קונקרטי יותר, כך התוצר חד יותר. אם זה מספיק לך, לחצו שוב על “הבא”.</NeriLine>
       )}
       <div className="flex items-center justify-between">
-        <button onClick={next} className="rounded-xl bg-primary px-6 py-2.5 font-medium text-primary-foreground">
-          {i === questions.length - 1 ? finishLabel : "הבא"}
+        <button
+          onClick={() => void next()}
+          disabled={thinking}
+          className="rounded-xl bg-primary px-6 py-2.5 font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {thinking ? "רגע, קוראת…" : i === questions.length - 1 ? finishLabel : "הבא"}
         </button>
         {!q.custom && showSamples && (
           <button

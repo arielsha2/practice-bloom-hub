@@ -17,6 +17,7 @@ export interface CardData {
   lead: string; // "אני עוזרת"
   who: string; // "לזוגות שהפכו להורים ומרגישים שהתרחקו זה מזה,"
   change: string; // "למצוא שוב שפה משותפת."
+  way?: string; // "בעבודה שמתחילה במה שהכי קשה לומר בקול." (small line under the sentence; optional)
   contact: string[];
   theme: CardTheme;
 }
@@ -161,6 +162,7 @@ export const BusinessCard = forwardRef<HTMLDivElement, { data: CardData; width: 
             <span>{data.who}</span>
             {data.change ? <span style={{ color: t.accent }}> {data.change}</span> : null}
           </p>
+          {data.way ? <p style={{ margin: `${8 * u}px 0 0`, fontSize: 13.5 * u, lineHeight: 1.45, color: t.muted }}>{data.way}</p> : null}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>

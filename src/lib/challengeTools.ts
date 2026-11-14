@@ -8,7 +8,9 @@ import type { CardTheme } from "@/components/challenge-tools/ToolDocuments";
 // same row as edited_content, which the owner may update.
 
 export type Gender = "f" | "m" | "n";
-export type Person = "f" | "m";
+export type Person = "f" | "m"; // only on cards made before 2026-11-14, when the person's gender was still asked
+export const CLIENT_WORDS = ["מטופלים", "לקוחות", "מתאמנים"] as const;
+export type ClientWord = (typeof CLIENT_WORDS)[number];
 export type CardToolKey = "professional-card";
 
 export interface CardVariant {
@@ -20,8 +22,10 @@ export interface CardVariant {
 
 export interface CardContent {
   gender: Gender;
-  person: Person;
+  person?: Person;
   niche_line: string;
+  way_line?: string; // the therapist's own way, from the 4th answer; cards made before 2026-11-14 have none
+  client_word?: ClientWord;
   person_summary: string;
   variants: CardVariant[];
 }
@@ -34,6 +38,7 @@ export interface CardEdit {
   title: string;
   phone: string;
   site: string;
+  showWay?: boolean; // the "way" line on the card; on by default when the card has one
 }
 
 export interface CardRow {
@@ -41,7 +46,7 @@ export interface CardRow {
   version: number;
   content: CardContent;
   edited_content: CardEdit | null;
-  inputs: { answers?: string[]; gender?: Gender; person?: Person; source?: string | null };
+  inputs: { answers?: string[]; gender?: Gender; person?: Person; client_word?: ClientWord; source?: string | null };
   created_at: string;
 }
 
@@ -67,8 +72,11 @@ export function rememberSource(search: string): string | null {
   }
 }
 
-export async function generateCard(input: { answers: string[]; gender: Gender; person: Person; source: string | null }): Promise<GenerateCardResult> {
-  const { data, error } = await supabase.functions.invoke("challenge-tool-generate", { body: { tool: "professional-card", ...input } });
+export async function generateCard(input: { answers: string[]; gender: Gender; clientWord: ClientWord; source: string | null }): Promise<GenerateCardResult> {
+  const { answers, gender, clientWord, source } = input;
+  const { data, error } = await supabase.functions.invoke("challenge-tool-generate", {
+    body: { tool: "professional-card", answers, gender, client_word: clientWord, source },
+  });
   if (error) {
     const status = (error as { context?: Response }).context?.status;
     return { status: status === 429 ? "limit" : "error" };
@@ -77,11 +85,24 @@ export async function generateCard(input: { answers: string[]; gender: Gender; p
     const d = data.deliverable;
     return {
       status: "ok",
-      row: { id: d.id, version: d.version, content: d.content, edited_content: null, inputs: { ...input, answers: input.answers }, created_at: new Date().toISOString() },
+      row: { id: d.id, version: d.version, content: d.content, edited_content: null, inputs: { answers, gender, client_word: clientWord, source }, created_at: new Date().toISOString() },
     };
   }
   if (data?.status === "needs_info") return { status: "needs_info", missing: data.missing ?? [] };
   return { status: "failed" };
+}
+
+// Neri's one-sentence mirror of an answer (and rarely one follow-up question). Saves nothing; null on any problem.
+export async function reflectAnswer(step: number, answers: string[], clientWord: ClientWord): Promise<{ mirror?: string; followUp?: string } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("challenge-tool-generate", {
+      body: { tool: "professional-card", action: "reflect", step, answers: answers.slice(0, step + 1), client_word: clientWord },
+    });
+    if (error || data?.status !== "ok" || typeof data.mirror !== "string") return null;
+    return { mirror: data.mirror, followUp: typeof data.follow_up === "string" && data.follow_up ? data.follow_up : undefined };
+  } catch {
+    return null;
+  }
 }
 
 export async function loadLatestCard(): Promise<CardRow | null> {

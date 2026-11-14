@@ -21,47 +21,52 @@ import { Chips, DownloadButtons, Guided, NeriLine, SERIF, ScaledBox, useChalleng
 import type { QDef } from "@/components/challenge-tools/ToolUI";
 import { MoreMentorTools } from "@/components/challenge-tools/MoreMentorTools";
 import { downloadPdf, downloadPng } from "@/lib/challengeToolsExport";
-import { generateCard, loadLatestCard, recordCardEvent, rememberSource, saveCardEdit } from "@/lib/challengeTools";
-import type { CardEdit, CardRow, Gender, Person } from "@/lib/challengeTools";
+import { CLIENT_WORDS, generateCard, loadLatestCard, recordCardEvent, reflectAnswer, rememberSource, saveCardEdit } from "@/lib/challengeTools";
+import type { CardEdit, CardRow, ClientWord, Gender } from "@/lib/challengeTools";
 import { guessGender, usableName } from "@/lib/hebrewNames";
 
-// The first challenge tool, for real: the professional business card. Three questions about ONE person the
-// therapist loves working with, three versions of "אני עוזר ל… ל…", a card to refine, a PDF and a PNG. Free for any
-// signed-in therapist; the link comes as homework (?src=hw1). The other Mentor tools appear only after the result.
+// The first challenge tool, for real: the professional business card. Four short questions about ONE person whose
+// life the therapist's work changed (who, and what happened when they reached out; what they asked for and what lay
+// beneath it; what changed after a few months; what was different in the therapist's way), with Neri mirroring each
+// answer in one sentence and, when an answer stays general, asking once for one concrete person. Then three versions
+// of "אני עוזר ל… ל…", a card to refine, a PDF and a PNG. A few minutes in all. The therapist is never asked for
+// their gender: the opening follows the account name when it is clear and is neutral otherwise, and every question
+// is worded so it reads the same to anyone. Free for any signed-in therapist; the link comes as homework (?src=hw1).
 
-const GENDER_LABEL: Record<Gender, string> = { f: "בלשון נקבה", m: "בלשון זכר", n: "בניסוח ניטרלי" };
-
-const PERSON_LEAD =
-  "לפני שעונים: חשבו על אדם אחד, אמיתי או מדומיין, שהכי טוב לכם לעבוד איתו. לא קהל ולא כל העולם. בלי שם ובלי פרטים מזהים.";
+const ANSWER_COUNT = 4;
 
 const QUESTIONS: QDef[] = [
   {
-    before: PERSON_LEAD,
-    label: "מי האדם הזה?",
-    hint: "תארו אותו כפי שהוא נכנס אליכם לחדר: גיל, שלב בחיים, מצב משפחתי ועבודה, ומה הוא עושה בימים רגילים. מהתיאור הזה נגדיר מי המטופל שאליו אתם רוצים לפנות, וזו הנישה שלכם.",
-    example: "למשל: “אישה בת 34, אמא לתינוק בן ארבעה חודשים. חזרה לעבוד חצי משרה, נשואה, ובן הזוג שלה מגיע הביתה מאוחר.”",
+    before: "אדם אחד, אמיתי או כזה שמורכב מכמה אנשים שפגשת. אפשר גם זוג, או הורה וילד, כיחידה אחת. בלי שם ובלי פרטים מזהים. ואם עדיין אין לך רבים כאלה, זה האדם שהיית רוצה שיגיע.",
+    label: "על איזה אדם היית רוצה שיגיעו אליך עוד רבים כמוהו? מה קרה בחייו ברגע שפנה אליך?",
+    hint: "לא קבוצה ולא אבחנה, אלא אדם אחד ברגע מסוים בחייו.",
+    example: "למשל: “אמא בת 34, ארבעה חודשים אחרי לידה ראשונה. חזרה לעבודה, ובערבים היא ובן הזוג כמעט לא מדברים. היא פנתה אחרי שמצאה את עצמה בוכה במקלחת.”",
   },
   {
-    before: "אותו אדם שחשבתם עליו.",
-    label: "מה מעסיק ומטריד אותו, עד שהוא מחליט לפנות?",
-    hint: "תארו מצב ולא תווית: לא “חרדה”, אלא מה קורה לו בפועל, ומה היה הרגע שבו הבין שהגיע הזמן.",
-    example: "למשל: “הם רבים על דברים קטנים, וקשה לה לספר לו איך היא מרגישה. היא הבינה שמשהו לא בסדר כשהתחילה לבכות במקלחת בלי סיבה.”",
+    label: "מה הוא ביקש, ומה היה באמת מתחת לבקשה?",
+    hint: "הבקשה היא לרוב מה שאפשר לומר בקול. מתחתיה יש משהו עמוק יותר: פחד, כמיהה, או משהו שקשה להודות בו.",
+    example: "למשל: “היא ביקשה עזרה עם העייפות. מתחת לזה היה פחד שהיא מאבדת את עצמה, ושהם הופכים לשני זרים שמגדלים ילד.”",
   },
   {
-    before: "אותו אדם שחשבתם עליו.",
-    label: "מה הוא מקווה שישתנה בחייו בעקבות העבודה איתך?",
-    hint: "איך ייראה ערב או בוקר רגיל אחרי השינוי? משהו שאפשר לראות ולשמוע.",
-    example: "למשל: “שיהיה לה כוח בבוקר, ושהם יחזרו לשבת ביחד בערב ולדבר.”",
+    label: "מה השתנה אצלו אחרי כמה חודשים? במה הבחינו האנשים סביבו?",
+    hint: "משהו שאפשר לראות ולשמוע ביום רגיל.",
+    example: "למשל: “היא חזרה לצחוק. בן הזוג סיפר שהם שוב יושבים יחד בערב, ואמא שלה אמרה שהיא נשמעת כמו פעם.”",
+  },
+  {
+    label: "מה היה בדרך שלך שונה מהמקובל?",
+    hint: "מה עשית שם, ומה היה צריך לקרות אצלו בפנים כדי שמשהו באמת יזוז?",
+    example: "למשל: “לא מיהרתי לתת עצות. הזמנתי אותה לומר בקול את מה שהיא מתביישת בו. כשהבושה ירדה, היא הצליחה לשתף את בן הזוג.”",
   },
 ];
 
+// Shown when Neri's live reflection is not available (slow reply, error).
 const REACTIONS = [
-  "זה בדיוק מה שאני צריכה: אדם אחד, עם גיל ועם חיים. מכאן עולה הנישה שלכם.",
-  "מצב ולא תווית. זה מה שהכרטיס צריך לדעת עליו.",
-  "יפה. עכשיו אני מנסחת.",
+  "תודה. אדם אחד, ברגע אחד בחייו. ממנו הכול מתחיל.",
+  "הבקשה, ומה שמתחתיה. שם נמצא הקושי האמיתי שהמשפט צריך לגעת בו.",
+  "זה לאן שהוא הגיע. נשארה שאלה אחת, על הדרך שלך.",
 ];
 
-const defaultEdit = (name: string): CardEdit => ({ variant: 0, sentence: null, theme: "burgundy", name, title: "", phone: "", site: "" });
+const defaultEdit = (name: string): CardEdit => ({ variant: 0, sentence: null, theme: "burgundy", name, title: "", phone: "", site: "", showWay: true });
 
 // ------------------------------------------------------------------------------------------------ result
 function CardResult({ row, accountName, source, onRestart }: { row: CardRow; accountName: string; source: string | null; onRestart: () => void }) {
@@ -109,10 +114,11 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
       lead: sentence ? "" : v.lead,
       who: sentence ?? v.who,
       change: sentence ? "" : v.change,
+      way: edit.showWay !== false && content.way_line ? content.way_line : "",
       contact: [edit.phone.trim(), edit.site.trim()].filter(Boolean),
       theme: edit.theme,
     }),
-    [edit.name, edit.title, edit.phone, edit.site, edit.theme, sentence, v],
+    [edit.name, edit.title, edit.phone, edit.site, edit.theme, edit.showWay, content.way_line, sentence, v],
   );
 
   const input = "w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-sm";
@@ -127,10 +133,10 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
               כרטיס הביקור שלך
             </h2>
           </div>
-          <NeriLine>כתבתי שלוש גרסאות לכרטיס, כל אחת מזווית אחרת. בחרו את זו שהכי נשמעת כמו שאתם מדברים, ואפשר גם לערוך אותה.</NeriLine>
+          <NeriLine>מתוך מה שסיפרת התגבשה נישה, וממנה כתבתי שלוש גרסאות לכרטיס, כל אחת מזווית אחרת. בחרו את זו שהכי נשמעת כמו שאתם מדברים, ואפשר גם לערוך אותה.</NeriLine>
 
           <div className="rounded-xl border border-mentor-border bg-card p-4 text-sm leading-relaxed">
-            <p className="text-xs font-semibold text-primary">מי האדם שהגדרתם, והנישה שעולה ממנו</p>
+            <p className="text-xs font-semibold text-primary">הנישה שהתגבשה</p>
             <p className="mt-2">
               <span className="text-muted-foreground">האדם: </span>
               {content.person_summary}
@@ -139,6 +145,12 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
               <span className="text-muted-foreground">הנישה: </span>
               {content.niche_line}
             </p>
+            {content.way_line && (
+              <p className="mt-1.5">
+                <span className="text-muted-foreground">הדרך שלך: </span>
+                {content.way_line}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2.5">
@@ -213,6 +225,13 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             </ScaledBox>
           </div>
 
+          {content.way_line && (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input type="checkbox" checked={edit.showWay !== false} onChange={(e) => update({ showWay: e.target.checked })} />
+              להציג בכרטיס גם את הדרך שלך
+            </label>
+          )}
+
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm text-muted-foreground">צבע:</span>
             {(Object.keys(THEME_LABELS) as CardTheme[]).map((t) => (
@@ -282,9 +301,16 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             <p className="mt-2 text-xs text-muted-foreground">עמוד 1: הכרטיס ואיפה משתמשים בו. עמוד 2: גיליון של 10 כרטיסים להדפסה, בגודל אמיתי.</p>
           </div>
 
+          <div className="rounded-xl border border-primary/30 bg-card p-4">
+            <p className="text-sm font-semibold text-primary">משימת בדיקה לשבוע הקרוב</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              למי אפשר לומר את המשפט השבוע? סקרנות ושאלה כמו “איך זה עובד אצלך?” הן סימן טוב. גבה מורמת פירושה שכדאי לדייק, ולחזור לכאן לנסח מחדש.
+            </p>
+          </div>
+
           <div className="rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 p-4">
             <p className="text-sm font-semibold">מחר: הפתק האישי</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">מחר תקבלו קישור לכלי השני. הוא ייבנה על מה שכתבתם היום: אותו אדם, הפעם בשפה שלו.</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">מחר יגיע קישור לכלי השני. הוא ייבנה על מה שנכתב היום: אותו אדם, הפעם בשפה שלו.</p>
           </div>
 
           <button onClick={onRestart} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-2 hover:underline">
@@ -307,12 +333,11 @@ const ChallengeCard = () => {
   const source = useMemo(() => rememberSource(window.location.search), []);
 
   const accountName = usableName((user?.user_metadata as { full_name?: string } | undefined)?.full_name);
-  const guess = useMemo(() => guessGender(accountName), [accountName]);
-  const [genderPick, setGenderPick] = useState<Gender | null | undefined>(undefined); // undefined: use the guess
-  const gender = genderPick === undefined ? guess : genderPick;
-  const [person, setPerson] = useState<Person | null>(null);
+  // Never asked: the name says it when it is clear, otherwise the card opens in neutral wording ("אני כאן כדי לעזור").
+  const gender: Gender = useMemo(() => guessGender(accountName) ?? "n", [accountName]);
 
-  const [answers, setAnswers] = useState<string[]>(["", "", ""]);
+  const [answers, setAnswers] = useState<string[]>(() => Array(ANSWER_COUNT).fill(""));
+  const [clientWord, setClientWord] = useState<ClientWord>("מטופלים");
   const [row, setRow] = useState<CardRow | null>(null);
   const [mode, setMode] = useState<"form" | "result" | null>(null);
   const started = useRef(false);
@@ -339,15 +364,14 @@ const ChallengeCard = () => {
 
   const restart = () => {
     const prev = row?.inputs;
-    if (prev?.answers?.length === 3) setAnswers(prev.answers);
-    if (prev?.person) setPerson(prev.person);
+    if (prev?.answers?.length === ANSWER_COUNT) setAnswers(prev.answers);
+    if (prev?.client_word) setClientWord(prev.client_word);
     void recordCardEvent("regenerated", row?.id ?? null);
     setMode("form");
   };
 
   const onFinish = async (): Promise<boolean> => {
-    if (!gender || !person) return false;
-    const res = await generateCard({ answers, gender, person, source });
+    const res = await generateCard({ answers, gender, clientWord, source });
     if (res.status === "ok") {
       trackEvent("challenge_card_generated", source ? { src: source } : {});
       setRow(res.row);
@@ -366,47 +390,6 @@ const ChallengeCard = () => {
     return false;
   };
 
-  const genderGate = (
-    <div className="rounded-xl border border-mentor-border bg-mentor-surface/60 p-4 text-sm">
-      {accountName && <p className="text-xs text-muted-foreground">השם בחשבון: {accountName}</p>}
-      {gender ? (
-        <p className="mt-1.5 leading-relaxed">
-          כתבנו עלייך {GENDER_LABEL[gender]}{genderPick === undefined ? ", לפי השם" : ""}. לא מתאים?{" "}
-          <button className="text-primary underline underline-offset-2" onClick={() => setGenderPick(null)}>
-            שינוי
-          </button>
-        </p>
-      ) : (
-        <div className="mt-1.5 space-y-2.5">
-          <p className="leading-relaxed">שאלה אחת לפני שמתחילים: איך נכון לכתוב עלייך בכרטיס?</p>
-          <Chips<Gender>
-            value={gender}
-            options={[
-              { id: "f", label: "בלשון נקבה" },
-              { id: "m", label: "בלשון זכר" },
-              { id: "n", label: "ניסוח ניטרלי" },
-            ]}
-            onChange={(g) => setGenderPick(g)}
-          />
-        </div>
-      )}
-    </div>
-  );
-
-  const personGate = (
-    <div className="space-y-2.5 rounded-xl border border-mentor-border bg-mentor-surface/60 p-4 text-sm">
-      <p className="leading-relaxed">ועוד אחת: מי האדם שחשבתם עליו?</p>
-      <Chips<Person>
-        value={person}
-        options={[
-          { id: "f", label: "אישה" },
-          { id: "m", label: "גבר" },
-        ]}
-        onChange={setPerson}
-      />
-    </div>
-  );
-
   return (
     <div dir="rtl" className="min-h-screen bg-mentor-bg pb-20 font-body text-foreground">
       <SEOHead title="כרטיס הביקור המקצועי" description="כלי מתוך האתגר" canonicalUrl="/challenge-tools/card" noindex />
@@ -417,8 +400,8 @@ const ChallengeCard = () => {
           <Guided
             key="card-form"
             eyebrow="כלי 1 · כרטיס הביקור המקצועי"
-            title="המומחה שהמטופל שלי צריך"
-            intro="שלוש שאלות על אדם אחד: מי הוא, מה מטריד אותו ומה הוא מקווה שישתנה. מהן נבנה משפט אחד במבנה של כרטיס ביקור: למי אתם עוזרים, ומה משתנה אצלו. בדרך תגדירו גם מי המטופל שאליו אתם רוצים לפנות, כלומר את הנישה שלכם."
+            title="המשפט שמציג אותך"
+            intro="ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו. מתוכן ננסח יחד משפט אחד לכרטיס הביקור: למי העבודה שלך מיועדת, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותך. זה ניסוי ולא מבחן, ואין כאן תשובה נכונה. כחמש דקות."
             questions={QUESTIONS}
             reactions={REACTIONS}
             answers={answers}
@@ -429,14 +412,15 @@ const ChallengeCard = () => {
               }
               setAnswers(a);
             }}
-            canStart={!!gender && !!person}
+            canStart
             gate={
-              <div className="space-y-4">
-                {genderGate}
-                {personGate}
+              <div className="space-y-2.5 rounded-xl border border-mentor-border bg-mentor-surface/60 p-4 text-sm">
+                <p className="leading-relaxed">איך נכון לקרוא לאנשים שמגיעים אליך?</p>
+                <Chips<ClientWord> value={clientWord} options={CLIENT_WORDS.map((w) => ({ id: w, label: w }))} onChange={setClientWord} />
               </div>
             }
-            writingText="כותבת את הגרסאות…"
+            reflect={(step, a) => reflectAnswer(step, a, clientWord)}
+            writingText="מנסחת את המשפט שלך…"
             finishLabel="לכתוב את הגרסאות"
             onFinish={onFinish}
             showSamples={false}
