@@ -22,6 +22,7 @@ export interface CardData {
   // language and the contact details. When it is set the card shows it instead of the "אני עוזרת…" sentence.
   niche?: { title: string; detail: string };
   pitch?: string; // the spoken sentence, shown only on the PDF's first page ("to say when asked")
+  photo?: string; // the therapist's photo (a small square JPEG data URL), shown round on the professional card
   contact: string[];
   theme: CardTheme;
 }
@@ -209,6 +210,23 @@ const ProfessionalCard = forwardRef<HTMLDivElement, { data: CardData; niche: { t
         }}
       >
         <div style={{ position: 'absolute', inset: 14 * u, border: `${Math.max(1, u)}px solid ${t.frame}`, borderRadius: 6 * u, pointerEvents: 'none' }} />
+        {data.photo ? (
+          <img
+            src={data.photo}
+            alt=""
+            style={{
+              position: 'absolute',
+              left: 40 * u,
+              top: 34 * u,
+              width: 112 * u,
+              height: 112 * u,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: `${3 * u}px solid ${t.accent}`,
+              boxSizing: 'border-box',
+            }}
+          />
+        ) : null}
         <div
           style={{
             position: 'absolute',
@@ -219,12 +237,12 @@ const ProfessionalCard = forwardRef<HTMLDivElement, { data: CardData; niche: { t
             justifyContent: 'space-between',
           }}
         >
-          <div>
+          <div style={{ paddingInlineEnd: data.photo ? 140 * u : 0 }}>
             <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 30 * u, lineHeight: 1.15 }}>{data.name}</div>
             {data.title ? <div style={{ marginTop: 6 * u, fontSize: 14.5 * u, color: t.muted, lineHeight: 1.4 }}>{data.title}</div> : null}
           </div>
 
-          <div>
+          <div style={{ paddingInlineEnd: data.photo ? 140 * u : 0 }}>
             <div style={{ width: 34 * u, height: 2 * u, background: t.accent, marginBottom: 12 * u }} />
             <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 21 * u, lineHeight: 1.3, color: t.accent }}>{niche.title}</div>
             {niche.detail ? <div style={{ marginTop: 6 * u, fontSize: 14 * u, lineHeight: 1.5 }}>{niche.detail}</div> : null}

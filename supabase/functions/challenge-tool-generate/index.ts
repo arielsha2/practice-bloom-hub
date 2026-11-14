@@ -312,6 +312,8 @@ export interface Deps {
   logReflect: (userId: string) => Promise<void>;
   callModel: (system: string, user: string) => Promise<string>;
   save: (userId: string, tool: Tool, content: unknown, inputs: unknown) => Promise<{ id: string; version: number }>;
+  isAdmin: (userId: string) => Promise<boolean>;
+  deleteMine: (userId: string, tool: Tool) => Promise<number>; // every version of the caller's own card (their events cascade)
 }
 
 const json = (status: number, body: unknown) =>
@@ -346,6 +348,12 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (!userId) return json(401, { error: "unauthorized" });
 
   if (body?.action === "reflect") return handleReflect(body, userId, deps);
+  // Admin only, for trying the exercise again from a clean slate: deletes the admin's OWN card rows, nobody else's.
+  if (body?.action === "reset") {
+    if (!(await deps.isAdmin(userId))) return json(403, { error: "forbidden" });
+    const deleted = await deps.deleteMine(userId, tool);
+    return json(200, { status: "ok", deleted });
+  }
 
   const parsed = parseInput(body);
   if ("error" in parsed) return json(400, { error: parsed.error });
@@ -422,6 +430,15 @@ Deno.serve(async (req) => {
         if (!r.ok) throw new Error("model " + r.status);
         const d = await r.json();
         return String(d?.choices?.[0]?.message?.content ?? "");
+      },
+      isAdmin: async (userId) => {
+        const { data, error } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
+        return !error && data === true;
+      },
+      deleteMine: async (userId, tool) => {
+        const { data, error } = await admin.from("therapist_deliverables").delete().eq("user_id", userId).eq("tool", tool).select("id");
+        if (error) throw error;
+        return (data as unknown[] | null)?.length ?? 0;
       },
       save: async (userId, tool, content, inputs) => {
         const { data: last } = await admin.from("therapist_deliverables").select("version").eq("user_id", userId).eq("tool", tool).order("version", { ascending: false }).limit(1);

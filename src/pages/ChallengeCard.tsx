@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Pencil, RotateCcw } from "lucide-react";
+import { Check, ImagePlus, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
@@ -21,7 +21,8 @@ import { Chips, DownloadButtons, Guided, NeriLine, SERIF, ScaledBox, useChalleng
 import type { QDef } from "@/components/challenge-tools/ToolUI";
 import { MoreMentorTools } from "@/components/challenge-tools/MoreMentorTools";
 import { downloadPdf, downloadPng } from "@/lib/challengeToolsExport";
-import { CLIENT_WORDS, generateCard, loadLatestCard, recordCardEvent, reflectAnswer, rememberSource, saveCardEdit } from "@/lib/challengeTools";
+import { CLIENT_WORDS, generateCard, loadLatestCard, photoToDataUrl, recordCardEvent, reflectAnswer, rememberSource, resetMyCard, saveCardEdit } from "@/lib/challengeTools";
+import { useShowExpertsTab } from "@/components/landing/ExpertsAdminTab";
 import type { CardEdit, CardRow, ClientWord, Gender } from "@/lib/challengeTools";
 import { guessGender, usableName } from "@/lib/hebrewNames";
 
@@ -34,6 +35,7 @@ import { guessGender, usableName } from "@/lib/hebrewNames";
 // is worded so it reads the same to anyone. Free for any signed-in therapist; the link comes as homework (?src=hw1).
 
 const ANSWER_COUNT = 4;
+const HAND = "'Gveret Levin', 'Miriam Libre', cursive";
 
 const SINGULAR: Record<ClientWord, string> = { מטופלים: "מטופל", לקוחות: "לקוח", מתאמנים: "מתאמן" };
 
@@ -142,10 +144,11 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
       way: !professional && edit.showWay !== false && content.way_line ? content.way_line : "",
       niche: professional ? { title: nicheTitle, detail: nicheDetail } : undefined,
       pitch: professional ? spoken : undefined,
+      photo: professional && edit.photo ? edit.photo : undefined,
       contact: [edit.phone.trim(), edit.site.trim()].filter(Boolean),
       theme: edit.theme,
     }),
-    [edit.name, edit.title, edit.phone, edit.site, edit.theme, edit.showWay, content.way_line, sentence, v, professional, nicheTitle, nicheDetail, spoken],
+    [edit.name, edit.title, edit.phone, edit.site, edit.theme, edit.showWay, edit.photo, content.way_line, sentence, v, professional, nicheTitle, nicheDetail, spoken],
   );
 
   const input = "w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-sm";
@@ -355,6 +358,49 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             ))}
           </div>
 
+          {professional && (
+            <div className="flex items-center gap-4 rounded-xl border border-dashed border-mentor-accent/60 bg-card/70 p-4">
+              {edit.photo ? (
+                <img src={edit.photo} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-mentor-accent/60 object-cover" />
+              ) : (
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-mentor-surface text-mentor-accent">
+                  <ImagePlus className="h-6 w-6" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl leading-tight text-primary" style={{ fontFamily: HAND }}>
+                  {edit.photo ? "איזה כיף, עכשיו רואים אותך בכרטיס" : "מוזמנים להוסיף תמונה שלכם לכרטיס הביקור"}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                  <label className="cursor-pointer rounded-lg border border-mentor-border bg-card px-3 py-1.5 hover:bg-mentor-surface">
+                    {edit.photo ? "החלפת התמונה" : "בחירת תמונה"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = "";
+                        if (!file) return;
+                        try {
+                          update({ photo: await photoToDataUrl(file) });
+                          trackEvent("challenge_card_photo_added", {});
+                        } catch {
+                          toast.error("לא הצלחנו לקרוא את התמונה. אפשר לנסות קובץ JPG או PNG אחר.");
+                        }
+                      }}
+                    />
+                  </label>
+                  {edit.photo && (
+                    <button onClick={() => update({ photo: null })} className="text-muted-foreground underline-offset-2 hover:underline">
+                      הסרה
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-3 rounded-xl border border-mentor-border bg-card p-4">
             <p className="text-sm font-semibold text-primary">פרטי הכרטיס</p>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -454,6 +500,9 @@ const ChallengeCard = () => {
 
   const [answers, setAnswers] = useState<string[]>(() => Array(ANSWER_COUNT).fill(""));
   const [clientWord, setClientWord] = useState<ClientWord>("מטופלים");
+  const isAdmin = useShowExpertsTab();
+  const [resetting, setResetting] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const [row, setRow] = useState<CardRow | null>(null);
   const [mode, setMode] = useState<"form" | "result" | null>(null);
   const started = useRef(false);
@@ -486,6 +535,25 @@ const ChallengeCard = () => {
     setMode("form");
   };
 
+  const adminReset = async () => {
+    if (!window.confirm("למחוק את כל מה שנכתב בתרגיל הזה בחשבון שלך (כל הגרסאות של הכרטיס) ולהתחיל מההתחלה? אי אפשר לשחזר.")) return;
+    setResetting(true);
+    const ok = await resetMyCard();
+    setResetting(false);
+    if (!ok) {
+      toast.error("המחיקה לא הצליחה. נסו שוב בעוד רגע.");
+      return;
+    }
+    queryClient.setQueryData(["challenge-card", user?.id], null);
+    setRow(null);
+    setAnswers(Array(ANSWER_COUNT).fill(""));
+    setClientWord("מטופלים");
+    setFormKey((k) => k + 1);
+    setMode("form");
+    window.scrollTo({ top: 0 });
+    toast.success("התרגיל נמחק. אפשר להתחיל מחדש.");
+  };
+
   const onFinish = async (): Promise<boolean> => {
     const res = await generateCard({ answers, gender, clientWord, source });
     if (res.status === "ok") {
@@ -510,11 +578,27 @@ const ChallengeCard = () => {
     <div dir="rtl" className="min-h-screen bg-mentor-bg pb-20 font-body text-foreground">
       <SEOHead title="כרטיס הביקור המקצועי" description="כלי מתוך האתגר" canonicalUrl="/challenge-tools/card" noindex />
       <div className="mx-auto max-w-5xl px-4 pt-8">
+        {isAdmin && mode !== null && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-primary/40 bg-card px-4 py-2.5 text-sm">
+            <span className="text-muted-foreground">
+              <span className="me-2 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">אדמין</span>
+              מחיקה של התוכן שלך בתרגיל, כדי לעבור אותו שוב מההתחלה.
+            </span>
+            <button
+              onClick={() => void adminReset()}
+              disabled={resetting}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-destructive hover:bg-destructive/5 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              {resetting ? "מוחקת…" : "מחיקה והתחלה מחדש"}
+            </button>
+          </div>
+        )}
         {mode === null && <p className="py-20 text-center text-sm text-muted-foreground">טוענת…</p>}
 
         {mode === "form" && (
           <Guided
-            key="card-form"
+            key={`card-form-${formKey}`}
             eyebrow="כלי 1 · כרטיס הביקור המקצועי"
             title="המשפט שמציג אותך"
             intro="ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו. מתוכן ננסח יחד משפט אחד לכרטיס הביקור: למי העבודה שלך מיועדת, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותך. זה ניסוי ולא מבחן, ואין כאן תשובה נכונה. כחמש דקות."

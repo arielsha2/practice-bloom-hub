@@ -52,6 +52,15 @@ export function Header() {
               <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
             </Link>
           )}
+          {isRTL && showExperts && (
+            <Link
+              to="/challenge-tools/card"
+              className="px-4 py-2 text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold rounded-lg hover:bg-primary-foreground/10"
+            >
+              כרטיס ביקור
+              <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
+            </Link>
+          )}
           <Link
             to={language === "en" ? "/en/ai-assistants/practice-diagnosis" : "/ai-assistants/practice-diagnosis"}
             className="px-3 py-1.5 rounded-full border border-[#ff6f61]/70 text-[#ff9a8f] hover:bg-[#ff6f61]/15 transition-colors"
@@ -168,6 +177,16 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 המומחים
+                <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
+              </Link>
+            )}
+            {isRTL && showExperts && (
+              <Link
+                to="/challenge-tools/card"
+                className="text-[hsl(var(--terracotta))] hover:text-primary-foreground transition-colors font-semibold py-3 px-4 rounded-lg hover:bg-primary-foreground/10"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                כרטיס ביקור
                 <span className="ms-1.5 rounded bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground/80">אדמין</span>
               </Link>
             )}

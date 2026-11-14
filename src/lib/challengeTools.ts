@@ -43,6 +43,7 @@ export interface CardEdit {
   niche?: number; // which of content.card_niches is on the card
   nicheTitle?: string | null; // the therapist's own wording of the niche on the card
   nicheDetail?: string | null;
+  photo?: string | null; // a small square JPEG data URL (about 30 KB), kept on the row with the other choices
 }
 
 export interface CardRow {
@@ -107,6 +108,40 @@ export async function reflectAnswer(step: number, answers: string[], clientWord:
   } catch {
     return null;
   }
+}
+
+// Admin only (checked by the function): deletes every version of the admin's own card, to try the exercise again.
+export async function resetMyCard(): Promise<boolean> {
+  const { data, error } = await supabase.functions.invoke("challenge-tool-generate", { body: { tool: "professional-card", action: "reset" } });
+  return !error && data?.status === "ok";
+}
+
+// The photo for the card: centre-cropped to a square and re-encoded small, so it can live on the row as text.
+export function photoToDataUrl(file: File, size = 360): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!/^image\//.test(file.type)) return reject(new Error("not_an_image"));
+    if (file.size > 15 * 1024 * 1024) return reject(new Error("too_big"));
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("no_canvas"));
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("bad_image"));
+    };
+    img.src = url;
+  });
 }
 
 export async function loadLatestCard(): Promise<CardRow | null> {

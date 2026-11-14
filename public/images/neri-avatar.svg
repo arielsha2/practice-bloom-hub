@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="c"><circle cx="256" cy="256" r="256"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="512" height="512" fill="#f4e8dc"/>
+    <circle cx="400" cy="110" r="70" fill="#ecd6c4"/>
+    <circle cx="95" cy="420" r="60" fill="#ead2bf"/>
+
+    <!-- hair, back -->
+    <path d="M136 250 C 120 150, 190 92, 262 94 C 340 96, 396 150, 384 250 C 380 300, 398 340, 410 372 L 104 372 C 118 336, 140 300, 136 250 Z" fill="#4b2e2b"/>
+
+    <!-- body / sweater -->
+    <path d="M70 512 C 78 420, 150 378, 256 378 C 362 378, 434 420, 442 512 Z" fill="#b8644a"/>
+    <!-- neck -->
+    <path d="M222 318 L 222 372 C 236 392, 276 392, 290 372 L 290 318 Z" fill="#dfa98b"/>
+    <!-- collar / scarf -->
+    <path d="M196 384 C 220 412, 292 412, 316 384 C 304 432, 276 452, 256 452 C 236 452, 208 432, 196 384 Z" fill="#6e1f30"/>
+    
+
+    <!-- ears -->
+    <ellipse cx="166" cy="246" rx="16" ry="24" fill="#e2ad8f"/>
+    <ellipse cx="346" cy="246" rx="16" ry="24" fill="#e2ad8f"/>
+    <circle cx="164" cy="276" r="5" fill="#d9a441"/>
+    <circle cx="348" cy="276" r="5" fill="#d9a441"/>
+
+    <!-- face -->
+    <path d="M168 230 C 168 160, 210 128, 256 128 C 302 128, 344 160, 344 230 C 344 296, 304 340, 256 340 C 208 340, 168 296, 168 230 Z" fill="#ebbb9d"/>
+
+    <!-- hair, front fringe with a soft side part -->
+    <path d="M160 236 C 150 160, 200 108, 262 108 C 326 108, 366 156, 352 236 C 342 204, 324 182, 298 170 C 262 156, 214 166, 186 196 C 174 208, 166 222, 160 236 Z" fill="#4b2e2b"/>
+
+    <!-- brows -->
+    <path d="M192 206 C 204 196, 222 194, 236 200" stroke="#3f2523" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M276 200 C 290 194, 308 196, 320 206" stroke="#3f2523" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+    <!-- eyes (soft, smiling) -->
+    <path d="M200 236 C 208 228, 222 228, 230 236" stroke="#3f2523" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M282 236 C 290 228, 304 228, 312 236" stroke="#3f2523" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+    <!-- glasses -->
+    <g fill="none" stroke="#6e1f30" stroke-width="7">
+      <circle cx="215" cy="236" r="32"/>
+      <circle cx="297" cy="236" r="32"/>
+      <path d="M247 232 C 252 226, 260 226, 265 232"/>
+      <path d="M183 230 L 166 224"/>
+      <path d="M329 230 L 346 224"/>
+    </g>
+    <circle cx="215" cy="236" r="28" fill="#ffffff" opacity="0.12"/>
+    <circle cx="297" cy="236" r="28" fill="#ffffff" opacity="0.12"/>
+
+    <!-- nose -->
+    <path d="M256 250 C 252 266, 250 276, 258 280" stroke="#c98d70" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+    <!-- cheeks -->
+    <circle cx="200" cy="284" r="16" fill="#d9776a" opacity="0.28"/>
+    <circle cx="312" cy="284" r="16" fill="#d9776a" opacity="0.28"/>
+
+    <!-- smile -->
+    <path d="M230 298 C 244 312, 268 312, 282 298" stroke="#8f3b3b" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
