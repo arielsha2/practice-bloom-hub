@@ -88,7 +88,7 @@ export function Guided({
 }: {
   eyebrow: string;
   title: string;
-  intro: string;
+  intro: ReactNode;
   questions: QDef[];
   reactions: string[];
   answers: string[];
@@ -180,7 +180,7 @@ export function Guided({
           <h2 className="mt-2 text-3xl leading-tight text-primary" style={{ fontFamily: SERIF }}>
             {title}
           </h2>
-          <p className="mt-3 leading-relaxed text-muted-foreground">{intro}</p>
+          {typeof intro === "string" ? <p className="mt-3 leading-relaxed text-muted-foreground">{intro}</p> : <div className="mt-3">{intro}</div>}
         </div>
         {gate}
         <button

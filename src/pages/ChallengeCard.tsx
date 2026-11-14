@@ -71,8 +71,8 @@ const buildQuestions = (clientWord: ClientWord): QDef[] => [
     example: "למשל: “היא חזרה לצחוק. בן הזוג סיפר שהם שוב יושבים יחד בערב, ואמא שלה אמרה שהיא נשמעת כמו פעם.”",
   },
   {
-    label: "מה היה בדרך שלך שונה מהמקובל?",
-    hint: "מה עשית שם, ומה היה צריך לקרות אצלו בפנים כדי שמשהו באמת יזוז?",
+    label: "מה עשית שם, ומה היה צריך לקרות אצלו בפנים כדי שמשהו באמת יזוז?",
+    hint: `האם היה לדעתך משהו ייחודי באופן שעבדת עם ה${SINGULAR[clientWord]}?`,
     example: "למשל: “לא מיהרתי לתת עצות. הזמנתי אותה לומר בקול את מה שהיא מתביישת בו. כשהבושה ירדה, היא הצליחה לשתף את בן הזוג.”",
   },
 ];
@@ -462,24 +462,27 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             </div>
             <p className="mt-2 text-xs text-muted-foreground">עמוד 1: הכרטיס ואיפה משתמשים בו. עמוד 2: גיליון של 10 כרטיסים להדפסה, בגודל אמיתי.</p>
           </div>
-
-          <div className="rounded-xl border border-primary/30 bg-card p-4">
-            <p className="text-sm font-semibold text-primary">משימת בדיקה לשבוע הקרוב</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              למי אפשר לומר את המשפט השבוע? סקרנות ושאלה כמו “איך זה עובד אצלך?” הן סימן טוב. גבה מורמת פירושה שכדאי לדייק, ולחזור לכאן לנסח מחדש.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 p-4">
-            <p className="text-sm font-semibold">מחר: הפתק האישי</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">מחר יגיע קישור לכלי השני. הוא ייבנה על מה שנכתב היום: אותו אדם, הפעם בשפה שלו.</p>
-          </div>
-
-          <button onClick={onRestart} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-2 hover:underline">
-            <RotateCcw className="h-3.5 w-3.5" />
-            לנסח מחדש עם אדם אחר או עם תשובות אחרות
-          </button>
         </div>
+      </div>
+
+      {/* What comes next: centred under the card, not in one of the columns. */}
+      <div className="mx-auto mt-10 max-w-2xl space-y-4 text-center">
+        <div className="rounded-xl border border-primary/30 bg-card p-5">
+          <p className="text-base font-semibold text-primary">משימת בדיקה לשבוע הקרוב</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            למי אפשר לומר את המשפט השבוע? סקרנות ושאלה כמו “איך זה עובד אצלך?” הן סימן טוב. גבה מורמת פירושה שכדאי לדייק, ולחזור לכאן לנסח מחדש.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 p-5">
+          <p className="text-base font-semibold">מחר: הפתק האישי</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">מחר יגיע קישור לכלי השני. הוא ייבנה על מה שנכתב היום: אותו אדם, הפעם בשפה שלו.</p>
+        </div>
+
+        <button onClick={onRestart} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-2 hover:underline">
+          <RotateCcw className="h-3.5 w-3.5" />
+          לנסח מחדש עם אדם אחר או עם תשובות אחרות
+        </button>
       </div>
 
       <MoreMentorTools afterTool="card" onClick={() => trackEvent("challenge_card_mentor_click", {})} />
@@ -601,7 +604,18 @@ const ChallengeCard = () => {
             key={`card-form-${formKey}`}
             eyebrow="כלי 1 · כרטיס הביקור המקצועי"
             title="המשפט שמציג אותך"
-            intro="ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו. מתוכן ננסח יחד משפט אחד לכרטיס הביקור: למי העבודה שלך מיועדת, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותך. זה ניסוי ולא מבחן, ואין כאן תשובה נכונה. כחמש דקות."
+            intro={
+              <div className="space-y-3 leading-relaxed">
+                <p className="text-lg text-foreground/90">
+                  אני מזמינה אותך לעצור לכמה דקות ולענות על ארבע שאלות קצרות, על אדם אחד שהעבודה שלך שינתה את חייו.
+                </p>
+                <p className="text-muted-foreground">
+                  מהתשובות ננסח יחד את כרטיס הביקור המקצועי שלך, כך שאנשים יידעו בדיוק למי העבודה שלך עוזרת, את מי כדאי להפנות אליך, ויזכרו אותך כשמישהו
+                  יצטרך אותך.
+                </p>
+                <p className="text-sm text-muted-foreground">זה ניסוי ולא מבחן, ואין כאן תשובה נכונה. כחמש דקות.</p>
+              </div>
+            }
             questions={buildQuestions(clientWord)}
             reactions={REACTIONS}
             answers={answers}
