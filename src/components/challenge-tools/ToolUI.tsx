@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Download, Image as ImageIcon, Sparkles, Wand2 } from "lucide-react";
+import { ArrowRight, Download, Image as ImageIcon, Sparkles, Wand2 } from "lucide-react";
 
 // Shared pieces of the challenge tools: the guided one-question-at-a-time flow, the scaled document
 // preview, the download buttons. Used by the preview page and by the real tool pages.
@@ -132,6 +132,27 @@ export function Guided({
     } else setI(i + 1);
   };
 
+  // Back to the previous question (or, from the first, to the opening screen). The answers are kept; the step
+  // being returned to gets a fresh reflection if the answer changes, so Neri never mirrors an old answer.
+  const back = () => {
+    setNudged(false);
+    const prev = i - 1;
+    if (prev >= 0) {
+      reflected.current.delete(prev);
+      setMirrors((m) => {
+        const rest = { ...m };
+        delete rest[prev];
+        return rest;
+      });
+      setFollowUps((m) => {
+        const rest = { ...m };
+        delete rest[prev];
+        return rest;
+      });
+    }
+    setI(prev);
+  };
+
   const next = async () => {
     const q = questions[i];
     const a = answers[i] ?? "";
@@ -252,6 +273,14 @@ export function Guided({
           className="rounded-xl bg-primary px-6 py-2.5 font-medium text-primary-foreground disabled:opacity-60"
         >
           {thinking ? "רגע, קוראת…" : i === questions.length - 1 ? finishLabel : "הבא"}
+        </button>
+        <button
+          onClick={back}
+          disabled={thinking}
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-mentor-surface hover:text-foreground disabled:opacity-50"
+        >
+          <ArrowRight className="h-4 w-4" />
+          {i === 0 ? "חזרה להסבר" : "חזרה לשאלה הקודמת"}
         </button>
         {!q.custom && showSamples && (
           <button
