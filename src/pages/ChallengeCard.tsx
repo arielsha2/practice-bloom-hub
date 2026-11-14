@@ -35,11 +35,27 @@ import { guessGender, usableName } from "@/lib/hebrewNames";
 
 const ANSWER_COUNT = 4;
 
-const QUESTIONS: QDef[] = [
+const SINGULAR: Record<ClientWord, string> = { מטופלים: "מטופל", לקוחות: "לקוח", מתאמנים: "מתאמן" };
+
+const firstBefore = (one: string) => (
+  <div className="space-y-2">
+    <p>
+      לפני שעונים, כדאי לעצור לרגע ולהיזכר ב{one} אחד שהיה לך ממש טוב לעבוד איתו. מישהו שחיכית לפגישות איתו, שהרגשת שהעבודה שלך פוגשת אותו
+      בדיוק במקום הנכון, ושהשינוי שעבר מילא אותך.
+    </p>
+    <p className="font-semibold text-primary">זה ה{one} שהיית רוצה שיגיעו אליך עוד רבים כמוהו.</p>
+    <p className="text-muted-foreground">
+      אפשר לחבר כמה אנשים שפגשת לדמות אחת, או לחשוב על זוג או הורה וילד כיחידה אחת. ואם עדיין לא פגשת כזה, אפשר לדמיין את מי שהיית רוצה שיגיע. בלי
+      שם ובלי פרטים מזהים.
+    </p>
+  </div>
+);
+
+const buildQuestions = (clientWord: ClientWord): QDef[] => [
   {
-    before: "אדם אחד, אמיתי או כזה שמורכב מכמה אנשים שפגשת. אפשר גם זוג, או הורה וילד, כיחידה אחת. בלי שם ובלי פרטים מזהים. ואם עדיין אין לך רבים כאלה, זה האדם שהיית רוצה שיגיע.",
-    label: "על איזה אדם היית רוצה שיגיעו אליך עוד רבים כמוהו? מה קרה בחייו ברגע שפנה אליך?",
-    hint: "לא קבוצה ולא אבחנה, אלא אדם אחד ברגע מסוים בחייו.",
+    before: firstBefore(SINGULAR[clientWord]),
+    label: "מי הוא, ומה קרה בחייו ברגע שפנה אליך?",
+    hint: "באיזה שלב בחיים הוא היה, מה עבר עליו באותה תקופה, ומה גרם לו לפנות דווקא אז. לא קבוצה ולא אבחנה, אלא אדם אחד ברגע מסוים בחייו.",
     example: "למשל: “אמא בת 34, ארבעה חודשים אחרי לידה ראשונה. חזרה לעבודה, ובערבים היא ובן הזוג כמעט לא מדברים. היא פנתה אחרי שמצאה את עצמה בוכה במקלחת.”",
   },
   {
@@ -107,6 +123,15 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
 
   const v = content.variants[Math.min(edit.variant, content.variants.length - 1)];
   const sentence = edit.sentence;
+  const spoken = sentence ?? `${v.lead} ${v.who} ${v.change}`;
+  // Cards made before 2026-11-15 have no professional niche and keep the sentence card.
+  const niches = content.card_niches ?? [];
+  const professional = niches.length > 0;
+  const n = niches[Math.min(edit.niche ?? 0, Math.max(niches.length - 1, 0))];
+  const nicheTitle = edit.nicheTitle ?? n?.title ?? "";
+  const nicheDetail = edit.nicheDetail ?? n?.detail ?? "";
+  const nicheEdited = edit.nicheTitle != null || edit.nicheDetail != null;
+  const [editingNiche, setEditingNiche] = useState(false);
   const cardData: CardData = useMemo(
     () => ({
       name: edit.name,
@@ -114,11 +139,13 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
       lead: sentence ? "" : v.lead,
       who: sentence ?? v.who,
       change: sentence ? "" : v.change,
-      way: edit.showWay !== false && content.way_line ? content.way_line : "",
+      way: !professional && edit.showWay !== false && content.way_line ? content.way_line : "",
+      niche: professional ? { title: nicheTitle, detail: nicheDetail } : undefined,
+      pitch: professional ? spoken : undefined,
       contact: [edit.phone.trim(), edit.site.trim()].filter(Boolean),
       theme: edit.theme,
     }),
-    [edit.name, edit.title, edit.phone, edit.site, edit.theme, edit.showWay, content.way_line, sentence, v],
+    [edit.name, edit.title, edit.phone, edit.site, edit.theme, edit.showWay, content.way_line, sentence, v, professional, nicheTitle, nicheDetail, spoken],
   );
 
   const input = "w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-sm";
@@ -133,7 +160,11 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
               כרטיס הביקור שלך
             </h2>
           </div>
-          <NeriLine>מתוך מה שסיפרת התגבשה נישה, וממנה כתבתי שלוש גרסאות לכרטיס, כל אחת מזווית אחרת. בחרו את זו שהכי נשמעת כמו שאתם מדברים, ואפשר גם לערוך אותה.</NeriLine>
+          <NeriLine>
+            {professional
+              ? "מתוך מה שסיפרת התגבשה נישה. על הכרטיס היא מופיעה בשפה מקצועית, לצד השם, ההכשרה ופרטי הקשר שלך. בחרו את הניסוח המדויק ביותר, ואפשר גם לערוך אותו."
+              : "מתוך מה שסיפרת התגבשה נישה, וממנה כתבתי שלוש גרסאות לכרטיס, כל אחת מזווית אחרת. בחרו את זו שהכי נשמעת כמו שאתם מדברים, ואפשר גם לערוך אותה."}
+          </NeriLine>
 
           <div className="rounded-xl border border-mentor-border bg-card p-4 text-sm leading-relaxed">
             <p className="text-xs font-semibold text-primary">הנישה שהתגבשה</p>
@@ -152,6 +183,84 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
               </p>
             )}
           </div>
+
+          {professional && (
+            <div className="space-y-2.5">
+              <p className="text-sm font-semibold text-primary">הנישה על הכרטיס</p>
+              {niches.map((nc, k) => {
+                const on = (edit.niche ?? 0) === k && !nicheEdited;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => {
+                      update({ niche: k, nicheTitle: null, nicheDetail: null });
+                      setEditingNiche(false);
+                    }}
+                    className={`block w-full rounded-xl border p-4 text-start transition-colors ${on ? "border-primary bg-card shadow-sm" : "border-mentor-border bg-card/60 hover:bg-card"}`}
+                  >
+                    <span className="flex items-start justify-between gap-2">
+                      <span className="block leading-snug text-primary" style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 700 }}>
+                        {nc.title}
+                      </span>
+                      {on && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                    </span>
+                    <span className="mt-1 block text-sm leading-relaxed text-foreground/80">{nc.detail}</span>
+                  </button>
+                );
+              })}
+              {editingNiche ? (
+                <div className="space-y-2 rounded-xl border border-mentor-border bg-card p-3">
+                  <input
+                    className="w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-base font-semibold"
+                    value={nicheTitle}
+                    onChange={(e) => update({ nicheTitle: e.target.value, nicheDetail })}
+                    maxLength={70}
+                  />
+                  <input
+                    className="w-full rounded-lg border border-mentor-border bg-card px-3 py-2 text-sm"
+                    value={nicheDetail}
+                    onChange={(e) => update({ nicheDetail: e.target.value, nicheTitle })}
+                    maxLength={110}
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditingNiche(false)} className="rounded-lg bg-primary px-4 py-1.5 text-sm text-primary-foreground">
+                      שמירה
+                    </button>
+                    <button
+                      onClick={() => {
+                        update({ nicheTitle: null, nicheDetail: null });
+                        setEditingNiche(false);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-mentor-border px-3 py-1.5 text-sm"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      חזרה למקור
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    onClick={() => setEditingNiche(true)}
+                    className="inline-flex items-center gap-1.5 text-sm text-primary underline-offset-2 hover:underline"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    עריכת הנישה בכרטיס
+                  </button>
+                  {nicheEdited && <span className="ms-3 rounded-full bg-mentor-surface px-2.5 py-0.5 text-[11px] text-muted-foreground">הנוסח נערך</span>}
+                </div>
+              )}
+            </div>
+          )}
+
+          {professional && (
+            <div className="pt-2">
+              <p className="text-sm font-semibold text-primary">המשפט שלך, לומר בעל פה</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                כשמישהו שואל במה העבודה שלך: משפט אחד בשפה של יום יום, למי העבודה שלך מיועדת ומה משתנה. הוא לא מופיע על הכרטיס, אבל נכנס לעמוד הראשון בקובץ ה-PDF.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2.5">
             {content.variants.map((vr, k) => {
@@ -225,7 +334,7 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             </ScaledBox>
           </div>
 
-          {content.way_line && (
+          {content.way_line && !professional && (
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input type="checkbox" checked={edit.showWay !== false} onChange={(e) => update({ showWay: e.target.checked })} />
               להציג בכרטיס גם את הדרך שלך
@@ -254,13 +363,13 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
                 <input className={input} value={edit.name} onChange={(e) => update({ name: e.target.value })} maxLength={60} />
               </label>
               <label className="space-y-1 text-xs text-muted-foreground">
-                כותרת מקצועית
+                {professional ? "הכשרה ותואר" : "כותרת מקצועית"}
                 <input
                   className={input}
                   value={edit.title}
                   onChange={(e) => update({ title: e.target.value })}
-                  placeholder="למשל: פסיכותרפיסטית זוגית ומשפחתית"
-                  maxLength={60}
+                  placeholder={professional ? "למשל: עובדת סוציאלית קלינית, M.S.W" : "למשל: פסיכותרפיסטית זוגית ומשפחתית"}
+                  maxLength={70}
                 />
               </label>
               <label className="space-y-1 text-xs text-muted-foreground">
@@ -272,7 +381,14 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
                 <input className={input} dir="ltr" value={edit.site} onChange={(e) => update({ site: e.target.value })} placeholder="name@example.com" maxLength={60} />
               </label>
             </div>
-            {!edit.title.trim() && <p className="text-xs text-muted-foreground">כדאי להוסיף כותרת מקצועית, כדי שהכרטיס יהיה שלם.</p>}
+            {!edit.title.trim() && (
+              <p className="text-xs text-muted-foreground">
+                {professional ? "כדאי להוסיף את ההכשרה והתואר שלך, כדי שהכרטיס יהיה שלם." : "כדאי להוסיף כותרת מקצועית, כדי שהכרטיס יהיה שלם."}
+              </p>
+            )}
+            {(!edit.phone.trim() || !edit.site.trim()) && professional && (
+              <p className="text-xs text-muted-foreground">ופרטי קשר, כדי שאפשר יהיה לפנות אליך מהכרטיס.</p>
+            )}
           </div>
 
           <DownloadButtons
@@ -402,7 +518,7 @@ const ChallengeCard = () => {
             eyebrow="כלי 1 · כרטיס הביקור המקצועי"
             title="המשפט שמציג אותך"
             intro="ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו. מתוכן ננסח יחד משפט אחד לכרטיס הביקור: למי העבודה שלך מיועדת, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותך. זה ניסוי ולא מבחן, ואין כאן תשובה נכונה. כחמש דקות."
-            questions={QUESTIONS}
+            questions={buildQuestions(clientWord)}
             reactions={REACTIONS}
             answers={answers}
             setAnswers={(a) => {

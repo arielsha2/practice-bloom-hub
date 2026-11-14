@@ -18,6 +18,10 @@ export interface CardData {
   who: string; // "לזוגות שהפכו להורים ומרגישים שהתרחקו זה מזה,"
   change: string; // "למצוא שוב שפה משותפת."
   way?: string; // "בעבודה שמתחילה במה שהכי קשה לומר בקול." (small line under the sentence; optional)
+  // The professional card (cards made from 2026-11-15): name, training (in `title`), the niche in professional
+  // language and the contact details. When it is set the card shows it instead of the "אני עוזרת…" sentence.
+  niche?: { title: string; detail: string };
+  pitch?: string; // the spoken sentence, shown only on the PDF's first page ("to say when asked")
   contact: string[];
   theme: CardTheme;
 }
@@ -96,6 +100,7 @@ export const BusinessCard = forwardRef<HTMLDivElement, { data: CardData; width: 
   const u = width / 640;
   const t = THEMES[data.theme];
   const initial = data.name.trim().charAt(0);
+  if (data.niche) return <ProfessionalCard ref={ref} data={data} niche={data.niche} width={width} />;
   return (
     <div
       ref={ref}
@@ -179,6 +184,64 @@ export const BusinessCard = forwardRef<HTMLDivElement, { data: CardData; width: 
 });
 BusinessCard.displayName = 'BusinessCard';
 
+// The professional business card: who you are (name, training), what you specialise in (the niche, in professional
+// words), how to reach you. The everyday "אני עוזרת…" sentence is for saying aloud, not for the card.
+const ProfessionalCard = forwardRef<HTMLDivElement, { data: CardData; niche: { title: string; detail: string }; width: number }>(
+  ({ data, niche, width }, ref) => {
+    const u = width / 640;
+    const t = THEMES[data.theme];
+    return (
+      <div
+        ref={ref}
+        dir="rtl"
+        style={{
+          width,
+          height: (width * 5) / 9,
+          background: t.bg,
+          color: t.fg,
+          borderRadius: 10 * u,
+          position: 'relative',
+          overflow: 'hidden',
+          fontFamily: F.sans,
+          boxShadow: t.shadow,
+          boxSizing: 'border-box',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ position: 'absolute', inset: 14 * u, border: `${Math.max(1, u)}px solid ${t.frame}`, borderRadius: 6 * u, pointerEvents: 'none' }} />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            padding: `${34 * u}px ${40 * u}px ${30 * u}px`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 30 * u, lineHeight: 1.15 }}>{data.name}</div>
+            {data.title ? <div style={{ marginTop: 6 * u, fontSize: 14.5 * u, color: t.muted, lineHeight: 1.4 }}>{data.title}</div> : null}
+          </div>
+
+          <div>
+            <div style={{ width: 34 * u, height: 2 * u, background: t.accent, marginBottom: 12 * u }} />
+            <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 21 * u, lineHeight: 1.3, color: t.accent }}>{niche.title}</div>
+            {niche.detail ? <div style={{ marginTop: 6 * u, fontSize: 14 * u, lineHeight: 1.5 }}>{niche.detail}</div> : null}
+          </div>
+
+          <div style={{ direction: 'ltr', textAlign: 'left', fontSize: 13 * u, lineHeight: 1.6, color: t.muted, display: 'flex', gap: 18 * u, flexWrap: 'wrap' }}>
+            {data.contact.map((c) => (
+              <span key={c}>{c}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  },
+);
+ProfessionalCard.displayName = 'ProfessionalCard';
+
 const page: CSSProperties = {
   width: PAGE_W,
   height: PAGE_H,
@@ -212,6 +275,7 @@ const Footer = ({ note }: { note: string }) => (
 
 // Page 1 of the card PDF: the card, how to use it, a quick test.
 export function CardPresentationPage({ data }: { data: CardData }) {
+  if (data.niche) return <ProfessionalPresentationPage data={data} />;
   const uses = [
     { title: 'בפרופיל ובאתר', body: 'המשפט הראשון בביו, בדף הבית או בפרופיל המקצועי.' },
     { title: 'בהיכרות עם עמית', body: 'כששואלים במה אתם עוסקים, מתחילים ממנו ומתארים אדם אחד.' },
@@ -256,6 +320,53 @@ export function CardPresentationPage({ data }: { data: CardData }) {
           <span style={{ fontWeight: 700, color: C.burgundy }}>בדיקה של שתי דקות: </span>
           קראו את המשפט לעמית ושאלו אותו מה הבין ולמי היה מפנה. אם התשובה קרובה למה שרציתם, המשפט עובד. אם לא, זה מידע טוב על מה לחדד.
         </div>
+      </div>
+
+      <Footer note="גרסה ראשונה. אפשר לחזור ולחדד אותה בכל זמן." />
+    </div>
+  );
+}
+
+// Page 1 for the professional card: the card, where to use it, and the spoken sentence that goes with it.
+function ProfessionalPresentationPage({ data }: { data: CardData }) {
+  const uses = [
+    { title: 'לעמיתים ולגורמים מפנים', body: 'הכרטיס אומר בשנייה במה ההתמחות שלך, ולמי כדאי להפנות אליך.' },
+    { title: 'בהדפסה', body: 'בכנסים, בסדנאות ובמפגשים מקצועיים. הגיליון בעמוד הבא מוכן לחיתוך.' },
+    { title: 'בשליחה', body: 'כתמונה בווטסאפ או במייל, או בחתימה של המייל.' },
+  ];
+  return (
+    <div style={page}>
+      <div style={{ padding: '58px 64px 0' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.terracotta, letterSpacing: 0.5 }}>כרטיס הביקור המקצועי</div>
+        <h1 style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 36, fontWeight: 700, color: C.burgundy, lineHeight: 1.2 }}>
+          {data.name}
+        </h1>
+        <p style={{ margin: '8px 0 0', fontSize: 16, color: C.muted, lineHeight: 1.6 }}>
+          השם, ההכשרה ותחום ההתמחות שלך, בכרטיס אחד להדפסה ולשליחה.
+        </p>
+      </div>
+
+      <div style={{ margin: '34px 0 0', background: C.sand, padding: '46px 0', display: 'flex', justifyContent: 'center' }}>
+        <BusinessCard data={data} width={640} />
+      </div>
+
+      <div style={{ padding: '30px 64px 0' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.burgundy, marginBottom: 12 }}>איפה משתמשים בו</div>
+        <div style={{ display: 'flex', gap: 16 }}>
+          {uses.map((u) => (
+            <div key={u.title} style={{ flex: 1, border: `1px solid ${C.line}`, borderRadius: 10, padding: '16px 16px 18px', background: C.cream }}>
+              <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 16, color: C.burgundy }}>{u.title}</div>
+              <div style={{ marginTop: 6, fontSize: 13.5, lineHeight: 1.65, color: C.ink }}>{u.body}</div>
+            </div>
+          ))}
+        </div>
+
+        {data.pitch ? (
+          <div style={{ marginTop: 22, borderInlineStart: `3px solid ${C.terracotta}`, paddingInlineStart: 16, fontSize: 14.5, lineHeight: 1.75 }}>
+            <div style={{ fontWeight: 700, color: C.burgundy }}>וכששואלים במה העבודה שלך, אפשר לומר:</div>
+            <div style={{ marginTop: 4, fontFamily: F.display, fontSize: 17 }}>{data.pitch}</div>
+          </div>
+        ) : null}
       </div>
 
       <Footer note="גרסה ראשונה. אפשר לחזור ולחדד אותה בכל זמן." />

@@ -86,6 +86,11 @@ export const TAGS = ["לפי הקהל", "לפי הקושי", "לפי השינו�
 export const CLIENT_WORDS = ["מטופלים", "לקוחות", "מתאמנים"] as const;
 export type ClientWord = (typeof CLIENT_WORDS)[number];
 
+// On the professional card itself professional words are right ("טיפול", "ליווי", "הדרכת הורים"); only empty
+// clichés are kept out of it.
+export const CARD_CLICHES = ["מרחב בטוח", "מקום בטוח", "מסע", "בגובה העיניים", "קרקע יציבה", "לצעוד יחד", "להחזיק מקום", "העצמה", "הגשמה"];
+const WORK_KIND: Record<string, string> = { "מטופלים": "טיפול", "לקוחות": "ייעוץ", "מתאמנים": "אימון" };
+
 // Words that keep a person at a distance: professional terms and vague abstractions the client would not use
 // about himself. They are also flagged for the therapist in the card they review (client side, same list).
 export const JARGON = ["ויסות", "דפוסים", "מרחב בטוח", "מרחב", "העצמה", "כלים", "חיבור", "תהליך", "ליווי"];
@@ -101,7 +106,7 @@ const stems = (s: string) => new Set(s.split(/\s+/).map(hebrewStem).filter((w) =
 // The four questions, in the order the page asks them (the path of Eliana's card prompt: who, what was asked and
 // what lay beneath it, where to, and the therapist's own way). Kept here too so the model sees the exact wording.
 export const QUESTIONS = [
-  "על איזה אדם אחד היית רוצה שיגיעו אליך עוד רבים כמוהו? מה קרה בחייו ברגע שפנה אליך?",
+  "אדם אחד שהיה לך ממש טוב לעבוד איתו, ושהיית רוצה שיגיעו אליך עוד רבים כמוהו: מי הוא, ומה קרה בחייו ברגע שפנה אליך?",
   "מה הוא ביקש, ומה היה באמת מתחת לבקשה?",
   "מה השתנה אצלו אחרי כמה חודשים? מה שמו לב האנשים סביבו?",
   "מה היה בדרך שלך שונה מהרגיל? מה היה צריך לקרות אצלו בפנים כדי שמשהו באמת יזוז?",
@@ -185,10 +190,10 @@ export function validateReflect(obj: any): { mirror: string; follow_up: string }
 // ---------------------------------------------------------------- the card
 export const SYSTEM = `את נרי, ומנסחת כרטיס ביקור מקצועי: משפט אחד שאומר למי המטפל עוזר, מאיפה ולאן, כך שמי ששומע אותו מבין, מתעניין, ומיד חושב על מישהו שצריך אותו. המטפל ענה על ארבע שאלות על אדם אחד שעבודתו שינתה את חייו: מי הוא ומה קרה בחייו כשפנה, מה ביקש ומה היה מתחת לבקשה, מה השתנה אחרי כמה חודשים, ומה היה שונה בדרך של המטפל.
 
-המשימה: שלוש גרסאות של משפט אחד במבנה "אני עוזר ל[מי] שמתמודדים עם [קושי], ל[מצב רצוי]", שורה אחת שמגדירה את הנישה, ושורה אחת שמתארת את הדרך הייחודית של המטפל. את הפתיחה "אני עוזר" אתה לא כותב, הקוד מוסיף אותה לפי המטפל. אתה כותב רק את who ואת change.
+המשימה: שלוש גרסאות של משפט אחד במבנה "אני עוזר ל[מי] שמתמודדים עם [קושי], ל[מצב רצוי]" (משפט שאומרים בעל פה), שורה אחת שמגדירה את הנישה, שורה אחת שמתארת את הדרך הייחודית של המטפל, ושלוש אפשרויות לניסוח הנישה על כרטיס הביקור המקצועי. את הפתיחה "אני עוזר" אתה לא כותב, הקוד מוסיף אותה לפי המטפל. אתה כותב רק את who ואת change.
 
 פורמט: JSON בלבד, בלי הסבר ובלי markdown:
-{"niche_line": "...", "way_line": "...", "variants": [{"tag": "לפי הקהל", "who": "...", "change": "..."}, {"tag": "לפי הקושי", "who": "...", "change": "..."}, {"tag": "לפי השינוי", "who": "...", "change": "..."}]}
+{"niche_line": "...", "way_line": "...", "card_niches": [{"title": "...", "detail": "..."}, {"title": "...", "detail": "..."}, {"title": "...", "detail": "..."}], "variants": [{"tag": "לפי הקהל", "who": "...", "change": "..."}, {"tag": "לפי הקושי", "who": "...", "change": "..."}, {"tag": "לפי השינוי", "who": "...", "change": "..."}]}
 
 כללים:
 1. who ממשיך את "אני עוזר" ומתחיל באות ל' ("לזוגות ...", "לאמהות ..."). הוא אומר מי האנשים ומה הקושי שלהם, בתיאור אחד ברור ולא ברשימה. עד 10 מילים ומסתיים בפסיק.
@@ -202,11 +207,12 @@ export const SYSTEM = `את נרי, ומנסחת כרטיס ביקור מקצו�
 8. niche_line: שורה אחת, עד 20 מילים, שמגדירה את הקבוצה שהאדם מייצג: מי הם, ומה משותף להם. בלי "אני עוזר".
 9. way_line: צירוף קצר, עד 10 מילים, שמתאר את הדרך הייחודית של המטפל מתוך תשובה 4, ומתחיל ב"דרך", "בעזרת" או "בעבודה". למשל: "בעבודה שמתחילה במה שהכי קשה לומר בקול." בלי פועל בגוף ראשון ובלי פנייה לפי מגדר. אל תמציא שיטה שלא נאמרה.
 10. לפני שאתה מחזיר, בדוק כל גרסה: האם מי שלא מכיר את התחום מבין אותה? האם היא מעוררת סקרנות? האם השומע יכול לחשוב מיד על מישהו שצריך אותה? אם לא, נסח מחדש.
-11. לא ידוע אם המטפל גבר או אישה, ולא ידוע מין האדם שתואר אלא אם זה עולה מהתיאור. אל תנחש: כתוב על האנשים בלשון רבים.`;
+11. card_niches: הנישה כפי שתופיע על כרטיס ביקור מקצועי, לצד שם המטפל וההכשרה שלו. כאן, בשונה מהמשפט, השפה מקצועית ומדויקת, כמו שמטפל מציג את תחום ההתמחות שלו לעמית או לגורם מפנה. title: תחום ההתמחות, עד 7 מילים, למשל "טיפול רגשי באמהות אחרי לידה" או "אימון למנהלים בשחיקה". detail: שורה אחת, עד 12 מילים, שמפרטת את הקשיים ואת הכיוון, למשל "ריחוק זוגי, עייפות ובדידות בשנה הראשונה להורות". שלוש האפשרויות שונות בזווית (לפי הקהל, לפי הקושי, לפי השינוי). אל תכתוב שיטה, הכשרה או תואר שהמטפל לא אמר (את ההכשרה הוא ממלא בעצמו). בלי פועל בגוף ראשון, בלי לוכסנים ובלי הבטחות. בכרטיס מותר להשתמש במונחים מקצועיים, אבל לא בביטויים שחוקים: ${CARD_CLICHES.join(", ")}.
+12. לא ידוע אם המטפל גבר או אישה, ולא ידוע מין האדם שתואר אלא אם זה עולה מהתיאור. אל תנחש: כתוב על האנשים בלשון רבים.`;
 
 export function buildUser(input: Input): string {
   const a = input.answers;
-  return `המטפל קורא לאנשים שמגיעים אליו "${input.clientWord}". השתמש במילה הזו אם צריך לכנות אותם.
+  return `המטפל קורא לאנשים שמגיעים אליו "${input.clientWord}". השתמש במילה הזו אם צריך לכנות אותם. סוג העבודה שלו, לכרטיס: ${WORK_KIND[input.clientWord] ?? "טיפול"}, אלא אם מהתשובות עולה אחרת.
 
 ${QUESTIONS.map((q, k) => `תשובה ${k + 1}. ${q}\n${a[k]}`).join("\n\n")}`;
 }
@@ -224,6 +230,22 @@ export function validateCard(obj: any, answersText: string): string[] {
   str(obj.niche_line, "שורת הנישה", 24);
   const way = str(obj.way_line, "שורת הדרך", 12);
   if (way && !/^(דרך|בדרך|בעזרת|בעבודה)/.test(way)) fails.push(`שורת הדרך חייבת להתחיל ב"דרך", "בעזרת" או "בעבודה"`);
+  const cn = Array.isArray(obj.card_niches) ? obj.card_niches : [];
+  if (cn.length !== 3) fails.push("נדרשות בדיוק שלוש אפשרויות לנישה בכרטיס");
+  const cardTexts: string[] = [];
+  cn.forEach((c: any, i: number) => {
+    const title = typeof c?.title === "string" ? c.title.trim() : "";
+    const detail = typeof c?.detail === "string" ? c.detail.trim() : "";
+    if (!title) fails.push(`נישה לכרטיס ${i + 1}: title חסר`);
+    else if (words(title) > 8) fails.push(`נישה לכרטיס ${i + 1}: title ארוך מדי (מעל 8 מילים)`);
+    if (!detail) fails.push(`נישה לכרטיס ${i + 1}: detail חסר`);
+    else if (words(detail) > 14) fails.push(`נישה לכרטיס ${i + 1}: detail ארוך מדי (מעל 14 מילים)`);
+    if (/(^|\s)(אני|אנחנו)(\s|$)/.test(`${title} ${detail}`)) fails.push(`נישה לכרטיס ${i + 1}: בלי גוף ראשון`);
+    cardTexts.push(title, detail);
+  });
+  const cardAll = cardTexts.join("\n");
+  for (const b of CARD_CLICHES) if (cardAll.includes(b)) fails.push(`ביטוי שחוק בכרטיס: ${b}`);
+  if (new Set(cn.map((c: any) => norm(String(c?.title ?? "")))).size < cn.length) fails.push("יש אפשרויות כפולות לנישה בכרטיס");
   const vs = Array.isArray(obj.variants) ? obj.variants : [];
   if (vs.length !== 3) fails.push("נדרשות בדיוק שלוש גרסאות");
   const full: string[] = [];
@@ -241,11 +263,12 @@ export function validateCard(obj: any, answersText: string): string[] {
   if (new Set(full.map(norm)).size < full.length) fails.push("יש גרסאות כפולות");
   const all = texts.join("\n");
   for (const b of BANNED) if (all.includes(b)) fails.push(`ביטוי שאסור להשתמש בו: ${b}`);
-  if (SLASH.test(all)) fails.push("צורת מגדר עם לוכסן או סוגריים");
-  if (/[\[\]()]/.test(all)) fails.push("סוגריים אסורים");
-  if (/@|https?:|www\./i.test(all) || /\d{7,}/.test(all)) fails.push("פרט קשר או כתובת בתוך הניסוח");
+  const everything = `${all}\n${cardAll}`;
+  if (SLASH.test(everything)) fails.push("צורת מגדר עם לוכסן או סוגריים");
+  if (/[\[\]()]/.test(everything)) fails.push("סוגריים אסורים");
+  if (/@|https?:|www\./i.test(everything) || /\d{7,}/.test(everything)) fails.push("פרט קשר או כתובת בתוך הניסוח");
   const allowedDigits = new Set(answersText.match(/\d+/g) ?? []);
-  for (const n of all.match(/\d+/g) ?? []) if (!allowedDigits.has(n)) fails.push(`מספר שלא הופיע בנתונים: ${n}`);
+  for (const n of everything.match(/\d+/g) ?? []) if (!allowedDigits.has(n)) fails.push(`מספר שלא הופיע בנתונים: ${n}`);
   // The wording has to come from what the therapist said: every version shares at least one content word with the answers.
   const said = stems(answersText);
   full.forEach((f, i) => {
@@ -260,6 +283,7 @@ export interface CardContent {
   client_word: ClientWord;
   niche_line: string;
   way_line: string;
+  card_niches: { title: string; detail: string }[];
   person_summary: string;
   variants: { tag: string; lead: string; who: string; change: string }[];
 }
@@ -270,6 +294,7 @@ export function composeContent(obj: any, input: Input): CardContent {
     client_word: input.clientWord,
     niche_line: String(obj.niche_line).trim(),
     way_line: String(obj.way_line).trim(),
+    card_niches: obj.card_niches.map((c: any) => ({ title: String(c.title).trim().replace(/[.]+$/, ""), detail: String(c.detail).trim().replace(/[.]+$/, "") })),
     person_summary: input.answers[0],
     variants: obj.variants.map((v: any, i: number) => ({
       tag: TAGS[i],

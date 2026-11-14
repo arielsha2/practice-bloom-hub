@@ -24,7 +24,8 @@ export interface CardContent {
   gender: Gender;
   person?: Person;
   niche_line: string;
-  way_line?: string; // the therapist's own way, from the 4th answer; cards made before 2026-11-14 have none
+  way_line?: string;
+  card_niches?: { title: string; detail: string }[]; // the niche in professional words, for the card (from 2026-11-15) // the therapist's own way, from the 4th answer; cards made before 2026-11-14 have none
   client_word?: ClientWord;
   person_summary: string;
   variants: CardVariant[];
@@ -38,7 +39,10 @@ export interface CardEdit {
   title: string;
   phone: string;
   site: string;
-  showWay?: boolean; // the "way" line on the card; on by default when the card has one
+  showWay?: boolean; // the "way" line on the old sentence card; on by default when the card has one
+  niche?: number; // which of content.card_niches is on the card
+  nicheTitle?: string | null; // the therapist's own wording of the niche on the card
+  nicheDetail?: string | null;
 }
 
 export interface CardRow {
