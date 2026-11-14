@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ImagePlus, MessageCircle, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowDown, Check, ImagePlus, MessageCircle, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
@@ -20,8 +20,8 @@ import type { CardData, CardTheme } from "@/components/challenge-tools/ToolDocum
 import { Chips, DownloadButtons, Guided, NeriLine, SERIF, ScaledBox, useChallengeToolFonts } from "@/components/challenge-tools/ToolUI";
 import type { QDef } from "@/components/challenge-tools/ToolUI";
 import { MoreMentorTools } from "@/components/challenge-tools/MoreMentorTools";
-import { downloadPdf, downloadPng } from "@/lib/challengeToolsExport";
-import { CLIENT_WORDS, generateCard, loadLatestCard, photoToDataUrl, recordCardEvent, reflectAnswer, rememberSource, resetMyCard, saveCardEdit } from "@/lib/challengeTools";
+import { downloadPdf, downloadPng, pngBlob } from "@/lib/challengeToolsExport";
+import { CLIENT_WORDS, generateCard, loadLatestCard, photoToDataUrl, recordCardEvent, reflectAnswer, rememberSource, resetMyCard, saveCardEdit, shareCardImage } from "@/lib/challengeTools";
 import { useShowExpertsTab } from "@/components/landing/ExpertsAdminTab";
 import type { CardEdit, CardRow, ClientWord, Gender } from "@/lib/challengeTools";
 import { guessGender, usableName } from "@/lib/hebrewNames";
@@ -166,7 +166,30 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
   ];
   const missing = completeness.filter((c) => !c.done && !c.label.includes("רשות")).map((c) => c.label);
 
-  const feedbackUrl = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(FEEDBACK_TEXT)}`;
+  const need = (empty: boolean) => (professional && empty ? "border-[hsl(var(--terracotta))] ring-2 ring-[hsl(var(--terracotta)/0.25)]" : "");
+
+  // WhatsApp links cannot carry a file, so the card image is uploaded first and its link goes into the
+  // message (WhatsApp shows the picture in the chat). The new tab is opened before the upload, inside the
+  // click, or browsers would block it as a pop-up.
+  const [sending, setSending] = useState(false);
+  const sendToEliana = async () => {
+    const tab = window.open("about:blank", "_blank");
+    setSending(true);
+    trackEvent("challenge_card_feedback_whatsapp", {});
+    let text = FEEDBACK_TEXT;
+    try {
+      const blob = await pngBlob(<BusinessCard data={cardData} width={640} />, 640, 2);
+      const link = await shareCardImage(blob);
+      if (link) text = `${FEEDBACK_TEXT}\n${link}`;
+      else toast.error("לא הצלחנו לצרף את הכרטיס. ההודעה תיפתח בלי התמונה, ואפשר לצרף אותה ידנית.");
+    } catch {
+      toast.error("לא הצלחנו לצרף את הכרטיס. ההודעה תיפתח בלי התמונה, ואפשר לצרף אותה ידנית.");
+    }
+    setSending(false);
+    const url = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(text)}`;
+    if (tab) tab.location.href = url;
+    else window.location.href = url;
+  };
   const downloadCardPdf = async () => {
     await downloadPdf(<CardPdfDocument data={cardData} />, PAGE_W, "business-card.pdf");
     void recordCardEvent("downloaded", row.id, { kind: "pdf" });
@@ -178,14 +201,86 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
 
   return (
     <div className="py-8">
-      <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-6">
-          <div>
-            <p className="section-eyebrow">התוצר הראשון</p>
-            <h2 className="mt-1 text-3xl text-primary" style={{ fontFamily: SERIF }}>
-              כרטיס הביקור שלך
-            </h2>
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="section-eyebrow">התוצר הראשון</p>
+        <h2 className="mt-1 text-3xl text-primary sm:text-4xl" style={{ fontFamily: SERIF }}>
+          כרטיס הביקור שלך
+        </h2>
+      </div>
+
+      {/* The card itself, centred and large: what the whole exercise was for. */}
+      <div className="mx-auto mt-6 max-w-3xl space-y-5">
+        <div className="rounded-3xl bg-[#f3ece1] p-5 shadow-sm sm:p-10">
+          <div className="mx-auto max-w-[640px]">
+            <ScaledBox baseWidth={640} baseHeight={356}>
+              <BusinessCard data={cardData} width={640} />
+            </ScaledBox>
           </div>
+        </div>
+
+        {professional && missing.length > 0 && (
+          <div className="rounded-2xl border-2 border-[hsl(var(--terracotta))] bg-[hsl(var(--terracotta)/0.08)] p-5 text-center">
+            <p className="text-xl font-semibold text-primary sm:text-2xl" style={{ fontFamily: SERIF }}>
+              עוד צעד קטן: הכרטיס עדיין לא שלם
+            </p>
+            <p className="mt-1.5 text-sm text-foreground/80">כדי שאפשר יהיה להדפיס ולשלוח אותו, חסרים על הכרטיס:</p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {missing.map((m) => (
+                <span key={m} className="rounded-full bg-[hsl(var(--terracotta))] px-3 py-1 text-sm font-medium text-white">
+                  {m}
+                </span>
+              ))}
+            </div>
+            <a
+              href="#complete-card"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 font-medium text-primary-foreground shadow-sm hover:opacity-90"
+            >
+              להשלמת הפרטים
+              <ArrowDown className="h-4 w-4" />
+            </a>
+          </div>
+        )}
+        {professional && missing.length === 0 && (
+          <p className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
+            <Check className="h-4 w-4" />
+            הכרטיס שלם ומוכן להורדה ולשליחה.
+          </p>
+        )}
+
+        {content.way_line && !professional && (
+          <label className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <input type="checkbox" checked={edit.showWay !== false} onChange={(e) => update({ showWay: e.target.checked })} />
+            להציג בכרטיס גם את הדרך שלך
+          </label>
+        )}
+
+        <div className="flex justify-center">
+          <DownloadButtons pngLabel="הורדת הכרטיס כתמונה" onPdf={downloadCardPdf} onPng={downloadCardPng} />
+        </div>
+
+        {professional && (
+          <div className="rounded-2xl border border-[#25D366]/40 bg-[#25D366]/[0.06] p-5 text-center">
+            <p className="text-lg font-semibold text-primary" style={{ fontFamily: SERIF }}>
+              רוצה פידבק אישי על הכרטיס?
+            </p>
+            <p className="mx-auto mt-1.5 max-w-lg text-sm leading-relaxed text-foreground/80">
+              בלחיצה אחת הכרטיס נשלח לאליענה בווטסאפ, והיא תסתכל עליו ותחזיר אליך פידבק אישי.
+            </p>
+            <button
+              onClick={() => void sendToEliana()}
+              disabled={sending}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857] disabled:opacity-70"
+            >
+              <MessageCircle className="h-5 w-5" />
+              {sending ? "מכינה את הכרטיס…" : "שליחת הכרטיס לאליענה"}
+            </button>
+            {missing.length > 0 && <p className="mt-2 text-xs text-muted-foreground">כדאי להשלים קודם את הפרטים, כדי שאליענה תראה את הכרטיס המלא.</p>}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+        <div className="space-y-6">
           <NeriLine>
             {professional
               ? "מתוך מה שסיפרת התגבשה נישה. על הכרטיס היא מופיעה בשפה מקצועית, לצד השם, ההכשרה ופרטי הקשר שלך. בחרו את הניסוח המדויק ביותר, ואפשר גם לערוך אותו."
@@ -354,76 +449,10 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-2xl bg-[#f3ece1] p-5 sm:p-8">
-            <ScaledBox baseWidth={640} baseHeight={356}>
-              <BusinessCard data={cardData} width={640} />
-            </ScaledBox>
-          </div>
-
-          {professional && (
-            <div className={`rounded-xl border p-3 text-sm ${missing.length ? "border-mentor-accent/50 bg-mentor-accent/5" : "border-primary/30 bg-card"}`}>
-              <div className="flex flex-wrap items-center gap-2">
-                {completeness.map((c) => (
-                  <span
-                    key={c.label}
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${c.done ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground ring-1 ring-mentor-border"}`}
-                  >
-                    {c.done ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-mentor-accent" />}
-                    {c.label}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-2 leading-relaxed text-muted-foreground">
-                {missing.length ? (
-                  <>
-                    כדי שהכרטיס יהיה שלם, חסרים עוד: {missing.join(", ")}.{" "}
-                    <a href="#complete-card" className="font-medium text-primary underline underline-offset-2">
-                      להשלמת הכרטיס
-                    </a>
-                  </>
-                ) : (
-                  "הכרטיס שלם ומוכן להורדה ולשליחה."
-                )}
-              </p>
-            </div>
-          )}
-
-          {content.way_line && !professional && (
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input type="checkbox" checked={edit.showWay !== false} onChange={(e) => update({ showWay: e.target.checked })} />
-              להציג בכרטיס גם את הדרך שלך
-            </label>
-          )}
-
-          <DownloadButtons pngLabel="הורדת הכרטיס כתמונה" onPdf={downloadCardPdf} onPng={downloadCardPng} />
-
-          {professional && (
-            <div className="rounded-2xl border border-[#25D366]/40 bg-[#25D366]/[0.06] p-5">
-              <p className="text-lg font-semibold text-primary" style={{ fontFamily: SERIF }}>
-                רוצה פידבק אישי על הכרטיס?
-              </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">
-                שלחו את הכרטיס לאליענה בווטסאפ, והיא תסתכל עליו ותחזיר אליך פידבק אישי. מורידים את הכרטיס כתמונה, ומצרפים אותו להודעה.
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <a
-                  href={feedbackUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackEvent("challenge_card_feedback_whatsapp", {})}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857]"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  שליחת הכרטיס לאליענה
-                </a>
-                <button onClick={() => void downloadCardPng()} className="text-sm text-primary underline-offset-2 hover:underline">
-                  קודם להוריד את הכרטיס כתמונה
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div id="complete-card" className="scroll-mt-6 space-y-4 rounded-2xl border border-mentor-border bg-card/60 p-4 sm:p-5">
+          <div
+            id="complete-card"
+            className={`scroll-mt-6 space-y-4 rounded-2xl border-2 p-4 sm:p-5 ${professional && missing.length ? "border-[hsl(var(--terracotta))] bg-[hsl(var(--terracotta)/0.05)]" : "border-mentor-border bg-card/60"}`}
+          >
             <div>
               <p className="text-lg font-semibold text-primary" style={{ fontFamily: SERIF }}>
                 השלמת הכרטיס
@@ -438,12 +467,12 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-1 text-xs text-muted-foreground">
                   שם
-                  <input className={input} value={edit.name} onChange={(e) => update({ name: e.target.value })} placeholder="השם כפי שיופיע בכרטיס" maxLength={60} />
+                  <input className={`${input} ${need(!edit.name.trim())}`} value={edit.name} onChange={(e) => update({ name: e.target.value })} placeholder="השם כפי שיופיע בכרטיס" maxLength={60} />
                 </label>
                 <label className="space-y-1 text-xs text-muted-foreground">
                   {professional ? "הכשרה ותואר" : "כותרת מקצועית"}
                   <input
-                    className={input}
+                    className={`${input} ${need(!edit.title.trim())}`}
                     value={edit.title}
                     onChange={(e) => update({ title: e.target.value })}
                     placeholder={professional ? "למשל: עובדת סוציאלית קלינית, M.S.W" : "למשל: פסיכותרפיסטית זוגית ומשפחתית"}
@@ -452,11 +481,11 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
                 </label>
                 <label className="space-y-1 text-xs text-muted-foreground">
                   טלפון
-                  <input className={input} dir="ltr" value={edit.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="050-000-0000" maxLength={30} />
+                  <input className={`${input} ${need(!edit.phone.trim() && !edit.site.trim())}`} dir="ltr" value={edit.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="050-000-0000" maxLength={30} />
                 </label>
                 <label className="space-y-1 text-xs text-muted-foreground">
                   אימייל או אתר
-                  <input className={input} dir="ltr" value={edit.site} onChange={(e) => update({ site: e.target.value })} placeholder="name@example.com" maxLength={60} />
+                  <input className={`${input} ${need(!edit.phone.trim() && !edit.site.trim())}`} dir="ltr" value={edit.site} onChange={(e) => update({ site: e.target.value })} placeholder="name@example.com" maxLength={60} />
                 </label>
               </div>
             </div>

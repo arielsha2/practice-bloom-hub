@@ -144,6 +144,23 @@ export function photoToDataUrl(file: File, size = 360): Promise<string> {
   });
 }
 
+// Uploads the card image (through the function, to a public folder of card images) and returns its link, so it can
+// go into the WhatsApp message to Eliana. Null on any problem.
+export async function shareCardImage(blob: Blob): Promise<string | null> {
+  try {
+    const image = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(blob);
+    });
+    const { data, error } = await supabase.functions.invoke("challenge-tool-generate", { body: { tool: "professional-card", action: "share", image } });
+    return !error && data?.status === "ok" && typeof data.url === "string" ? data.url : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function loadLatestCard(): Promise<CardRow | null> {
   const { data, error } = await supabase
     .from("therapist_deliverables")

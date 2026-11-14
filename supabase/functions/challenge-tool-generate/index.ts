@@ -73,6 +73,22 @@ export type Tool = "professional-card";
 export const TOOLS: Tool[] = ["professional-card"];
 export const DAILY_LIMIT = 8;
 export const DAILY_REFLECT_LIMIT = 120;
+export const DAILY_SHARE_LIMIT = 20;
+export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
+// A PNG sent as a data URL; anything else (another type, not really a PNG, too big) is refused.
+export function parsePngDataUrl(v: unknown): Uint8Array | null {
+  if (typeof v !== "string") return null;
+  const m = v.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
+  if (!m || m[1].length > (MAX_IMAGE_BYTES * 4) / 3 + 4) return null;
+  let bin: string;
+  try { bin = atob(m[1]); } catch { return null; }
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.length < 8 || sig.some((b, i) => bytes[i] !== b)) return null;
+  return bytes;
+}
 
 export type Gender = "f" | "m" | "n";
 
@@ -314,6 +330,8 @@ export interface Deps {
   save: (userId: string, tool: Tool, content: unknown, inputs: unknown) => Promise<{ id: string; version: number }>;
   isAdmin: (userId: string) => Promise<boolean>;
   deleteMine: (userId: string, tool: Tool) => Promise<number>; // every version of the caller's own card (their events cascade)
+  // Stores the card image (PNG bytes) in the public card-images bucket and returns its public link.
+  storeImage: (userId: string, bytes: Uint8Array) => Promise<string>;
 }
 
 const json = (status: number, body: unknown) =>
@@ -348,6 +366,15 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (!userId) return json(401, { error: "unauthorized" });
 
   if (body?.action === "reflect") return handleReflect(body, userId, deps);
+  // The card image, for the WhatsApp message to Eliana (a wa.me link cannot carry a file, only text with a link).
+  if (body?.action === "share") {
+    const bytes = parsePngDataUrl(body?.image);
+    if (!bytes) return json(400, { error: "bad_image" });
+    if ((await deps.countReflectToday(`share:${userId}`)) >= DAILY_SHARE_LIMIT) return json(429, { error: "daily_limit" });
+    await deps.logReflect(`share:${userId}`);
+    const url = await deps.storeImage(userId, bytes);
+    return json(200, { status: "ok", url });
+  }
   // Admin only, for trying the exercise again from a clean slate: deletes the admin's OWN card rows, nobody else's.
   if (body?.action === "reset") {
     if (!(await deps.isAdmin(userId))) return json(403, { error: "forbidden" });
@@ -383,6 +410,8 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 // ===== core: end =====
 
 const reflectCounts = new Map<string, number>();
+// Public bucket of card images sent to Eliana for feedback (random file names; the card is what the therapist chose to share).
+const CARD_BUCKET = "challenge-cards";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -434,6 +463,12 @@ Deno.serve(async (req) => {
       isAdmin: async (userId) => {
         const { data, error } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
         return !error && data === true;
+      },
+      storeImage: async (userId, bytes) => {
+        const path = `${userId}/${crypto.randomUUID()}.png`;
+        const { error } = await admin.storage.from(CARD_BUCKET).upload(path, bytes, { contentType: "image/png", upsert: false });
+        if (error) throw error;
+        return admin.storage.from(CARD_BUCKET).getPublicUrl(path).data.publicUrl;
       },
       deleteMine: async (userId, tool) => {
         const { data, error } = await admin.from("therapist_deliverables").delete().eq("user_id", userId).eq("tool", tool).select("id");
