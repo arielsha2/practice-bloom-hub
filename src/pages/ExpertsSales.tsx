@@ -222,6 +222,7 @@ const ExpertsSales = () => {
         title='המומחים | תוכנית ליווי למטפלים עם אליענה שפירא'
         description="ממטפל אנונימי למומחה מבוקש: ארבעה חודשים של לימוד, תרגול וליווי אישי וקבוצתי, שמשלבים אסטרטגיה שיווקית ועבודה פנימית."
         canonicalUrl="/hamumchim"
+        ogImage="/og-experts.jpg"
         noindex
       />
 

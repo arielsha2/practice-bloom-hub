@@ -33,6 +33,16 @@ const PAGES = [
     title: "הזמנה לקהילה: אתגר להיות מומחה מבוקש - עם אליענה שפירא",
     description: "לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (15-19.11), ממטפל אנונימי למומחה מבוקש בתחומך.",
   },
+  {
+    file: "hamumchim.html",
+    path: "/hamumchim",
+    chunk: "ExpertsSales",
+    image: `${SITE}/og-experts.jpg`,
+    noindex: true, // the page itself is noindex until the design is approved
+    title: "המומחים | תוכנית ליווי למטפלים עם אליענה שפירא",
+    description:
+      "ממטפל אנונימי למומחה מבוקש: ארבעה חודשים של לימוד, תרגול וליווי אישי וקבוצתי, שמשלבים אסטרטגיה שיווקית ועבודה פנימית.",
+  },
 ];
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -48,6 +58,7 @@ for (const page of PAGES) {
     html = html.replace(pattern, replacement);
   };
   const url = `${SITE}${page.path}`;
+  const image = page.image ?? IMAGE;
 
   set(/<title>[\s\S]*?<\/title>/, `<title>${esc(page.title)}</title>`, "<title>");
   set(/<meta\s+name="description"[\s\S]*?\/>/, `<meta name="description" content="${esc(page.description)}" />`, "description");
@@ -57,10 +68,10 @@ for (const page of PAGES) {
   set(/<meta property="og:url"[^>]*\/>/, `<meta property="og:url" content="${url}" />`, "og:url");
   set(
     /<meta property="og:image"[^>]*\/>/,
-    `<meta property="og:image" content="${IMAGE}" />\n    <meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="630" />\n    <meta property="og:image:alt" content="${esc(page.title)}" />`,
+    `<meta property="og:image" content="${image}" />\n    <meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="630" />\n    <meta property="og:image:alt" content="${esc(page.title)}" />`,
     "og:image",
   );
-  set(/<meta name="twitter:image"[^>]*\/>/, `<meta name="twitter:image" content="${IMAGE}" />`, "twitter:image");
+  set(/<meta name="twitter:image"[^>]*\/>/, `<meta name="twitter:image" content="${image}" />`, "twitter:image");
 
   // Pages are lazy-loaded chunks, so without hints the browser only discovers
   // the page chunk (and the hero photo inside it) after the main bundle has
@@ -78,7 +89,8 @@ for (const page of PAGES) {
     `<link rel="preload" as="image" href="/assets/${heroImage}" fetchpriority="high" />`,
     ...[...chunks].map((f) => `<link rel="modulepreload" crossorigin href="/assets/${f}" />`),
   ].map((l) => `    ${l}`).join("\n");
-  set(/<\/head>/, `${hints}\n  </head>`, "</head>");
+  const robots = page.noindex ? `\n    <meta name="robots" content="noindex, nofollow" />` : "";
+  set(/<\/head>/, `${hints}${robots}\n  </head>`, "</head>");
 
   writeFileSync(`dist/${page.file}`, html);
   console.log(`challenge-og-page: wrote dist/${page.file}`);
