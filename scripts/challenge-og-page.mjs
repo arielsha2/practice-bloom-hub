@@ -9,7 +9,8 @@
 // boots the same app, so the page itself is unchanged. Page paths must stay
 // flat (no "/challenge/x"): a dist/challenge/ folder next to challenge.html
 // could make Netlify redirect /challenge to /challenge/.
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 const SITE = "https://therapykeys.co.il";
 // v4: a mini version of the page hero that fits inside the centre 630x630 square.
@@ -32,6 +33,16 @@ const PAGES = [
     chunk: "ChallengeCommunity",
     title: "הזמנה לקהילה: אתגר להיות מומחה מבוקש - עם אליענה שפירא",
     description: "לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (15-19.11), ממטפל אנונימי למומחה מבוקש בתחומך.",
+  },
+  {
+    // The homework link (/challenge-tools/card?src=hw1) shares with the challenge's own preview. A folder here is
+    // safe: there is no challenge-tools.html beside it, so Netlify has nothing to redirect.
+    file: "challenge-tools/card.html",
+    path: "/challenge-tools/card",
+    chunk: "ChallengeCard",
+    noindex: true,
+    title: "אתגר להיות מומחה מבוקש: כרטיס הביקור המקצועי - עם אליענה שפירא",
+    description: "המשימה מהאתגר: ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו, ובסופן כרטיס ביקור מקצועי עם הנישה שלך.",
   },
   {
     file: "hamumchim.html",
@@ -92,6 +103,7 @@ for (const page of PAGES) {
   const robots = page.noindex ? `\n    <meta name="robots" content="noindex, nofollow" />` : "";
   set(/<\/head>/, `${hints}${robots}\n  </head>`, "</head>");
 
+  mkdirSync(dirname(`dist/${page.file}`), { recursive: true });
   writeFileSync(`dist/${page.file}`, html);
   console.log(`challenge-og-page: wrote dist/${page.file}`);
 }
