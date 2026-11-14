@@ -634,6 +634,7 @@ const ChallengeCard = () => {
               </div>
             }
             reflect={(step, a) => reflectAnswer(step, a, clientWord)}
+            conversational
             writingText="מנסחת את המשפט שלך…"
             finishLabel="לכתוב את הגרסאות"
             onFinish={onFinish}

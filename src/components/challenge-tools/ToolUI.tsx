@@ -51,6 +51,19 @@ export function NeriLine({ children }: { children: ReactNode }) {
   );
 }
 
+// Neri speaking: her avatar and her words in a speech bubble, so the tool reads as a conversation with her.
+export function NeriBubble({ children, name = true }: { children: ReactNode; name?: boolean }) {
+  return (
+    <div className="flex items-start gap-3">
+      <img src="/images/neri-avatar.png" alt="נרי" className="h-12 w-12 shrink-0 rounded-full border-2 border-mentor-accent/40 object-cover shadow-sm" />
+      <div className="min-w-0 flex-1">
+        {name && <p className="mb-1 text-xs font-semibold text-primary">נרי</p>}
+        <div className="rounded-2xl rounded-tr-sm border border-mentor-border bg-card p-4 leading-relaxed shadow-sm">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export function Chips<T extends string>({ value, options, onChange }: { value: T | null; options: { id: T; label: string }[]; onChange: (v: T) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -85,6 +98,7 @@ export function Guided({
   onFinish,
   showSamples = true,
   reflect,
+  conversational = false,
 }: {
   eyebrow: string;
   title: string;
@@ -100,6 +114,8 @@ export function Guided({
   // May be async: while it runs the "writing" screen stays. Returning false (or throwing) brings the therapist back to the last question.
   onFinish: () => void | boolean | Promise<void | boolean>;
   showSamples?: boolean;
+  // Neri is present from the first screen: the opening and each question's lead-in are her speech bubbles.
+  conversational?: boolean;
   // Optional: Neri's one-sentence mirror of each answer, shown above the next question instead of the fixed
   // reaction, and at most one follow-up question per step (the therapist then adds to the same answer). Null, an
   // error or a slow reply (over REFLECT_WAIT_MS) falls back to the fixed reaction, so the flow never stalls.
@@ -201,8 +217,10 @@ export function Guided({
           <h2 className="mt-2 text-3xl leading-tight text-primary" style={{ fontFamily: SERIF }}>
             {title}
           </h2>
-          {typeof intro === "string" ? <p className="mt-3 leading-relaxed text-muted-foreground">{intro}</p> : <div className="mt-3">{intro}</div>}
+          {!conversational &&
+            (typeof intro === "string" ? <p className="mt-3 leading-relaxed text-muted-foreground">{intro}</p> : <div className="mt-3">{intro}</div>)}
         </div>
+        {conversational && <NeriBubble>{typeof intro === "string" ? <p className="text-muted-foreground">{intro}</p> : intro}</NeriBubble>}
         {gate}
         <button
           disabled={!canStart}
@@ -230,7 +248,14 @@ export function Guided({
         </span>
       </div>
       {i > 0 && <NeriLine>{mirrors[i - 1] ?? reactions[i - 1]}</NeriLine>}
-      {q.before && <div className="rounded-xl border border-mentor-border bg-mentor-surface/70 p-4 text-sm leading-relaxed">{q.before}</div>}
+      {q.before &&
+        (conversational ? (
+          <NeriBubble name={false}>
+            <div className="text-sm">{q.before}</div>
+          </NeriBubble>
+        ) : (
+          <div className="rounded-xl border border-mentor-border bg-mentor-surface/70 p-4 text-sm leading-relaxed">{q.before}</div>
+        ))}
       <h3 className="text-2xl leading-snug text-primary" style={{ fontFamily: SERIF }}>
         {q.label}
       </h3>
