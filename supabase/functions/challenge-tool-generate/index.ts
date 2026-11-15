@@ -335,7 +335,9 @@ export const BRIDGE_DAY3 = "ליום 3: קחו את המכתב או את ארב�
 
 export interface ChatMsg { role: "user" | "assistant"; content: string }
 
-export function parseMessages(v: unknown): ChatMsg[] | null {
+// A chat turn must end with the therapist's message; the summary ("finish") is asked for right after Neri's draft,
+// so there the last message is hers.
+export function parseMessages(v: unknown, lastMustBeUser = true): ChatMsg[] | null {
   if (!Array.isArray(v)) return null;
   const out: ChatMsg[] = [];
   for (const m of v) {
@@ -345,7 +347,7 @@ export function parseMessages(v: unknown): ChatMsg[] | null {
     out.push({ role, content });
   }
   const kept = out.slice(-LETTER_MAX_TURNS);
-  if (!kept.length || kept[kept.length - 1].role !== "user") return null;
+  if (!kept.length || (lastMustBeUser && kept[kept.length - 1].role !== "user")) return null;
   return kept;
 }
 
@@ -540,7 +542,7 @@ export function validateLetter(obj: any, gender: Gender): { content: LetterConte
 async function handleLetter(body: any, userId: string, deps: Deps): Promise<Response> {
   const gender = parseGender(body?.gender);
   const name = typeof body?.name === "string" ? body.name.replace(/[^\p{L}\s'"-]/gu, "").trim().slice(0, 40) : "";
-  const msgs = parseMessages(body?.messages);
+  const msgs = parseMessages(body?.messages, body?.action !== "finish");
   if (!msgs) return json(400, { error: "bad_messages" });
 
   if (body?.action === "chat") {
@@ -578,6 +580,7 @@ async function handleLetter(body: any, userId: string, deps: Deps): Promise<Resp
         return json(200, { status: "ok", deliverable: { id: saved.id, tool: "personal-note", version: saved.version, content: v.content, edited_content: null } });
       }
       fails = v.fails;
+      console.warn("letter finish rejected", attempt, fails.join("; "));
       if (fails.includes("no_letter")) return json(200, { status: "no_letter" });
     }
     return json(200, { status: "failed", failures: fails });
