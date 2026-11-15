@@ -128,7 +128,7 @@ export async function saveLetterEdit(id: string, edit: LetterEdit): Promise<void
   if (error) throw error;
 }
 
-export async function recordLetterEvent(kind: "viewed" | "copied" | "edited" | "regenerated", deliverableId: string | null) {
+export async function recordLetterEvent(kind: "viewed" | "copied" | "downloaded" | "edited" | "regenerated", deliverableId: string | null) {
   try {
     const { data } = await supabase.auth.getUser();
     if (!data.user) return;

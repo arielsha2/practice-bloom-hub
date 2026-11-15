@@ -3,12 +3,15 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowUp, Check, Copy, MessageCircle, MessagesSquare, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { ArrowUp, Check, Copy, FileDown, MessageCircle, MessagesSquare, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { LETTER_TOOL, logToolStep } from "@/lib/toolFunnel";
 import { NeriBubble, SERIF, useChallengeToolFonts } from "@/components/challenge-tools/ToolUI";
+import { LetterPdfDocument } from "@/components/challenge-tools/LetterDocument";
+import { PAGE_W } from "@/components/challenge-tools/ToolDocuments";
+import { downloadPdf } from "@/lib/challengeToolsExport";
 import { MoreMentorTools } from "@/components/challenge-tools/MoreMentorTools";
 import { useShowExpertsTab } from "@/components/landing/ExpertsAdminTab";
 import { rememberSource } from "@/lib/challengeTools";
@@ -123,6 +126,19 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
   const waText = `היי אליענה, כתבתי את המכתב האישי באתגר ואשמח לפידבק ממך:\n\n${letter}`;
   const waHref = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(waText)}`;
   const copied = () => void recordLetterEvent("copied", row.id);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const downloadLetterPdf = async () => {
+    setPdfBusy(true);
+    try {
+      await downloadPdf(<LetterPdfDocument letter={letter} />, PAGE_W, "personal-letter.pdf");
+      void recordLetterEvent("downloaded", row.id);
+      trackEvent("challenge_letter_downloaded", {});
+    } catch {
+      toast.error("ההורדה לא הצליחה. נסו שוב בעוד רגע.");
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -151,6 +167,15 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
           className="w-full resize-y rounded-xl border border-mentor-border bg-mentor-bg/40 p-4 text-lg leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/30"
           style={{ fontFamily: SERIF }}
         />
+        <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          onClick={() => void downloadLetterPdf()}
+          disabled={pdfBusy}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-60"
+        >
+          <FileDown className="h-5 w-5" />
+          {pdfBusy ? "מכינה את הקובץ…" : "הורדת המכתב כ־PDF"}
+        </button>
         <a
           href={waHref}
           target="_blank"
@@ -159,11 +184,12 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
             trackEvent("challenge_letter_whatsapp_click", {});
             logToolStep("whatsapp_click", LETTER_TOOL);
           }}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 font-semibold text-white shadow-sm hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 font-semibold text-white shadow-sm hover:opacity-90"
         >
           <MessageCircle className="h-5 w-5" />
           שליחת המכתב לאליענה לפידבק
         </a>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-mentor-border bg-card p-5 shadow-sm sm:p-7">
