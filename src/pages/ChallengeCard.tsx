@@ -168,28 +168,35 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
 
   const need = (empty: boolean) => (professional && empty ? "border-[hsl(var(--terracotta))] ring-2 ring-[hsl(var(--terracotta)/0.25)]" : "");
 
-  // WhatsApp links cannot carry a file, so the card image is uploaded first and its link goes into the
-  // message (WhatsApp shows the picture in the chat). The new tab is opened before the upload, inside the
-  // click, or browsers would block it as a pop-up.
-  const [sending, setSending] = useState(false);
-  const sendToEliana = async () => {
-    const tab = window.open("about:blank", "_blank");
-    setSending(true);
-    trackEvent("challenge_card_feedback_whatsapp", {});
-    let text = FEEDBACK_TEXT;
-    try {
-      const blob = await pngBlob(<BusinessCard data={cardData} width={640} />, 640, 2);
-      const link = await shareCardImage(blob);
-      if (link) text = `${FEEDBACK_TEXT}\n${link}`;
-      else toast.error("לא הצלחנו לצרף את הכרטיס. ההודעה תיפתח בלי התמונה, ואפשר לצרף אותה ידנית.");
-    } catch {
-      toast.error("לא הצלחנו לצרף את הכרטיס. ההודעה תיפתח בלי התמונה, ואפשר לצרף אותה ידנית.");
-    }
-    setSending(false);
-    const url = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(text)}`;
-    if (tab) tab.location.href = url;
-    else window.location.href = url;
-  };
+  // WhatsApp links cannot carry a file, so the card image is uploaded and its link goes into the message
+  // (WhatsApp shows the picture in the chat). The upload happens AHEAD of the click, a few seconds after the
+  // card stops changing: preparing it inside the click failed on phones, where opening WhatsApp sends the page
+  // to the background and the browser pauses it, so the image was never uploaded and no link was ever sent.
+  // The button is then an ordinary link with the image link already inside.
+  const [shareLink, setShareLink] = useState<{ key: string; url: string | null } | null>(null);
+  const cardKey = useMemo(() => JSON.stringify(cardData), [cardData]);
+  useEffect(() => {
+    if (!professional) return;
+    let stale = false;
+    const t = window.setTimeout(async () => {
+      let url: string | null = null;
+      try {
+        url = await shareCardImage(await pngBlob(<BusinessCard data={cardData} width={640} />, 640, 2));
+      } catch {
+        url = null;
+      }
+      if (!stale) setShareLink({ key: cardKey, url });
+    }, 2500);
+    return () => {
+      stale = true;
+      window.clearTimeout(t);
+    };
+    // cardKey stands for cardData
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardKey, professional]);
+  const shareReady = shareLink?.key === cardKey;
+  const shareText = shareReady && shareLink?.url ? `${FEEDBACK_TEXT}\n${shareLink.url}` : FEEDBACK_TEXT;
+  const shareHref = `https://wa.me/${ELIANA_WHATSAPP}?text=${encodeURIComponent(shareText)}`;
   const downloadCardPdf = async () => {
     await downloadPdf(<CardPdfDocument data={cardData} />, PAGE_W, "business-card.pdf");
     void recordCardEvent("downloaded", row.id, { kind: "pdf" });
@@ -266,14 +273,26 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
             <p className="mx-auto mt-1.5 max-w-lg text-sm leading-relaxed text-foreground/80">
               בלחיצה אחת הכרטיס נשלח לאליענה בווטסאפ, והיא תסתכל עליו ותחזיר אליך פידבק אישי.
             </p>
-            <button
-              onClick={() => void sendToEliana()}
-              disabled={sending}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857] disabled:opacity-70"
+            <a
+              href={shareHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={!shareReady}
+              onClick={(e) => {
+                if (!shareReady) {
+                  e.preventDefault();
+                  return;
+                }
+                trackEvent("challenge_card_feedback_whatsapp", { with_image: !!shareLink?.url });
+              }}
+              className={`mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857] ${shareReady ? "" : "pointer-events-none opacity-70"}`}
             >
               <MessageCircle className="h-5 w-5" />
-              {sending ? "מכינה את הכרטיס…" : "שליחת הכרטיס לאליענה"}
-            </button>
+              {shareReady ? "שליחת הכרטיס לאליענה" : "מכינה את הכרטיס לשליחה…"}
+            </a>
+            {shareReady && !shareLink?.url && (
+              <p className="mt-2 text-xs text-muted-foreground">לא הצלחנו לצרף את תמונת הכרטיס להודעה. אפשר להוריד את הכרטיס ולצרף אותו בווטסאפ.</p>
+            )}
             {missing.length > 0 && <p className="mt-2 text-xs text-muted-foreground">כדאי להשלים קודם את הפרטים, כדי שאליענה תראה את הכרטיס המלא.</p>}
           </div>
         )}

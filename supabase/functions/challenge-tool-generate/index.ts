@@ -73,7 +73,7 @@ export type Tool = "professional-card";
 export const TOOLS: Tool[] = ["professional-card"];
 export const DAILY_LIMIT = 8;
 export const DAILY_REFLECT_LIMIT = 120;
-export const DAILY_SHARE_LIMIT = 20;
+export const DAILY_SHARE_LIMIT = 100; // the page uploads the card ahead of the click, once after every edit settles
 export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 
 // A PNG sent as a data URL; anything else (another type, not really a PNG, too big) is refused.
