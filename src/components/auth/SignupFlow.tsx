@@ -283,7 +283,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
               ? "לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים — לפעמים זה לוקח דקה-שתיים."
               : "Can't find the email? Check your spam/promotions folder too — it can take a minute or two."}
           </p>
-          <div className="flex justify-center">
+          <div className="flex justify-center" dir="ltr">
             <InputOTP
               maxLength={6}
               value={otp}
@@ -291,7 +291,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
               inputMode="numeric"
               autoFocus
               onComplete={() => handleVerifyOtp()}
-              containerClassName="dir-ltr"
+              containerClassName="justify-center"
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />

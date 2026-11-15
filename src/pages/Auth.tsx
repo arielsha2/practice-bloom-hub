@@ -479,7 +479,7 @@ export default function Auth() {
                       <p className="text-xs text-muted-foreground">
                         {isRTL ? "לא מוצא/ת את המייל? כדאי לבדוק גם בתיקיית הספאם/קידומים." : "Don't see it? Worth checking your spam/promotions folder."}
                       </p>
-                      <div className="flex justify-center">
+                      <div className="flex justify-center" dir="ltr">
                         <InputOTP
                           maxLength={6}
                           value={otp}
@@ -487,7 +487,7 @@ export default function Auth() {
                           inputMode="numeric"
                           autoFocus
                           onComplete={() => handleVerifyLoginCode()}
-                          containerClassName="dir-ltr"
+                          containerClassName="justify-center"
                         >
                           <InputOTPGroup>
                             <InputOTPSlot index={0} />
