@@ -280,15 +280,27 @@ function LetterChat({
 }) {
   const [text, setText] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const lastRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const firstRender = useRef(true);
+  const desktop = () => window.matchMedia("(pointer: fine)").matches;
 
+  // While Neri is writing, the bottom of the conversation stays in view (above the input box). When her reply
+  // arrives, the page goes to the START of the reply, so it can be read from its first line, and the cursor stays in
+  // the input box, ready for the answer (on a computer; on a phone the keyboard would cover the reply).
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       if (messages.length <= 1) return;
     }
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, pending]);
+    const last = messages[messages.length - 1];
+    if (!pending && last?.role === "assistant") {
+      lastRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (desktop()) inputRef.current?.focus({ preventScroll: true });
+    } else {
+      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, pending]);
 
   const send = (t: string) => {
     const v = t.trim();
@@ -309,15 +321,17 @@ function LetterChat({
       </div>
 
       <div className="space-y-5">
-        {messages.map((m, i) =>
-          m.role === "assistant" ? (
-            <NeriBubble key={i} name={i === 0 || messages[i - 1]?.role !== "assistant"}>
-              <RichText text={m.content} />
-            </NeriBubble>
-          ) : (
-            <UserBubble key={i}>{m.content}</UserBubble>
-          ),
-        )}
+        {messages.map((m, i) => (
+          <div key={i} ref={i === messages.length - 1 ? lastRef : undefined} className="scroll-mt-4">
+            {m.role === "assistant" ? (
+              <NeriBubble name={i === 0 || messages[i - 1]?.role !== "assistant"}>
+                <RichText text={m.content} />
+              </NeriBubble>
+            ) : (
+              <UserBubble>{m.content}</UserBubble>
+            )}
+          </div>
+        ))}
         {pending && (
           <NeriBubble name={false}>
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -340,7 +354,8 @@ function LetterChat({
             ))}
           </div>
         )}
-        <div ref={endRef} />
+        {/* the input box is pinned over the bottom of the page: keep the end of the conversation clear of it */}
+        <div ref={endRef} style={{ scrollMarginBottom: 150 }} />
       </div>
 
       {draft && (
@@ -362,10 +377,11 @@ function LetterChat({
       <div className="sticky bottom-0 mt-6 bg-gradient-to-t from-mentor-bg via-mentor-bg to-transparent pb-4 pt-4">
         <div className="flex items-end gap-2 rounded-2xl border border-mentor-border bg-card p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
           <textarea
+            ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && window.matchMedia("(pointer: fine)").matches) {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && desktop()) {
                 e.preventDefault();
                 send(text);
               }
@@ -377,6 +393,8 @@ function LetterChat({
           />
           <button
             onClick={() => send(text)}
+            // pressing the button must not take the cursor out of the box (on a phone that also closes the keyboard)
+            onPointerDown={(e) => e.preventDefault()}
             disabled={pending || !text.trim()}
             aria-label="שליחה"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground disabled:opacity-40"
