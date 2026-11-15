@@ -45,6 +45,15 @@ const PAGES = [
     description: "המשימה מהאתגר: ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו, ובסופן כרטיס ביקור מקצועי עם הנישה שלך.",
   },
   {
+    // Day 2 homework (/challenge-tools/letter?src=hw2).
+    file: "challenge-tools/letter.html",
+    path: "/challenge-tools/letter",
+    chunk: "ChallengeLetter",
+    noindex: true,
+    title: "אתגר להיות מומחה מבוקש: מכתב למטופל - עם אליענה שפירא",
+    description: "המשימה של יום 2: מכתב למטופל או המטופלת שהיית הכי רוצה לעבוד איתו ולעזור לו, כזה שכשהוא יקרא אותו ירגיש שמדברים בדיוק עליו.",
+  },
+  {
     file: "hamumchim.html",
     path: "/hamumchim",
     chunk: "ExpertsSales",
