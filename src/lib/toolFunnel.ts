@@ -14,7 +14,8 @@ export type FunnelStep =
   | "code_wrong" // the code entered was wrong or expired
   | "signed_in" // the code was accepted
   | "questions_shown" // the first screen of the exercise
-  | "tool_done"; // the card was made
+  | "tool_done" // the card was made
+  | "whatsapp_click"; // pressed "send the card to Eliana" (opens WhatsApp; whether they then pressed send there is unknowable)
 
 export const CARD_TOOL = "professional-card";
 

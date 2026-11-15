@@ -285,6 +285,7 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
                   return;
                 }
                 trackEvent("challenge_card_feedback_whatsapp", { with_image: !!shareLink?.url });
+                logToolStep("whatsapp_click");
               }}
               className={`mt-4 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-7 py-3 text-base font-semibold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1fb857] ${shareReady ? "" : "pointer-events-none opacity-70"}`}
             >
