@@ -38,13 +38,16 @@ const ELIANA_WHATSAPP = "972523379716";
 const opening = (name: string, withCard: boolean) =>
   [
     `שלום${name ? ` ${name}` : ""}, אני נרי.`,
-    "היום נבנה תיאור קצר של העבודה שלך, כזה שאחרים יוכלו לספר עליו הלאה, ואחר כך נכתוב מכתב אחד לאדם אחד מתוך האנשים שהכי חשוב לך לעזור להם.",
     withCard
-      ? "ביום הראשון נבנה כרטיס הביקור שלך. אפשר לבנות ממנו, או להתחיל מאדם אחר (מטופל, או נישה שמעניינת אותך). מה מתאים לך?"
+      ? "אתמול נבנה כרטיס הביקור שלך. היום נכתוב מכתב אישי לאדם אחד מתוך האנשים שהכי חשוב לך לעזור להם: מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו. שמכירים אותו, מבינים לעומק מה עובר עליו, ולכן גם יכולים לעזור לו."
+      : "היום נכתוב מכתב אישי לאדם אחד מתוך האנשים שהכי חשוב לך לעזור להם: מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו. שמכירים אותו, מבינים לעומק מה עובר עליו, ולכן גם יכולים לעזור לו.",
+    "בדרך נבנה ארבע שורות קצרות על העבודה שלך, ומהן ייכתב המכתב.",
+    withCard
+      ? "אפשר לצאת מהאדם שעליו נבנה הכרטיס אתמול, או מאדם אחר. מה מתאים לך?"
       : "נתחיל מאדם אחד שהכי אהבת לעבוד איתו, אמיתי או מורכב מכמה אנשים, בלי שם ובלי פרטים מזהים. מי עולה לך ראשון, ובאיזה רגע בחייו הוא פנה אליך?",
   ].join("\n\n");
 
-const START_CHOICES = ["לבנות מהכרטיס שלי", "להתחיל מאדם אחר או מנישה אחרת"];
+const START_CHOICES = ["מהאדם שבכרטיס שלי", "מאדם אחר"];
 
 // Neri writes plain text with an occasional **bold**; nothing else is interpreted.
 function RichText({ text }: { text: string }) {
@@ -128,26 +131,9 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
       <div className="text-center">
         <p className="text-sm font-medium text-primary">יום 2 · התוצרים שלך</p>
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl" style={{ fontFamily: SERIF }}>
-          ארבע השורות והמכתב
+          המכתב שלך
         </h1>
       </div>
-
-      <section className="rounded-2xl border border-mentor-border bg-card p-5 shadow-sm sm:p-7">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: SERIF }}>
-            ארבע השורות
-          </h2>
-          <CopyButton text={fourText} label="העתקה" onCopied={copied} />
-        </div>
-        <ol className="space-y-3">
-          {content.four_lines.map((l, i) => (
-            <li key={i} className="flex gap-3 leading-relaxed">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{i + 1}</span>
-              <span className="text-lg">{l}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
 
       <section className="rounded-2xl border border-mentor-border bg-card p-5 shadow-sm sm:p-7">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -180,6 +166,26 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
           <MessageCircle className="h-5 w-5" />
           שליחת המכתב לאליענה לפידבק
         </a>
+      </section>
+
+      <section className="rounded-2xl border border-mentor-border bg-card p-5 shadow-sm sm:p-7">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-xl font-semibold" style={{ fontFamily: SERIF }}>
+              ארבע השורות
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">התיאור הקצר של העבודה שלך, שממנו נכתב המכתב. כזה שאחרים יוכלו לספר עליו הלאה.</p>
+          </div>
+          <CopyButton text={fourText} label="העתקה" onCopied={copied} />
+        </div>
+        <ol className="space-y-3">
+          {content.four_lines.map((l, i) => (
+            <li key={i} className="flex gap-3 leading-relaxed">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{i + 1}</span>
+              <span className="text-lg">{l}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -274,10 +280,11 @@ function LetterChat({
       <div className="mb-8 text-center">
         <p className="text-sm font-medium text-primary">כלי 2 · יום 2 באתגר</p>
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl" style={{ fontFamily: SERIF }}>
-          ארבע שורות ומכתב אחד
+          מכתב לאדם אחד
         </h1>
-        <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-          תיאור קצר של העבודה שלך, כזה שאנשים יוכלו לספר עליו הלאה, ומכתב אישי לאדם אחד. שיחה עם נרי, שאלה אחת בכל פעם.
+        <p className="mx-auto mt-3 max-w-lg leading-relaxed text-muted-foreground">
+          אתמול נכתב כרטיס הביקור. היום כותבים מכתב שהאדם שהכי חשוב לך לעזור לו יקרא וירגיש שמדברים בדיוק עליו: שמכירים ומבינים אותו לעומק, ולכן גם
+          יכולים לעזור לו. שיחה עם נרי, שאלה אחת בכל פעם.
         </p>
       </div>
 
@@ -504,7 +511,7 @@ const ChallengeLetter = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-mentor-bg pb-10 font-body text-foreground">
-      <SEOHead title="ארבע שורות ומכתב אחד" description="כלי מתוך האתגר" canonicalUrl="/challenge-tools/letter" noindex />
+      <SEOHead title="מכתב לאדם אחד" description="כלי מתוך האתגר" canonicalUrl="/challenge-tools/letter" noindex />
       <div className="mx-auto max-w-3xl px-4 pt-8">
         {isAdmin && mode !== null && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-primary/40 bg-card px-4 py-2.5 text-sm">
