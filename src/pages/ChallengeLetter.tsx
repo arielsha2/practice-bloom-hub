@@ -38,16 +38,14 @@ const ELIANA_WHATSAPP = "972523379716";
 const opening = (name: string, withCard: boolean) =>
   [
     `שלום${name ? ` ${name}` : ""}, אני נרי.`,
+    withCard ? "אתמול כתבת את כרטיס הביקור שלך. היום נכתוב מכתב לאדם אחד שהכי חשוב לך לעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו." : "היום נכתוב מכתב לאדם אחד שהכי חשוב לך לעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו.",
+    "נתחיל מארבע שורות קצרות שמתארות את העבודה שלך, ומהן נבנה את המכתב.",
     withCard
-      ? "אתמול נבנה כרטיס הביקור שלך. היום נכתוב מכתב אישי לאדם אחד מתוך האנשים שהכי חשוב לך לעזור להם: מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו. שמכירים אותו, מבינים לעומק מה עובר עליו, ולכן גם יכולים לעזור לו."
-      : "היום נכתוב מכתב אישי לאדם אחד מתוך האנשים שהכי חשוב לך לעזור להם: מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו. שמכירים אותו, מבינים לעומק מה עובר עליו, ולכן גם יכולים לעזור לו.",
-    "בדרך נבנה ארבע שורות קצרות על העבודה שלך, ומהן ייכתב המכתב.",
-    withCard
-      ? "אפשר לצאת מהאדם שעליו נבנה הכרטיס אתמול, או מאדם אחר. מה מתאים לך?"
-      : "נתחיל מאדם אחד שהכי אהבת לעבוד איתו, אמיתי או מורכב מכמה אנשים, בלי שם ובלי פרטים מזהים. מי עולה לך ראשון, ובאיזה רגע בחייו הוא פנה אליך?",
+      ? "על מי נכתוב? על האדם שתיארת אתמול בכרטיס, או על מישהו אחר?"
+      : "על מי נכתוב? כדאי לבחור אדם אחד שהכי אהבת לעבוד איתו, אמיתי או כזה שמורכב מכמה אנשים, בלי שם ובלי פרטים מזהים. מי עולה לך ראשון?",
   ].join("\n\n");
 
-const START_CHOICES = ["מהאדם שבכרטיס שלי", "מאדם אחר"];
+const START_CHOICES = ["על האדם מהכרטיס", "על מישהו אחר"];
 
 // Neri writes plain text with an occasional **bold**; nothing else is interpreted.
 function RichText({ text }: { text: string }) {
@@ -174,7 +172,7 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
             <h2 className="text-xl font-semibold" style={{ fontFamily: SERIF }}>
               ארבע השורות
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">התיאור הקצר של העבודה שלך, שממנו נכתב המכתב. כזה שאחרים יוכלו לספר עליו הלאה.</p>
+            <p className="mt-1 text-sm text-muted-foreground">תיאור קצר של העבודה שלך, שקל לחזור עליו ולספר עליו הלאה.</p>
           </div>
           <CopyButton text={fourText} label="העתקה" onCopied={copied} />
         </div>
@@ -225,7 +223,7 @@ function LetterResult({ row, onBackToChat }: { row: LetterRow; onBackToChat: (()
       {onBackToChat && (
         <button onClick={onBackToChat} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-2 hover:underline">
           <MessagesSquare className="h-3.5 w-3.5" />
-          חזרה לשיחה עם נרי, להמשיך לדייק
+          חזרה לשיחה עם נרי
         </button>
       )}
 
@@ -283,8 +281,7 @@ function LetterChat({
           מכתב לאדם אחד
         </h1>
         <p className="mx-auto mt-3 max-w-lg leading-relaxed text-muted-foreground">
-          אתמול נכתב כרטיס הביקור. היום כותבים מכתב שהאדם שהכי חשוב לך לעזור לו יקרא וירגיש שמדברים בדיוק עליו: שמכירים ומבינים אותו לעומק, ולכן גם
-          יכולים לעזור לו. שיחה עם נרי, שאלה אחת בכל פעם.
+          שיחה עם נרי, שאלה אחת בכל פעם.
         </p>
       </div>
 
@@ -325,7 +322,7 @@ function LetterChat({
 
       {draft && (
         <div className="mt-8 rounded-2xl border border-mentor-accent/50 bg-mentor-accent/5 p-4 text-center">
-          <p className="text-sm text-muted-foreground">אפשר להמשיך לדייק עם נרי, וכשמתאים לך:</p>
+          <p className="text-sm text-muted-foreground">אפשר להמשיך לדייק עם נרי. כשהמכתב מרגיש נכון:</p>
           <button
             onClick={onFinish}
             disabled={finishing || pending}
