@@ -34,6 +34,7 @@ const SiteStylesPreview = lazy(() => import("./pages/SiteStylesPreview"));
 const MentorWorkroomPreview = lazy(() => import("./pages/MentorWorkroomPreview"));
 const ChallengeToolsPreview = lazy(() => import("./pages/ChallengeToolsPreview"));
 const ChallengeCard = lazy(() => import("./pages/ChallengeCard"));
+const ChallengeLetter = lazy(() => import("./pages/ChallengeLetter"));
 const ExpertsSales = lazy(() => import("./pages/ExpertsSales"));
 const MySite = lazy(() => import("./pages/MySite"));
 const MentorAdmin = lazy(() => import("./pages/MentorAdmin"));
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/mentor-workroom" element={<MentorWorkroomPreview />} />
               <Route path="/challenge-tools-preview" element={<ChallengeToolsPreview />} />
               <Route path="/challenge-tools/card" element={<ChallengeCard />} />
+              <Route path="/challenge-tools/letter" element={<ChallengeLetter />} />
               <Route path="/hamumchim" element={<ExpertsSales />} />
               <Route path="/mentor/my-site" element={<MySite />} />
               <Route path="/contact-finder" element={<BotChat />} />

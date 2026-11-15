@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { logToolStep } from "@/lib/toolFunnel";
+import { CARD_TOOL, LETTER_TOOL, logToolStep } from "@/lib/toolFunnel";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -60,11 +60,13 @@ export default function Auth() {
     : null;
   // ?next=challenge-card: the first free challenge tool (the professional business card), sent as homework.
   // Like the diagnosis it skips the password step: a new visitor goes from "e-mail + code" straight to the tool.
-  const challengeRedirect = nextParam === "challenge-card" ? "/challenge-tools/card" : null;
+  // ?next=challenge-letter: the second one (day 2, the four lines and the personal letter), same flow.
+  const challengeRedirect = nextParam === "challenge-card" ? "/challenge-tools/card" : nextParam === "challenge-letter" ? "/challenge-tools/letter" : null;
+  const funnelTool = nextParam === "challenge-letter" ? LETTER_TOOL : CARD_TOOL;
   const afterLoginPath = diagnosisRedirect ?? botRedirect ?? reportRedirect ?? challengeRedirect ?? "/dashboard";
   useEffect(() => {
-    if (challengeRedirect) logToolStep("auth_shown");
-  }, [challengeRedirect]);
+    if (challengeRedirect) logToolStep("auth_shown", funnelTool);
+  }, [challengeRedirect, funnelTool]);
 
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
@@ -267,7 +269,7 @@ export default function Auth() {
     setIsSubmitting(true);
     const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
     setIsSubmitting(false);
-    if (challengeRedirect) logToolStep(ok ? "code_sent" : "code_send_failed");
+    if (challengeRedirect) logToolStep(ok ? "code_sent" : "code_send_failed", funnelTool);
     if (!ok) {
       if (status === 429) return toast.error(isRTL ? `נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות` : `Try again in ${body?.retry_after ?? 60} seconds`);
       return toast.error(isRTL ? "לא הצלחנו לשלוח את הקוד. נסה/י שוב." : "We couldn't send the code. Please try again.");
@@ -284,7 +286,7 @@ export default function Auth() {
     const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
     if (!ok || !body?.token_hash) {
       setIsSubmitting(false);
-      if (challengeRedirect) logToolStep("code_wrong");
+      if (challengeRedirect) logToolStep("code_wrong", funnelTool);
       if (body?.error === "expired") return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "Code expired — send a new code");
       if (body?.error === "too_many_attempts") return toast.error(isRTL ? "יותר מדי ניסיונות — שלח/י קוד חדש" : "Too many attempts — send a new code");
       return toast.error(isRTL ? "הקוד שגוי" : "Invalid code");
@@ -298,7 +300,7 @@ export default function Auth() {
       return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "Login failed. Please try again.");
     }
     trackEvent("form_submission", { form: "login_code", location: "auth_page" });
-    if (challengeRedirect) logToolStep("signed_in");
+    if (challengeRedirect) logToolStep("signed_in", funnelTool);
     toast.success(t("auth.loginSuccess"));
     navigate(afterLoginPath);
   };
@@ -397,6 +399,7 @@ export default function Auth() {
                 redirectTo={diagnosisRedirect ?? botRedirect ?? challengeRedirect ?? (isRTL ? "/mentor" : "/en/mentor")}
                 skipPassword={(!!diagnosisRedirect || !!challengeRedirect) && !resumePasswordSetup}
                 purpose={challengeRedirect ? "challenge-tool" : "diagnosis"}
+                funnelTool={funnelTool}
               />
             ) : mode === "forgot" && resetSent ? (
               <div className="text-center space-y-4">

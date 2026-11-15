@@ -14,12 +14,15 @@ export type FunnelStep =
   | "code_wrong" // the code entered was wrong or expired
   | "signed_in" // the code was accepted
   | "questions_shown" // the first screen of the exercise
-  | "tool_done" // the card was made
+  | "tool_done" // the card was made (day 2: the four lines and the letter were summed up)
+  | "chat_started" // day 2: sent a first message to Neri
+  | "draft_written" // day 2: Neri wrote the first draft of the letter
   | "whatsapp_click"; // pressed "send the card to Eliana" (opens WhatsApp; whether they then pressed send there is unknowable)
 
 export const CARD_TOOL = "professional-card";
+export const LETTER_TOOL = "personal-note"; // day 2: the four lines and the personal letter
 
-export function logToolStep(step: FunnelStep, tool = CARD_TOOL) {
+export function logToolStep(step: FunnelStep, tool: string = CARD_TOOL) {
   try {
     const onceKey = `tool_funnel:${tool}:${step}`;
     try {

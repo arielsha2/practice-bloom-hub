@@ -37,9 +37,11 @@ interface SignupFlowProps {
   skipPassword?: boolean;
   /** What the new account is for, only used in the consent line when the password step is skipped. */
   purpose?: "diagnosis" | "challenge-tool";
+  /** Which challenge tool the sign-up is on the way to, for the step counter. */
+  funnelTool?: string;
 }
 
-export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false, purpose = "diagnosis" }: SignupFlowProps) {
+export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/mentor", skipPassword = false, purpose = "diagnosis", funnelTool }: SignupFlowProps) {
   const navigate = useNavigate();
   const { isRTL } = useLanguage();
   const [step, setStep] = useState<Step>(startStep);
@@ -82,7 +84,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       mailing_list_consent: true,
     });
     setBusy(false);
-    if (purpose === "challenge-tool") logToolStep(ok ? "code_sent" : "code_send_failed");
+    if (purpose === "challenge-tool") logToolStep(ok ? "code_sent" : "code_send_failed", funnelTool);
     if (!ok) {
       if (status === 429)
         return toast.error(
@@ -136,7 +138,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     if (!ok || !body?.token_hash) {
       setBusy(false);
       trackEvent("signup_otp_failed");
-      if (purpose === "challenge-tool") logToolStep("code_wrong");
+      if (purpose === "challenge-tool") logToolStep("code_wrong", funnelTool);
       if (body?.error === "expired")
         return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "The code has expired — send a new one");
       if (body?.error === "too_many_attempts")
@@ -154,7 +156,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "We couldn't complete sign-in. Please try again.");
     }
     trackEvent("signup_step_complete", { step: 2 });
-    if (purpose === "challenge-tool") logToolStep("signed_in");
+    if (purpose === "challenge-tool") logToolStep("signed_in", funnelTool);
     if (skipPassword) {
       // Mark signup as "done" (no password, OTP login covers returning here)
       // so Auth.tsx's resume-incomplete-signup check doesn't nag this user
