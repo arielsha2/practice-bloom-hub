@@ -41,11 +41,11 @@ const ELIANA_WHATSAPP = "972523379716";
 const opening = (name: string, withCard: boolean) =>
   [
     `שלום${name ? ` ${name}` : ""}, אני נרי.`,
-    withCard ? "אתמול כתבת את כרטיס הביקור שלך. היום נכתוב מכתב לאדם אחד שהכי חשוב לך לעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו." : "היום נכתוב מכתב לאדם אחד שהכי חשוב לך לעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו.",
+    withCard ? "אתמול כתבת את כרטיס הביקור שלך. היום נכתוב מכתב למטופל או המטופלת שהיית הכי רוצה לעבוד איתו ולעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו." : "היום נכתוב מכתב למטופל או המטופלת שהיית הכי רוצה לעבוד איתו ולעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו: שמכירים אותו ומבינים מה עובר עליו, ולכן גם יכולים לעזור לו.",
     "נתחיל מארבע שורות קצרות שמתארות את העבודה שלך, ומהן נבנה את המכתב.",
     withCard
       ? "על מי נכתוב? על האדם שתיארת אתמול בכרטיס, או על מישהו אחר?"
-      : "על מי נכתוב? כדאי לבחור אדם אחד שהכי אהבת לעבוד איתו, אמיתי או כזה שמורכב מכמה אנשים, בלי שם ובלי פרטים מזהים. מי עולה לך ראשון?",
+      : "על מי נכתוב? כדאי לחשוב על אדם אחד מסוים, אמיתי או כזה שמורכב מכמה אנשים, בלי שם ובלי פרטים מזהים: בן כמה הוא, מה הוא עושה בחיים, מאיזה רקע הוא בא, ומה קורה לו עכשיו שבגללו הוא פונה אליך.",
   ].join("\n\n");
 
 const START_CHOICES = ["על האדם מהכרטיס", "על מישהו אחר"];
@@ -306,9 +306,6 @@ function LetterChat({
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl" style={{ fontFamily: SERIF }}>
           מכתב לאדם אחד
         </h1>
-        <p className="mx-auto mt-3 max-w-lg leading-relaxed text-muted-foreground">
-          שיחה עם נרי, שאלה אחת בכל פעם.
-        </p>
       </div>
 
       <div className="space-y-5">
@@ -360,6 +357,8 @@ function LetterChat({
         </div>
       )}
 
+      {/* While the two starting choices are on screen there is nothing to type yet. */}
+      {!showChoices && (
       <div className="sticky bottom-0 mt-6 bg-gradient-to-t from-mentor-bg via-mentor-bg to-transparent pb-4 pt-4">
         <div className="flex items-end gap-2 rounded-2xl border border-mentor-border bg-card p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
           <textarea
@@ -395,6 +394,7 @@ function LetterChat({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
