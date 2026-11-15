@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 import { SignupFlow } from "@/components/auth/SignupFlow";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { codeFromPaste, onlyDigits } from "@/lib/otpCode";
 import { OtpResendButton } from "@/components/auth/OtpResendButton";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
@@ -483,7 +484,8 @@ export default function Auth() {
                         <InputOTP
                           maxLength={6}
                           value={otp}
-                          onChange={setOtp}
+                          onChange={(v) => setOtp(onlyDigits(v))}
+                          pasteTransformer={codeFromPaste}
                           inputMode="numeric"
                           autoFocus
                           onComplete={() => handleVerifyLoginCode()}

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { codeFromPaste, onlyDigits } from "@/lib/otpCode";
 import { Loader2, Mail, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { logToolStep } from "@/lib/toolFunnel";
@@ -287,7 +288,8 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
             <InputOTP
               maxLength={6}
               value={otp}
-              onChange={setOtp}
+              onChange={(v) => setOtp(onlyDigits(v))}
+              pasteTransformer={codeFromPaste}
               inputMode="numeric"
               autoFocus
               onComplete={() => handleVerifyOtp()}
