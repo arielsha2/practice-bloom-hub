@@ -83,12 +83,20 @@ Deno.serve(async (req) => {
     let userId: string | null = null;
     let isNewUser = false;
 
-    // List then filter (admin.listUsers supports email filter via query param in newer SDKs)
-    const { data: existing } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    const found = existing?.users?.find((u) => u.email?.toLowerCase() === email);
+    // Look through EVERY page of users. This used to read only the first 200 (newest first), so once the site
+    // passed 200 accounts an older user's correct code ended in a failed attempt to create a second account
+    // with the same e-mail ("create_failed"), and they could not sign in at all (2026-11-15, 302 accounts).
+    let found: { id: string; email?: string; email_confirmed_at?: string | null } | undefined;
+    for (let page = 1; page <= 50 && !found; page++) {
+      const { data: existing, error: listErr } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (listErr) {
+        console.error("listUsers failed", listErr);
+        return jsonResp({ error: "internal" }, 500);
+      }
+      const users = existing?.users ?? [];
+      found = users.find((u) => u.email?.toLowerCase() === email);
+      if (users.length < 1000) break;
+    }
 
     if (found) {
       userId = found.id;
@@ -104,12 +112,18 @@ Deno.serve(async (req) => {
           mailing_list_consent: mailingConsent,
         },
       });
-      if (createErr || !created.user) {
+      const alreadyExists = !!createErr && /already|exists|registered/i.test(createErr.message ?? "");
+      if (alreadyExists) {
+        // Safety net: the account exists after all (the lookup missed it). Sign them in to it; generateLink below
+        // works by e-mail and returns the user.
+        console.warn("createUser: account already exists, signing in to it", email);
+      } else if (createErr || !created.user) {
         console.error("createUser failed", createErr);
         return jsonResp({ error: "create_failed" }, 500);
+      } else {
+        userId = created.user.id;
+        isNewUser = true;
       }
-      userId = created.user.id;
-      isNewUser = true;
     }
 
     // Mint a session via magiclink → verifyOtp using the token_hash.
@@ -125,7 +139,7 @@ Deno.serve(async (req) => {
     return jsonResp({
       ok: true,
       is_new_user: isNewUser,
-      user_id: userId,
+      user_id: userId ?? linkData.user?.id ?? null,
       token_hash: linkData.properties.hashed_token,
       verification_type: "magiclink",
     });
