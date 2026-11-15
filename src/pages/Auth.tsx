@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { logToolStep } from "@/lib/toolFunnel";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -60,6 +61,9 @@ export default function Auth() {
   // Like the diagnosis it skips the password step: a new visitor goes from "e-mail + code" straight to the tool.
   const challengeRedirect = nextParam === "challenge-card" ? "/challenge-tools/card" : null;
   const afterLoginPath = diagnosisRedirect ?? botRedirect ?? reportRedirect ?? challengeRedirect ?? "/dashboard";
+  useEffect(() => {
+    if (challengeRedirect) logToolStep("auth_shown");
+  }, [challengeRedirect]);
 
   const initialMode = (searchParams.get("mode") as AuthMode) || "login";
   const [mode, setMode] = useState<AuthMode>(
@@ -262,6 +266,7 @@ export default function Auth() {
     setIsSubmitting(true);
     const { ok, status, body } = await callFn("signup-send-otp", { email: normalized });
     setIsSubmitting(false);
+    if (challengeRedirect) logToolStep(ok ? "code_sent" : "code_send_failed");
     if (!ok) {
       if (status === 429) return toast.error(isRTL ? `נסה/י שוב בעוד ${body?.retry_after ?? 60} שניות` : `Try again in ${body?.retry_after ?? 60} seconds`);
       return toast.error(isRTL ? "לא הצלחנו לשלוח את הקוד. נסה/י שוב." : "We couldn't send the code. Please try again.");
@@ -278,6 +283,7 @@ export default function Auth() {
     const { ok, body } = await callFn("signup-verify-otp", { email, code: otp });
     if (!ok || !body?.token_hash) {
       setIsSubmitting(false);
+      if (challengeRedirect) logToolStep("code_wrong");
       if (body?.error === "expired") return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "Code expired — send a new code");
       if (body?.error === "too_many_attempts") return toast.error(isRTL ? "יותר מדי ניסיונות — שלח/י קוד חדש" : "Too many attempts — send a new code");
       return toast.error(isRTL ? "הקוד שגוי" : "Invalid code");
@@ -291,6 +297,7 @@ export default function Auth() {
       return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "Login failed. Please try again.");
     }
     trackEvent("form_submission", { form: "login_code", location: "auth_page" });
+    if (challengeRedirect) logToolStep("signed_in");
     toast.success(t("auth.loginSuccess"));
     navigate(afterLoginPath);
   };

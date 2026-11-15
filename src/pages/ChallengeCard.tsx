@@ -6,6 +6,7 @@ import { ArrowDown, Check, ImagePlus, MessageCircle, Pencil, RotateCcw, Trash2 }
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
+import { logToolStep } from "@/lib/toolFunnel";
 import {
   BusinessCard,
   CardPdfDocument,
@@ -651,6 +652,13 @@ const ChallengeCard = () => {
     }
   }, [latest.data, latest.isLoading, mode, user]);
 
+  useEffect(() => {
+    if (!authLoading) logToolStep(user ? "landed_signed_in" : "landed_signed_out");
+  }, [authLoading, user]);
+  useEffect(() => {
+    if (mode === "form") logToolStep("questions_shown");
+  }, [mode]);
+
   if (!authLoading && !user) return <Navigate to="/auth?next=challenge-card&mode=signup" replace />;
 
   const restart = () => {
@@ -684,6 +692,7 @@ const ChallengeCard = () => {
     const res = await generateCard({ answers, gender, clientWord, source });
     if (res.status === "ok") {
       trackEvent("challenge_card_generated", source ? { src: source } : {});
+      logToolStep("tool_done");
       setRow(res.row);
       queryClient.setQueryData(["challenge-card", user?.id], res.row);
       setMode("result");

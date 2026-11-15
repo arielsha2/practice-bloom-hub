@@ -263,6 +263,33 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_tool_funnel: {
+        Row: {
+          created_at: string
+          id: string
+          source: string | null
+          step: string
+          tool: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: string | null
+          step: string
+          tool: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: string | null
+          step?: string
+          tool?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       cohorts: {
         Row: {
           created_at: string | null

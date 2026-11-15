@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Loader2, Mail, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { logToolStep } from "@/lib/toolFunnel";
 import { trackEvent } from "@/lib/analytics";
 import { SignupStepper } from "./SignupStepper";
 import { OtpResendButton } from "./OtpResendButton";
@@ -80,6 +81,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       mailing_list_consent: true,
     });
     setBusy(false);
+    if (purpose === "challenge-tool") logToolStep(ok ? "code_sent" : "code_send_failed");
     if (!ok) {
       if (status === 429)
         return toast.error(
@@ -133,6 +135,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
     if (!ok || !body?.token_hash) {
       setBusy(false);
       trackEvent("signup_otp_failed");
+      if (purpose === "challenge-tool") logToolStep("code_wrong");
       if (body?.error === "expired")
         return toast.error(isRTL ? "הקוד פג תוקף — שלח/י קוד חדש" : "The code has expired — send a new one");
       if (body?.error === "too_many_attempts")
@@ -150,6 +153,7 @@ export function SignupFlow({ startStep = 1, initialEmail = "", redirectTo = "/me
       return toast.error(isRTL ? "לא הצלחנו להשלים את ההתחברות. נסה/י שוב." : "We couldn't complete sign-in. Please try again.");
     }
     trackEvent("signup_step_complete", { step: 2 });
+    if (purpose === "challenge-tool") logToolStep("signed_in");
     if (skipPassword) {
       // Mark signup as "done" (no password, OTP login covers returning here)
       // so Auth.tsx's resume-incomplete-signup check doesn't nag this user
