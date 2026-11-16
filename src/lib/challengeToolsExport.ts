@@ -58,11 +58,19 @@ export async function pdfBlob(el: ReactElement, width: number): Promise<Blob> {
   });
 }
 
+// The slice of html2pdf's worker this file uses (its bundled typings do not describe toCanvas / get).
+interface Html2PdfWorker {
+  set(options: unknown): Html2PdfWorker;
+  from(node: HTMLElement): Html2PdfWorker;
+  toCanvas(): Html2PdfWorker;
+  get(key: "canvas"): Promise<unknown>;
+}
+
 export async function pngBlob(el: ReactElement, width: number, scale = 3): Promise<Blob> {
   const { default: html2pdf } = await import('html2pdf.js');
   return withRendered(el, width, async (node) => {
     // html2pdf's worker exposes the html2canvas canvas, so html2canvas need not be imported separately.
-    const canvas = (await (html2pdf() as any)
+    const canvas = (await (html2pdf() as unknown as Html2PdfWorker)
       .set({
         margin: 0,
         // a page exactly the size of the element, so the canvas is the element and nothing else

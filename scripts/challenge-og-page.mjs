@@ -81,17 +81,17 @@ for (const page of PAGES) {
   const image = page.image ?? IMAGE;
 
   set(/<title>[\s\S]*?<\/title>/, `<title>${esc(page.title)}</title>`, "<title>");
-  set(/<meta\s+name="description"[\s\S]*?\/>/, `<meta name="description" content="${esc(page.description)}" />`, "description");
-  set(/<link rel="canonical"[^>]*\/>/, `<link rel="canonical" href="${url}" />`, "canonical");
-  set(/<meta property="og:title"[^>]*\/>/, `<meta property="og:title" content="${esc(page.title)}" />`, "og:title");
-  set(/<meta\s+property="og:description"[\s\S]*?\/>/, `<meta property="og:description" content="${esc(page.description)}" />`, "og:description");
-  set(/<meta property="og:url"[^>]*\/>/, `<meta property="og:url" content="${url}" />`, "og:url");
+  set(/<meta\s+name="description"[\s\S]*?\/>/, `<meta name="description" data-rh="true" content="${esc(page.description)}" />`, "description");
+  set(/<link rel="canonical"[^>]*\/>/, `<link rel="canonical" data-rh="true" href="${url}" />`, "canonical");
+  set(/<meta property="og:title"[^>]*\/>/, `<meta property="og:title" data-rh="true" content="${esc(page.title)}" />`, "og:title");
+  set(/<meta\s+property="og:description"[\s\S]*?\/>/, `<meta property="og:description" data-rh="true" content="${esc(page.description)}" />`, "og:description");
+  set(/<meta property="og:url"[^>]*\/>/, `<meta property="og:url" data-rh="true" content="${url}" />`, "og:url");
   set(
     /<meta property="og:image"[^>]*\/>/,
     `<meta property="og:image" content="${image}" />\n    <meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="630" />\n    <meta property="og:image:alt" content="${esc(page.title)}" />`,
     "og:image",
   );
-  set(/<meta name="twitter:image"[^>]*\/>/, `<meta name="twitter:image" content="${image}" />`, "twitter:image");
+  set(/<meta name="twitter:image"[^>]*\/>/, `<meta name="twitter:image" data-rh="true" content="${image}" />`, "twitter:image");
 
   // Pages are lazy-loaded chunks, so without hints the browser only discovers
   // the page chunk (and the hero photo inside it) after the main bundle has

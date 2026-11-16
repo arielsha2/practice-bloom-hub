@@ -128,7 +128,9 @@ export function Hero() {
                 width={1672}
                 height={941}
                 loading="eager"
-                fetchPriority="high"
+                // React 18 only knows the lowercase attribute (camelCase fetchPriority arrived in React 19 and
+                // logs a warning here); the browser reads it the same way.
+                {...{ fetchpriority: "high" }}
                 decoding="async"
               />
             </div>

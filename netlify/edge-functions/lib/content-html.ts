@@ -53,7 +53,7 @@ const SHELL_META =
   /<meta\s+(?:name|property)="(?:description|og:title|og:description|og:url|og:image|og:type|twitter:title|twitter:description|twitter:image|robots)"[^>]*>\s*/gi;
 
 export function injectContentHead(shell: string, row: ContentRow, id: string): string {
-  const title = `${plainText(row.title ?? "") || "מאמר"} | TherapyKeys`;
+  const title = `${plainText(row.title ?? "") || "מאמר"} | על שפת הקליניקה`;
   const description = articleDescription(row);
   const canonical = `${SITE}/contents/${id}`;
   const image = row.featured_image_url ? (row.featured_image_url.startsWith("http") ? row.featured_image_url : `${SITE}${row.featured_image_url}`) : DEFAULT_IMAGE;
@@ -75,18 +75,18 @@ export function injectContentHead(shell: string, row: ContentRow, id: string): s
 
   const tags = [
     `<title>${esc(title)}</title>`,
-    `<meta name="description" content="${esc(description)}" />`,
-    `<link rel="canonical" href="${esc(canonical)}" />`,
-    `<meta property="og:type" content="article" />`,
-    `<meta property="og:title" content="${esc(title)}" />`,
-    `<meta property="og:description" content="${esc(description)}" />`,
-    `<meta property="og:url" content="${esc(canonical)}" />`,
-    `<meta property="og:image" content="${esc(image)}" />`,
-    `<meta name="twitter:title" content="${esc(title)}" />`,
-    `<meta name="twitter:description" content="${esc(description)}" />`,
-    `<meta name="twitter:image" content="${esc(image)}" />`,
+    `<meta name="description" data-rh="true" content="${esc(description)}" />`,
+    `<link rel="canonical" data-rh="true" href="${esc(canonical)}" />`,
+    `<meta property="og:type" data-rh="true" content="article" />`,
+    `<meta property="og:title" data-rh="true" content="${esc(title)}" />`,
+    `<meta property="og:description" data-rh="true" content="${esc(description)}" />`,
+    `<meta property="og:url" data-rh="true" content="${esc(canonical)}" />`,
+    `<meta property="og:image" data-rh="true" content="${esc(image)}" />`,
+    `<meta name="twitter:title" data-rh="true" content="${esc(title)}" />`,
+    `<meta name="twitter:description" data-rh="true" content="${esc(description)}" />`,
+    `<meta name="twitter:image" data-rh="true" content="${esc(image)}" />`,
     // the shell's own structured data describes the home page: an article carries its own
-    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
+    `<script type="application/ld+json" data-rh="true">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
   ].join("\n    ");
 
   const out = shell

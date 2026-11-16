@@ -161,22 +161,22 @@ export default function ContentDetail() {
 
   const plainText = (content.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = plainText ? plainText.split(' ').length : undefined;
-  const canonicalPath = `/contents/${(content as any).id}`;
+  const canonicalPath = `/contents/${content.id}`;
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SEOHead
-        title={`${articleTitle || 'מאמר'} | TherapyKeys`}
+        title={`${articleTitle || 'מאמר'} | על שפת הקליניקה`}
         description={seoDesc || 'מאמר מקצועי למטפלים — TherapyKeys'}
         canonicalUrl={canonicalPath}
-        ogImage={(content as any).featured_image_url || undefined}
+        ogImage={content.featured_image_url || undefined}
         ogType="article"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Article",
           headline: articleTitle,
           description: seoDesc,
-          image: (content as any).featured_image_url,
+          image: content.featured_image_url,
           inLanguage: "he",
           ...(content.published_at ? { datePublished: content.published_at } : {}),
           ...(wordCount ? { wordCount } : {}),
