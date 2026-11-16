@@ -55,12 +55,12 @@ const Index = () => {
       <SEOHead
         title={
           isRTL
-            ? 'ד"ר אריאל שפירא | פסיכולוג קליני ומלווה מטפלים לקליניקה יציבה'
+            ? 'על שפת הקליניקה | ליווי מטפלים לקליניקה מלאה – ד"ר אריאל שפירא'
             : "Dr. Ariel Shapira | Clinical Psychologist Guiding Therapists to a Stable Practice"
         }
         description={
           isRTL
-            ? 'ד"ר אריאל שפירא, פסיכולוג קליני, מסייע למטפלים בישראל לבנות קליניקה פרטית מצליחה בשיטת "על שפת הקליניקה", ללא פשרות על הזהות המקצועית.'
+            ? 'על שפת הקליניקה: ד"ר אריאל שפירא (פסיכולוג קליני מומחה) ואליענה שפירא מלווים מטפלים ופסיכותרפיסטים לבניית קליניקה פרטית מלאה ויציבה בדרך אתית ומותאמת.'
             : "Dr. Ariel Shapira, clinical psychologist, helps therapists build a thriving private practice without compromising their professional identity."
         }
         canonicalUrl={isRTL ? "/" : "/en"}

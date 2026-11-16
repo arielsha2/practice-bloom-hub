@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { SEOHead } from '@/components/SEOHead';
+import { articleDescription, plainText as toPlainText } from '@/lib/articleSeo';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryBadge } from '@/components/contents/CategoryBadge';
 import { AuthorFooter } from '@/components/contents/AuthorFooter';
@@ -153,9 +154,10 @@ export default function ContentDetail() {
     return null;
   }
 
-  const articleTitle = (isRTL ? (content as any).title_he : (content as any).title_en) || (content as any).title_he || (content as any).title_en || '';
-  const articleExcerpt = (isRTL ? (content as any).excerpt_he : (content as any).excerpt_en) || (content as any).excerpt_he || (content as any).excerpt_en || '';
-  const seoDesc = (articleExcerpt || articleTitle).toString().replace(/\s+/g, ' ').slice(0, 160);
+  // Each article has its own title and description: its title, and its summary (or, without one, how the text opens).
+  // (This read title_he / excerpt_he, columns that do not exist, so every article got an empty title.)
+  const articleTitle = toPlainText(content.title || '');
+  const seoDesc = articleDescription(content);
 
   const plainText = (content.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = plainText ? plainText.split(' ').length : undefined;
@@ -164,7 +166,7 @@ export default function ContentDetail() {
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SEOHead
-        title={`${articleTitle} | TherapyKeys`}
+        title={`${articleTitle || 'מאמר'} | TherapyKeys`}
         description={seoDesc || 'מאמר מקצועי למטפלים — TherapyKeys'}
         canonicalUrl={canonicalPath}
         ogImage={(content as any).featured_image_url || undefined}
