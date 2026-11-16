@@ -263,6 +263,39 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_tool_feedback: {
+        Row: {
+          created_at: string
+          deliverable_id: string | null
+          id: string
+          renewed: string | null
+          tool: string
+          updated_at: string
+          user_id: string
+          wish: string | null
+        }
+        Insert: {
+          created_at?: string
+          deliverable_id?: string | null
+          id?: string
+          renewed?: string | null
+          tool: string
+          updated_at?: string
+          user_id: string
+          wish?: string | null
+        }
+        Update: {
+          created_at?: string
+          deliverable_id?: string | null
+          id?: string
+          renewed?: string | null
+          tool?: string
+          updated_at?: string
+          user_id?: string
+          wish?: string | null
+        }
+        Relationships: []
+      }
       challenge_tool_funnel: {
         Row: {
           created_at: string

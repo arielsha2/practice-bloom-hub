@@ -20,7 +20,7 @@ export type FunnelStep =
   | "whatsapp_click"; // pressed "send the card to Eliana" (opens WhatsApp; whether they then pressed send there is unknowable)
 
 export const CARD_TOOL = "professional-card";
-export const LETTER_TOOL = "personal-note"; // day 2: the four lines and the personal letter
+export const LETTER_TOOL = "personal-note"; // day 2: the mirror (until 16.11.2026: the four lines and a letter)
 
 export function logToolStep(step: FunnelStep, tool: string = CARD_TOOL) {
   try {

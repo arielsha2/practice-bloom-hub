@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Gender } from "@/lib/challengeTools";
 
-// Client side of the second challenge tool (day 2): a conversation with Neri that builds "the four lines" and a
-// personal letter to one person. The conversation lives in this browser (localStorage, per account) and is sent
+// Client side of the second challenge tool (day 2): a conversation with Neri that builds "the mirror", 2–3 clear
+// sentences saying whom the therapist helps and what that person urgently needs (until 16.11.2026: "the four lines" and a personal letter; rows
+// saved then still have that shape and are shown as they were). The conversation lives in this browser (localStorage, per account) and is sent
 // whole with every turn to challenge-tool-generate (tool = 'personal-note', action "chat"); the server adds the
 // prompt and yesterday's card itself. "finish" turns the conversation into the day's products and saves them in
 // therapist_deliverables (tool = 'personal-note'); the therapist's own edit of the letter is saved on the same row.
@@ -14,7 +15,9 @@ export interface ChatMsg {
   content: string;
 }
 
-export interface LetterContent {
+// A row saved before 16.11.2026 (the letter version of the tool).
+export interface LegacyLetterContent {
+  kind?: undefined;
   gender: Gender;
   four_lines: string[];
   letter: string;
@@ -24,8 +27,42 @@ export interface LetterContent {
   bridge: string;
 }
 
+export type ClarityState = "clear" | "almost" | "foggy";
+export interface ClarityItem {
+  text: string;
+  camera: boolean;
+  mouth: boolean;
+  referral: boolean;
+  fog_red: string[];
+  fog_yellow: string[];
+  questions: { phrase: string; question: string }[];
+  state: ClarityState;
+}
+export interface Clarity {
+  state: ClarityState;
+  items: ClarityItem[];
+}
+
+export type Mirror = string[]; // 2–3 sentences: whom the therapist helps and what that person urgently needs
+
+export interface MirrorContent {
+  kind: "mirror";
+  gender: Gender;
+  mirror: Mirror;
+  spoken: string;
+  client_words: string[];
+  reader: string;
+  bridge: string;
+  clarity: Clarity | null;
+}
+
+export type LetterContent = MirrorContent | LegacyLetterContent;
+export const isMirror = (c: LetterContent): c is MirrorContent => c?.kind === "mirror";
+
 export interface LetterEdit {
   letter?: string | null;
+  mirror?: Mirror | null;
+  clarity?: Clarity | null; // the judge's answer on the edited sentences
 }
 
 export interface LetterRow {
@@ -63,7 +100,7 @@ export function saveChat(userId: string, chat: SavedChat | null) {
   }
 }
 
-export type ChatResult = { status: "ok"; reply: string; draft: boolean } | { status: "limit" } | { status: "error" };
+export type ChatResult = { status: "ok"; reply: string; draft: boolean; choice: boolean } | { status: "limit" } | { status: "error" };
 
 export async function sendChat(messages: ChatMsg[], gender: Gender, name: string): Promise<ChatResult> {
   try {
@@ -74,14 +111,14 @@ export async function sendChat(messages: ChatMsg[], gender: Gender, name: string
       const status = (error as { context?: Response }).context?.status;
       return { status: status === 429 ? "limit" : "error" };
     }
-    if (data?.status === "ok" && typeof data.reply === "string") return { status: "ok", reply: data.reply, draft: !!data.draft };
+    if (data?.status === "ok" && typeof data.reply === "string") return { status: "ok", reply: data.reply, draft: !!data.draft, choice: !!data.choice };
     return { status: "error" };
   } catch {
     return { status: "error" };
   }
 }
 
-export type FinishResult = { status: "ok"; row: LetterRow } | { status: "no_letter" } | { status: "limit" } | { status: "error" };
+export type FinishResult = { status: "ok"; row: LetterRow } | { status: "no_letter" } | { status: "own_words" } | { status: "limit" } | { status: "error" };
 
 export async function finishLetter(messages: ChatMsg[], gender: Gender, source: string | null): Promise<FinishResult> {
   try {
@@ -96,10 +133,25 @@ export async function finishLetter(messages: ChatMsg[], gender: Gender, source: 
       const d = data.deliverable;
       return { status: "ok", row: { id: d.id, version: d.version, content: d.content, edited_content: null, created_at: new Date().toISOString() } };
     }
-    if (data?.status === "no_letter") return { status: "no_letter" };
+    if (data?.status === "no_mirror" || data?.status === "no_letter") return { status: "no_letter" };
+    if (data?.status === "failed" && data?.reason === "own_words") return { status: "own_words" };
     return { status: "error" };
   } catch {
     return { status: "error" };
+  }
+}
+
+// The judge alone: three tests per sentence and a question for every unclear phrase, on any sentences (also the
+// therapist's own edit).
+export async function checkClarity(sentences: string[], gender: Gender): Promise<Clarity | "limit" | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("challenge-tool-generate", {
+      body: { tool: LETTER_TOOL, action: "clarity", sentences, gender },
+    });
+    if (error) return (error as { context?: Response }).context?.status === 429 ? "limit" : null;
+    return data?.status === "ok" && data.clarity ? (data.clarity as Clarity) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -142,4 +194,32 @@ export async function recordLetterEvent(kind: "viewed" | "copied" | "downloaded"
 export async function resetMyLetter(): Promise<boolean> {
   const { data, error } = await supabase.functions.invoke("challenge-tool-generate", { body: { tool: LETTER_TOOL, action: "reset" } });
   return !error && data?.status === "ok";
+}
+
+// The therapist's own reflection at the end (both answers optional), one row per account and tool.
+export interface ToolFeedback {
+  renewed: string;
+  wish: string;
+}
+
+export async function loadMyFeedback(): Promise<ToolFeedback | null> {
+  const { data } = await supabase.from("challenge_tool_feedback").select("renewed, wish").eq("tool", LETTER_TOOL).maybeSingle();
+  return data ? { renewed: data.renewed ?? "", wish: data.wish ?? "" } : null;
+}
+
+export async function saveMyFeedback(fb: ToolFeedback, deliverableId: string | null): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) throw new Error("signed out");
+  const { error } = await supabase.from("challenge_tool_feedback").upsert(
+    {
+      user_id: auth.user.id,
+      tool: LETTER_TOOL,
+      deliverable_id: deliverableId,
+      renewed: fb.renewed.trim().slice(0, 3000) || null,
+      wish: fb.wish.trim().slice(0, 3000) || null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,tool" },
+  );
+  if (error) throw error;
 }

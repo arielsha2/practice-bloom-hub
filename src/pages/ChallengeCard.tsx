@@ -600,8 +600,8 @@ function CardResult({ row, accountName, source, onRestart }: { row: CardRow; acc
         </div>
 
         <div className="rounded-xl border border-mentor-accent/40 bg-mentor-accent/5 p-5">
-          <p className="text-base font-semibold">מחר: מכתב לאדם אחד</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">מחר יגיע קישור למשימה השנייה: מכתב למטופל או המטופלת שהיית הכי רוצה לעבוד איתו ולעזור לו. מכתב שכשהוא יקרא אותו, ירגיש שמדברים בדיוק עליו.</p>
+          <p className="text-base font-semibold">מחר: המראה</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">מחר יגיע קישור למשימה השנייה: המראה. שניים־שלושה משפטים ברורים על המטופל או המטופלת שהיית הכי רוצה לעבוד איתו ועל מה שבוער לו עכשיו.</p>
         </div>
 
         <button onClick={onRestart} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-2 hover:underline">

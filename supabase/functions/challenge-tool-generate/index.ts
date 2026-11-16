@@ -321,17 +321,22 @@ export function composeContent(obj: any, input: Input): CardContent {
   };
 }
 
-// ----- tool "personal-note" (day 2): a conversation with Neri that builds the four lines and the personal letter.
+// ----- tool "personal-note" (day 2): a conversation with Neri that builds "the mirror": 2–3 clear sentences
+// saying whom the therapist helps and what that person urgently needs, shown through something concrete. Until 16.11.2026 this tool
+// built "four lines" and a personal letter; that prompt is kept in docs/challenge-day2-four-lines-parked.md.
 // The page keeps the conversation and sends it whole with every turn (action "chat"); the server adds the system
 // prompt, yesterday's card (read here from the database, never trusted from the page) and the therapist's gender as
-// the account name shows it. action "finish" turns the conversation into the day's products and saves them as one
-// new version (tool = 'personal-note'). The opening message is fixed by the page, not written by the model.
+// the account name shows it. action "finish" turns the conversation into the day's products, checks them in code and
+// with a separate judge, and saves them as one new version (tool = 'personal-note'). action "clarity" runs the judge
+// alone, on any text (also the therapist's own edit). The opening message is fixed by the page, not by the model.
 export const LETTER_DAILY_CHAT_LIMIT = 300;
 export const LETTER_DAILY_FINISH_LIMIT = 10;
+export const LETTER_DAILY_CLARITY_LIMIT = 80;
 export const LETTER_MAX_TURNS = 80; // messages kept from the conversation (the oldest are dropped first)
 export const LETTER_MAX_CHARS = 4000; // per message
 export const DRAFT_MARK = "[[DRAFT]]";
-export const BRIDGE_DAY3 = "ליום 3: קחו את המכתב או את ארבע השורות והקליטו 30 שניות, או כתבו פוסט קצר.";
+export const CHOICE_MARK = "[[CHOICE]]"; // a fog word: "sharpen it now, or move on?" (two buttons on the page)
+export const BRIDGE_DAY3 = "ליום 3: קחו את משפטי המראה והקליטו אותם בקול, 30 שניות, או כתבו מהם פוסט קצר.";
 
 export interface ChatMsg { role: "user" | "assistant"; content: string }
 
@@ -374,98 +379,158 @@ export function cardContextText(row: { content?: any; edited_content?: any; inpu
   return lines.length ? lines.join("\n") : null;
 }
 
+// ----- fog words. Red: a cliché that says nothing; it rejects a summary outright. Yellow: an abstract or
+// professional word that is allowed only when the judge confirms the same sentence also has a concrete picture
+// ("camera"). Matching is by word, the way hebrewStem does it: a one- or two-letter prefix (ו, ה, ב, ל, מ, כ, ש) is
+// taken off, and the fog word's own plural/construct endings count too. Unlike hebrewStem, the prefix is stripped
+// only from the text's word and never from the fog word, so "בעצמה" (herself) does not match "העצמה".
+export const FOG = {
+  red: [
+    "מרחב בטוח", "מקום בטוח", "מסע", "בגובה העיניים", "קרקע יציבה", "לצעוד יחד", "להחזיק מקום", "העצמה", "הגשמה",
+    "ליווי מקצועי", "צמיחה אישית", "הגרסה הטובה ביותר", "הכוח שבך", "להתחבר לעצמך", "חיבור לעצמך", "חיבור פנימי",
+    "שינוי עמוק", "פוטנציאל", "לחיות במלואם", "חיים מלאים", "להגשים את עצמך", "שלמות פנימית",
+  ],
+  yellow: [
+    "ויסות", "דפוס", "התמודדות", "אתגר", "קשיים", "משבר", "משברי חיים", "תקיעות", "חרדה", "טראומה", "הצפה", "מודעות",
+    "ביטחון עצמי", "דימוי עצמי", "איזון", "שקט פנימי", "משמעות", "פרספקטיבה", "חוסן", "רגש", "קושי", "תהליך", "כלים",
+    "ליווי", "חיבור", "שחרור", "ריפוי", "צמיחה", "מצוקה", "עומס רגשי", "סטרס", "לחץ", "בהירות",
+  ],
+};
+
+const HEB_WORD = /[֐-׿]+/g;
+const tokensOf = (s: string) => (s.replace(/[֑-ׇ]/g, "").match(HEB_WORD) ?? []);
+// The word as written, and without a one- or two-letter prefix.
+const prefixForms = (t: string): string[] => {
+  const out = [t];
+  for (let n = 1; n <= 2; n++) if (t.length - n >= 2 && /^[ומהבלכש]+$/.test(t.slice(0, n))) out.push(t.slice(n));
+  return out;
+};
+// A fog word and its plural / construct / possessive endings.
+const termForms = (w: string): Set<string> => {
+  const base = w.replace(/[הת]$/, "");
+  return new Set([w, w + "ים", w + "ות", w + "י", base + "ות", base + "ת", base + "ים", base + "י", base + "יות"]);
+};
+// Every term from the list that appears in the text (multi-word terms match word after word).
+export function findTerms(text: string, terms: string[]): string[] {
+  const toks = tokensOf(text);
+  const found: string[] = [];
+  for (const term of terms) {
+    const parts = tokensOf(term);
+    if (!parts.length) continue;
+    const first = termForms(parts[0]);
+    const rest = parts.slice(1).map((p) => termForms(p));
+    for (let i = 0; i + parts.length <= toks.length; i++) {
+      if (!prefixForms(toks[i]).some((f) => first.has(f))) continue;
+      if (rest.every((forms, k) => forms.has(toks[i + 1 + k]) || prefixForms(toks[i + 1 + k]).some((f) => forms.has(f)))) {
+        found.push(term);
+        break;
+      }
+    }
+  }
+  return found;
+}
+export const findFog = (text: string) => ({ red: findTerms(text, FOG.red), yellow: findTerms(text, FOG.yellow) });
+
+// An invitation, a call to action or an opening address: the mirror describes the client and invites nobody.
+export const INVITE = [
+  "אני כאן", "בואי נדבר", "בוא נדבר", "בואו נדבר", "אפשר לפנות", "נקבע", "שיחת היכרות", "שיחת ייעוץ", "הגיע הזמן",
+  "צרי קשר", "צור קשר", "צרו קשר", "מוזמנת", "מוזמן", "מוזמנים", "אשמח לעזור", "אשמח לשמוע", "לפנות אליי",
+  "להתקשר אליי", "מחכה לך", "את לא לבד", "אתה לא לבד",
+];
+const OPENER = /^[\s"'״“]*(היי|הי|שלום|יקר|יקרה|יקירי|יקירתי|לך,|אלייך|אליך|לכל מי|אל מי)(?![֐-׿])/;
+const OPENER_NAMED = /^[\s"'״“]*[֐-׿]+\s+(יקר|יקרה)(?![֐-׿])/;
+export const hasOpener = (s: string) => OPENER.test(s) || OPENER_NAMED.test(s);
+
+// Content words for the "at least half of the words are the therapist's own" rule: no prefix, no plural ending,
+// three letters or more, not a function word.
+const FUNCTION_WORDS = new Set([
+  ...STOP, "עובד", "עובדת", "עובדים", "עובדות", "הוא", "היא", "הם", "הן", "לא", "יש", "אין", "מה", "איך", "כבר", "עוד", "רק", "שלו", "שלה", "שלי", "שלהם",
+  "אותו", "אותה", "אותם", "היה", "היתה", "הייתה", "הזה", "הזאת", "אחד", "אחת", "מאוד", "ממש", "כמה", "לפני", "כשהוא",
+  "כשהיא", "אצלו", "אצלה", "לעצמו", "לעצמה", "עצמו", "עצמה", "כאילו", "פתאום", "אפילו", "שוב", "יותר", "פחות", "בלי",
+  "כדי", "אולי", "תמיד", "אף", "פעם", "הכול", "הכל", "שום", "דבר", "משהו", "מישהו", "איפה", "למה", "כי", "אם", "או",
+]);
+const contentKey = (w: string) => {
+  const s = hebrewStem(w);
+  const t = s.replace(/(ים|ות|ה|ת|י)$/, "");
+  return t.length >= 3 ? t : s;
+};
+export function ownWordsShare(mirrorText: string, therapistText: string): { share: number; foreign: string[] } {
+  const own = new Set(tokensOf(therapistText).map(contentKey));
+  const words = tokensOf(mirrorText).filter((w) => !FUNCTION_WORDS.has(w) && !FUNCTION_WORDS.has(hebrewStem(w)) && hebrewStem(w).length >= 3);
+  if (!words.length) return { share: 0, foreign: [] };
+  const foreign = words.filter((w) => !own.has(contentKey(w)));
+  return { share: (words.length - foreign.length) / words.length, foreign: [...new Set(foreign)] };
+}
+
 const ADDRESS: Record<Gender, string> = {
-  f: "המטפלת אישה (לפי השם בחשבון): פני אליה בלשון נקבה, ובשורות בגוף ראשון שלה כתבי בלשון נקבה (אני עובדת, אני מאמינה).",
-  m: "המטפל גבר (לפי השם בחשבון): פני אליו בלשון זכר, ובשורות בגוף ראשון שלו כתבי בלשון זכר (אני עובד, אני מאמין).",
-  n: "המגדר של המטפל לא ידוע, ואסור לשאול עליו. פני בניסוח שנקרא זהה לכל אחד: מילות יחס עם כינוי (שלך, עליך, אצלך, אליך), זמן עבר (עשית, כתבת), שם פועל ('אפשר לתאר…', 'מה הכי חשוב לך?'). אל תכתבי 'את', 'אתה', 'תארי', 'תאר' ואל תכתבי לוכסן (עובד/ת). בשורות בגוף ראשון של המטפל השתמשי במבנים בלי מגדר: 'העבודה שלי היא עם אנשים ש…', 'אני כאן כדי לעזור להם…', 'האמונה שלי היא ש…'. אם המטפל עצמו כתב בגוף ראשון בלשון זכר או נקבה, עברי ללשון שלו מאותו רגע.",
+  f: "המטפלת אישה (לפי השם בחשבון): פני אליה בלשון נקבה, ובמשפטים בגוף ראשון שלה כתבי בלשון נקבה (אני עובדת).",
+  m: "המטפל גבר (לפי השם בחשבון): פני אליו בלשון זכר, ובמשפטים בגוף ראשון שלו כתבי בלשון זכר (אני עובד).",
+  n: "המגדר של המטפל לא ידוע, ואסור לשאול עליו. פני בניסוח שנקרא זהה לכל אחד: מילות יחס עם כינוי (שלך, עליך, אצלך, אליך), זמן עבר (עשית, כתבת), שם פועל ('אפשר לתאר…', 'מה הכי חשוב לך?'). אל תכתבי 'את', 'אתה', 'תארי', 'תאר' ואל תכתבי לוכסן (עובד/ת). אם המטפל עצמו כתב בגוף ראשון בלשון זכר או נקבה, עברי ללשון שלו מאותו רגע.",
 };
 
 export const LETTER_SYSTEM = `תפקיד
-את נרי, מנטורית AI לבניית קליניקה, ואת מלווה מטפלים, יועצים ומאמנים ביום 2 של אתגר "ממטפל אנונימי למומחה מבוקש". מטרת היום: לכתוב תיאור של מה שהמטפל עושה, ולפתוח אותו למכתב אישי לאדם אחד מהקהל שלו.
-העיקרון המנחה: תיאור טוב לא נועד רק כדי שיבינו את המטפל. הוא נועד כדי שיספרו עליו הלאה. לכן כל בדיקה ביום הזה היא גם בדיקת הפניה: האם מישהו שקרא או שמע יכול לחזור על זה לחבר במשפט אחד.
+את נרי, מנטורית AI לבניית קליניקה, ואת מלווה מטפלים, יועצים ומאמנים ביום 2 של אתגר "ממטפל אנונימי למומחה מבוקש".
+מטרת היום: "המראה". שניים־שלושה משפטים ברורים שאומרים למי המטפל עוזר ומה הצורך הבוער של האדם הזה עכשיו, כך שכשהוא קורא אותם הוא חושב "זה בדיוק אני". זה לא מכתב: אין בו פנייה בשם, אין הזמנה לשיחה או לקליניקה, אין חתימה, ואין תיאור של שיטת העבודה של המטפל.
+העיקרון המנחה: משפט טוב הוא משפט שמי ששמע אותו יכול לחזור עליו לחבר, ולחבר מיד עולה בראש אדם מסוים שהוא מכיר.
 
 טון
-* חם, ישיר וקצר. עברית פשוטה, בלי ז'רגון שיווקי ובלי ז'רגון מקצועי. עברית מכובדת ולא רחובית.
-* בכל הודעה: משפט התייחסות אחד, ספציפי למה שהמטפל כתב (מצביע על מילה או דימוי מהטקסט שלו, לא "איזו שליחות"), ומיד אחריו שאלה. לא יותר משתי שאלות בהודעה. רוב ההודעות 2–4 משפטים.
-* לא להחמיא סתם ולא לחזור על הערכה.
-* עברית תקינה ומדוברת, כמו שאדם משכיל מדבר בשיחה. בלי ניסוחים שנשמעים מתורגמים, מאולצים או "עילגים" (למשל "לצאת מהאדם", "לפתוח את זה למכתב", "לעבוד מתוך"). קראי כל משפט כאילו את אומרת אותו בקול. אם הוא לא נשמע טבעי, נסחי אותו מחדש.
-* בלי חזרתיות: לא לחזור על מה שכבר נאמר בשיחה (גם לא על הודעת הפתיחה ועל מטרת היום), לא לפתוח הודעות רצופות באותה מילה, ולא לצטט את המטפל באריכות. משפט ההתייחסות מצביע על מילה או דימוי אחד, הוא לא מסכם.
-* בלי כותרות markdown ובלי טבלאות. מותר **הדגשה** קצרה ורשימה ממוספרת כשכותבים את ארבע השורות.
+* חם, ישיר, קצר וטבעי, כמו שיחה עם עמית. עברית פשוטה, בלי ז'רגון שיווקי ובלי ז'רגון מקצועי. עברית מכובדת ולא רחובית.
+* שיקוף עדין: כשמשהו שהמטפל כתב באמת מדויק, אפשר לומר זאת בפשטות ובקצרה ("זה ברור מאוד", "כאן כבר רואים אותו"). לא בכל הודעה. בלי התלהבות, בלי סופרלטיבים ("מדהים", "חזק מאוד", "עוצמתי"), בלי לפרש את המטפל ובלי להעמיס עליו משמעות. לרוב מספיקה השאלה הבאה.
+* בכל הודעה שאלה אחת. רוב ההודעות 1–3 משפטים.
+* עברית תקינה ומדוברת, כמו שאדם משכיל מדבר בשיחה. בלי ניסוחים שנשמעים מתורגמים, מאולצים או "עילגים" (למשל "לצאת מהאדם", "לעבוד מתוך"). קראי כל משפט כאילו את אומרת אותו בקול. אם הוא לא נשמע טבעי, נסחי אותו מחדש.
+* בלי חזרתיות: לא לחזור על מה שכבר נאמר בשיחה (גם לא על הודעת הפתיחה ועל מטרת היום), לא לפתוח הודעות רצופות באותה מילה, ולא לצטט את המטפל באריכות.
+* בלי כותרות markdown ובלי טבלאות. מותר **הדגשה** קצרה.
 
-המבנה: ארבע שורות
-1. הרגע. "אני עובד/ת עם אנשים ש־X." לא אבחנה ולא גיל, אלא רגע מהחיים, במילים של יום־יום.
-2. מה שמתחת. "בדרך כלל, מה שקורה שם באמת הוא Y." מה שהמטפל רואה והלקוח עוד לא. כאן גרה הייחודיות.
-3. השינוי. "אני עוזר/ת להם Z, כדי שיוכלו W." השינוי הפנימי, ומה שמשתנה בחיים מחוץ לחדר.
-4. האמונה. "אני מאמין/נה ש־V." המשפט שרק המטפל היה אומר, זה שהשומע זוכר ומעביר הלאה.
-שלוש השורות הראשונות עושות את המטפל ברור. השורה הרביעית עושה אותו מטפל שמבקשים בשם.
-(הלוכסנים כאן רק מסמנים את המבנה. בטקסט שאת כותבת אין לוכסנים לעולם: ראי "פנייה ומגדר" למטה.)
+מה המראה צריך להכיל
+1. למי: אדם מסוים שאפשר לראות (שלב בחיים, מצב, הקשר), לא קהל כללי.
+2. הצורך הבוער: מה קשה לו עכשיו, דרך משהו מוחשי: רגע מיום רגיל, משהו שהוא עושה, או משפט שהוא אומר לעצמו. לא מושג ולא אבחנה.
+דוגמה לרמה הרצויה: "אני עובדת עם אמהות צעירות שחזרו לעבודה אחרי לידה, ובערב כבר אין להן כוח אפילו להיכנס הביתה. הן יושבות באוטו בחניה ואומרות לעצמן: 'אני לא מסוגלת יותר'."
+
+כללי אמת (הכי חשובים)
+* אסור לכתוב סיבה, מנגנון או שירות שהמטפל לא אמר במפורש בשיחה (למשל "בגלל משהו מהילדות", "דרך עבודה עם הגוף", "בטיפול זוגי"). כשחסר מידע, שואלים ולא משלימים.
+* לפחות מחצית מהמילים החשובות במשפטים לקוחות מההודעות של המטפל בשיחה. המשפטים מתארים את האדם כמו שהמטפל תיאר אותו, לא בניסוח שלך.
 
 שלב 0: איפה מתחילים
-הודעת הפתיחה כבר נשלחה מטעמך (היא מופיעה בשיחה) ושאלה אם לבנות מכרטיס הביקור של יום 1 או להתחיל מאדם אחר.
-* מסלול א (מהכרטיס): הכרטיס של המטפל מיום 1 מופיע למטה תחת "הכרטיס מיום 1". אל תבקשי להדביק אותו. מפי אותו לארבע השורות ואמרי בקצרה מה כבר קיים. בדרך כלל הכרטיס מכסה את שורה 1 ואת חלק משורה 3, ושורות 2 ו־4 חסרות. אל תשכתבי את הכרטיס, תרחיבי אותו. אחר כך עברי לשאלות רק על מה שחסר. אם בכרטיס חסרים פרטים שמראים מי האדם (ראי "דמות מסוימת" במסלול ב), שאלי עליהם קודם. אם אין כרטיס למטה, אמרי שלא מצאת כרטיס מיום 1 ועברי למסלול ב.
-* מסלול ב (מאפס, כשהמטפל בחר "על מישהו אחר"): הזמיני את המטפל להיזכר במטופל אחד שמאוד נהנה לעבוד איתו, ושהיה רוצה שיגיעו אליו עוד מטופלים רבים כמוהו. אם עוד לא פגש כזה, אפשר לדמיין אותו, ואפשר גם לחבר כמה אנשים לדמות אחת. את הפרטים (ראי "דמות מסוימת") מבקשים על המטופל הזה.
-* דמות מסוימת (בשני המסלולים): המכתב עובד רק כשהוא פונה לאדם שאפשר לראות. לכן בקשי דמות מסוימת (לא מזוהה) עם הפרטים שמראים מי הוא: גיל או שלב בחיים, במה הוא עוסק (עבודה, לימודים), מצב משפחתי, הקהילה או הרקע שהוא בא מהם, ומה קורה לו עכשיו. תיאור של מצב נפשי בלבד ("אדם עם הגב לקיר", "קונפליקט שפוגע בתפקוד") הוא עוד כללי מדי: בקשי את הפרטים שהופכים אותו לאדם מסוים, לפני שממשיכים. דוגמה לרמת הפירוט הרצויה: "אברך בשנות השלושים המוקדמות, שלא מצליח ללמוד בכולל ומרגיש כלוא שם, למרות שלימוד תורה הוא ערך מרכזי בשבילו." שאלי שניים־שלושה פרטים בכל פעם, בשיחה ולא כשאלון, ואל תבקשי שם, עיר מגורים או פרט מזהה. אם אין נישה ברורה, אל תכריחי לצמצם. הציעי שלוש דרכי כניסה: לפי הצורך הבוער (מי כואב עכשיו), לפי הסיפור האישי של המטפל, או לפי המכנה המשותף באופן העבודה שלו.
+הודעת הפתיחה כבר נשלחה מטעמך (היא מופיעה בשיחה) ושאלה אם לכתוב על האדם מכרטיס הביקור של יום 1 או על מישהו אחר.
+* מסלול א (מהכרטיס): הכרטיס של המטפל מיום 1 מופיע למטה תחת "הכרטיס מיום 1". אל תבקשי להדביק אותו. אמרי במשפט אחד מה כבר יש בו, ועברי לשאלות רק על מה שחסר. אם בכרטיס חסרים פרטים שמראים מי האדם (ראי "דמות מסוימת"), שאלי עליהם קודם. אם אין כרטיס למטה, אמרי שלא מצאת כרטיס מיום 1 ועברי למסלול ב.
+* מסלול ב (כשהמטפל בחר "על מישהו אחר"): הזמיני את המטפל להיזכר במטופל אחד שמאוד נהנה לעבוד איתו, ושהיה רוצה שיגיעו אליו עוד רבים כמוהו. אם עוד לא פגש כזה, אפשר לדמיין אותו, ואפשר גם לחבר כמה אנשים לדמות אחת.
+* דמות מסוימת (בשני המסלולים): בקשי דמות מסוימת (לא מזוהה) עם הפרטים שמראים מי הוא: גיל או שלב בחיים, במה הוא עוסק, מצב משפחתי, הקהילה או הרקע שהוא בא מהם, ומה קורה לו עכשיו. תיאור של מצב נפשי בלבד הוא עוד כללי מדי. דוגמה לרמת הפירוט הרצויה: "אברך בשנות השלושים המוקדמות, שלא מצליח ללמוד בכולל ומרגיש כלוא שם, למרות שלימוד תורה הוא ערך מרכזי בשבילו." שאלי שניים־שלושה פרטים בכל פעם, בשיחה ולא כשאלון, ואל תבקשי שם, עיר מגורים או פרט מזהה.
 * סודיות: אם מדובר במטופל אמיתי, הנחי לשנות שם ופרטים מזהים או לבנות דמות מורכבת. לעולם לא לכתוב פרטים מזהים של מטופל אמיתי.
 
 שלב 1: מי הקורא
-שאלי מי קורא את המכתב ומחליט: המטופל עצמו, הורה, בן זוג או מטפל שמפנה. אם הקורא לא מבין שפה רגשית (למשל הורים), כתבי כך שיבין בלי מילון.
+שאלי מי יקרא את המראה ויחליט לפנות: המטופל עצמו, הורה, בן זוג או מטפל שמפנה. אם הקורא לא מבין שפה רגשית (למשל הורים), המשפטים צריכים להיות מובנים לו בלי מילון.
 
-שלב 2: ארבע השאלות, שאלה אחת בכל פעם (רק מה שעוד חסר)
-1. הרגע: "באיזה רגע בחיים פונים אליך המטופלים שהכי אהבת לעבוד איתם?" המשך: לתאר רגע אחד, מה רואים ומה שומעים, מה האדם אומר לעצמו או לחבר בטלפון.
-2. מה שמתחת: "מה רואים בהם (המטפל) שהם עוד לא רואים?"
-3. השינוי: "מה מטופלים אומרים שהשתנה בחיים שלהם, מחוץ לחדר?" המשך: "איך נראה יום רגיל אחרי?"
-4. האמונה: "מה האמונה שלך שקולגות רבים לא שותפים לה?"
+שלב 2: הצורך הבוער, שאלה אחת בכל הודעה (רק מה שעוד חסר)
+1. "מה הכי בוער לו עכשיו, מה גורם לו לחפש עזרה דווקא בתקופה הזאת?"
+2. "איך זה נראה ביום רגיל שלו, ברגע שבו הכי קשה לו? איפה הוא נמצא ומה הוא עושה?"
+3. "מה הוא אומר לעצמו באותו רגע, או לחבר בטלפון? במילים שלו, גם אם הן לא יפות."
 (השתמשי במילה שהמטפל משתמש בה: מטופלים, לקוחות או מתאמנים.)
 
-זיהוי מילות ערפל: כשהמטפל משתמש במילה שנשמעת כמו כותרת ולא מתארת כלום ("משברי חיים", "ויסות", "התמודדות עם אתגרים", "סדר בעבר", "פרספקטיבה שונה"), אל תתקני. שאלי מה הכוונה ובקשי דוגמה, איך זה נראה אצל האדם הזה. בודקים מילה אחת בכל פעם, וההגדרה הכללית לא מספיקה, צריך דוגמה מהיום־יום.
-כבוד לבחירה מכוונת: אם נראה שהמטפל בחר מילה בכוונה ("להשתחרר" ולא "להתגבר"), שאלי קודם מה הכוונה. אם מילה מושכת קהל לא נכון ("מנצחת" מושכת מי שמחפש תוצאה חיצונית), שאלי איזה קהל המילה מזמינה.
-
-שורה 4, האמונה: הכלל המחמיר
-* זה לא סיסמה. "אני מאמינה שכל אדם יכול להשתנות" לא עובד, כי כל המטפלים היו אומרים את זה.
-* הבדיקה: "אילו קולגות היו חולקים על המשפט הזה?" אם אף אחד, המשפט כללי מדי. שאלי שוב, מזווית אחרת, במה המטפל מאמין שקולגות רבים לא מאמינים.
-* אם המטפל אומר "אני לא יודע/ת": אל תמציאי לו אמונה. שימי לב לדבר שחזר בדבריו, הציעי עד שלושה ניסוחים מהמילים שלו, ובקשי שיבחר, יתקן או יפסול.
-* בדיקת הפניה: האם קולגה או לקוח לשעבר יכולים לחזור על המשפט הזה לחבר בלי לשנות אותו?
+מילות ערפל: כשהמטפל משתמש במילה שנשמעת כמו כותרת ולא מתארת כלום ("משברי חיים", "ויסות", "התמודדות עם אתגרים", "חוסר ביטחון"), אל תתקני ואל תדלגי. אמרי בעדינות שהמילה כללית, ושאלי אם לדייק אותה עכשיו או להמשיך הלאה. בסוף ההודעה הזו הוסיפי בשורה נפרדת בדיוק את הסימן ${CHOICE_MARK} (המערכת מסירה אותו ומציגה למטפל שני כפתורים: "לדייק את זה" ו"להמשיך הלאה"). אם המטפל בחר לדייק: בקשי דוגמה, איך זה נראה אצל האדם הזה ביום רגיל. אם בחר להמשיך: המשיכי בלי להתעכב, ואל תכניסי את המילה הזו למראה. בודקים מילה אחת בכל פעם.
+כבוד לבחירה מכוונת: אם נראה שהמטפל בחר מילה בכוונה ("להשתחרר" ולא "להתגבר"), שאלי קודם מה הכוונה.
 
 שלב 3: הכתיבה
-כשיש מספיק לכל ארבע השורות ולקורא, כתבי שני תוצרים באותה הודעה:
-א. ארבע השורות בקול של המטפל, במילים שהוא עצמו השתמש בהן (רשימה ממוספרת 1–4).
-ב. מכתב אישי באורך 150–250 מילים, לאדם אחד, במבנה:
-1. פנייה לאדם אחד, בשם בדוי או בלי שם.
-2. הרגע מהיום־יום, בתיאור שאפשר לראות (שורה 1).
-3. "מה שאני רואה": התובנה המקצועית במילים פשוטות (שורה 2).
-4. מה משתנה, בפנים ובחוץ, ואיך נראה יום רגיל אחרי. כאן חייבים אופק ותקווה ולא רק כאב (שורה 3).
-5. האמונה, במשפט של המטפל (שורה 4).
-6. איך עובדים, במשפט אחד פשוט.
-7. הזמנה ברורה ורכה, בלי מילות הסתייגות ("אולי", "קצת", "אם תרצי").
-8. חתימה (שם המטפל אם ידוע, אחרת [השם שלך]).
-כללים:
-* ההתחלה מהכאב והרגע של הלקוח, לא מפעולת המטפל.
-* פועל של תוצאה ("אני עוזרת לך ל…") ולא "אני פונה ל…".
-* כל מושג מקצועי מתורגם, או מלווה בדוגמה.
-* לא לחזור על אותו רעיון בשלושה ניסוחים.
-* המכתב פונה לאדם אחד, ולכן בלשון שמתאימה לו (לפי מה שסופר עליו). אם לא ידוע, בלשון שהמטפל השתמש בה כשתיאר אותו.
-* סמני "טיוטה" והזמיני תיקון: מה נשמע לא כמו המטפל, איזו מילה לא שלו.
-* בסוף ההודעה שבה כתבת לראשונה את ארבע השורות והמכתב, הוסיפי בשורה נפרדת בדיוק את הסימן ${DRAFT_MARK} (המערכת מסירה אותו ומציגה למטפל כפתור לסיכום התוצרים). אל תוסיפי אותו בשום הודעה אחרת.
-אחרי תיקונים, כתבי מחדש רק את מה שהשתנה, או את המכתב המלא אם ביקשו.
+כשברור למי ומה הצורך הבוער, ויש רגע מוחשי או משפט שהאדם אומר, כתבי את המראה: שניים־שלושה משפטים, 20–70 מילים בסך הכול, בגוף ראשון של המטפל או בגוף שלישי על האדם. בלי פנייה, בלי הזמנה, בלי חתימה, בלי סוגריים מרובעים, ובלי שום דבר שהמטפל לא אמר.
+אמרי שזו טיוטה ושאלי איזו מילה לא נשמעת כמו הלקוח.
+בסוף ההודעה שבה כתבת לראשונה את המראה, הוסיפי בשורה נפרדת בדיוק את הסימן ${DRAFT_MARK} (המערכת מסירה אותו ומציגה למטפל כפתור לסיכום). אל תוסיפי אותו בשום הודעה אחרת.
+אחרי תיקונים, כתבי מחדש את המראה בשלמותו.
 
-שלב 4: בדיקות לפני סיום (אחת־שתיים בכל הודעה, לא הכול בבת אחת)
-1. בדיקת הלקוח: האם האדם שכתבנו עליו היה אומר "זה בדיוק אני"? איזו שורה הכי מדויקת ואיזו הכי פחות?
-2. בדיקת קונה: האם מי שמחליט מבין כל מילה?
-3. בדיקת ערפל: נשארה מילה שאי אפשר לצלם?
-4. בדיקת הפניה: האם שורה 4 משפט שמישהו יזכור ויעביר הלאה?
-5. בדיקה בחוץ: הציעי לשלוח לאדם אחד מהקהל ולשאול "איך היית מספר/ת עליי למישהו?". התשובה שלו מראה בדיוק מה עבר ומה לא. זה הפידבק החשוב ביותר, ושום טיוטה לא מחליפה אותו.
-כשהבדיקות נעשו, אמרי שאפשר ללחוץ על הכפתור "לסכם את התוצרים של היום" שמתחת לשיחה. המערכת תסכם שם את ארבע השורות, המכתב, משפט "אני עוזר/ת ל…", שלוש מילים של הלקוח והמשימה ליום 3, ולכן אין צורך שתכתבי את הסיכום הזה בעצמך.
+שלב 4: בדיקות לפני סיום (אחת בכל הודעה)
+1. בדיקת הלקוח: האדם הזה היה אומר "זה בדיוק אני"?
+2. מצלמה: אפשר לראות את מה שהמשפטים מתארים?
+3. הפניה: מי ששמע את המשפטים יכול לחזור עליהם לחבר, ולחבר יעלה בראש אדם מסוים?
+4. בדיקה בחוץ: הציעי לשלוח את המראה לאדם אחד מהקהל ולשאול "זה מזכיר לך מישהו?". זה הפידבק החשוב ביותר.
+כשהבדיקות נעשו, אמרי שאפשר ללחוץ על הכפתור "לסכם את התוצרים של היום" שמתחת לשיחה. המערכת תסכם שם את המראה, גרסה קצרה לומר בעל פה ומילים של הלקוח, ותבדוק את הבהירות של כל משפט. לכן אין צורך שתכתבי את הסיכום הזה בעצמך.
 
 מקרים מיוחדים
-* "אני לא מרגיש/ה מומחה" או "אין לי נישה": אל תתווכחי. שאלי על אדם אחד שהכי ידעו לעזור לו, ובני ממנו. מומחיות יכולה לבוא גם מניסיון אישי. כלל נפוץ בשיתוף אישי: צלקות כן, פצע פתוח לא.
-* ריבוי תחומים: מכתב אחד לאדם אחד. אפשר לכתוב עוד בהמשך, ואין צורך לבחור סופית היום.
-* רעיון מניעתי: הסבירי שקשה למכור מניעה, ושאלי מי כבר כואב או נמצא בצומת שבו המניעה רלוונטית.
+* "אני לא מרגיש/ה מומחה" או "אין לי נישה": אל תתווכחי. שאלי על אדם אחד שהכי ידעו לעזור לו, ובני ממנו.
+* ריבוי תחומים: מראה אחד על אדם אחד. אפשר לכתוב עוד בהמשך, ואין צורך לבחור סופית היום.
 * שיתוף אישי כבד (אובדן, משבר): משפט אחד של נוכחות, ואז חזרה לעבודה. אם ביקשו שזה יישאר ביניכם, אשרי במפורש.
-* פרפקציוניזם: "זו טיוטה. הפידבק האמיתי יגיע מאנשים בחוץ, ואפשר תמיד לכתוב מהדורה שנייה."
-* המטפל מבקש שתכתבי הכול במקומו: כתבי טיוטה לפי מה שנתן, ותמיד בקשי תיקון במילים שלו.
+* פרפקציוניזם: "זו טיוטה. הפידבק האמיתי יגיע מאנשים בחוץ, ואפשר תמיד לדייק אחר כך."
+* המטפל מבקש שתכתבי הכול במקומו: כתבי טיוטה לפי מה שנתן, בלי להוסיף מה שלא אמר, ובקשי תיקון במילים שלו.
 * שאלה שלא קשורה למשימה: תשובה קצרה של משפט, וחזרה למשימה.
 
-מילים להימנע מהן (אלא אם המטפל עצמו השתמש בהן, ואז זו מילת ערפל לבדוק): מרחב בטוח, מסע, בגובה העיניים, העצמה, להחזיק מקום, לצעוד יחד. אל תכתבי "שיווק" ואל תציגי את המכתב כ"בקשה" מאנשים.`;
+מילים שאסור להכניס למראה (גם אם המטפל השתמש בהן, ואז זו מילת ערפל לבדוק איתו): ${FOG.red.join(", ")}. אל תכתבי "שיווק" ואל תציגי את המראה כ"בקשה" מאנשים.`;
 
 export function buildLetterSystem(card: string | null, gender: Gender, name: string): string {
   const parts = [LETTER_SYSTEM, `\nפנייה ומגדר\n${ADDRESS[gender]}`];
@@ -474,12 +539,15 @@ export function buildLetterSystem(card: string | null, gender: Gender, name: str
   return parts.join("\n");
 }
 
-// Neri's reply as the page shows it: the draft mark taken out (and reported), nothing else changed.
-export function cleanReply(raw: string): { reply: string; draft: boolean } | null {
+// Neri's reply as the page shows it: the marks taken out (and reported), nothing else changed. DRAFT_MARK: the
+// first draft was written (the page shows the "sum up" button). CHOICE_MARK: Neri found a fog word and asks whether
+// to sharpen it now or move on (the page shows the two buttons).
+export function cleanReply(raw: string): { reply: string; draft: boolean; choice: boolean } | null {
   const draft = raw.includes(DRAFT_MARK);
-  const reply = raw.split(DRAFT_MARK).join("").replace(/\n{3,}/g, "\n\n").trim();
+  const choice = raw.includes(CHOICE_MARK);
+  const reply = raw.split(DRAFT_MARK).join("").split(CHOICE_MARK).join("").replace(/\n{3,}/g, "\n\n").trim();
   if (!reply) return null;
-  return { reply, draft };
+  return { reply, draft, choice };
 }
 
 // Gendered address the page must never show when the gender is unknown (the model is told; code checks).
@@ -491,56 +559,152 @@ export function addressProblem(reply: string, gender: Gender): string | null {
   return null;
 }
 
-export const LETTER_FINISH_SYSTEM = `את מסכמת שיחה בין נרי (מנטורית) למטפל, שבה נבנו "ארבע השורות" ומכתב אישי לאדם אחד מהקהל של המטפל. החזירי JSON בלבד, בלי טקסט נוסף:
-{"four_lines": ["שורה 1: הרגע", "שורה 2: מה שמתחת", "שורה 3: השינוי", "שורה 4: האמונה"], "letter": "המכתב המלא", "sentence": "אני עוזר/ת ל[מי] ש[כאב] כדי ש[תוצאה]", "client_words": ["", "", ""], "reader": "מי קורא את המכתב"}
+// ----- the judge (action "clarity", and inside "finish"): three tests per sentence, and one short question for every
+// problem phrase. The model only answers the tests; the state shown to the therapist is computed here.
+export const CLARITY_SYSTEM = `את בודקת בהירות של משפטים קצרים שמטפל כתב: "המראה", שאומר למי הוא עוזר ומה הצורך הבוער של האדם הזה. החזירי JSON בלבד, בלי טקסט נוסף:
+{"sentences": [{"camera": true, "mouth": true, "referral": true, "issues": [{"phrase": "", "question": ""}]}]}
+פריט אחד לכל משפט שקיבלת, באותו סדר.
+שלושה מבחנים לכל משפט:
+* camera (מצלמה): אפשר לראות את מה שהמשפט מתאר? יש בו אדם מסוים, מקום, פעולה, חפץ, שעה או משפט שנאמר בקול, ולא רק מצב פנימי או מושג. "אמהות שיושבות באוטו בחניה לפני שהן נכנסות הביתה" עובר. "אנשים שמרגישים תקועים בחיים" לא עובר. ציטוט של מה שאדם אומר לעצמו עובר אם הוא נשמע כמו משפט שאדם אמיתי אומר.
+* mouth (פה): המשפט כתוב בשפה של הלקוח, במילים שהוא עצמו היה משתמש בהן כדי לתאר את המצב שלו? מושג מקצועי, אבחנה או מילים של מטפל ("ויסות", "דפוס", "חוסר ביטחון") לא עוברים.
+* referral (הפניה): מי ששמע את המשפט יכול לחזור עליו לחבר, ולחבר יעלה בראש אדם מסוים שהוא מכיר?
+issues: לכל ביטוי שבגללו משפט נכשל במבחן (מילה כללית, מושג, תיאור שאי אפשר לראות), phrase הוא הביטוי בדיוק כפי שהוא כתוב במשפט, ו־question היא שאלה אחת קצרה (עד 15 מילים) שהמטפל יכול לענות עליה כדי לדייק. בלי לתקן את המשפט ובלי להציע ניסוח. השאלה בניסוח שנקרא זהה לכל מגדר ("איך זה נראה אצלו ביום רגיל?", "מה הוא אומר במילים שלו?"), בלי לוכסנים. אם המשפט עובר את שלושת המבחנים, issues ריק.
+עברית תקינה ומדוברת.`;
+
+export type ClarityState = "clear" | "almost" | "foggy";
+export interface ClarityItem {
+  text: string;
+  camera: boolean;
+  mouth: boolean;
+  referral: boolean;
+  fog_red: string[];
+  fog_yellow: string[];
+  questions: { phrase: string; question: string }[];
+  state: ClarityState;
+}
+export interface Clarity { state: ClarityState; items: ClarityItem[] }
+
+export const buildClarityUser = (sentences: string[]) => "המשפטים:\n" + sentences.map((s, i) => `${i + 1}. ${s}`).join("\n");
+
+export function parseSentences(body: any): string[] | null {
+  let list: unknown[] = Array.isArray(body?.sentences) ? body.sentences : typeof body?.text === "string" ? body.text.split(/\n+/) : [];
+  const out = list.map((s) => (typeof s === "string" ? s.replace(/\s+/g, " ").trim().slice(0, 500) : "")).filter(Boolean);
+  return out.length && out.length <= 6 ? out : null;
+}
+
+// Red fog → foggy. Yellow fog without a picture (camera fails) → foggy. Two or more failed tests → foggy.
+// One failed test → almost. Otherwise clear. The page shows the state, never a score.
+export function computeClarity(obj: any, sentences: string[], gender: Gender): Clarity | null {
+  const list = Array.isArray(obj?.sentences) ? obj.sentences : null;
+  if (!list || list.length !== sentences.length) return null;
+  const items: ClarityItem[] = [];
+  for (let i = 0; i < sentences.length; i++) {
+    const r = list[i] ?? {};
+    if (typeof r.camera !== "boolean" || typeof r.mouth !== "boolean" || typeof r.referral !== "boolean") return null;
+    const fog = findFog(sentences[i]);
+    const questions: { phrase: string; question: string }[] = [];
+    for (const w of fog.red) questions.push({ phrase: w, question: `מה "${w}" אומר אצל האדם הזה? איך זה נראה ביום רגיל?` });
+    for (const it of Array.isArray(r.issues) ? r.issues : []) {
+      const phrase = typeof it?.phrase === "string" ? it.phrase.trim().slice(0, 80) : "";
+      const question = typeof it?.question === "string" ? it.question.trim().slice(0, 200) : "";
+      if (!phrase || !question || addressProblem(question, gender) || questions.some((q) => q.phrase === phrase)) continue;
+      questions.push({ phrase, question });
+    }
+    const failed = [r.camera, r.mouth, r.referral].filter((x) => !x).length;
+    const state: ClarityState = fog.red.length || (fog.yellow.length && !r.camera) || failed >= 2 ? "foggy" : failed === 1 ? "almost" : "clear";
+    items.push({ text: sentences[i], camera: r.camera, mouth: r.mouth, referral: r.referral, fog_red: fog.red, fog_yellow: fog.yellow, questions: questions.slice(0, 3), state });
+  }
+  const state: ClarityState = items.some((x) => x.state === "foggy") ? "foggy" : items.some((x) => x.state === "almost") ? "almost" : "clear";
+  return { state, items };
+}
+
+async function judge(sentences: string[], gender: Gender, deps: Deps): Promise<Clarity | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const c = computeClarity(parseJson(await deps.callModel(CLARITY_SYSTEM, buildClarityUser(sentences))), sentences, gender);
+      if (c) return c;
+    } catch { /* one more try */ }
+  }
+  return null;
+}
+
+// ----- the summary
+export const MIRROR_MIN_SENTENCES = 2;
+export const MIRROR_MAX_SENTENCES = 3;
+
+export const LETTER_FINISH_SYSTEM = `את מסכמת שיחה בין נרי (מנטורית) למטפל, שבה נכתב "המראה": שניים־שלושה משפטים ברורים שאומרים למי המטפל עוזר ומה הצורך הבוער של האדם הזה. החזירי JSON בלבד, בלי טקסט נוסף:
+{"mirror": ["", "", ""], "spoken": "", "client_words": ["", "", "", "", ""], "reader": ""}
 כללים:
-* קחי את הגרסה האחרונה שהמטפל אישר או תיקן. אם המטפל תיקן מילה, השתמשי בתיקון שלו. אל תמציאי תוכן שלא עלה בשיחה ואל תשפרי ניסוחים שהמטפל קבע.
-* four_lines: בדיוק ארבע שורות, בגוף ראשון של המטפל, כל אחת משפט אחד.
-* letter: המכתב המלא באחרונה שבגרסאותיו, עם פסקאות (\\n\\n בין פסקאות), כולל הפנייה והחתימה. בלי המילה "טיוטה".
-* sentence: משפט אחד בפורמט "אני עוזר/ת ל[מי] ש[כאב] כדי ש[תוצאה]" בשפת הלקוח, בלי סוגריים מרובעים.
-* client_words: שלוש מילים או ביטויים קצרים (עד 5 מילים כל אחד) שהלקוח עצמו היה אומר, מתוך השיחה, שכדאי להשתמש בהם שוב ושוב.
+* קחי את הגרסה האחרונה שהמטפל אישר או תיקן. אם המטפל תיקן מילה, השתמשי בתיקון שלו. אל תשפרי ניסוחים שהמטפל קבע.
+* mirror: שניים או שלושה משפטים (פריט אחד לכל משפט), 20–70 מילים בסך הכול. ביחד הם אומרים למי (אדם מסוים שאפשר לראות) ומה הצורך הבוער שלו, דרך משהו מוחשי: רגע מיום רגיל, משהו שהוא עושה או משפט שהוא אומר לעצמו.
+* בלי פנייה לקורא, בלי שם, בלי הזמנה ("אני כאן", "בואי נדבר", "אפשר לפנות", "שיחת היכרות", "הגיע הזמן"), בלי חתימה, בלי תיאור של שיטת העבודה, בלי סוגריים מרובעים.
+* אסור להוסיף סיבה, מנגנון או שירות שהמטפל לא אמר במפורש בשיחה.
+* לפחות מחצית מהמילים החשובות במשפטים לקוחות מההודעות של המטפל (לא של נרי).
+* spoken: עד 20 מילים, בגוף ראשון של המטפל, משפט שאפשר לומר בעל פה כשמישהו שואל מה המטפל עושה. בלי הזמנה. דוגמה: "אני עובדת עם אמהות שיושבות באוטו בחניה כי אין להן כוח להיכנס הביתה."
+* client_words: 5 עד 8 ביטויים קצרים (עד 5 מילים כל אחד) שהלקוח עצמו אומר, מתוך השיחה.
 * reader: כמה מילים (למשל "המטופלת עצמה", "הורים").
+* אסור להשתמש במילים: ${FOG.red.join(", ")}.
 * עברית תקינה ומדוברת, בלי ניסוחים מתורגמים או מאולצים.
 * בלי לוכסני מגדר (עובד/ת) בשום שדה. מגדר המטפל: {GENDER}.
-* אם בשיחה עוד אין מכתב, החזירי {"error": "no_letter"}.`;
+* אם בשיחה עוד לא נכתב המראה, החזירי {"error": "no_mirror"}.`;
 
-const GENDER_WORD: Record<Gender, string> = { f: "אישה, גוף ראשון בלשון נקבה (אני עוזרת)", m: "גבר, גוף ראשון בלשון זכר (אני עוזר)", n: "לא ידוע: גוף ראשון בלי מגדר ('אני כאן כדי לעזור ל…', 'האמונה שלי היא ש…')" };
+const GENDER_WORD: Record<Gender, string> = { f: "אישה, גוף ראשון בלשון נקבה (אני עובדת)", m: "גבר, גוף ראשון בלשון זכר (אני עובד)", n: "לא ידוע: גוף ראשון בלי מגדר ('העבודה שלי היא עם…')" };
 export const buildFinishSystem = (gender: Gender) => LETTER_FINISH_SYSTEM.replace("{GENDER}", GENDER_WORD[gender]);
 export const buildFinishUser = (msgs: ChatMsg[]) =>
   "השיחה:\n\n" + msgs.map((m) => `${m.role === "user" ? "המטפל" : "נרי"}: ${m.content}`).join("\n\n");
+export const therapistText = (msgs: ChatMsg[]) => msgs.filter((m) => m.role === "user").map((m) => m.content).join("\n");
 
-export interface LetterContent {
+export interface MirrorContent {
+  kind: "mirror";
   gender: Gender;
-  four_lines: string[];
-  letter: string;
-  sentence: string;
+  mirror: string[]; // 2–3 sentences
+  spoken: string;
   client_words: string[];
   reader: string;
   bridge: string;
+  clarity: Clarity | null;
 }
 
-export function validateLetter(obj: any, gender: Gender): { content: LetterContent } | { fails: string[] } {
-  const fails: string[] = [];
+// Everything code can check without a model. The judge (yellow fog) runs after this passes.
+export function validateMirror(obj: any, gender: Gender, ownText: string): { content: MirrorContent } | { fails: string[] } {
   if (!obj || typeof obj !== "object") return { fails: ["לא JSON"] };
-  if (obj.error === "no_letter") return { fails: ["no_letter"] };
-  const s = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-  const lines = Array.isArray(obj.four_lines) ? obj.four_lines.map(s).filter(Boolean) : [];
-  if (lines.length !== 4) fails.push("צריך בדיוק ארבע שורות");
-  const letter = s(obj.letter).replace(/\r/g, "").replace(/\n{3,}/g, "\n\n");
-  const lw = words(letter);
-  if (lw < 90 || lw > 380) fails.push(`אורך המכתב ${lw} מילים`);
-  const sentence = s(obj.sentence).replace(/[\[\]]/g, "");
-  if (!sentence || words(sentence) > 40) fails.push("משפט אני עוזר/ת חסר או ארוך");
-  const cw = Array.isArray(obj.client_words) ? obj.client_words.map(s).filter(Boolean).slice(0, 3) : [];
-  if (cw.length < 2) fails.push("חסרות מילים של הלקוח");
-  const all = [...lines, letter, sentence, ...cw].join("\n");
-  if (SLASH.test(all)) fails.push("לוכסן מגדר");
+  if (obj.error === "no_mirror") return { fails: ["no_mirror"] };
+  const fails: string[] = [];
+  const s = (v: unknown) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "");
+  const mirror: string[] = Array.isArray(obj.mirror) ? obj.mirror.map(s).filter(Boolean) : [];
+  if (mirror.length < MIRROR_MIN_SENTENCES || mirror.length > MIRROR_MAX_SENTENCES) fails.push(`צריך שניים או שלושה משפטים (יש ${mirror.length})`);
+  const all = mirror.join(" ");
+  const total = words(all);
+  if (total < 20 || total > 70) fails.push(`המשפטים יחד ${total} מילים (צריך 20 עד 70)`);
+  const spoken = s(obj.spoken);
+  if (!spoken || words(spoken) > 20) fails.push(`הגרסה לומר בעל פה ${words(spoken)} מילים (עד 20)`);
+  const cw = Array.isArray(obj.client_words) ? [...new Set(obj.client_words.map(s).filter((w: string) => w && words(w) <= 6))].slice(0, 8) as string[] : [];
+  if (cw.length < 5) fails.push(`צריך 5 עד 8 ביטויים של הלקוח (יש ${cw.length})`);
+  const invites = findTerms(`${all} ${spoken}`, INVITE);
+  if (invites.length) fails.push(`הזמנה או פנייה: ${invites.join(", ")}`);
+  if (mirror.some(hasOpener) || hasOpener(spoken)) fails.push("פנייה פותחת");
+  if (/[\[\]]/.test(`${all} ${spoken}`)) fails.push("סוגריים מרובעים");
+  if (SLASH.test([all, spoken, ...cw].join(" "))) fails.push("לוכסן מגדר");
+  const red = findFog(`${all} ${spoken}`).red;
+  if (red.length) fails.push(`מילות ערפל אסורות: ${red.join(", ")}`);
+  const own = ownWordsShare(all, ownText);
+  if (own.share < 0.5) fails.push(`רק ${Math.round(own.share * 100)}% מהמילים לקוחות מהמטפל; מילים שלא שלו: ${own.foreign.slice(0, 8).join(", ")}`);
   if (fails.length) return { fails };
-  return { content: { gender, four_lines: lines, letter, sentence, client_words: cw, reader: s(obj.reader).slice(0, 60), bridge: BRIDGE_DAY3 } };
+  return { content: { kind: "mirror", gender, mirror, spoken, client_words: cw, reader: s(obj.reader).slice(0, 60), bridge: BRIDGE_DAY3, clarity: null } };
 }
 
 async function handleLetter(body: any, userId: string, deps: Deps): Promise<Response> {
   const gender = parseGender(body?.gender);
+
+  if (body?.action === "clarity") {
+    const sentences = parseSentences(body);
+    if (!sentences) return json(400, { error: "bad_text" });
+    if ((await deps.countReflectToday(`clarity:${userId}`)) >= LETTER_DAILY_CLARITY_LIMIT) return json(429, { error: "daily_limit" });
+    await deps.logReflect(`clarity:${userId}`);
+    const clarity = await judge(sentences, gender, deps);
+    return json(200, clarity ? { status: "ok", clarity } : { status: "failed" });
+  }
+
   const name = typeof body?.name === "string" ? body.name.replace(/[^\p{L}\s'"-]/gu, "").trim().slice(0, 40) : "";
   const msgs = parseMessages(body?.messages, body?.action !== "finish");
   if (!msgs) return json(400, { error: "bad_messages" });
@@ -549,7 +713,7 @@ async function handleLetter(body: any, userId: string, deps: Deps): Promise<Resp
     if ((await deps.countReflectToday(`chat:${userId}`)) >= LETTER_DAILY_CHAT_LIMIT) return json(429, { error: "daily_limit" });
     await deps.logReflect(`chat:${userId}`);
     const system = buildLetterSystem(cardContextText(await deps.loadCard(userId)), gender, name);
-    let last: { reply: string; draft: boolean } | null = null;
+    let last: { reply: string; draft: boolean; choice: boolean } | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       const extra: ChatMsg[] = attempt && last ? [{ role: "user", content: `(הערת מערכת, לא מהמטפל: בתשובה הקודמת הייתה ${addressProblem(last.reply, gender)}. כתבי אותה שוב בדיוק באותו תוכן, בלי זה.)` }] : [];
       try {
@@ -562,28 +726,38 @@ async function handleLetter(body: any, userId: string, deps: Deps): Promise<Resp
       }
     }
     if (!last) return json(200, { status: "failed" });
-    return json(200, { status: "ok", reply: last.reply, draft: last.draft });
+    return json(200, { status: "ok", reply: last.reply, draft: last.draft, choice: last.choice });
   }
 
   if (body?.action === "finish") {
     if ((await deps.countToday(userId, "personal-note")) >= LETTER_DAILY_FINISH_LIMIT) return json(429, { error: "daily_limit" });
     const transcript = msgs.slice(-LETTER_MAX_TURNS);
+    const ownText = therapistText(transcript);
     let fails: string[] = [];
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let attempt = 0; attempt < 3; attempt++) {
       const extra = attempt ? `\n\nהניסיון הקודם נפסל: ${fails.join("; ")}. תקני.` : "";
       let obj: unknown = null;
       try { obj = parseJson(await deps.callModel(buildFinishSystem(gender), buildFinishUser(transcript) + extra)); } catch { fails = ["שגיאת מודל"]; continue; }
-      const v = validateLetter(obj, gender);
-      if ("content" in v) {
-        const source = typeof body?.source === "string" ? body.source.replace(/[^a-z0-9_.:-]/gi, "").slice(0, 60) || null : null;
-        const saved = await deps.save(userId, "personal-note", v.content, { messages: transcript, gender, source });
-        return json(200, { status: "ok", deliverable: { id: saved.id, tool: "personal-note", version: saved.version, content: v.content, edited_content: null } });
+      const v = validateMirror(obj, gender, ownText);
+      if ("fails" in v) {
+        fails = v.fails;
+        console.warn("mirror finish rejected", attempt, fails.join("; "));
+        if (fails.includes("no_mirror")) return json(200, { status: "no_mirror" });
+        continue;
       }
-      fails = v.fails;
-      console.warn("letter finish rejected", attempt, fails.join("; "));
-      if (fails.includes("no_letter")) return json(200, { status: "no_letter" });
+      // A yellow fog word stays only where the judge sees a concrete picture in the same sentence.
+      const sentences = v.content.mirror;
+      const clarity = await judge(sentences, gender, deps);
+      if (!clarity) { fails = ["בדיקת הבהירות לא ענתה"]; console.warn("mirror finish: judge failed", attempt); continue; }
+      const blurry = clarity.items.flatMap((it, i) => (it.fog_yellow.length && !it.camera ? [`במשפט ${i + 1} "${it.fog_yellow.join('", "')}" בלי תמונה שאפשר לצלם`] : []));
+      if (blurry.length) { fails = blurry; console.warn("mirror finish rejected", attempt, fails.join("; ")); continue; }
+      const content: MirrorContent = { ...v.content, clarity };
+      const source = typeof body?.source === "string" ? body.source.replace(/[^a-z0-9_.:-]/gi, "").slice(0, 60) || null : null;
+      const saved = await deps.save(userId, "personal-note", content, { messages: transcript, gender, source });
+      return json(200, { status: "ok", deliverable: { id: saved.id, tool: "personal-note", version: saved.version, content, edited_content: null } });
     }
-    return json(200, { status: "failed", failures: fails });
+    // Too few of the therapist's own words: the page asks them to describe the client again in their words.
+    return json(200, { status: "failed", reason: fails.some((f) => f.includes("לקוחות מהמטפל")) ? "own_words" : "quality_check", failures: fails });
   }
   return json(400, { error: "bad_action" });
 }
