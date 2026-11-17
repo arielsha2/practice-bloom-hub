@@ -26,7 +26,7 @@ import elianaHero from "@/assets/founders/eliana-hero.webp";
 import elianaAbout from "@/assets/founders/eliana-about.webp";
 import { ProgramMockup } from "@/components/experts/ProgramMockup";
 import { ExpertsLeadDialog } from "@/components/experts/ExpertsLeadDialog";
-import type { ExpertsPlan } from "@/components/experts/ExpertsLeadDialog";
+import type { ExpertsPlan, ExpertsPricing } from "@/components/experts/ExpertsLeadDialog";
 
 // Sales page of the "המומחים" program. Updated 17.11.2026 from Eliana's final brief: a cream first screen with her
 // photo, her story right after it, "התוכנית כוללת" with a benefit for every part, one length everywhere (4 months,
@@ -47,6 +47,7 @@ const PRICE = "6,777";
 const PRICE_SINGLE = "6,277";
 const INSTALLMENT = "565";
 const INSTALLMENTS = 12;
+const PRICING: ExpertsPricing = { installmentsUrl: PAY_INSTALLMENTS_URL, singleUrl: PAY_SINGLE_URL, price: PRICE, priceSingle: PRICE_SINGLE, installment: INSTALLMENT, installments: INSTALLMENTS };
 const OPENING = "30.12.2026";
 // Registration closes on Monday 23.11.2026 at 14:00, Israel time (winter, UTC+2).
 const DEADLINE = new Date("2026-11-23T14:00:00+02:00");
@@ -145,6 +146,25 @@ function Testimonial({ quote, who, dark = false, children }: { quote: string; wh
       <blockquote className="font-display text-xl leading-[1.75] md:text-2xl">“{quote}”</blockquote>
       <figcaption className={`mt-5 text-sm ${dark ? "text-background/70" : "text-muted-foreground"}`}>{who}</figcaption>
       {children}
+    </figure>
+  );
+}
+
+// A testimonial as a large cream card on the burgundy band: the strongest sentence as a headline, then the full quote.
+// Two of them sit side by side on wide screens and one under the other on phones.
+function StoryCard({ headline, quote, who, role }: { headline: string; quote: string; who: string; role: string }) {
+  return (
+    <figure className="reveal flex h-full flex-col rounded-3xl bg-background p-7 text-right shadow-[0_24px_48px_-20px_rgba(0,0,0,0.55)] md:p-9">
+      <Quote className="h-9 w-9 text-accent" />
+      <p className="mt-4 font-display text-2xl leading-snug text-primary md:text-3xl">{headline}</p>
+      <blockquote className="mt-5 flex-1 text-lg leading-[1.9] text-foreground/85">“{quote}”</blockquote>
+      <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-5">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/15 font-display text-lg font-bold text-accent">{who.charAt(0)}</span>
+        <span className="leading-tight">
+          <span className="block font-semibold text-primary">{who}</span>
+          <span className="block text-sm text-muted-foreground">{role}</span>
+        </span>
+      </figcaption>
     </figure>
   );
 }
@@ -691,9 +711,29 @@ const ExpertsSales = () => {
             ))}
           </div>
 
-          <div className="mt-16">
-            <p className="mb-6 text-center font-display text-3xl leading-snug text-primary md:text-4xl">“לפני חמישה חודשים הייתי במקום אחר לגמרי”</p>
-            <Testimonial quote="אם אני חושבת על עצמי אחורה חמישה חודשים, הייתי במקום אחר לגמרי, מדשדשת שם במחשבות של איך ואיפה, והיום אני עם הרבה פחות פחד, עם הרבה ידע איך לעשות את זה נכון, איך לשווק את זה נכון, איך לתמחר נכון." who="מרים, עובדת סוציאלית קלינית" />
+        </div>
+      </section>
+
+      {/* ============================================================ TESTIMONIALS: Miriam and the psychologist, side by side */}
+      <section className="band band-burgundy band-grain py-16 md:py-24">
+        <div className="container relative z-10 mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <Eyebrow>מהבוגרות</Eyebrow>
+            <h2 className="reveal font-display text-3xl leading-snug text-background md:text-5xl">מה השתנה אצל מי שכבר עשו את הדרך</h2>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <StoryCard
+              headline="“לפני חמישה חודשים הייתי במקום אחר לגמרי”"
+              quote="אם אני חושבת על עצמי אחורה חמישה חודשים, הייתי במקום אחר לגמרי, מדשדשת שם במחשבות של איך ואיפה, והיום אני עם הרבה פחות פחד, עם הרבה ידע איך לעשות את זה נכון, איך לשווק את זה נכון, איך לתמחר נכון."
+              who="מרים"
+              role="עובדת סוציאלית קלינית"
+            />
+            <StoryCard
+              headline="“די מהר הקליניקה החלה לפרוח”"
+              quote="נרשמתי ל'נקודת המפנה' בתקופה של קליניקה בתחילת דרכה, היו מעט פניות, וגם כשהיו, פעמים רבות השיחה הראשונית לא הובילה לתחילת הטיפול. במהלך התוכנית חידדתי את החשיבה על מי אני כפסיכולוגית, ומה אני מעוניינת לתת למטופלים שלי, ובתקופה קצרה יחסית העברתי זאת החוצה בבהירות ללא התנצלות ועם הבנה של מה אני יכולה לתת בטיפול. די מהר הקליניקה החלה לפרוח."
+              who="ל.פ"
+              role="פסיכולוגית קלינית, בוגרת “נקודת המפנה”"
+            />
           </div>
         </div>
       </section>
@@ -961,18 +1001,6 @@ const ExpertsSales = () => {
         </div>
       </section>
 
-      {/* ============================================================ TESTIMONIAL: the psychologist (moved down, no photo) */}
-      <section className="band band-burgundy band-grain py-16 md:py-20">
-        <div className="container relative z-10 mx-auto px-4">
-          <p className="mb-8 text-center font-display text-2xl text-[hsl(var(--terracotta))]">מקליניקה בתחילת דרכה לקליניקה שהחלה לפרוח</p>
-          <Testimonial
-            dark
-            quote="נרשמתי ל'נקודת המפנה' בתקופה של קליניקה בתחילת דרכה, היו מעט פניות, וגם כשהיו, פעמים רבות השיחה הראשונית לא הובילה לתחילת הטיפול. במהלך התוכנית חידדתי את החשיבה על מי אני כפסיכולוגית, ומה אני מעוניינת לתת למטופלים שלי, ובתקופה קצרה יחסית העברתי זאת החוצה בבהירות ללא התנצלות ועם הבנה של מה אני יכולה לתת בטיפול. די מהר הקליניקה החלה לפרוח."
-            who="ל.פ, פסיכולוגית קלינית, בוגרת “נקודת המפנה”"
-          />
-        </div>
-      </section>
-
       {/* ============================================================ FINAL CTA */}
       <section className="band band-cream py-16 md:py-24">
         <div className="container mx-auto max-w-3xl px-4 text-center">
@@ -1045,9 +1073,9 @@ const ExpertsSales = () => {
       </div>
 
       <ExpertsLeadDialog
-        plan={lead?.plan ?? null}
+        open={lead !== null}
         location={lead?.location ?? ""}
-        payUrl={lead?.plan === "single" ? PAY_SINGLE_URL : PAY_INSTALLMENTS_URL}
+        pricing={PRICING}
         onClose={() => setLead(null)}
       />
     </div>

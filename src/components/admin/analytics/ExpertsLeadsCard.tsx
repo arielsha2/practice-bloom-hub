@@ -17,7 +17,7 @@ interface Lead {
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("he-IL", { timeZone: "Asia/Jerusalem", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
-const PLAN: Record<string, string> = { "hamumchim:installments": "תשלומים", "hamumchim:single": "תשלום אחד" };
+const PLAN: Record<string, string> = { "hamumchim:installments": "תשלומים", "hamumchim:single": "תשלום אחד", "hamumchim:form": "בוחרים מסלול אחרי הטופס" };
 
 export function ExpertsLeadsCard() {
   const [rows, setRows] = useState<Lead[] | null>(null);
@@ -58,7 +58,7 @@ export function ExpertsLeadsCard() {
                   <th className="py-2 font-medium">שם</th>
                   <th className="py-2 font-medium">טלפון</th>
                   <th className="py-2 font-medium">אימייל</th>
-                  <th className="py-2 font-medium">מסלול</th>
+                  <th className="py-2 font-medium">מקור</th>
                   <th className="py-2 font-medium">מתי</th>
                 </tr>
               </thead>
