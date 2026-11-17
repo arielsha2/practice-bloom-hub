@@ -27,6 +27,7 @@ import { ChallengeRegistrationsCard } from '@/components/admin/analytics/Challen
 import { CardFunnelCard } from '@/components/admin/analytics/CardFunnelCard';
 import { CardSummaryCard } from '@/components/admin/analytics/CardSummaryCard';
 import { MirrorFeedbackCard } from '@/components/admin/analytics/MirrorFeedbackCard';
+import { ExpertsLeadsCard } from '@/components/admin/analytics/ExpertsLeadsCard';
 import { DiagnosisFollowupListCard } from '@/components/admin/analytics/DiagnosisFollowupListCard';
 import { RefreshCw } from 'lucide-react';
 
@@ -78,6 +79,7 @@ export default function AdminAnalytics() {
               <ChallengeRegistrationsCard />
 
               <CardSummaryCard />
+              <ExpertsLeadsCard />
               <MirrorFeedbackCard />
 
               <CardFunnelCard />
