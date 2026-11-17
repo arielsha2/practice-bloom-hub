@@ -458,6 +458,24 @@ const ExpertsSales = () => {
         </div>
       </section>
 
+      {/* ============================================================ CHAIM'S VIDEO, right after "זה אפשרי" */}
+      <section className="band band-cream pb-8 pt-4 md:pb-12">
+        <div className="container mx-auto max-w-4xl px-4">
+          <h2 className="reveal text-center font-display text-3xl leading-snug text-primary md:text-5xl">רואים תוצאות בשטח, אנשים מגיעים אל הקליניקה</h2>
+          <div className="reveal mt-8 grid items-center gap-8 md:grid-cols-[340px_1fr]">
+            <DriveVideo id={CHAIM_VIDEO_ID} title="העדות של חיים אדרת" vertical />
+            <div>
+              <Quote className="h-8 w-8 text-accent" />
+              <blockquote className="mt-3 font-display text-2xl leading-[1.6] text-primary">“אני יכול לומר שאני רואה תוצאות בשטח. אנשים באים לקליניקה.”</blockquote>
+              <p className="mt-4 text-sm text-muted-foreground">חיים אדרת, עובד סוציאלי בהתמחות קלינית, מטפל בהתמכרויות ומנחה קורסים לצוותי חינוך, בוגר התוכנית הקודמת</p>
+              <div className="mt-6">
+                <JoinButton location="chaim_video" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ============================================================ THE PROBLEM */}
       <section className="band band-cream pb-16 md:pb-24">
         <div className="container mx-auto max-w-3xl px-4">
@@ -861,24 +879,6 @@ const ExpertsSales = () => {
               <h3 className="font-display text-xl text-primary">ולמי התוכנית פחות מתאימה?</h3>
               <p className="mt-2 leading-[1.9]">אם המטרה היא שמישהו אחר יעשה עבורך את כל השיווק, בלי להתנסות, ללמוד ולפעול, זו כנראה לא התוכנית הנכונה עבורך.</p>
               <p className="mt-2 leading-[1.9] text-muted-foreground">“המומחים” נועדה למי שרוצה להבין איך בונים קליניקה, ולהוביל את התהליך באופן עצמאי, עם אסטרטגיה, כלים, תרגול ותמיכה מקצועית.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ CHAIM'S VIDEO, right before the decision */}
-      <section className="band band-cream pb-8 pt-4 md:pb-12">
-        <div className="container mx-auto max-w-4xl px-4">
-          <h2 className="reveal text-center font-display text-3xl leading-snug text-primary md:text-5xl">רואים תוצאות בשטח, אנשים מגיעים אל הקליניקה</h2>
-          <div className="reveal mt-8 grid items-center gap-8 md:grid-cols-[340px_1fr]">
-            <DriveVideo id={CHAIM_VIDEO_ID} title="העדות של חיים אדרת" vertical />
-            <div>
-              <Quote className="h-8 w-8 text-accent" />
-              <blockquote className="mt-3 font-display text-2xl leading-[1.6] text-primary">“אני יכול לומר שאני רואה תוצאות בשטח. אנשים באים לקליניקה.”</blockquote>
-              <p className="mt-4 text-sm text-muted-foreground">חיים אדרת, עובד סוציאלי בהתמחות קלינית, מטפל בהתמכרויות ומנחה קורסים לצוותי חינוך, בוגר התוכנית הקודמת</p>
-              <div className="mt-6">
-                <JoinButton location="chaim_video" />
-              </div>
             </div>
           </div>
         </div>
