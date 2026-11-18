@@ -12,9 +12,9 @@ import elianaPortrait from "@/assets/founders/eliana-portrait.jpg";
 // challenge is and the form. Same challenge, form and sign-ups table as
 // /challenge; visitors without a ?src are tagged "community".
 const HOW = [
-  { big: "5 ימים", small: "15-19 בנובמבר, בכל יום ידע ותרגול מעשי" },
+  { big: "5 ימים", small: "20-24 בדצמבר, בכל יום ידע ותרגול מעשי" },
   { big: "קבוצה סגורה", small: "בווטסאפ, כדי שתוכל להתרכז בתוכן ולשתף אותי בפרטי" },
-  { big: "סדנה חיה", small: "ביום רביעי, 18.11, החלק הכי חשוב באתגר" },
+  { big: "סדנה חיה", small: "ביום רביעי, 23.12, החלק הכי חשוב באתגר" },
 ];
 
 const ChallengeCommunity = () => {
@@ -26,7 +26,7 @@ const ChallengeCommunity = () => {
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
       <SEOHead
         title="הזמנה לקהילה: אתגר להיות מומחה מבוקש - עם אליענה שפירא"
-        description="לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (15-19.11), ממטפל אנונימי למומחה מבוקש בתחומך."
+        description="לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (20-24.12), ממטפל אנונימי למומחה מבוקש בתחומך."
         canonicalUrl="/challenge-community"
         ogImage="/og-challenge-v4.jpg"
       />
@@ -64,7 +64,7 @@ const ChallengeCommunity = () => {
                 אתגר חינמי של 5 ימים: ממטפל אנונימי למומחה מבוקש בתחומך.
               </p>
               <p className="text-lg text-background/65 leading-relaxed mb-8">
-                15-19 בנובמבר · קבוצת ווטסאפ סגורה · סדנה חיה ביום רביעי 18.11
+                20-24 בדצמבר · קבוצת ווטסאפ סגורה · סדנה חיה ביום רביעי 23.12
               </p>
               <CtaButton label="כן, אני מצטרף" location="community_hero" />
             </div>

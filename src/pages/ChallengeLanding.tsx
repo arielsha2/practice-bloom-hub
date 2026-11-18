@@ -56,7 +56,7 @@ const ChallengeLanding = () => {
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
       <SEOHead
         title="אתגר להיות מומחה מבוקש - עם אליענה שפירא"
-        description="אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם. עם אליענה שפירא."
+        description="אתגר חינמי של 5 ימים (20-24.12) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם. עם אליענה שפירא."
         canonicalUrl="/challenge"
         ogImage="/og-challenge-v4.jpg"
       />
@@ -87,7 +87,7 @@ const ChallengeLanding = () => {
         <div className="container mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-24 relative z-10">
           <div className="grid lg:grid-cols-[1.25fr_1fr] gap-10 lg:gap-14 items-center">
             <div>
-              <p className="section-eyebrow">הזמנה לאתגר חינמי · 5 ימים · 15-19 בנובמבר</p>
+              <p className="section-eyebrow">הזמנה לאתגר חינמי · 5 ימים · 20-24 בדצמבר</p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display tracking-tight text-background leading-[1.2] mb-6">
                 ממטפל אנונימי
                 <br />
@@ -209,9 +209,9 @@ const ChallengeLanding = () => {
           <span className="section-divider mb-10" />
         <div className="grid sm:grid-cols-3 gap-4 mb-14 text-center">
           {[
-            { big: "5 ימים", small: "15-19 בנובמבר, ידע עמוק ותרגול פרקטי" },
+            { big: "5 ימים", small: "20-24 בדצמבר, ידע עמוק ותרגול פרקטי" },
             { big: "קבוצה סגורה", small: "בווטסאפ, כדי שתוכל להתרכז בתוכן, ואפשר לשתף אותי בפרטי בתובנות ובתרגילים" },
-            { big: "שידור חי", small: "ביום רביעי, 18.11, סדנה מעשית: החלק הכי חשוב באתגר" },
+            { big: "שידור חי", small: "ביום רביעי, 23.12, סדנה מעשית: החלק הכי חשוב באתגר" },
           ].map((s) => (
             <div key={s.big} className="rounded-2xl border border-border bg-card p-6">
               <p className="text-2xl font-display text-accent mb-2">{s.big}</p>
@@ -333,7 +333,7 @@ const ChallengeLanding = () => {
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-display text-primary mb-3">רוצה להיות מומחה מבוקש?</h2>
               <p className="text-lg text-foreground/80">מחכה לך באתגר!</p>
-              <p className="text-sm text-muted-foreground mt-2">5 ימים · 15-19 בנובמבר · חינם</p>
+              <p className="text-sm text-muted-foreground mt-2">5 ימים · 20-24 בדצמבר · חינם</p>
             </div>
             <div className="rounded-3xl bg-card p-6 md:p-8 shadow-[var(--shadow-elevated)] border border-border">
               <RegistrationForm source={source} />

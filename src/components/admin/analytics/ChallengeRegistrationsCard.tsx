@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import CollapsibleSection from "./CollapsibleSection";
 import { Loader2, Trophy, Download } from "lucide-react";
 import { sourceGroup, SOURCE_GROUP_LABELS, type SourceGroup } from "@/lib/challengeSource";
+import { CHALLENGE_KEY, CHALLENGE_ROUNDS } from "@/components/challenge/ChallengeShared";
 
 interface RegistrationRow {
   id: string;
@@ -50,16 +51,19 @@ export function ChallengeRegistrationsCard() {
   const [rows, setRows] = useState<RegistrationRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [views, setViews] = useState<ViewRow[]>([]);
+  const [round, setRound] = useState(CHALLENGE_KEY);
 
   useEffect(() => {
     void load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [round]);
 
   async function load() {
     setLoading(true);
     const { data, error: loadError } = await supabase
       .from("challenge_registrations")
       .select("id, challenge_key, full_name, email, phone, source, marketing_consent, created_at")
+      .eq("challenge_key", round)
       .order("created_at", { ascending: false })
       .limit(2000);
     if (loadError) setError(loadError.message);
@@ -67,7 +71,7 @@ export function ChallengeRegistrationsCard() {
     // Page views only exist from the day visit tracking went live; a missing
     // table (migration not applied yet) just hides the visits table.
     const viewQuery = (columns: string) =>
-      supabase.from("challenge_page_views").select(columns).order("created_at", { ascending: true }).limit(20000);
+      supabase.from("challenge_page_views").select(columns).eq("challenge_key", round).order("created_at", { ascending: true }).limit(20000);
     let { data: viewData, error: viewError } = await viewQuery("source, visitor_id, created_at, already_registered");
     // Before migration 20261102120000 there is no already_registered column.
     if (viewError) ({ data: viewData } = await viewQuery("source, visitor_id, created_at"));
@@ -80,7 +84,7 @@ export function ChallengeRegistrationsCard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `challenge-registrations-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `challenge-registrations-${round.replace("anonymous-to-expert-", "")}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -169,6 +173,13 @@ export function ChallengeRegistrationsCard() {
           <Trophy className="w-5 h-5 text-primary" />
           נרשמים לאתגר, לפי מקור
         </CardTitle>
+        <div className="flex gap-1">
+          {CHALLENGE_ROUNDS.map((r) => (
+            <Button key={r.key} variant={r.key === round ? "default" : "outline"} size="sm" onClick={() => setRound(r.key)}>
+              {r.label}
+            </Button>
+          ))}
+        </div>
         {total > 0 && (
           <Button variant="outline" size="sm" onClick={downloadCsv} className="gap-1.5">
             <Download className="w-4 h-4" />

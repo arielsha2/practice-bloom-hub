@@ -25,14 +25,14 @@ const PAGES = [
     chunk: "ChallengeLanding",
     title: "אתגר להיות מומחה מבוקש - עם אליענה שפירא",
     description:
-      "אתגר חינמי של 5 ימים (15-19.11) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם.",
+      "אתגר חינמי של 5 ימים (20-24.12) למטפלים, יועצים ומאמנים שרוצים קליניקה מלאה ומבוקשת, בדרך אותנטית שמכבדת את המקצועיות שלהם.",
   },
   {
     file: "challenge-community.html",
     path: "/challenge-community",
     chunk: "ChallengeCommunity",
     title: "הזמנה לקהילה: אתגר להיות מומחה מבוקש - עם אליענה שפירא",
-    description: "לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (15-19.11), ממטפל אנונימי למומחה מבוקש בתחומך.",
+    description: "לחברי קהילת על שפת הקליניקה: אתגר חינמי של 5 ימים (20-24.12), ממטפל אנונימי למומחה מבוקש בתחומך.",
   },
   {
     // The homework link (/challenge-tools/card?src=hw1) shares with the challenge's own preview. A folder here is

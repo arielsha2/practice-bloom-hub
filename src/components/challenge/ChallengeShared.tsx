@@ -12,7 +12,13 @@ import { Check, Loader2, MessageCircle } from "lucide-react";
 
 // One row per challenge run in challenge_registrations; change both when the
 // next challenge opens so its sign-ups stay separate.
-export const CHALLENGE_KEY = "anonymous-to-expert-2026-11";
+// One key per round of the challenge, so each round's sign-ups and visits stay separate (and a November participant
+// can sign up again for December). The admin card switches between the rounds in CHALLENGE_ROUNDS.
+export const CHALLENGE_KEY = "anonymous-to-expert-2026-12";
+export const CHALLENGE_ROUNDS = [
+  { key: "anonymous-to-expert-2026-12", label: "20-24.12.2026" },
+  { key: "anonymous-to-expert-2026-11", label: "15-19.11.2026" },
+];
 export const WHATSAPP_GROUP_URL =
   "https://chat.whatsapp.com/KBJdNI4SqvUGrrxCkIEl5x";
 
