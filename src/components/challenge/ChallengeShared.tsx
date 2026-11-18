@@ -20,7 +20,7 @@ export const CHALLENGE_ROUNDS = [
   { key: "anonymous-to-expert-2026-11", label: "15-19.11.2026" },
 ];
 export const WHATSAPP_GROUP_URL =
-  "https://chat.whatsapp.com/KBJdNI4SqvUGrrxCkIEl5x";
+  "https://chat.whatsapp.com/IFMCf0oHa3A7wV2cUFErFJ";
 
 export const OUTCOMES = [
   "הכרזת מומחיות",
