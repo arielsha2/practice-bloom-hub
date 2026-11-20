@@ -10,8 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 // every page view of every signed-in visitor.
 export const EXPERTS_PATH = "/hamumchim";
 
-export function useShowExpertsTab(): boolean {
-  const { user } = useAuth();
+export function useAdminNav(): { isAdmin: boolean; isLoading: boolean } {
+  const { user, loading: authLoading } = useAuth();
   const q = useQuery({
     queryKey: ["is-admin-nav", user?.id],
     enabled: !!user,
@@ -23,5 +23,9 @@ export function useShowExpertsTab(): boolean {
       return data?.isAdmin === true;
     },
   });
-  return q.data === true;
+  return { isAdmin: q.data === true, isLoading: authLoading || (!!user && q.isLoading) };
+}
+
+export function useShowExpertsTab(): boolean {
+  return useAdminNav().isAdmin;
 }

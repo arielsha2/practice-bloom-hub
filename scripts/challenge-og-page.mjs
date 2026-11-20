@@ -39,19 +39,19 @@ const PAGES = [
     // safe: there is no challenge-tools.html beside it, so Netlify has nothing to redirect.
     file: "challenge-tools/card.html",
     path: "/challenge-tools/card",
-    chunk: "ChallengeCard",
+    chunk: "ChallengeToolsClosed",
     noindex: true,
-    title: "אתגר להיות מומחה מבוקש: כרטיס הביקור המקצועי - עם אליענה שפירא",
-    description: "המשימה מהאתגר: ארבע שאלות קצרות על אדם אחד שהעבודה שלך שינתה את חייו, ובסופן כרטיס ביקור מקצועי עם הנישה שלך.",
+    title: "האתגר הסתיים - האתגר הבא ב-20.12 - עם אליענה שפירא",
+    description: "האתגר הסתיים. האתגר הבא: 20-24 בדצמבר, חמישה ימים, חינם. ההרשמה בדף האתגר.",
   },
   {
     // Day 2 homework (/challenge-tools/letter?src=hw2).
     file: "challenge-tools/letter.html",
     path: "/challenge-tools/letter",
-    chunk: "ChallengeLetter",
+    chunk: "ChallengeToolsClosed",
     noindex: true,
-    title: "אתגר להיות מומחה מבוקש: המראה - עם אליענה שפירא",
-    description: "המשימה של יום 2: המראה. שניים־שלושה משפטים ברורים על המטופל או המטופלת שהיית הכי רוצה לעבוד איתו ועל מה שבוער לו עכשיו.",
+    title: "האתגר הסתיים - האתגר הבא ב-20.12 - עם אליענה שפירא",
+    description: "האתגר הסתיים. האתגר הבא: 20-24 בדצמבר, חמישה ימים, חינם. ההרשמה בדף האתגר.",
   },
   {
     file: "hamumchim.html",
