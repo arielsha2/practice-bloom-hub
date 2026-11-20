@@ -4,14 +4,14 @@
 // page itself never breaks. Cached at the CDN.
 //
 // An address that carries the id is sent on to the readable address with a permanent redirect (one hop) once
-// REDIRECT_ID_TO_SLUG is on. It is switched on only after the slug addresses are live and checked on every article,
-// so that a mistake can be undone by flipping this one constant.
+// REDIRECT_ID_TO_SLUG is on (switched on after the slug addresses were live and checked on every article; a
+// mistake can be undone by flipping this one constant).
 import type { Config, Context } from "@netlify/edge-functions";
 import { injectContentHead, type ContentRow } from "./lib/content-html.ts";
 import { ANON_KEY, SUPABASE_URL } from "./lib/public-db.ts";
 import { contentPath, RESERVED_SLUGS, UUID_RE } from "./lib/slug.ts";
 
-export const REDIRECT_ID_TO_SLUG = false;
+export const REDIRECT_ID_TO_SLUG = true;
 
 const FIELDS = "id,slug,updated_at,title,excerpt,content,featured_image_url,published_at,language";
 
