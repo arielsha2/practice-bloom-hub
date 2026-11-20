@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
@@ -9,190 +11,161 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { articleLd, faqLd as buildFaqLd } from "../../netlify/edge-functions/lib/schema";
+import { contentPath } from "../../netlify/edge-functions/lib/slug";
+import {
+  ABOUT,
+  CTA,
+  FAQS,
+  groupArticles,
+  INTRO,
+  PILLAR_DESCRIPTION,
+  PILLAR_H1,
+  PILLAR_TITLE,
+  PILLAR_URL,
+  pillarJsonLd,
+  STEPS,
+  TOC,
+  WHY,
+  type PillarArticle,
+} from "../../netlify/edge-functions/lib/pillar-clinic-marketing";
 
-const PAGE_PATH = "/שיווק-קליניקה-למטפלים";
-const CANONICAL = `https://therapykeys.co.il${encodeURI(PAGE_PATH)}`;
-
-// Dates in the structured data are fixed: a date that changes on every page load (it used to be "today") tells
-// crawlers the page is edited daily. Update DATE_MODIFIED when the guide's content really changes.
-const DATE_PUBLISHED = "2026-11-20";
-const DATE_MODIFIED = "2026-11-20";
-
-const STEPS = [
-  {
-    name: "הגדרת זהות מקצועית וייחודיות המטפל",
-    text: "לפני כל כלי שיווקי — להגדיר מי אתה כמטפל, באיזו אוכלוסייה אתה הכי טוב, ומה הייחודיות שלך בחדר הטיפול.",
-  },
-  {
-    name: "בניית מצב פנימי נכון לפני כלים שיווקיים",
-    text: "לעבוד על החסמים הפנימיים — פחד מפרסום, תחושת 'מי אני שאגיד', בושה לבקש תשלום. בלי זה, שום כלי לא יחזיק לאורך זמן.",
-  },
-  {
-    name: "בחירת ערוץ שיווק אחד ועקבי",
-    text: "לא לפזר אנרגיה על חמישה ערוצים בבת אחת. לבחור ערוץ אחד — LinkedIn, פייסבוק מקצועי או Google My Business — ולהיות שם בעקביות.",
-  },
-  {
-    name: "יצירת נראות אותנטית — תוכן שמדבר בשפת המטפל",
-    text: "לכתוב ולדבר בשפה הטיפולית שלך, לא בשפה שיווקית מלאכותית. מטופלים מזהים אותנטיות מקילומטרים.",
-  },
-  {
-    name: "בניית מערכת הפניות ומטופלים קבועים",
-    text: "ליצור קשרים עם רופאי משפחה, קולגות, ומרכזים מקצועיים. הפניות הן עדיין המקור החזק ביותר למטופלים איכותיים.",
-  },
-];
-
-const FAQS = [
-  {
-    q: "האם מותר לפסיכולוג לפרסם את עצמו?",
-    a: "כן — האתיקה המקצועית מאפשרת פרסום כל עוד הוא אמיתי ולא מטעה. השאלה היא לא 'האם מותר' אלא 'איך לעשות זאת בצורה שמרגישה נכונה'.",
-  },
-  {
-    q: "מה הדרך הכי יעילה למצוא מטופלים ראשונים?",
-    a: "הפניות מקולגות ומכרים הן המקור המהיר ביותר. לאחר מכן — נוכחות עקבית בערוץ אחד: LinkedIn, קבוצות פייסבוק מקצועיות, או Google My Business.",
-  },
-  {
-    q: "כמה זמן לוקח לבנות קליניקה מלאה?",
-    a: "על פי הניסיון עם עשרות מטפלים ב-TherapyKeys — עם ליווי נכון, 3-6 חודשים מספיקים לעבור מקליניקה ריקה לקליניקה עם מטופלים קבועים.",
-  },
-  {
-    q: "האם צריך אתר אינטרנט כדי לשווק קליניקה?",
-    a: "לא חייב בשלב הראשון. פרופיל Google My Business מעודכן + LinkedIn פעיל יכולים להספיק בהתחלה. אתר הוא כלי חשוב לשלב השני.",
-  },
-  {
-    q: "מה ההבדל בין שיווק קליניקה לשיווק עסק רגיל?",
-    a: "בעסק רגיל אפשר להפריד בין המוצר לבין המוכר. בקליניקה — המטפל הוא המוצר. לכן שיווק שלא נובע מזהות אמיתית מרגיש מזויף ולא עובד לאורך זמן.",
-  },
-];
+// The page's text, its topics and its structured data live in netlify/edge-functions/lib/pillar-clinic-marketing.ts
+// (also used by the build step that writes the text into the raw HTML for crawlers): edit them there.
 
 const ShivukKlinika = () => {
-  const guideLd = articleLd({
-    headline: "שיווק קליניקה למטפלים — המדריך המלא",
-    description: 'איך מטפלים ופסיכולוגים בונים שיווק קליניקה אותנטי? ד"ר אריאל שפירא מ-TherapyKeys מסביר את השיטה ב-5 שלבים.',
-    url: CANONICAL,
-    lang: "he",
-    datePublished: DATE_PUBLISHED,
-    dateModified: DATE_MODIFIED,
+  // Every published Hebrew article, so that each is linked from this page
+  const { data: articles = [] } = useQuery({
+    queryKey: ["pillar-clinic-marketing-articles"],
+    staleTime: 10 * 60 * 1000,
+    queryFn: async (): Promise<PillarArticle[]> => {
+      const { data, error } = await supabase
+        .from("contents")
+        .select("id,slug,title")
+        .eq("status", "published")
+        .eq("language", "he")
+        .order("published_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
-
-  const howToLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: "איך בונים שיווק קליניקה שמרגיש אמיתי",
-    description:
-      '5 שלבים לשיווק קליניקה פרטית למטפלים לפי שיטת ד"ר אריאל שפירא',
-    inLanguage: "he",
-    step: STEPS.map((s, i) => ({
-      "@type": "HowToStep",
-      position: i + 1,
-      name: s.name,
-      text: s.text,
-    })),
-  };
-
-  const faqLd = buildFaqLd(FAQS);
+  const groups = groupArticles(articles);
+  const topicIds = new Set(groups.map((g) => g.id));
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <SEOHead
-        title="שיווק קליניקה למטפלים — המדריך המלא | TherapyKeys"
-        description='איך מטפלים ופסיכולוגים בונים שיווק קליניקה אותנטי? ד"ר אריאל שפירא מ-TherapyKeys מסביר את השיטה ב-5 שלבים.'
-        canonicalUrl={CANONICAL}
-        ogType="article"
-        jsonLd={[guideLd, howToLd, faqLd]}
-      />
+      <SEOHead title={PILLAR_TITLE} description={PILLAR_DESCRIPTION} canonicalUrl={PILLAR_URL} ogType="article" jsonLd={pillarJsonLd()} />
       <Header />
       <main className="pt-24 pb-16">
         <article className="container mx-auto px-4 max-w-3xl">
           <header className="mb-10">
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-              שיווק קליניקה למטפלים — המדריך המלא של ד"ר אריאל שפירא
-            </h1>
-            <p className="text-lg md:text-xl text-foreground/90 leading-relaxed">
-              שיווק קליניקה פרטית למטפלים הוא תהליך שונה לחלוטין משיווק עסקי
-              רגיל — כי מטפל שמרגיש לא אותנטי לא יצליח לשווק לאורך זמן. הגישה
-              של ד"ר אריאל שפירא מ-TherapyKeys מבוססת על עיקרון אחד: מצב פנימי
-              נכון לפני כלים שיווקיים. מטפל שיודע מי הוא ומה הייחודיות שלו —
-              ימשוך מטופלים שמתאימים לו, בלי להרגיש שהוא "מוכר את עצמו".
-            </p>
+            <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight">{PILLAR_H1}</h1>
+            <p className="text-lg md:text-xl text-foreground/90 leading-relaxed">{INTRO}</p>
           </header>
 
-          <section className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              למה שיווק רגיל לא עובד למטפלים
-            </h2>
-            <p className="text-base md:text-lg text-muted-foreground mb-4 leading-relaxed">
-              שיווק קלאסי בנוי על העברת מסר מוצרי לקהל רחב. בעולם הטיפולי, זה
-              לא רק לא עובד — זה גם פוגע באמון המקצועי. הנה למה:
-            </p>
+          <nav aria-label="תוכן עניינים" className="mb-12 bg-card border border-border rounded-xl p-5 md:p-6">
+            <h2 className="text-lg font-bold text-foreground mb-3">בדף הזה</h2>
+            <ul className="space-y-2">
+              {TOC.filter((t) => t.id !== "articles" || groups.length > 0).map((t) => (
+                <li key={t.id}>
+                  <a href={`#${t.id}`} className="text-primary hover:underline">
+                    {t.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <section id="why" className="mb-12 scroll-mt-24">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">{WHY.heading}</h2>
+            <p className="text-base md:text-lg text-muted-foreground mb-4 leading-relaxed">{WHY.intro}</p>
             <ul className="list-disc pr-6 space-y-2 text-base md:text-lg text-muted-foreground">
-              <li>
-                המטפל הוא המוצר — אי אפשר להפריד בין מי שאתה לבין מה שאתה מציע.
-              </li>
-              <li>
-                מטופלים בוחרים מטפל מתוך תחושת ביטחון ואמון, לא מתוך השוואת
-                תכונות.
-              </li>
-              <li>
-                טכניקות שיווק אגרסיביות סותרות את עמדת ההקשבה הטיפולית ויוצרות
-                דיסוננס פנימי שמשתק.
-              </li>
+              {WHY.points.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
             </ul>
           </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-              איך בונים שיווק קליניקה שמרגיש אמיתי — 5 שלבים
-            </h2>
+          <section id="steps" className="mb-12 scroll-mt-24">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">{TOC[1].label}</h2>
             <ol className="space-y-6">
               {STEPS.map((s, i) => (
-                <li key={i} className="border-r-4 border-primary pr-4">
+                <li key={s.name} className="border-r-4 border-primary pr-4">
                   <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2">
                     שלב {i + 1}: {s.name}
                   </h3>
-                  <p className="text-base text-muted-foreground leading-relaxed">
-                    {s.text}
-                  </p>
+                  <p className="text-base text-muted-foreground leading-relaxed">{s.text}</p>
+                  {topicIds.has(s.topic) && (
+                    <p className="mt-2">
+                      <a href={`#${s.topic}`} className="text-sm text-primary hover:underline">
+                        למאמרים בנושא
+                      </a>
+                    </p>
+                  )}
                 </li>
               ))}
             </ol>
           </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-              השאלות שמטפלים שואלים אותי הכי הרבה על שיווק
-            </h2>
+          {groups.length > 0 && (
+            <section id="articles" className="mb-12 scroll-mt-24">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">מאמרים לפי נושא</h2>
+              <div className="space-y-8">
+                {groups.map((g) => (
+                  <section key={g.id} id={g.id} className="scroll-mt-24">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">{g.title}</h3>
+                    <p className="text-base text-muted-foreground mb-3 leading-relaxed">{g.intro}</p>
+                    <ul className="space-y-1.5 pr-5 list-disc marker:text-primary">
+                      {g.articles.map((a) => (
+                        <li key={a.id}>
+                          <Link to={contentPath(a)} className="text-foreground hover:text-primary hover:underline">
+                            {a.title.trim()}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section id="faq" className="mb-12 scroll-mt-24">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">{TOC[3].label}</h2>
             <Accordion type="single" collapsible className="w-full space-y-3">
               {FAQS.map((f, i) => (
-                <AccordionItem
-                  key={i}
-                  value={`faq-${i}`}
-                  className="bg-card border border-border rounded-lg px-5 shadow-sm"
-                >
+                <AccordionItem key={f.q} value={`faq-${i}`} className="bg-card border border-border rounded-lg px-5 shadow-sm">
                   <AccordionTrigger className="text-right text-base md:text-lg font-semibold text-foreground hover:no-underline">
                     {f.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-base leading-relaxed pt-2">
-                    {f.a}
-                  </AccordionContent>
+                  <AccordionContent className="text-muted-foreground text-base leading-relaxed pt-2">{f.a}</AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
           </section>
 
-          <section className="bg-secondary rounded-2xl p-8 md:p-10 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              איך TherapyKeys עוזר למטפלים לשווק נכון
-            </h2>
-            <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-2xl mx-auto">
-              תוכנית "נקודת המפנה" של ד"ר אריאל שפירא היא ליווי של 3 חודשים
-              שמתחיל מהמצב הפנימי של המטפל וממשיך לכלים שיווקיים אותנטיים.
-              בסיום התוכנית — קליניקה עם מטופלים קבועים, זהות מקצועית ברורה,
-              ושיווק שמרגיש כמו המשך טבעי של עבודת הטיפול.
-            </p>
-            <Button asChild variant="cta" size="xl">
-              <Link to="/turning-point">לפרטים על תוכנית נקודת המפנה</Link>
-            </Button>
+          <section id="about" className="mb-12 scroll-mt-24">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">{ABOUT.heading}</h2>
+            <ul className="space-y-2 mb-4 text-base md:text-lg text-muted-foreground">
+              {ABOUT.people.map((p) => (
+                <li key={p.name}>
+                  <strong className="text-foreground">{p.name}</strong> — {p.role}
+                </li>
+              ))}
+            </ul>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">{ABOUT.text}</p>
+          </section>
+
+          <section id="next" className="bg-secondary rounded-2xl p-8 md:p-10 text-center scroll-mt-24">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">{CTA.heading}</h2>
+            <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-2xl mx-auto">{CTA.text}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild variant="cta" size="xl">
+                <Link to={CTA.programPath}>{CTA.programLabel}</Link>
+              </Button>
+              <Button asChild variant="outline" size="xl">
+                <Link to={CTA.diagnosisPath}>{CTA.diagnosisLabel}</Link>
+              </Button>
+            </div>
           </section>
         </article>
       </main>
