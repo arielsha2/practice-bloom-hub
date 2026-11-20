@@ -9,9 +9,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { articleLd, faqLd as buildFaqLd } from "../../netlify/edge-functions/lib/schema";
 
 const PAGE_PATH = "/שיווק-קליניקה-למטפלים";
 const CANONICAL = `https://therapykeys.co.il${encodeURI(PAGE_PATH)}`;
+
+// Dates in the structured data are fixed: a date that changes on every page load (it used to be "today") tells
+// crawlers the page is edited daily. Update DATE_MODIFIED when the guide's content really changes.
+const DATE_PUBLISHED = "2026-11-20";
+const DATE_MODIFIED = "2026-11-20";
 
 const STEPS = [
   {
@@ -60,26 +66,14 @@ const FAQS = [
 ];
 
 const ShivukKlinika = () => {
-  const today = new Date().toISOString().split("T")[0];
-
-  const articleLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const guideLd = articleLd({
     headline: "שיווק קליניקה למטפלים — המדריך המלא",
-    author: { "@type": "Person", name: 'ד"ר אריאל שפירא' },
-    datePublished: today,
-    dateModified: today,
-    publisher: {
-      "@type": "Organization",
-      name: "TherapyKeys",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://therapykeys.co.il/og-image.jpg",
-      },
-    },
-    inLanguage: "he",
-    mainEntityOfPage: CANONICAL,
-  };
+    description: 'איך מטפלים ופסיכולוגים בונים שיווק קליניקה אותנטי? ד"ר אריאל שפירא מ-TherapyKeys מסביר את השיטה ב-5 שלבים.',
+    url: CANONICAL,
+    lang: "he",
+    datePublished: DATE_PUBLISHED,
+    dateModified: DATE_MODIFIED,
+  });
 
   const howToLd = {
     "@context": "https://schema.org",
@@ -96,24 +90,16 @@ const ShivukKlinika = () => {
     })),
   };
 
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: FAQS.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
+  const faqLd = buildFaqLd(FAQS);
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <SEOHead
         title="שיווק קליניקה למטפלים — המדריך המלא | TherapyKeys"
-        description='איך מטפלים ופסיכולוגים בונים שיווק קליניקה אותנטי? ד"ר אריאל שפירא מ-TherapyKeys מסביר את השיטה בـ5 שלבים.'
+        description='איך מטפלים ופסיכולוגים בונים שיווק קליניקה אותנטי? ד"ר אריאל שפירא מ-TherapyKeys מסביר את השיטה ב-5 שלבים.'
         canonicalUrl={CANONICAL}
         ogType="article"
-        jsonLd={[articleLd, howToLd, faqLd]}
+        jsonLd={[guideLd, howToLd, faqLd]}
       />
       <Header />
       <main className="pt-24 pb-16">

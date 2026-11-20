@@ -1690,6 +1690,25 @@ export default function Mentor() {
     document.getElementById("full-journey-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // The page's head, for both views: the logged-out sales page is what search engines and AI crawlers see, so it
+  // needs the title, canonical and hreflang as much as the signed-in view.
+  const mentorHead = (
+    <SEOHead
+      title={
+        isRTL
+          ? "המנטור | ליווי AI אישי למטפלים — TherapyKeys"
+          : "The Mentor | AI Guidance for Therapists — TherapyKeys"
+      }
+      description={
+        isRTL
+          ? 'מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
+          : "An AI mentor based on Dr. Ariel Shapira\u2019s method. Personal guidance for therapists on niche, pricing, marketing and building a private practice."
+      }
+      canonicalUrl={isRTL ? "/mentor" : "/en/mentor"}
+      alternates={{ he: "/mentor", en: "/en/mentor" }}
+    />
+  );
+
   // Paywall — the generic sales page is now only for logged-out visitors.
   // Any signed-up user without paid access reaches Eliana instead, since her
   // prompt already knows to invite a free user into the diagnosis (or, if
@@ -1699,6 +1718,7 @@ export default function Mentor() {
   if (!accessLoading && hasAccess === false && !user) {
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-mentor-bg">
+        {mentorHead}
         <MentorTopBar />
         <main className="flex-1 pt-16">
           {user && <PaymentPendingBanner />}
@@ -1714,19 +1734,7 @@ export default function Mentor() {
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen flex flex-col bg-gradient-to-b from-mentor-bg to-[hsl(var(--mentor-bg)/0.7)]"
     >
-      <SEOHead
-        title={
-          isRTL
-            ? "המנטור | ליווי AI אישי למטפלים — TherapyKeys"
-            : "The Mentor | AI Guidance for Therapists — TherapyKeys"
-        }
-        description={
-          isRTL
-            ? 'מנטור AI מבוסס שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא. ליווי אישי לאיתור נישה, תמחור, שיווק ובניית קליניקה פרטית למטפלים בישראל.'
-            : "An AI mentor based on Dr. Ariel Shapira\u2019s method. Personal guidance for therapists on niche, pricing, marketing and building a private practice."
-        }
-        canonicalUrl={isRTL ? "/mentor" : "/en/mentor"}
-      />
+      {mentorHead}
       <MentorTopBar />
       <MailingConsentGate />
 

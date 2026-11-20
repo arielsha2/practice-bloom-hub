@@ -5,8 +5,9 @@
 //
 // articleDescription / plainText / clip are mirrored in src/lib/articleSeo.ts (the browser side): keep them in step.
 
-const SITE = "https://therapykeys.co.il";
-const DEFAULT_IMAGE = `${SITE}/og-image.jpg`;
+import { articleLd, ldScript, LOGO, SITE, type Lang } from "./schema.ts";
+
+const DEFAULT_IMAGE = LOGO;
 
 export interface ContentRow {
   title: string | null;
@@ -14,6 +15,7 @@ export interface ContentRow {
   content: string | null;
   featured_image_url: string | null;
   published_at: string | null;
+  language?: string | null;
 }
 
 const esc = (v: unknown): string =>
@@ -50,34 +52,32 @@ export function articleDescription(row: { excerpt?: string | null; title?: strin
 }
 
 const SHELL_META =
-  /<meta\s+(?:name|property)="(?:description|og:title|og:description|og:url|og:image|og:type|twitter:title|twitter:description|twitter:image|robots)"[^>]*>\s*/gi;
+  /<meta\s+(?:name|property)="(?:description|og:locale|og:title|og:description|og:url|og:image|og:type|twitter:title|twitter:description|twitter:image|robots)"[^>]*>\s*/gi;
 
 export function injectContentHead(shell: string, row: ContentRow, id: string): string {
-  const title = `${plainText(row.title ?? "") || "מאמר"} | על שפת הקליניקה`;
+  const lang: Lang = row.language === "en" ? "en" : "he";
+  const title = `${plainText(row.title ?? "") || (lang === "en" ? "Article" : "מאמר")} | ${lang === "en" ? "TherapyKeys" : "על שפת הקליניקה"}`;
   const description = articleDescription(row);
   const canonical = `${SITE}/contents/${id}`;
   const image = row.featured_image_url ? (row.featured_image_url.startsWith("http") ? row.featured_image_url : `${SITE}${row.featured_image_url}`) : DEFAULT_IMAGE;
   const words = plainText(row.content ?? "").split(" ").filter(Boolean).length;
 
-  const ld = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const ld = articleLd({
     headline: plainText(row.title ?? ""),
     description,
+    url: canonical,
+    lang,
     image,
-    inLanguage: "he",
-    ...(row.published_at ? { datePublished: row.published_at } : {}),
-    ...(words ? { wordCount: words } : {}),
-    author: { "@type": "Person", "@id": `${SITE}/#ariel-shapira`, name: 'ד"ר אריאל שפירא', url: SITE },
-    publisher: { "@type": "Organization", "@id": `${SITE}/#organization`, name: "TherapyKeys", logo: { "@type": "ImageObject", url: DEFAULT_IMAGE } },
-    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
-  };
+    datePublished: row.published_at,
+    wordCount: words || undefined,
+  });
 
   const tags = [
     `<title>${esc(title)}</title>`,
     `<meta name="description" data-rh="true" content="${esc(description)}" />`,
     `<link rel="canonical" data-rh="true" href="${esc(canonical)}" />`,
     `<meta property="og:type" data-rh="true" content="article" />`,
+    `<meta property="og:locale" data-rh="true" content="${lang === "en" ? "en_US" : "he_IL"}" />`,
     `<meta property="og:title" data-rh="true" content="${esc(title)}" />`,
     `<meta property="og:description" data-rh="true" content="${esc(description)}" />`,
     `<meta property="og:url" data-rh="true" content="${esc(canonical)}" />`,
@@ -85,14 +85,13 @@ export function injectContentHead(shell: string, row: ContentRow, id: string): s
     `<meta name="twitter:title" data-rh="true" content="${esc(title)}" />`,
     `<meta name="twitter:description" data-rh="true" content="${esc(description)}" />`,
     `<meta name="twitter:image" data-rh="true" content="${esc(image)}" />`,
-    // the shell's own structured data describes the home page: an article carries its own
-    `<script type="application/ld+json" data-rh="true">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
+    // the shell keeps the site-wide organization graph (who runs the site); the article adds its own
+    ldScript(ld, `data-rh="true"`),
   ].join("\n    ");
 
   const out = shell
     .replace(/<title>[\s\S]*?<\/title>\s*/i, "")
     .replace(SHELL_META, "")
-    .replace(/<link\s+rel="canonical"[^>]*>\s*/gi, "")
-    .replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>\s*/gi, "");
+    .replace(/<link\s+rel="canonical"[^>]*>\s*/gi, "");
   return out.replace(/<\/head>/i, () => `    ${tags}\n  </head>`);
 }

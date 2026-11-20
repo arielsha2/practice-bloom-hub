@@ -10,52 +10,17 @@ import { CTABanner } from "@/components/landing/CTABanner";
 import { Footer } from "@/components/landing/Footer";
 import { MentorSection } from "@/components/landing/MentorSection";
 import { FAQ } from "@/components/landing/FAQ";
+import { homeLd } from "../../netlify/edge-functions/lib/schema";
 
 const Index = () => {
   const { isRTL } = useLanguage();
-
-  const personLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: 'ד"ר אריאל שפירא',
-    alternateName: "Dr. Ariel Shapira",
-    jobTitle: "פסיכולוג קליני ומלווה מטפלים לקליניקה יציבה",
-    description:
-      "פסיכולוג קליני המתמחה בליווי עסקי למטפלים הבונים קליניקה פרטית בישראל, בעל שיטה ייחודית בשם 'על שפת הקליניקה'",
-    url: "https://therapykeys.co.il",
-    sameAs: ["https://il.linkedin.com/in/dr-ariel-shapira-phd-00703ba8"],
-    knowsAbout: [
-      "ליווי מטפלים לקליניקה פרטית",
-      "ייעוץ עסקי למטפלים",
-      "פסיכולוגיה קלינית",
-      "בניית עסק למטפלים",
-      "therapist private practice consulting",
-      "clinical psychology Israel",
-    ],
-    address: { "@type": "PostalAddress", addressCountry: "IL" },
-  };
-
-  const serviceLd = {
-    "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    name: "TherapyKeys, ייעוץ עסקי למטפלים",
-    alternateName: "Therapy Keys",
-    url: "https://therapykeys.co.il",
-    description:
-      'שירות ייעוץ עסקי ייחודי למטפלים ופסיכולוגים בישראל המעוניינים לבנות ולשווק קליניקה פרטית, מבוסס על שיטת "על שפת הקליניקה" של ד"ר אריאל שפירא',
-    provider: { "@type": "Person", name: 'ד"ר אריאל שפירא' },
-    areaServed: { "@type": "Country", name: "Israel" },
-    serviceType: ["ייעוץ עסקי למטפלים", "ליווי שיווקי לקליניקה פרטית", "הדרכה מקצועית לפסיכולוגים"],
-    availableLanguage: ["Hebrew", "English"],
-    address: { "@type": "PostalAddress", addressCountry: "IL" },
-  };
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen">
       <SEOHead
         title={
           isRTL
-            ? 'על שפת הקליניקה | ליווי מטפלים לקליניקה מלאה – ד"ר אריאל שפירא'
+            ? 'שיווק לקליניקה פרטית וליווי עסקי למטפלים | על שפת הקליניקה'
             : "Dr. Ariel Shapira | Clinical Psychologist Guiding Therapists to a Stable Practice"
         }
         description={
@@ -64,7 +29,8 @@ const Index = () => {
             : "Dr. Ariel Shapira, clinical psychologist, helps therapists build a thriving private practice without compromising their professional identity."
         }
         canonicalUrl={isRTL ? "/" : "/en"}
-        jsonLd={[personLd, serviceLd]}
+        jsonLd={homeLd(isRTL ? "he" : "en")}
+        alternates={{ he: "/", en: "/en" }}
       />
       <Header />
       <main>

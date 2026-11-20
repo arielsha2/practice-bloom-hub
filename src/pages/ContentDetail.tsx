@@ -7,6 +7,7 @@ import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
 import { SEOHead } from '@/components/SEOHead';
 import { articleDescription, plainText as toPlainText } from '@/lib/articleSeo';
+import { articleLd } from '../../netlify/edge-functions/lib/schema';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryBadge } from '@/components/contents/CategoryBadge';
 import { AuthorFooter } from '@/components/contents/AuthorFooter';
@@ -162,44 +163,26 @@ export default function ContentDetail() {
   const plainText = (content.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = plainText ? plainText.split(' ').length : undefined;
   const canonicalPath = `/contents/${content.id}`;
+  const articleLang: 'he' | 'en' = content.language === 'en' ? 'en' : 'he';
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SEOHead
-        title={`${articleTitle || 'מאמר'} | על שפת הקליניקה`}
+        title={`${articleTitle || (articleLang === 'en' ? 'Article' : 'מאמר')} | ${articleLang === 'en' ? 'TherapyKeys' : 'על שפת הקליניקה'}`}
         description={seoDesc || 'מאמר מקצועי למטפלים — TherapyKeys'}
         canonicalUrl={canonicalPath}
         ogImage={content.featured_image_url || undefined}
         ogType="article"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Article",
+        lang={articleLang}
+        jsonLd={articleLd({
           headline: articleTitle,
           description: seoDesc,
+          url: `https://therapykeys.co.il${canonicalPath}`,
+          lang: articleLang,
           image: content.featured_image_url,
-          inLanguage: "he",
-          ...(content.published_at ? { datePublished: content.published_at } : {}),
-          ...(wordCount ? { wordCount } : {}),
-          author: {
-            "@type": "Person",
-            "@id": "https://therapykeys.co.il/#ariel-shapira",
-            name: 'ד"ר אריאל שפירא',
-            url: "https://therapykeys.co.il",
-          },
-          publisher: {
-            "@type": "Organization",
-            "@id": "https://therapykeys.co.il/#organization",
-            name: "TherapyKeys",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://therapykeys.co.il/og-image.jpg",
-            },
-          },
-          mainEntityOfPage: {
-            "@type": "WebPage",
-            "@id": `https://therapykeys.co.il${canonicalPath}`,
-          },
-        }}
+          datePublished: content.published_at,
+          wordCount,
+        })}
       />
       <Header />
       

@@ -22,7 +22,7 @@ export default async (request: Request, context: Context) => {
   let row: ContentRow | null = null;
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/contents?id=eq.${id}&is_published=eq.true&select=title,excerpt,content,featured_image_url,published_at&limit=1`,
+      `${SUPABASE_URL}/rest/v1/contents?id=eq.${id}&is_published=eq.true&select=title,excerpt,content,featured_image_url,published_at,language&limit=1`,
       { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }, signal: AbortSignal.timeout(4000) },
     );
     if (!r.ok) return response;
