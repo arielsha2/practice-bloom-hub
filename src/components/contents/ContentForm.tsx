@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { FileContentImport } from "./FileContentImport";
+import { isValidSlug, slugify, uniqueSlug } from "../../../netlify/edge-functions/lib/slug";
 
 interface Category {
   id: string;
@@ -21,6 +22,8 @@ interface Category {
 interface ContentFormProps {
   content?: {
     id: string;
+    slug?: string | null;
+    published_at?: string | null;
     title: string;
     content: string;
     language: string;
@@ -43,6 +46,7 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
   const [status, setStatus] = useState(content?.status || "draft");
   const [excerpt, setExcerpt] = useState(content?.excerpt || "");
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(content?.featured_image_url || null);
+  const [slug, setSlug] = useState(content?.slug || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -64,15 +68,30 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // The article's address. Typed by hand it is cleaned up; left empty it is made from the title (and, once it
+    // exists, it never changes by itself when the title is edited, so links that were shared keep working).
+    let finalSlug = slugify(slug);
+    if (slug.trim() && !isValidSlug(finalSlug)) {
+      toast.error(isRTL ? "הכתובת אינה תקינה" : "The address is not valid");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!finalSlug) {
+      const { data: rows } = await supabase.from("contents").select("slug").not("slug", "is", null);
+      finalSlug = uniqueSlug(title, (rows ?? []).map((r) => r.slug as string));
+    }
+
     const contentData = {
       title,
+      slug: finalSlug,
       content: contentText,
       language,
       category_id: categoryId,
       status,
       excerpt: excerpt || null,
       featured_image_url: featuredImageUrl,
-      published_at: status === 'published' ? new Date().toISOString() : null,
+      // an edit keeps the original publish date (it used to be reset to "now" on every save)
+      published_at: status === 'published' ? (content?.published_at ?? new Date().toISOString()) : null,
     };
 
     try {
@@ -84,7 +103,7 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
           .eq("id", content.id);
 
         if (error) {
-          toast.error(t("contents.admin.saveError"));
+          toast.error(error.code === "23505" ? (isRTL ? "הכתובת כבר תפוסה במאמר אחר" : "That address is already used by another article") : t("contents.admin.saveError"));
           console.error("Error updating content:", error);
         } else {
           toast.success(t("contents.admin.saveSuccess"));
@@ -95,7 +114,7 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
         const { error } = await supabase.from("contents").insert(contentData);
 
         if (error) {
-          toast.error(t("contents.admin.saveError"));
+          toast.error(error.code === "23505" ? (isRTL ? "הכתובת כבר תפוסה במאמר אחר" : "That address is already used by another article") : t("contents.admin.saveError"));
           console.error("Error creating content:", error);
         } else {
           toast.success(t("contents.admin.saveSuccess"));
@@ -119,6 +138,27 @@ export function ContentForm({ content, onSaved, onCancel }: ContentFormProps) {
           placeholder={t("contents.form.titlePlaceholder")}
           required
         />
+      </div>
+
+      {/* Address (slug) */}
+      <div className="space-y-2">
+        <Label htmlFor="slug">{isRTL ? "כתובת המאמר (slug)" : "Article address (slug)"}</Label>
+        <Input
+          id="slug"
+          dir="ltr"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder={isRTL ? "ריק = נוצר אוטומטית מהכותרת" : "empty = made from the title"}
+        />
+        <p className="text-xs text-muted-foreground">
+          {content?.slug
+            ? isRTL
+              ? "שינוי הכתובת ישבור קישורים שכבר פורסמו למאמר. עריכת הכותרת לא משנה אותה."
+              : "Changing the address breaks links already shared. Editing the title does not change it."
+            : isRTL
+              ? "מילים בעברית או באנגלית מופרדות במקפים, למשל: שיווק-למטפלים"
+              : "Words separated by hyphens, e.g. marketing-for-therapists"}
+        </p>
       </div>
 
       {/* Category, Language, Status Row */}

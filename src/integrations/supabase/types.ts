@@ -452,8 +452,10 @@ export type Database = {
           published_at: string | null
           scheduled_publish_at: string | null
           source: string | null
+          slug: string | null
           status: string | null
           title: string
+          updated_at: string
         }
         Insert: {
           category_id?: string | null
@@ -469,8 +471,10 @@ export type Database = {
           published_at?: string | null
           scheduled_publish_at?: string | null
           source?: string | null
+          slug?: string | null
           status?: string | null
           title: string
+          updated_at?: string
         }
         Update: {
           category_id?: string | null
@@ -486,8 +490,10 @@ export type Database = {
           published_at?: string | null
           scheduled_publish_at?: string | null
           source?: string | null
+          slug?: string | null
           status?: string | null
           title?: string
+          updated_at?: string
         }
         Relationships: [
           {

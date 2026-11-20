@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { contentPath } from "../../../netlify/edge-functions/lib/slug";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,7 +81,7 @@ export function ContentCard({ content, category }: ContentCardProps) {
       </CardContent>
 
       <CardFooter>
-        <Link to={`/contents/${content.id}`} className="w-full">
+        <Link to={contentPath(content)} className="w-full">
           <Button variant="outline" className="w-full group">
             {t('contents.readMore')}
             <ArrowIcon className="w-4 h-4 ms-2 group-hover:translate-x-1 transition-transform" />

@@ -6,10 +6,14 @@
 // articleDescription / plainText / clip are mirrored in src/lib/articleSeo.ts (the browser side): keep them in step.
 
 import { articleLd, ldScript, LOGO, SITE, type Lang } from "./schema.ts";
+import { contentPath } from "./slug.ts";
 
 const DEFAULT_IMAGE = LOGO;
 
 export interface ContentRow {
+  id: string;
+  slug?: string | null;
+  updated_at?: string | null;
   title: string | null;
   excerpt: string | null;
   content: string | null;
@@ -54,11 +58,12 @@ export function articleDescription(row: { excerpt?: string | null; title?: strin
 const SHELL_META =
   /<meta\s+(?:name|property)="(?:description|og:locale|og:title|og:description|og:url|og:image|og:type|twitter:title|twitter:description|twitter:image|robots)"[^>]*>\s*/gi;
 
-export function injectContentHead(shell: string, row: ContentRow, id: string): string {
+export function injectContentHead(shell: string, row: ContentRow): string {
   const lang: Lang = row.language === "en" ? "en" : "he";
   const title = `${plainText(row.title ?? "") || (lang === "en" ? "Article" : "מאמר")} | ${lang === "en" ? "TherapyKeys" : "על שפת הקליניקה"}`;
   const description = articleDescription(row);
-  const canonical = `${SITE}/contents/${id}`;
+  // the article's one address: its slug when it has one, so the id address and the slug address share a canonical
+  const canonical = `${SITE}${encodeURI(contentPath(row))}`;
   const image = row.featured_image_url ? (row.featured_image_url.startsWith("http") ? row.featured_image_url : `${SITE}${row.featured_image_url}`) : DEFAULT_IMAGE;
   const words = plainText(row.content ?? "").split(" ").filter(Boolean).length;
 
@@ -69,6 +74,7 @@ export function injectContentHead(shell: string, row: ContentRow, id: string): s
     lang,
     image,
     datePublished: row.published_at,
+    dateModified: row.updated_at,
     wordCount: words || undefined,
   });
 

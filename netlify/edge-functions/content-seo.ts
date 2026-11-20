@@ -1,38 +1,60 @@
-// /contents/:id: returns the app shell with the article's own title, description and link preview in the HTML, so
-// search engines and link-preview bots (which do not run JavaScript) no longer see the home page's tags on every
-// article. Any failure falls back to the plain shell, so the page itself never breaks. Cached at the CDN.
+// /contents/:key (the key is an article's slug, or, for older links, its id): returns the app shell with the article's
+// own title, description and link preview in the HTML, so search engines and link-preview bots (which do not run
+// JavaScript) no longer see the home page's tags on every article. Any failure falls back to the plain shell, so the
+// page itself never breaks. Cached at the CDN.
+//
+// An address that carries the id is sent on to the readable address with a permanent redirect (one hop) once
+// REDIRECT_ID_TO_SLUG is on. It is switched on only after the slug addresses are live and checked on every article,
+// so that a mistake can be undone by flipping this one constant.
 import type { Config, Context } from "@netlify/edge-functions";
 import { injectContentHead, type ContentRow } from "./lib/content-html.ts";
+import { ANON_KEY, SUPABASE_URL } from "./lib/public-db.ts";
+import { contentPath, RESERVED_SLUGS, UUID_RE } from "./lib/slug.ts";
 
-const SUPABASE_URL = "https://umtqmhzzxbfvokbiwsmr.supabase.co";
-// The public (anon) key, the same one the site ships to every browser. Reads are limited by row-level security,
-// which lets anyone read published articles only.
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdHFtaHp6eGJmdm9rYml3c21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NjI5ODIsImV4cCI6MjA4MjIzODk4Mn0.lVF-CCkqp0VlTjCmXbVKhYIjBrp9y7_hWacMHk7AxCE";
+export const REDIRECT_ID_TO_SLUG = false;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const FIELDS = "id,slug,updated_at,title,excerpt,content,featured_image_url,published_at,language";
 
 export default async (request: Request, context: Context) => {
-  const id = context.params?.id ?? new URL(request.url).pathname.split("/")[2] ?? "";
-  if (!UUID.test(id)) return; // /contents/admin and anything else that is not an article id: leave the request alone
+  const url = new URL(request.url);
+  const raw = context.params?.id ?? url.pathname.split("/")[2] ?? "";
+  let key = "";
+  try {
+    key = decodeURIComponent(raw);
+  } catch {
+    return; // not a valid address: leave the request alone
+  }
+  if (!key || RESERVED_SLUGS.includes(key)) return; // /contents/admin is a page of its own
+
+  const byId = UUID_RE.test(key);
+  let row: ContentRow | null = null;
+  try {
+    const filter = byId ? `id=eq.${key}` : `slug=eq.${encodeURIComponent(key)}`;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/contents?${filter}&is_published=eq.true&select=${FIELDS}&limit=1`, {
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return;
+    row = ((await r.json()) as ContentRow[])[0] ?? null;
+  } catch {
+    return;
+  }
+  if (!row?.title) return; // unknown or unpublished: the app shows its own state
+
+  if (REDIRECT_ID_TO_SLUG && byId && row.slug) {
+    return new Response(null, {
+      status: 301,
+      headers: {
+        location: `${encodeURI(contentPath(row))}${url.search}`,
+        "cache-control": "public, max-age=0, s-maxage=600",
+      },
+    });
+  }
 
   const response = await context.next();
   if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
 
-  let row: ContentRow | null = null;
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/contents?id=eq.${id}&is_published=eq.true&select=title,excerpt,content,featured_image_url,published_at,language&limit=1`,
-      { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }, signal: AbortSignal.timeout(4000) },
-    );
-    if (!r.ok) return response;
-    row = ((await r.json()) as ContentRow[])[0] ?? null;
-  } catch {
-    return response;
-  }
-  if (!row?.title) return response; // unknown or unpublished: the app shows its own state
-
-  const html = injectContentHead(await response.text(), row, id);
+  const html = injectContentHead(await response.text(), row);
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/html; charset=utf-8");

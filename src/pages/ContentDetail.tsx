@@ -8,6 +8,7 @@ import { Footer } from '@/components/landing/Footer';
 import { SEOHead } from '@/components/SEOHead';
 import { articleDescription, plainText as toPlainText } from '@/lib/articleSeo';
 import { articleLd } from '../../netlify/edge-functions/lib/schema';
+import { UUID_RE, contentPath } from '../../netlify/edge-functions/lib/slug';
 import { ContentForm } from '@/components/contents/ContentForm';
 import { CategoryBadge } from '@/components/contents/CategoryBadge';
 import { AuthorFooter } from '@/components/contents/AuthorFooter';
@@ -40,6 +41,8 @@ interface Category {
 
 interface Content {
   id: string;
+  slug: string | null;
+  updated_at: string | null;
   title: string;
   content: string;
   language: string;
@@ -51,7 +54,8 @@ interface Content {
 }
 
 export default function ContentDetail() {
-  const { id } = useParams<{ id: string }>();
+  // The address carries a slug (or, for older links, the id)
+  const { id: param } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
   const { isAdmin } = useIsAdmin();
@@ -63,13 +67,13 @@ export default function ContentDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchContent = async () => {
-    if (!id) return;
+    if (!param) return;
     
     try {
       const { data, error } = await supabase
         .from('contents')
         .select('*')
-        .eq('id', id)
+        .eq(UUID_RE.test(param) ? 'id' : 'slug', param)
         .single();
 
       if (error) {
@@ -77,6 +81,8 @@ export default function ContentDetail() {
         navigate('/contents');
       } else {
         setContent(data);
+        // an old link by id: show the readable address (search engines are sent there by the server)
+        if (UUID_RE.test(param) && data.slug) navigate(contentPath(data), { replace: true });
         
         if (data.category_id) {
           const { data: catData } = await supabase
@@ -97,16 +103,16 @@ export default function ContentDetail() {
 
   useEffect(() => {
     fetchContent();
-  }, [id]);
+  }, [param]);
 
   const handleDelete = async () => {
-    if (!id) return;
+    if (!content?.id) return;
     
     try {
       const { error } = await supabase
         .from('contents')
         .delete()
-        .eq('id', id);
+        .eq('id', content.id);
 
       if (error) {
         toast.error(t('contents.admin.deleteError'));
@@ -162,7 +168,7 @@ export default function ContentDetail() {
 
   const plainText = (content.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = plainText ? plainText.split(' ').length : undefined;
-  const canonicalPath = `/contents/${content.id}`;
+  const canonicalPath = encodeURI(contentPath(content));
   const articleLang: 'he' | 'en' = content.language === 'en' ? 'en' : 'he';
 
   return (
@@ -181,6 +187,7 @@ export default function ContentDetail() {
           lang: articleLang,
           image: content.featured_image_url,
           datePublished: content.published_at,
+          dateModified: content.updated_at,
           wordCount,
         })}
       />

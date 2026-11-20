@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { contentPath } from "../../netlify/edge-functions/lib/slug";
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -426,7 +427,7 @@ export default function ContentsAdmin() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/contents/${content.id}`)}
+                            onClick={() => navigate(contentPath(content))}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
